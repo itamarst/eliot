@@ -29,6 +29,6 @@ Bugs and feature requests should be filed at the project `Github page`_.
 .. _PyPI: https://pypi.python.org/pypi/eliot
 .. _HybridCluster: http://www.hybridcluster.com
 
-.. image:: https://travis-ci.org/hybridlogic/eliot.png?branch=master
-           :target: http://travis-ci.org/hybridlogic/eliot
+.. image:: https://travis-ci.org/hybridcluster/eliot.png?branch=master
+           :target: http://travis-ci.org/hybridcluster/eliot
            :alt: Build Status
