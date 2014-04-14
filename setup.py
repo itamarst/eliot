@@ -38,7 +38,7 @@ setup(
     name='eliot',
     version=get_version(),
     description="Logging as Storytelling",
-    install_requires=[],
+    install_requires=["six"],
     keywords="logging",
     license="APL2",
     packages=["eliot", "eliot.tests"],

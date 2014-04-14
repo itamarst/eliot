@@ -53,7 +53,8 @@ def _get_traceback_no_io():
     path = traceback.__file__
     if path.endswith(".pyc") or path.endswith(".pyo"):
         path = path[:-1]
-    execfile(path, module.__dict__, module.__dict__)
+    with open(path) as f:
+        exec(f.read(), module.__dict__, module.__dict__)
     class FakeLineCache(object):
         def checkcache(self, *args, **kwargs):
             None

@@ -7,8 +7,10 @@ although in theory it could be done then as well.
 
 from __future__ import unicode_literals
 
-import types
 from collections import namedtuple
+
+import six
+unicode = six.text_type
 
 from eliot._message import Message
 from eliot._action import startAction, startTask
@@ -21,8 +23,8 @@ class ValidationError(Exception):
 
 
 # Types that can be encoded to JSON:
-_JSON_TYPES = {types.NoneType, int, long, float, unicode, list, dict, bytes, bool}
-
+_JSON_TYPES = {type(None), int, float, unicode, list, dict, bytes, bool}
+_JSON_TYPES |= set(six.integer_types)
 
 class Field(object):
     """
@@ -128,7 +130,7 @@ class Field(object):
         fixedClasses = []
         for k in classes:
             if k is None:
-                k = types.NoneType
+                k = type(None)
             if k not in _JSON_TYPES:
                 raise TypeError("%s is not JSON-encodeable" % (k,))
             fixedClasses.append(k)
