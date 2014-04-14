@@ -619,7 +619,8 @@ class TwistedActionTests(TestCase):
                               "action_status": "failed",
                               "x": 2,
                               "reason": "because",
-                              "exception": "exceptions.RuntimeError"})
+                              "exception":
+                              "%s.RuntimeError" % (RuntimeError.__module__,)})
         d.addErrback(lambda _: None) # don't let Failure go to Twisted logs
 
 
