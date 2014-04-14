@@ -485,7 +485,7 @@ class LoggerJSONEncodingErrorTests(TestCase):
         try:
             json.dumps(self.badMessage)
         except Exception, e:
-            expected = "%s.%s" % (e.__module__, type(e).__name__)
+            expected = "%s.%s" % (type(e).__module__, type(e).__name__)
 
         logger, written = makeLogger()
         logger.write(self.badMessage)
