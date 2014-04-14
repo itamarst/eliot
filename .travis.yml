@@ -1,0 +1,15 @@
+language: python
+
+python:
+  - 2.7
+  - pypy
+
+install:
+  - python setup.py --version
+  - pip install -q -r requirements-dev.txt
+  - python setup.py -q install
+
+script: trial eliot.tests
+
+notifications:
+  email: false
