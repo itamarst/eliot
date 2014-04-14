@@ -12,8 +12,7 @@ from ._output import MemoryLogger
 
 def issuperset(a, b):
     """
-    Use L{assertContainsFields} instead. To be removed in
-    https://www.pivotaltracker.com/s/projects/787341/stories/63615936
+    Use L{assertContainsFields} instead.
 
     @type a: C{dict}
 
