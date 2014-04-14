@@ -1,9 +1,9 @@
-Welcome to Eliot's documentation!
-=================================
+.. include:: ../../README.rst
 
 Contents:
 
 .. toctree::
+   introduction
    usage
    fields
    threads
