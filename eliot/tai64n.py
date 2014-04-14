@@ -26,7 +26,8 @@ def encode(timestamp):
     seconds = int(timestamp)
     nanoseconds = int((timestamp - seconds) * 1000000000)
     seconds = seconds + _OFFSET
-    return "@" + b2a_hex(struct.pack(_STRUCTURE, seconds, nanoseconds))
+    encoded = b2a_hex(struct.pack(_STRUCTURE, seconds, nanoseconds))
+    return "@" + encoded.decode("ascii")
 
 
 

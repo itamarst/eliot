@@ -443,8 +443,8 @@ class ValidateLoggingTests(TestCase):
         raised = None
         try:
             MyTest("test_foo").test_foo()
-        except Exception as raised:
-            pass
+        except Exception as e:
+            raised = e
         self.assertIs(exc, raised)
 
 

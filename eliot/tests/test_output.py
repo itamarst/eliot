@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 
 from unittest import TestCase
 
+from six import text_type as unicode
+
 from zope.interface.verify import verifyClass
 
 from .._output import (
@@ -53,7 +55,7 @@ class MemoryLoggerTests(TestCase):
         Field keys can be bytes containing utf-8 encoded Unicode.
         """
         logger = MemoryLogger()
-        logger.write({b'\u1234'.encode("utf-8"): 'b'})
+        logger.write({u'\u1234'.encode("utf-8"): 'b'})
         logger.validate()
 
 
@@ -484,7 +486,7 @@ class LoggerJSONEncodingErrorTests(TestCase):
         # of the json library.
         try:
             json.dumps(self.badMessage)
-        except Exception, e:
+        except Exception as e:
             expected = "%s.%s" % (type(e).__module__, type(e).__name__)
 
         logger, written = makeLogger()

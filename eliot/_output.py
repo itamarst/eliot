@@ -4,16 +4,23 @@ Implementation of hooks and APIs for outputting log messages.
 
 from __future__ import unicode_literals
 
-try:
-    # ujson is pretty crappy... but much faster than built-in json module, at
-    # least on CPython. So we use it until we come up with some better. We
-    # import built-in module for use by the validation code path, since want
-    # to validate messages encode in all JSON encoders.
-    import ujson as json
-    import json as pyjson
-except ImportError:
-    import json
+from six import text_type as unicode, PY3
+if PY3:
+    from eliot import _py3json as json
     pyjson = json
+else:
+    try:
+        # ujson is pretty crappy... but much faster than built-in json module, at
+        # least on CPython. So we use it until we come up with some better. We
+        # import built-in module for use by the validation code path, since want
+        # to validate messages encode in all JSON encoders.
+        import ujson as json
+        import json as pyjson
+    except ImportError:
+        import json
+        pyjson = json
+
+
 
 from zope.interface import Interface, implementer
 

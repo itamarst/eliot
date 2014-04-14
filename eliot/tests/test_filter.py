@@ -3,9 +3,14 @@ Tests for L{eliot.filter}.
 """
 from __future__ import unicode_literals
 
+from six import PY3
+
 import sys
 import time
-import json
+if PY3:
+    from eliot import _py3json as json
+else:
+    import json
 from unittest import TestCase
 from datetime import datetime
 from io import BytesIO
