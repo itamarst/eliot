@@ -5,12 +5,11 @@ Tests for L{eliot._output}.
 from __future__ import unicode_literals
 
 from unittest import TestCase
-import json
 
 from zope.interface.verify import verifyClass
 
 from .._output import (
-    MemoryLogger, ILogger, Destinations, Logger,
+    MemoryLogger, ILogger, Destinations, Logger, json
     )
 from .._validation import ValidationError, Field, _MessageSerializer
 from .._traceback import writeTraceback
@@ -466,6 +465,9 @@ class LoggerTests(TestCase):
 
 
 class LoggerJSONEncodingErrorTests(TestCase):
+    """
+    Tests for JSON encoding errors in the Logger.
+    """
     unencodeable = []
     unencodeable.append(unencodeable)
 
@@ -478,14 +480,19 @@ class LoggerJSONEncodingErrorTests(TestCase):
         If JSON encoding fails in L{Logger.write} then the exception and
         associated traceback are logged.
         """
+        # The exception type here sadly depends on implementation details
+        # of the json library.
+        try:
+            json.dumps(self.badMessage)
+        except Exception, e:
+            expected = "%s.%s" % (e.__module__, type(e).__name__)
+
         logger, written = makeLogger()
         logger.write(self.badMessage)
 
         tracebackMessage = json.loads(written[0])
         expected = {
-            # The exception type here sadly depends on implementation details
-            # of the json library.
-            'exception': 'exceptions.OverflowError',
+            'exception': expected,
             'message_type': 'eliot:traceback'}
         assertContainsFields(self, tracebackMessage, expected)
 
