@@ -102,7 +102,8 @@ class TracebackLoggingTests(TestCase):
         _writeTracebackMessage(logger, "sys", *exc_info)
         serialized = logger.serialize()[0]
         assertContainsFields(self, serialized,
-                             {"exception": "exceptions.KeyError",
+                             {"exception":
+                              "%s.KeyError" % (KeyError.__module__,),
                               "reason": "123"})
         logger.flushTracebacks(KeyError)
 

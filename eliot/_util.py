@@ -4,6 +4,8 @@ Utilities that don't go anywhere else.
 
 from __future__ import unicode_literals
 
+from six import text_type as unicode
+
 
 def safeunicode(o):
     """

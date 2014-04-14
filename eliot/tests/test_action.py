@@ -540,7 +540,7 @@ class ActionTests(TestCase):
         """
         action = Action(MemoryLogger(), "uuid", "/1/", "sys:me")
         self.assertEqual([action._incrementMessageCounter() for i in range(5)],
-                         range(5))
+                         list(range(5)))
 
 
 

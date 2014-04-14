@@ -14,7 +14,7 @@ else:
 from unittest import TestCase
 from datetime import datetime
 from io import BytesIO
-
+import inspect
 
 from eliot.filter import EliotFilter, main, USAGE
 from eliot import tai64n
@@ -36,8 +36,8 @@ class EliotFilterTests(TestCase):
         self.assertEqual(f.getvalue(), b"")
         efilter.run()
         self.assertEqual(f.getvalue(),
-                         b'{"x": 4, "orig": "abcd"}\n'
-                         b'{"x": 2, "orig": [1, 2]}\n')
+                         json.dumps({"x": 4, "orig": "abcd"}) + b"\n" +
+                         json.dumps({"x": 2, "orig": [1, 2]}) +  b'\n')
 
 
     def evaluateExpression(self, expr, message):
@@ -127,7 +127,7 @@ class MainTests(TestCase):
         """
         By default L{main} uses information from L{sys}.
         """
-        self.assertEqual(main.func_defaults, (sys,))
+        self.assertEqual(inspect.getargspec(main).defaults, (sys,))
 
 
     def test_stdinOut(self):

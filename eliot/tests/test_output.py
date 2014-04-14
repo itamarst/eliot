@@ -359,7 +359,7 @@ class LoggerTests(TestCase):
 
         d = {"hello": 1}
         logger.write(d)
-        self.assertEqual(map(json.loads, written), [d])
+        self.assertEqual(list(map(json.loads, written)), [d])
 
 
     def test_bytes(self):
@@ -391,7 +391,7 @@ class LoggerTests(TestCase):
         logger.write({"message_type": "mymessage",
                       "length": "thething"},
                      serializer)
-        self.assertEqual(map(json.loads, written),
+        self.assertEqual(list(map(json.loads, written)),
                          [{"message_type": "mymessage",
                            "length": 8}])
 
@@ -406,13 +406,11 @@ class LoggerTests(TestCase):
                 raise TypeError()
 
         dictionary = {badobject(): 123,
-                      "key": "value",
-                      "badvalue": badobject()}
+                      123: badobject()}
         badMessage = "eliot: unknown, unicode() raised exception"
         self.assertEqual(Logger()._safeUnicodeDictionary(dictionary),
                          unicode({badMessage: "123",
-                                  "u'key'": "u'value'",
-                                  "u'badvalue'": badMessage}))
+                                  "123": badMessage}))
 
 
     def test_safeUnicodeDictionaryFallback(self):
@@ -457,7 +455,8 @@ class LoggerTests(TestCase):
         self.assertEqual(len(written), 2)
         tracebackMessage = json.loads(written[0])
         assertContainsFields(self, tracebackMessage,
-                             {'exception': 'exceptions.RuntimeError',
+                             {'exception':
+                              '%s.RuntimeError' % (RuntimeError.__module__,),
                               'message_type': 'eliot:traceback'})
         self.assertIn("RuntimeError: oops", tracebackMessage['traceback'])
         assertContainsFields(self, json.loads(written[1]),
