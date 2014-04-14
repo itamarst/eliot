@@ -1,5 +1,5 @@
 """
-Eliot: An Opinionated Logging Library
+Eliot: Logging as Storytelling
 
     Suppose we turn from outside estimates of a man, to wonder, with keener
     interest, what is the report of his own consciousness about his doings or
@@ -10,9 +10,6 @@ Eliot: An Opinionated Logging Library
     its final pause.
 
         -- George Eliot, "Middlemarch"
-
-See http://wiki.hybrid-cluster.com/index.php?title=Logging_Design_Document for
-motivation.
 """
 
 # Expose the public API:
