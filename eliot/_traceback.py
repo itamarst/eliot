@@ -8,6 +8,8 @@ import types
 import traceback
 import sys
 
+from six import exec_
+
 from .serializers import identity
 from ._util import safeunicode
 from ._validation import MessageType, Field
@@ -54,7 +56,7 @@ def _get_traceback_no_io():
     if path.endswith(".pyc") or path.endswith(".pyo"):
         path = path[:-1]
     with open(path) as f:
-        exec(f.read(), module.__dict__, module.__dict__)
+        exec_(f.read(), module.__dict__, module.__dict__)
     class FakeLineCache(object):
         def checkcache(self, *args, **kwargs):
             None
