@@ -12,6 +12,8 @@ Eliot: Logging as Storytelling
         -- George Eliot, "Middlemarch"
 """
 
+from ._version import __version__
+
 # Expose the public API:
 from ._message import Message
 from ._action import startAction, startTask, Action
@@ -27,4 +29,6 @@ __all__ = ["Message", "writeTraceback", "writeFailure",
            "Field", "MessageType", "ActionType",
            "ILogger", "Logger", "MemoryLogger", "addDestination",
            "removeDestination",
+
+           "__version__",
            ]
