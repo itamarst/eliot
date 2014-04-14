@@ -1,0 +1,6 @@
+include LICENSE
+include README.rst
+include requirements-dev.txt
+recursive-include docs *
+prune docs/_build
+recursive-include benchmarks *
