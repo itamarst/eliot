@@ -4,9 +4,9 @@ Tests for L{eliot._output}.
 
 from __future__ import unicode_literals
 
-from unittest import TestCase
+from unittest import TestCase, skipIf
 
-from six import text_type as unicode
+from six import PY3, text_type as unicode
 
 from zope.interface.verify import verifyClass
 
@@ -50,6 +50,7 @@ class MemoryLoggerTests(TestCase):
         self.assertRaises(TypeError, logger.validate)
 
 
+    @skipIf(PY3, "Don't use bytes on Python 3 because it hates you")
     def test_bytesFieldKeys(self):
         """
         Field keys can be bytes containing utf-8 encoded Unicode.
@@ -362,6 +363,7 @@ class LoggerTests(TestCase):
         self.assertEqual(list(map(json.loads, written)), [d])
 
 
+    @skipIf(PY3, "Don't use bytes on Python 3 because it hates you")
     def test_bytes(self):
         """
         L{Logger.write} uses a JSON encoder that assumes any C{bytes} are
