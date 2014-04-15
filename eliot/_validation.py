@@ -155,6 +155,7 @@ def fields(**keys):
 
     @return: A L{list} of L{Field} instances.
     """
+    return [Field.forTypes(key, [value], "") for key, value in keys.items()]
 
 
 

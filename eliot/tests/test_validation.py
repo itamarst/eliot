@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 from unittest import TestCase
 
 from .._validation import (
-    Field, MessageType, ActionType, ValidationError,
+    Field, MessageType, ActionType, ValidationError, fields,
     _MessageSerializer,
     )
 from .._action import startAction, startTask
@@ -237,6 +237,38 @@ class FieldForValueTests(TestCase):
         """
         field = Field.forValue("key", 1234, "description")
         self.assertEqual(field.serialize(None), 1234)
+
+
+
+class FieldsTests(TestCase):
+    """
+    Tests for L{fields}.
+    """
+    def test_keys(self):
+        """
+        L{fields} creates L{Field} instances with the given keys.
+        """
+        l = fields(key=int, status=str)
+        self.assertEqual({(type(field), field.key) for field in l},
+                         {(Field, "key"), (Field, "status")})
+
+
+    def test_validTypes(self):
+        """
+        The L{Field} instances constructed by L{fields} validate the specified
+        types.
+        """
+        field, = fields(key=int)
+        self.assertRaises(ValidationError, field.validate, "abc")
+
+
+    def test_noSerialization(self):
+        """
+        The L{Field} instances constructed by L{fields} do no special
+        serialization.
+        """
+        field, = fields(key=int)
+        self.assertEqual(field.serialize("abc"), "abc")
 
 
 
