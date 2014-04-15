@@ -111,6 +111,14 @@ class FieldTests(TestCase):
         self.assertEqual(field.description, u"A path!")
 
 
+    def test_optionalDescription(self):
+        """
+        L{Field} can be constructed with no description.
+        """
+        field = Field("path", identity)
+        self.assertEqual(field.description, "")
+
+
     def test_key(self):
         """
         L{Field.key} stores the passed in field key.
@@ -464,6 +472,14 @@ class MessageTypeTests(TestCase):
         self.assertEqual(messageType.description, u"A message type")
 
 
+    def test_optionalDescription(self):
+        """
+        L{MessageType} can be constructed without a description.
+        """
+        messageType = MessageType("name", [])
+        self.assertEqual(messageType.description, "")
+
+
 
 class ActionTypeTestsMixin(object):
     """
@@ -740,6 +756,14 @@ class ActionTypeTests(TestCase):
         """
         actionType = self.actionType()
         self.assertEqual(actionType.description, "An action type")
+
+
+    def test_optionalDescription(self):
+        """
+        L{ActionType} can be constructed without a description.
+        """
+        actionType = ActionType("name", [], [], [])
+        self.assertEqual(actionType.description, "")
 
 
 

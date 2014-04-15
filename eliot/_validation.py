@@ -38,7 +38,7 @@ class Field(object):
     @ivar description: A description of what this field contains.
     @type description: C{unicode}
     """
-    def __init__(self, key, serializer, description, extraValidator=None):
+    def __init__(self, key, serializer, description="", extraValidator=None):
         """
         @param serializer: A function that takes a single rich input and
             returns a serialized value that can be written out as JSON. May
@@ -146,6 +146,18 @@ class Field(object):
 
 
 
+def fields(**keys):
+    """
+    Succinct factory for for L{MessageType} and L{ActionType} field definitions.
+
+    @param keys: A L{dict} mapping key names to the expected type of the
+        field's values.
+
+    @return: A L{list} of L{Field} instances.
+    """
+
+
+
 REASON = Field.forTypes("reason", [unicode], "The reason for an event.")
 TRACEBACK = Field.forTypes("traceback", [unicode],
                            "The traceback for an exception.")
@@ -218,7 +230,6 @@ class _MessageSerializer(object):
                 raise ValidationError(message, "Unexpected field %r" % (key,))
 
 
-
 class MessageType(object):
     """
     A specific type of non-action message.
@@ -248,7 +259,7 @@ class MessageType(object):
     @ivar description: A description of what this message means.
     @type description: C{unicode}
     """
-    def __init__(self, message_type, fields, description):
+    def __init__(self, message_type, fields, description=""):
         """
         @ivar type: The name of the type,
             e.g. C{"yourapp:subsystem:yourtype"}.
@@ -334,7 +345,7 @@ class ActionType(object):
 
 
     def __init__(self, action_type, startFields, successFields, failureFields,
-                 description):
+                 description=""):
         self.action_type = action_type
         self.description = description
 
