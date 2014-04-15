@@ -181,7 +181,7 @@ While running the block of code within the ``with`` statement new actions create
 If there is no parent the action will be considered a task.
 If you want to ignore the context and create a top-level task you can use the ``eliot.startTask`` API.
 
-You can add fields to both the start message and the success/failure messages.
+You can add fields to both the start message and the success messages.
 
 .. code-block:: python
 
@@ -193,13 +193,9 @@ You can add fields to both the start message and the success/failure messages.
                       # Fields added to start message only:
                       key=123, foo=u"bar") as action:
          x = _beep(123)
-         try:
-              result = frobinate(x)
-              # Fields added to success message only:
-              action.addSuccessFields(result=result)
-         except KeyError, e:
-              # Fields added to failure message only:
-              action.addFailureFields(x=x)
+         result = frobinate(x)
+         # Fields added to success message only:
+         action.addSuccessFields(result=result)
 
 
 Twisted
