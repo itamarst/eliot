@@ -325,7 +325,7 @@ ActionType
 ^^^^^^^^^^
 
 Similarly to ``MessageType`` you can also create types for actions.
-Unlike a ``MessageType`` you need three sets of fields: one for actions start, one for success and one for failure.
+Unlike a ``MessageType`` you need two sets of fields: one for actions start, one for success.
 
 .. code-block:: python
 
@@ -336,8 +336,6 @@ Unlike a ``MessageType`` you need three sets of fields: one for actions start, o
                                  [USERNAME],
                                  # Success message fields:
                                  [Field.forTypes(u"status", [int], u"Status code for the user")],
-                                 # Failure message fields in addition to built-in ones:
-                                 [],
                                  u"A user is attempting to sign in.")
 
 Calling the resulting instance is equivalent to ``startAction``.
