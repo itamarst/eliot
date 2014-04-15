@@ -540,6 +540,21 @@ class ActionTests(TestCase):
                          range(5))
 
 
+    def test_multipleFinishCalls(self):
+        """
+        If L{Action.finish} is called, subsequent calls to L{Action.finish} have
+        no effect.
+        """
+        logger = MemoryLogger()
+        action = Action(logger, "uuid", "/1/", "sys:me")
+        with action as act:
+            act.finish()
+            act.finish(Exception())
+            act.finish()
+        # Only initial finish message is logged:
+        self.assertEqual(len(logger.messages), 1)
+
+
 
 class TwistedActionTests(TestCase):
     """
