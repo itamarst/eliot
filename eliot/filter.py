@@ -14,10 +14,10 @@ from datetime import datetime, timedelta
 
 from six import PY3
 
-from eliot import tai64n
+from . import tai64n
 
 if PY3:
-    from eliot import _py3json as json
+    from . import _py3json as json
 else:
     import json
 

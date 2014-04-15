@@ -8,7 +8,7 @@ from six import PY3
 import sys
 import time
 if PY3:
-    from eliot import _py3json as json
+    from . import _py3json as json
 else:
     import json
 from unittest import TestCase
@@ -16,8 +16,8 @@ from datetime import datetime
 from io import BytesIO
 import inspect
 
-from eliot.filter import EliotFilter, main, USAGE
-from eliot import tai64n
+from ..filter import EliotFilter, main, USAGE
+from .. import tai64n
 
 
 class EliotFilterTests(TestCase):

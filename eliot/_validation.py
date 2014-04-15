@@ -12,8 +12,8 @@ from collections import namedtuple
 import six
 unicode = six.text_type
 
-from eliot._message import Message
-from eliot._action import startAction, startTask
+from ._message import Message
+from ._action import startAction, startTask
 
 
 class ValidationError(Exception):

@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 from six import text_type as unicode, PY3
 if PY3:
-    from eliot import _py3json as json
+    from . import _py3json as json
     pyjson = json
 else:
     try:
