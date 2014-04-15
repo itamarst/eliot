@@ -152,7 +152,7 @@ class Action(object):
         Message(fields, serializer).write(self._logger, self)
 
 
-    def _finish(self, exception=None):
+    def finish(self, exception=None):
         """
         Log the finish message.
 
@@ -256,7 +256,7 @@ class Action(object):
                 exception = result.value
             else:
                 exception = None
-            self._finish(exception)
+            self.finish(exception)
             return result
         deferred.addBoth(done)
 
@@ -294,7 +294,7 @@ class Action(object):
         Pop this action off the execution context, log finish message.
         """
         _context.pop()
-        self._finish(exception)
+        self.finish(exception)
 
 
 
