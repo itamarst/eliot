@@ -367,23 +367,6 @@ class ActionTests(TestCase):
         self.assertIs(logger[0], serializers.success)
 
 
-    def test_failureFinishSerializer(self):
-        """
-        L{Action._finish} with an exception passes the failure
-        L{eliot._validation._MessageSerializer} to the message it creates.
-        """
-        serializers = ActionType("sys:thename", [], [],
-                                 [Field("key", lambda x: x, "")],
-                                 "")._serializers
-        class Logger(list):
-            def write(self, msg, serializer):
-                self.append(serializer)
-        logger = Logger()
-        action = Action(logger, "unique", "/", "sys:thename", serializers)
-        action._finish(Exception())
-        self.assertIs(logger[0], serializers.failure)
-
-
     def test_startFieldsNotInFinish(self):
         """
         L{Action._finish} logs a message without the fields from
@@ -481,56 +464,6 @@ class ActionTests(TestCase):
                              {"x": 1, "y": 2, "z": 3})
 
 
-    def test_addSuccessFieldsIgnoresFailure(self):
-        """
-        On a successful finish, L{Action.__exit__} ignores fields from
-        L{Action.addFailureFields}.
-        """
-        logger = MemoryLogger()
-        action = Action(logger, "uuid", "/1/", "sys:me")
-        with action as act:
-            act.addFailureFields(z=3)
-        self.assertNotIn("z", logger.messages[0])
-
-
-    def test_addFailureFields(self):
-        """
-        On an failed finish, L{Action.__exit__} adds fields from
-        L{Action.addFailureFields} to the result message.
-        """
-        logger = MemoryLogger()
-        action = Action(logger, "uuid", "/1/", "sys:me")
-        try:
-            with action as act:
-                act.addFailureFields(x=1, y=2)
-                act.addFailureFields(z=3)
-                raise RuntimeError()
-        except RuntimeError:
-            pass
-        else:
-            self.fail("No exception")
-        assertContainsFields(self, logger.messages[0],
-                             {"x": 1, "y": 2, "z": 3})
-
-
-    def test_addFailureFieldsIgnoresSuccess(self):
-        """
-        On a successful finish, L{Action.__exit__} ignores fields from
-        L{Action.addFailureFields}.
-        """
-        logger = MemoryLogger()
-        action = Action(logger, "uuid", "/1/", "sys:me")
-        try:
-            with action as act:
-                act.addSuccessFields(z=3)
-                raise RuntimeError()
-        except RuntimeError:
-            pass
-        else:
-            self.fail("No exception")
-        self.assertNotIn("z", logger.messages[0])
-
-
     def test_incrementMessageCounter(self):
         """
         Each call to L{Action._incrementMessageCounter} increments a counter.
@@ -599,13 +532,11 @@ class TwistedActionTests(TestCase):
     def test_finishAfterFailure(self):
         """
         When the L{Deferred} passed to L{Action.finishAfter} fires
-        with an exception, a finish message is logged with any failure bindings
-        added.
+        with an exception, a finish message is logged.
         """
         d = Deferred()
         logger = MemoryLogger()
         action = Action(logger, "uuid", "/1/", "sys:me")
-        action.addFailureFields(x=2)
         action.finishAfter(d)
         exception = RuntimeError("because")
         d.errback(exception)
@@ -614,7 +545,6 @@ class TwistedActionTests(TestCase):
                               "task_level": "/1/",
                               "action_type": "sys:me",
                               "action_status": "failed",
-                              "x": 2,
                               "reason": "because",
                               "exception": "exceptions.RuntimeError"})
         d.addErrback(lambda _: None) # don't let Failure go to Twisted logs

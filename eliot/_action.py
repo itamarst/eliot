@@ -85,8 +85,6 @@ class Action(object):
     @ivar _identification: Fields identifying this action.
 
     @ivar _successFields: Fields to be included in successful finish message.
-
-    @ivar _failureFields: Fields to be included in a failed finish message.
     """
     def __init__(self, logger, task_uuid, task_level, action_type,
                  serializers=None):
@@ -115,7 +113,6 @@ class Action(object):
         self._numberOfChildren = 0
         self._numberOfMessages = iter(count())
         self._successFields = {}
-        self._failureFields = {}
         self._logger = logger
         self._identification = {"task_uuid": task_uuid,
                                 "task_level": task_level,
@@ -163,9 +160,9 @@ class Action(object):
         block or L{Action.finishAfter}.
 
         @param exception: C{None}, in which case the fields added with
-            L{Action.addSuccessFields} are used. Or an L{Exception}, in which case
-            an C{"exception"} field is added with the given L{Exception} and the
-            fields added with L{Action.addFailureFields} are used.
+            L{Action.addSuccessFields} are used. Or an L{Exception}, in
+            which case an C{"exception"} field is added with the given
+            L{Exception} type and C{"reason"} with its contents.
         """
         serializer = None
         if exception is None:
@@ -174,7 +171,7 @@ class Action(object):
             if self._serializers is not None:
                 serializer = self._serializers.success
         else:
-            fields = self._failureFields
+            fields = {}
             fields["exception"] = "%s.%s" % (exception.__class__.__module__,
                                              exception.__class__.__name__)
             fields["reason"] = safeunicode(exception)
@@ -269,15 +266,6 @@ class Action(object):
         @param fields: Additional fields to add to the result message.
         """
         self._successFields.update(fields)
-
-
-    def addFailureFields(self, **fields):
-        """
-        Add fields to be included in the result message if the action fails.
-
-        @param fields: Additional fields to add to the result message.
-        """
-        self._failureFields.update(fields)
 
 
     # Python context manager implementation:
