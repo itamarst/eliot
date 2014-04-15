@@ -18,7 +18,7 @@ from ._version import __version__
 from ._message import Message
 from ._action import startAction, startTask, Action
 from ._output import ILogger, Logger, MemoryLogger
-from ._validation import Field, MessageType, ActionType
+from ._validation import Field, fields, MessageType, ActionType
 from ._traceback import writeTraceback, writeFailure
 addDestination = Logger._destinations.add
 removeDestination = Logger._destinations.remove
@@ -26,7 +26,7 @@ removeDestination = Logger._destinations.remove
 
 __all__ = ["Message", "writeTraceback", "writeFailure",
            "startAction", "startTask", "Action",
-           "Field", "MessageType", "ActionType",
+           "Field", "fields", "MessageType", "ActionType",
            "ILogger", "Logger", "MemoryLogger", "addDestination",
            "removeDestination",
 
