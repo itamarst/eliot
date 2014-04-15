@@ -172,7 +172,7 @@ class ActionTests(TestCase):
         """
         serializers = ActionType("sys:thename",
                                  [Field("key", lambda x: x, "")],
-                                 [], [], "")._serializers
+                                 [], "")._serializers
         class Logger(list):
             def write(self, msg, serializer):
                 self.append(serializer)
@@ -357,7 +357,7 @@ class ActionTests(TestCase):
         serializers = ActionType("sys:thename",
                                  [],
                                  [Field("key", lambda x: x, "")],
-                                 [], "")._serializers
+                                 "")._serializers
         class Logger(list):
             def write(self, msg, serializer):
                 self.append(serializer)
