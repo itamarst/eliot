@@ -310,7 +310,7 @@ class ActionType(object):
         RESULT = Field("result", [str], u"The result of lookups.")
         LOG_DOSOMETHING = ActionType(
             "yourapp:subsystem:youraction",
-            [KEY], [RESULT], [],
+            [KEY], [RESULT],
             u"Do something with a key, resulting in a value.")
 
         # Actual code, with logging added:
@@ -344,8 +344,7 @@ class ActionType(object):
     _startTask = staticmethod(startTask)
 
 
-    def __init__(self, action_type, startFields, successFields, failureFields,
-                 description=""):
+    def __init__(self, action_type, startFields, successFields, description=""):
         self.action_type = action_type
         self.description = description
 
@@ -357,7 +356,7 @@ class ActionType(object):
             actionTypeField, makeActionStatusField("started")]
         successFields = successFields + [
             actionTypeField, makeActionStatusField("succeeded")]
-        failureFields = failureFields + [
+        failureFields = [
             actionTypeField, makeActionStatusField("failed"), REASON,
             EXCEPTION]
 

@@ -508,7 +508,6 @@ class ActionTypeTestsMixin(object):
         return ActionType("myapp:mysystem:myaction",
                           [Field.forTypes("key", [int], "")], # start fields
                           [Field.forTypes("value", [int], "")], # success fields
-                          [Field.forTypes("value2", [int], "")], # failure fields
                           "A action type")
 
 
@@ -637,7 +636,6 @@ class ActionTypeFailureMessage(TestCase, ActionTypeTestsMixin):
         """
         return {"action_type": "myapp:mysystem:myaction",
                 "action_status": "failed",
-                "value2": 1,
                 "exception": "exceptions.RuntimeError",
                 "reason": "because",
                 }
@@ -657,9 +655,9 @@ class ChildActionTypeStartMessage(TestCase):
         Validation of child actions uses the child's validator.
         """
         A = ActionType(
-            "myapp:foo", [Field.forTypes("a", [int], "")], [], [], "")
+            "myapp:foo", [Field.forTypes("a", [int], "")], [], "")
         B = ActionType(
-            "myapp:bar", [Field.forTypes("b", [int], "")], [], [], "")
+            "myapp:bar", [Field.forTypes("b", [int], "")], [], "")
 
         logger = MemoryLogger()
 
@@ -679,7 +677,7 @@ class ActionTypeTests(TestCase):
         """
         Return a L{ActionType} suitable for unit tests.
         """
-        return ActionType("myapp:mysystem:myaction", [], [], [],
+        return ActionType("myapp:mysystem:myaction", [], [],
                           "An action type")
 
 
@@ -762,7 +760,7 @@ class ActionTypeTests(TestCase):
         """
         L{ActionType} can be constructed without a description.
         """
-        actionType = ActionType("name", [], [], [])
+        actionType = ActionType("name", [], [])
         self.assertEqual(actionType.description, "")
 
 
@@ -778,7 +776,6 @@ class EndToEndValidationTests(TestCase):
     ACTION = ActionType("myapp:myaction",
                         [Field.forTypes("key", [int], "The key")],
                         [Field.forTypes("result", [unicode], "The result")],
-                        [Field.forTypes("intermediate", [int], "For debug")],
                         "An action for testing.")
 
 
@@ -855,21 +852,7 @@ class EndToEndValidationTests(TestCase):
         """
         logger = MemoryLogger()
         def run():
-            with self.ACTION(logger, key=123) as action:
-                action.addFailureFields(intermediate=12)
-                raise RuntimeError()
+            with self.ACTION(logger, key=123):
+                raise RuntimeError("hello")
         self.assertRaises(RuntimeError, run)
-        self.assertEqual(logger.messages[1]["intermediate"], 12)
-
-
-    def test_incorrectFailureFromActionType(self):
-        """
-        An incorrect failure message created using a L{ActionType} will raise a
-        L{ValidationError}.
-        """
-        logger = MemoryLogger()
-        with self.assertRaises(RuntimeError):
-            with self.ACTION(logger, key=123) as action:
-                action.addFailureFields(intermediate="12")
-                raise RuntimeError()
-        self.assertRaises(ValidationError, logger.validate)
+        self.assertEqual(logger.messages[1]["reason"], "hello")
