@@ -12,6 +12,8 @@ env:
     - TOX_ENV=pyflakes3
     - TOX_ENV=sphinx
 
+install: pip install tox
+
 script: tox -e $TOX_ENV
 
 notifications:
