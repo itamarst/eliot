@@ -299,11 +299,23 @@ It also takes a list of ``Field`` instances and a description.
 
 .. code-block:: python
 
-    from eliot import MessageType
+    from eliot import MessageType, Field
+    USERNAME = Field.forTypes("username", [str])
+    AGE = Field.forTypes("age", [int])
 
     LOG_USER_REGISTRATION = MessageType(u"yourapp:authentication:registration",
                                         [USERNAME, AGE],
                                         u"We've just registered a new user.")
+
+Since this syntax is rather verbose a utility function called ``fields`` is provided which creates a ``list`` of ``Field`` instances for you, with support to specifying the types of the fields.
+The equivalent to the code above would be:
+
+.. code-block:: python
+
+    from eliot import MessageType, fields
+
+    LOG_USER_REGISTRATION = MessageType(u"yourapp:authentication:registration",
+                                        fields(username=str, age=int))
 
 Given a ``MessageType`` you can create a ``Message`` instance with the ``message_type`` field pre-populated.
 You can then use it the way you would normally use ``Message``, e.g. ``bind()`` or ``write()``.
@@ -329,13 +341,14 @@ Unlike a ``MessageType`` you need two sets of fields: one for actions start, one
 
 .. code-block:: python
 
-    from eliot import ActionType, Field, Logger
+    from eliot import ActionType, fields, Logger
 
     LOG_USER_SIGNIN = ActionType(u"yourapp:authentication:signin",
                                  # Start message fields:
-                                 [USERNAME],
+                                 fields(username=str),
                                  # Success message fields:
-                                 [Field.forTypes(u"status", [int], u"Status code for the user")],
+                                 fields(status=int),
+                                 # Description:
                                  u"A user is attempting to sign in.")
 
 Calling the resulting instance is equivalent to ``startAction``.
