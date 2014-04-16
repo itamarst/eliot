@@ -71,8 +71,8 @@ class MemoryLoggerTests(TestCase):
 
     def test_serializer(self):
         """
-        L{MemoryLogger.validate} calls the given serializer's C{validate()} method
-        with the message.
+        L{MemoryLogger.validate} calls the given serializer's C{validate()}
+        method with the message.
         """
         class FakeValidator(list):
             def validate(self, message):
@@ -90,8 +90,8 @@ class MemoryLoggerTests(TestCase):
 
     def test_failedValidation(self):
         """
-        L{MemoryLogger.validate} will allow exceptions raised by the serializer to
-        pass through.
+        L{MemoryLogger.validate} will allow exceptions raised by the serializer
+        to pass through.
         """
         serializer = _MessageSerializer(
             [Field.forValue("message_type", "mymessage", u"The type")])
