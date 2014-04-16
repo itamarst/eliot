@@ -135,10 +135,11 @@ class Logger(object):
         """
         Serialize the dictionary, and write it to C{self._destinations}.
         """
+        dictionary = dictionary.copy()
         try:
             if serializer is not None:
                 serializer.serialize(dictionary)
-            self._destinations.send(json.dumps(dictionary))
+            self._destinations.send(dictionary)
         except:
             writeTraceback(self, "eliot:output")
             msg = Message({"message_type": "eliot:serialization_failure",

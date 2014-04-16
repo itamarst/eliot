@@ -353,36 +353,19 @@ class LoggerTests(TestCase):
 
     def test_write(self):
         """
-        L{Logger.write} serializes the dictionary to JSON, and sends it to the
-        L{Destinations} object.
+        L{Logger.write} sends the given dictionary L{Destinations} object.
         """
         logger, written = makeLogger()
 
         d = {"hello": 1}
         logger.write(d)
-        self.assertEqual(list(map(json.loads, written)), [d])
-
-
-    @skipIf(PY3, "Don't use bytes on Python 3 because it hates you")
-    def test_bytes(self):
-        """
-        L{Logger.write} uses a JSON encoder that assumes any C{bytes} are
-        UTF-8 encoded Unicode.
-        """
-        logger = Logger()
-        logger._destinations = Destinations()
-        written = []
-        logger._destinations.add(written.append)
-
-        d = {"hello \u1234".encode("utf-8"): "\u5678".encode("utf-8")}
-        logger.write(d)
-        self.assertEqual(json.loads(written[0]), {"hello \u1234": "\u5678"})
+        self.assertEqual(written, [d])
 
 
     def test_serializer(self):
         """
         If a L{_MessageSerializer} is passed to L{Logger.write}, it is used to
-        serialize the message before it is JSON-encoded.
+        serialize the message before it is passed to the destination.
         """
         logger, written = makeLogger()
 
@@ -393,9 +376,26 @@ class LoggerTests(TestCase):
         logger.write({"message_type": "mymessage",
                       "length": "thething"},
                      serializer)
-        self.assertEqual(list(map(json.loads, written)),
+        self.assertEqual(written,
                          [{"message_type": "mymessage",
                            "length": 8}])
+
+
+    def test_passedInDictionaryUnmodified(self):
+        """
+        The dictionary passed in to L{Logger.write} is not modified.
+        """
+        logger, written = makeLogger()
+
+        serializer = _MessageSerializer(
+            [Field.forValue("message_type", "mymessage", u"The type"),
+             Field("length", len, "The length of a thing"),
+             ])
+        d = {"message_type": "mymessage",
+             "length": "thething"}
+        original = d.copy()
+        logger.write(d, serializer)
+        self.assertEqual(d, original)
 
 
     def test_safeUnicodeDictionary(self):
@@ -455,61 +455,28 @@ class LoggerTests(TestCase):
                    "fail": "will"}
         logger.write(message, serializer)
         self.assertEqual(len(written), 2)
-        tracebackMessage = json.loads(written[0])
+        tracebackMessage = written[0]
         assertContainsFields(self, tracebackMessage,
                              {'exception':
                               '%s.RuntimeError' % (RuntimeError.__module__,),
                               'message_type': 'eliot:traceback'})
         self.assertIn("RuntimeError: oops", tracebackMessage['traceback'])
-        assertContainsFields(self, json.loads(written[1]),
+        assertContainsFields(self, written[1],
                              {"message_type": "eliot:serialization_failure",
                               "message": logger._safeUnicodeDictionary(message)})
 
 
 
-class LoggerJSONEncodingErrorTests(TestCase):
+class JSONTests(TestCase):
     """
-    Tests for JSON encoding errors in the Logger.
+    Tests for the L{json} object exposed by L{eliot._output}.
     """
-    unencodeable = []
-    unencodeable.append(unencodeable)
-
-    badMessage = {
-        "message_type": "mymessage",
-        "willnotjsonencode": unencodeable}
-
-    def test_exception(self):
+    @skipIf(PY3, "Don't use bytes on Python 3 because it hates you")
+    def test_bytes(self):
         """
-        If JSON encoding fails in L{Logger.write} then the exception and
-        associated traceback are logged.
+        L{json.dumps} uses a JSON encoder that assumes any C{bytes} are
+        UTF-8 encoded Unicode.
         """
-        # The exception type here sadly depends on implementation details
-        # of the json library.
-        try:
-            json.dumps(self.badMessage)
-        except Exception as e:
-            expected = "%s.%s" % (type(e).__module__, type(e).__name__)
-
-        logger, written = makeLogger()
-        logger.write(self.badMessage)
-
-        tracebackMessage = json.loads(written[0])
-        expected = {
-            'exception': expected,
-            'message_type': 'eliot:traceback'}
-        assertContainsFields(self, tracebackMessage, expected)
-
-
-    def test_serialization(self):
-        """
-        If JSON encoding fails in L{Logger.write} then another message is
-        logged containing all of the values which can be encoded.
-        """
-        logger, written = makeLogger()
-        logger.write(self.badMessage)
-
-        expected = {
-            "message_type": "eliot:serialization_failure",
-            "message": logger._safeUnicodeDictionary(self.badMessage)}
-        serializationMessage = json.loads(written[1])
-        assertContainsFields(self, serializationMessage, expected)
+        d = {"hello \u1234".encode("utf-8"): "\u5678".encode("utf-8")}
+        result = json.dumps(d)
+        self.assertEqual(json.loads(result), {"hello \u1234": "\u5678"})
