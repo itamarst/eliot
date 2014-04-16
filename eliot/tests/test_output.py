@@ -251,10 +251,10 @@ class DestinationsTests(TestCase):
     def test_send(self):
         """
         L{Destinations.send} calls all destinations added with
-        L{Destinations.add} with the given bytes.
+        L{Destinations.add} with the given dictionary.
         """
         destinations = Destinations()
-        message = b"hoorj"
+        message = {"hoorj": "blargh"}
         dest = []
         dest2 = []
         destinations.add(dest.append)
@@ -277,10 +277,10 @@ class DestinationsTests(TestCase):
         destinations.add(dest2)
         destinations.add(dest3.append)
 
-        destinations.send(b"hello")
-        self.assertEqual(dest, [b"hello"])
+        destinations.send({u"hello": 123})
+        self.assertEqual(dest, [{u"hello": 123}])
         self.assertEqual(dest2, [])
-        self.assertEqual(dest3, [b"hello"])
+        self.assertEqual(dest3, [{u"hello": 123}])
 
 
     def test_destinationExceptionContinue(self):
@@ -292,9 +292,9 @@ class DestinationsTests(TestCase):
         dest = BadDestination()
         destinations.add(dest)
 
-        destinations.send(b"hello")
-        destinations.send(b"world")
-        self.assertEqual(dest, [b"world"])
+        destinations.send({u"hello": 123})
+        destinations.send({u"hello": 200})
+        self.assertEqual(dest, [{u"hello": 200}])
 
 
     def test_remove(self):
@@ -303,7 +303,7 @@ class DestinationsTests(TestCase):
         receive messages from L{Destionations.add} calls.
         """
         destinations = Destinations()
-        message = b"hoorj"
+        message = {u"hello": 123}
         dest = []
         destinations.add(dest.append)
         destinations.remove(dest.append)
