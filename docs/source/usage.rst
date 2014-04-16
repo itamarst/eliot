@@ -54,7 +54,7 @@ Messages and Loggers
 --------------------
 
 At its base, Eliot outputs structured messages composed of named fields.
-Eliot messages are eventually serialized to JSON structs.
+Eliot messages are typically serialized to JSON objects.
 Fields therefore can have Unicode names, so either ``unicode`` or ``bytes`` containing UTF-8 encoded Unicode.
 Message values must be supported by JSON: ``int``, ``float``, ``None``, ``unicode``, UTF-8 encoded Unicode as ``bytes``, ``dict`` or ``list``.
 The latter two can only be composed of other supported types.
@@ -125,15 +125,16 @@ Destinations
 ------------
 
 Destinations are how messages get written out by the ``Logger`` class.
-A destination is a callable that takes some bytes, specifically a serialized JSON message.
-For example:
+A destination is a callable that takes a message dictionary.
+For example, if we want to write out a JSON message per line we can do:
 
 .. code-block:: python
 
+    import json
     from eliot import addDestination
 
     def stdout(message):
-        sys.stdout.write(message + b"\n")
+        sys.stdout.write(json.dumps(message) + b"\n")
     addDestination(stdout)
 
 For Twisted users ``eliot.logwriter.ThreadedFileWriter`` is a logging destination that writes to a file-like object in a thread.
