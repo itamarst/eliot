@@ -471,7 +471,7 @@ class JSONTests(TestCase):
     """
     Tests for the L{json} object exposed by L{eliot._output}.
     """
-    @skipIf(PY3, "Don't use bytes on Python 3 because it hates you")
+    @skipIf(PY3, "Python 3 json does not support bytes as keys")
     def test_bytes(self):
         """
         L{json.dumps} uses a JSON encoder that assumes any C{bytes} are
