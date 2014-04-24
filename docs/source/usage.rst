@@ -342,7 +342,7 @@ ActionType
 ^^^^^^^^^^
 
 Similarly to ``MessageType`` you can also create types for actions.
-Unlike a ``MessageType`` you need two sets of fields: one for actions start, one for success.
+Unlike a ``MessageType`` you need two sets of fields: one for action start, one for success.
 
 .. code-block:: python
 
