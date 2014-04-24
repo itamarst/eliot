@@ -116,4 +116,4 @@ from ._action import currentAction, Action
 # The default Action to use as a context for messages, if no other Action is the
 # context. This ensures all messages have a unique identity, as specified by
 # task_uuid/task_level/action_counter.
-_defaultAction = Action(None, unicode(uuid4()), "/", "eliot:default")
+_defaultAction = Action(None, u"%s" % (uuid4(),), "/", "eliot:default")

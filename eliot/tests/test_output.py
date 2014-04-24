@@ -4,7 +4,9 @@ Tests for L{eliot._output}.
 
 from __future__ import unicode_literals
 
-from unittest import TestCase
+from unittest import TestCase, skipIf
+
+from six import PY3, text_type as unicode
 
 from zope.interface.verify import verifyClass
 
@@ -48,12 +50,13 @@ class MemoryLoggerTests(TestCase):
         self.assertRaises(TypeError, logger.validate)
 
 
+    @skipIf(PY3, "Python 3 json module makes it impossible to use bytes as keys")
     def test_bytesFieldKeys(self):
         """
         Field keys can be bytes containing utf-8 encoded Unicode.
         """
         logger = MemoryLogger()
-        logger.write({b'\u1234'.encode("utf-8"): 'b'})
+        logger.write({u'\u1234'.encode("utf-8"): 'b'})
         logger.validate()
 
 
@@ -357,9 +360,10 @@ class LoggerTests(TestCase):
 
         d = {"hello": 1}
         logger.write(d)
-        self.assertEqual(map(json.loads, written), [d])
+        self.assertEqual(list(map(json.loads, written)), [d])
 
 
+    @skipIf(PY3, "Python 3 json module makes it impossible to use bytes as keys")
     def test_bytes(self):
         """
         L{Logger.write} uses a JSON encoder that assumes any C{bytes} are
@@ -389,7 +393,7 @@ class LoggerTests(TestCase):
         logger.write({"message_type": "mymessage",
                       "length": "thething"},
                      serializer)
-        self.assertEqual(map(json.loads, written),
+        self.assertEqual(list(map(json.loads, written)),
                          [{"message_type": "mymessage",
                            "length": 8}])
 
@@ -404,13 +408,11 @@ class LoggerTests(TestCase):
                 raise TypeError()
 
         dictionary = {badobject(): 123,
-                      "key": "value",
-                      "badvalue": badobject()}
+                      123: badobject()}
         badMessage = "eliot: unknown, unicode() raised exception"
         self.assertEqual(Logger()._safeUnicodeDictionary(dictionary),
                          unicode({badMessage: "123",
-                                  "u'key'": "u'value'",
-                                  "u'badvalue'": badMessage}))
+                                  "123": badMessage}))
 
 
     def test_safeUnicodeDictionaryFallback(self):
@@ -455,7 +457,8 @@ class LoggerTests(TestCase):
         self.assertEqual(len(written), 2)
         tracebackMessage = json.loads(written[0])
         assertContainsFields(self, tracebackMessage,
-                             {'exception': 'exceptions.RuntimeError',
+                             {'exception':
+                              '%s.RuntimeError' % (RuntimeError.__module__,),
                               'message_type': 'eliot:traceback'})
         self.assertIn("RuntimeError: oops", tracebackMessage['traceback'])
         assertContainsFields(self, json.loads(written[1]),
@@ -484,7 +487,7 @@ class LoggerJSONEncodingErrorTests(TestCase):
         # of the json library.
         try:
             json.dumps(self.badMessage)
-        except Exception, e:
+        except Exception as e:
             expected = "%s.%s" % (type(e).__module__, type(e).__name__)
 
         logger, written = makeLogger()
