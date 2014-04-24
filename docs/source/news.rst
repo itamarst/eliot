@@ -11,4 +11,4 @@ Incompatible changes from v0.3:
 Features:
 
 * Added support for Python 3.3.
-
+* Actions can now be explicitly finished using a public API: ``Action.finish()``.
