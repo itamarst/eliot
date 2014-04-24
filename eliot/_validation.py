@@ -7,11 +7,13 @@ although in theory it could be done then as well.
 
 from __future__ import unicode_literals
 
-import types
 from collections import namedtuple
 
-from eliot._message import Message
-from eliot._action import startAction, startTask
+import six
+unicode = six.text_type
+
+from ._message import Message
+from ._action import startAction, startTask
 
 
 class ValidationError(Exception):
@@ -21,8 +23,8 @@ class ValidationError(Exception):
 
 
 # Types that can be encoded to JSON:
-_JSON_TYPES = {types.NoneType, int, long, float, unicode, list, dict, bytes, bool}
-
+_JSON_TYPES = {type(None), int, float, unicode, list, dict, bytes, bool}
+_JSON_TYPES |= set(six.integer_types)
 
 class Field(object):
     """
@@ -128,7 +130,7 @@ class Field(object):
         fixedClasses = []
         for k in classes:
             if k is None:
-                k = types.NoneType
+                k = type(None)
             if k not in _JSON_TYPES:
                 raise TypeError("%s is not JSON-encodeable" % (k,))
             fixedClasses.append(k)
@@ -299,7 +301,7 @@ class ActionType(object):
         RESULT = Field("result", [str], u"The result of lookups.")
         LOG_DOSOMETHING = ActionType(
             "yourapp:subsystem:youraction",
-            [KEY], [RESULT], [],
+            [KEY], [RESULT],
             u"Do something with a key, resulting in a value.")
 
         # Actual code, with logging added:
@@ -333,8 +335,7 @@ class ActionType(object):
     _startTask = staticmethod(startTask)
 
 
-    def __init__(self, action_type, startFields, successFields, failureFields,
-                 description):
+    def __init__(self, action_type, startFields, successFields, description):
         self.action_type = action_type
         self.description = description
 
@@ -346,7 +347,7 @@ class ActionType(object):
             actionTypeField, makeActionStatusField("started")]
         successFields = successFields + [
             actionTypeField, makeActionStatusField("succeeded")]
-        failureFields = failureFields + [
+        failureFields = [
             actionTypeField, makeActionStatusField("failed"), REASON,
             EXCEPTION]
 

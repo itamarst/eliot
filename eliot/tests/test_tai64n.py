@@ -58,5 +58,5 @@ class FunctionalTests(TestCase):
         process.stdin.close()
         decodedToLocalTime = process.stdout.read().strip()
         self.assertEqual(time.strftime("%Y-%m-%d %H:%M:%S.12345",
-                                       time.localtime(timestamp)),
+                                       time.localtime(timestamp)).encode("ascii"),
                          decodedToLocalTime[:25])

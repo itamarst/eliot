@@ -12,6 +12,7 @@ Features:
 * Excellent support for unit testing your logging code.
 * Twisted support.
 * JSON output, usable by Logstash/Elasticsearch.
+* Supports Python 2.7 and 3.3.
 
 This is a **PREVIEW** and does not guarantee version stability across versions.
 
