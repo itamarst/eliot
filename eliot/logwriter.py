@@ -16,7 +16,7 @@ if getattr(select, "poll", None):
 else:
     from twisted.internet.selectreactor import SelectReactor as Reactor
 
-from eliot import addDestination, removeDestination
+from . import addDestination, removeDestination
 
 
 class ThreadedFileWriter(Service):

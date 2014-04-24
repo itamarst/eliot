@@ -443,8 +443,8 @@ class ValidateLoggingTests(TestCase):
         raised = None
         try:
             MyTest("test_foo").test_foo()
-        except Exception as raised:
-            pass
+        except Exception as e:
+            raised = e
         self.assertIs(exc, raised)
 
 
@@ -474,7 +474,7 @@ class ValidateLoggingTests(TestCase):
                              MESSAGE._serializer)
         test = MyTest()
         self.assertRaises(ValidationError, test.debug)
-        self.assertEqual(test.logger.messages[0].keys(), ["message_type"])
+        self.assertEqual(list(test.logger.messages[0].keys()), ["message_type"])
 
 
     def test_addCleanupTracebacks(self):

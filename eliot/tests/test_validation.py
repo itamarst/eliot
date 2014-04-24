@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 
 from unittest import TestCase
 
+from six import text_type as unicode
+
 from .._validation import (
     Field, MessageType, ActionType, ValidationError,
     _MessageSerializer,

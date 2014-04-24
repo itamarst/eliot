@@ -7,6 +7,8 @@ from __future__ import unicode_literals
 from unittest import TestCase, SkipTest
 from threading import Thread
 
+from six import text_type as unicode
+
 try:
     import twisted
     from twisted.internet.defer import Deferred
@@ -437,7 +439,8 @@ class ActionTests(TestCase):
                               "action_type": "sys:me",
                               "action_status": "failed",
                               "reason": "because",
-                              "exception": "exceptions.RuntimeError"})
+                              "exception": "%s.RuntimeError" % (
+                                  RuntimeError.__module__,)})
 
 
     def test_withReturnValue(self):
@@ -470,7 +473,7 @@ class ActionTests(TestCase):
         """
         action = Action(MemoryLogger(), "uuid", "/1/", "sys:me")
         self.assertEqual([action._incrementMessageCounter() for i in range(5)],
-                         range(5))
+                         list(range(5)))
 
 
 
@@ -546,7 +549,8 @@ class TwistedActionTests(TestCase):
                               "action_type": "sys:me",
                               "action_status": "failed",
                               "reason": "because",
-                              "exception": "exceptions.RuntimeError"})
+                              "exception":
+                              "%s.RuntimeError" % (RuntimeError.__module__,)})
         d.addErrback(lambda _: None) # don't let Failure go to Twisted logs
 
 
