@@ -1,18 +1,19 @@
 Eliot: Logging as Storytelling
 ==============================
 
-Eliot provides a structured logging system for Python that generates as a forest
-of nested actions. Action start and eventually finish, successfully or not. Log
-messages thus tell a story: what happened, and what caused it.
+Eliot provides a structured logging and tracing system for Python that generates log messages describing a forest of nested actions.
+Actions start and eventually finish, successfully or not.
+Log messages thus tell a story: what happened and what caused it.
 
 Features:
 
-* Structured, typed messages.
-* Action tree, with messages automatically figuring out their action context.
+* Structured, typed log messages.
+* Ability to log actions, not just point-in-time information: log messages become a trace of program execution.
 * Excellent support for unit testing your logging code.
-* Twisted support.
-* JSON output, usable by Logstash/Elasticsearch.
-* Supports Python 2.7 and 3.3.
+* Emphasis on performance, including no blocking I/O in logging code path.
+* Optional Twisted support.
+* Designed for JSON output, usable by Logstash/Elasticsearch.
+* Supports CPython 2.7, 3.3 and PyPy.
 
 This is a **PREVIEW** and does not guarantee version stability across versions.
 
