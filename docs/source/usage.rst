@@ -199,7 +199,7 @@ Keep in mind that code within the context block that is run after the action is 
          except FrobError as e:
              action.finish(e)
 
-You can add fields to both the start message and the success/failure messages.
+You can add fields to both the start message and the success messages.
 
 .. code-block:: python
 
@@ -211,13 +211,12 @@ You can add fields to both the start message and the success/failure messages.
                       # Fields added to start message only:
                       key=123, foo=u"bar") as action:
          x = _beep(123)
-         try:
-              result = frobinate(x)
-              # Fields added to success message only:
-              action.addSuccessFields(result=result)
-         except KeyError, e:
-              # Fields added to failure message only:
-              action.addFailureFields(x=x)
+         result = frobinate(x)
+         # Fields added to success message only:
+         action.addSuccessFields(result=result)
+
+If you want to include some extra information in case of failures beyond the exception you can always log a regular message with that information.
+Since the message will be recorded inside the context of the action its information will be clearly tied to the result of the action by the person (or code!) reading the logs later on.
 
 
 Twisted
@@ -343,7 +342,7 @@ ActionType
 ^^^^^^^^^^
 
 Similarly to ``MessageType`` you can also create types for actions.
-Unlike a ``MessageType`` you need three sets of fields: one for actions start, one for success and one for failure.
+Unlike a ``MessageType`` you need two sets of fields: one for action start, one for success.
 
 .. code-block:: python
 
@@ -354,8 +353,6 @@ Unlike a ``MessageType`` you need three sets of fields: one for actions start, o
                                  [USERNAME],
                                  # Success message fields:
                                  [Field.forTypes(u"status", [int], u"Status code for the user")],
-                                 # Failure message fields in addition to built-in ones:
-                                 [],
                                  u"A user is attempting to sign in.")
 
 Calling the resulting instance is equivalent to ``startAction``.
