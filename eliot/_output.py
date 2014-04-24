@@ -10,10 +10,12 @@ if PY3:
     pyjson = json
 else:
     try:
-        # ujson is pretty crappy... but much faster than built-in json module, at
-        # least on CPython. So we use it until we come up with some better. We
-        # import built-in module for use by the validation code path, since want
-        # to validate messages encode in all JSON encoders.
+        # ujson has some issues, in particular it is far too lenient on bad
+        # inputs... but on the other hand it's much faster than built-in
+        # json module on CPython. So we use it until we come up with some
+        # better. We import built-in module for use by the validation code
+        # path, since we want to validate messages encode in all JSON
+        # encoders.
         import ujson as json
         import json as pyjson
     except ImportError:
