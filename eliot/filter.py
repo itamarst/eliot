@@ -2,7 +2,7 @@
 Command line program for filtering line-based Eliot logs.
 """
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 if __name__ == '__main__':
     import eliot.filter
@@ -10,10 +10,16 @@ if __name__ == '__main__':
 
 
 import sys
-import json
 from datetime import datetime, timedelta
 
-from eliot import tai64n
+from six import PY3
+
+from . import tai64n
+
+if PY3:
+    from . import _py3json as json
+else:
+    import json
 
 
 class _JSONEncoder(json.JSONEncoder):
@@ -57,15 +63,15 @@ class EliotFilter(object):
 
     def run(self):
         """
-        For each incoming message, decode the JSON, evaluate expression, encode as
-        JSON and write that to the output file.
+        For each incoming message, decode the JSON, evaluate expression, encode
+        as JSON and write that to the output file.
         """
         for line in self.incoming:
             message = json.loads(line)
             result = self._evaluate(message)
             if result is self._SKIP:
                 continue
-            self.output.write(_encoder.encode(result) + b"\n")
+            self.output.write(_encoder.encode(result).encode("utf-8") + b"\n")
 
 
     def _evaluate(self, message):

@@ -186,7 +186,7 @@ class MessageTests(TestCase):
         # We expect 6 messages: start action, 4 standalone messages, finish
         # action:
         self.assertEqual([m["action_counter"] for m in logger.messages],
-                         range(6))
+                         list(range(6)))
 
 
     def test_writePassesSerializer(self):

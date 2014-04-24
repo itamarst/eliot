@@ -1,15 +1,24 @@
 language: python
 
+env:
+  - TWISTED=Twisted RUNTESTS=trial
+
 python:
   - 2.7
   - pypy
 
+matrix:
+  include:
+    - python: 3.3
+      env: TWISTED=git+https://github.com/twisted/twisted.git RUNTESTS="python -m unittest discover"
+
+
 install:
   - python setup.py --version
-  - pip install -q -r requirements-dev.txt
+  - pip install -q $TWISTED --use-mirrors
   - python setup.py -q install
 
-script: trial eliot.tests
+script: $RUNTESTS eliot.tests
 
 notifications:
   email: false

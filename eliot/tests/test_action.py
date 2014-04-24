@@ -7,6 +7,8 @@ from __future__ import unicode_literals
 from unittest import TestCase, SkipTest
 from threading import Thread
 
+from six import text_type as unicode
+
 try:
     import twisted
     from twisted.internet.defer import Deferred
@@ -336,12 +338,12 @@ class ActionTests(TestCase):
 
     def test_finish(self):
         """
-        L{Action._finish} with no exception logs an
-        C{action_status="succeeded"} message.
+        L{Action.finish} with no exception logs an C{action_status="succeeded"}
+        message.
         """
         logger = MemoryLogger()
         action = Action(logger, "unique", "/", "sys:thename")
-        action._finish()
+        action.finish()
         assertContainsFields(self, logger.messages[0],
                              {"task_uuid": "unique",
                               "task_level": "/",
@@ -351,7 +353,7 @@ class ActionTests(TestCase):
 
     def test_successfulFinishSerializer(self):
         """
-        L{Action._finish} with no exception passes the success
+        L{Action.finish} with no exception passes the success
         L{eliot._validation._MessageSerializer} to the message it creates.
         """
         serializers = ActionType("sys:thename",
@@ -363,25 +365,42 @@ class ActionTests(TestCase):
                 self.append(serializer)
         logger = Logger()
         action = Action(logger, "unique", "/", "sys:thename", serializers)
-        action._finish()
+        action.finish()
         self.assertIs(logger[0], serializers.success)
+
+
+    def test_failureFinishSerializer(self):
+        """
+        L{Action.finish} with an exception passes the failure
+        L{eliot._validation._MessageSerializer} to the message it creates.
+        """
+        serializers = ActionType("sys:thename", [],
+                                 [Field("key", lambda x: x, "")],
+                                 "")._serializers
+        class Logger(list):
+            def write(self, msg, serializer):
+                self.append(serializer)
+        logger = Logger()
+        action = Action(logger, "unique", "/", "sys:thename", serializers)
+        action.finish(Exception())
+        self.assertIs(logger[0], serializers.failure)
 
 
     def test_startFieldsNotInFinish(self):
         """
-        L{Action._finish} logs a message without the fields from
+        L{Action.finish} logs a message without the fields from
         L{Action._start}.
         """
         logger = MemoryLogger()
         action = Action(logger, "unique", "/", "sys:thename")
         action._start({"key": "value"})
-        action._finish()
+        action.finish()
         self.assertNotIn("key", logger.messages[1])
 
 
     def test_finishWithBadException(self):
         """
-        L{Action._finish} still logs a message if the given exception raises
+        L{Action.finish} still logs a message if the given exception raises
         another exception when called with C{unicode()}.
         """
         logger = MemoryLogger()
@@ -389,7 +408,7 @@ class ActionTests(TestCase):
         class BadException(Exception):
             def __str__(self):
                 raise TypeError()
-        action._finish(BadException())
+        action.finish(BadException())
         self.assertEqual(logger.messages[0]["reason"],
                          "eliot: unknown, unicode() raised exception")
 
@@ -437,7 +456,8 @@ class ActionTests(TestCase):
                               "action_type": "sys:me",
                               "action_status": "failed",
                               "reason": "because",
-                              "exception": "exceptions.RuntimeError"})
+                              "exception": "%s.RuntimeError" % (
+                                  RuntimeError.__module__,)})
 
 
     def test_withReturnValue(self):
@@ -470,7 +490,22 @@ class ActionTests(TestCase):
         """
         action = Action(MemoryLogger(), "uuid", "/1/", "sys:me")
         self.assertEqual([action._incrementMessageCounter() for i in range(5)],
-                         range(5))
+                         list(range(5)))
+
+
+    def test_multipleFinishCalls(self):
+        """
+        If L{Action.finish} is called, subsequent calls to L{Action.finish} have
+        no effect.
+        """
+        logger = MemoryLogger()
+        action = Action(logger, "uuid", "/1/", "sys:me")
+        with action as act:
+            act.finish()
+            act.finish(Exception())
+            act.finish()
+        # Only initial finish message is logged:
+        self.assertEqual(len(logger.messages), 1)
 
 
 
@@ -546,7 +581,8 @@ class TwistedActionTests(TestCase):
                               "action_type": "sys:me",
                               "action_status": "failed",
                               "reason": "because",
-                              "exception": "exceptions.RuntimeError"})
+                              "exception":
+                              "%s.RuntimeError" % (RuntimeError.__module__,)})
         d.addErrback(lambda _: None) # don't let Failure go to Twisted logs
 
 

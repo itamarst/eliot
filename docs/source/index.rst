@@ -8,6 +8,7 @@ Contents:
    fields
    threads
    development
+   news
    :maxdepth: 2
 
 
