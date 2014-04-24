@@ -50,7 +50,7 @@ class MemoryLoggerTests(TestCase):
         self.assertRaises(TypeError, logger.validate)
 
 
-    @skipIf(PY3, "Don't use bytes on Python 3 because it hates you")
+    @skipIf(PY3, "Python 3 json module makes it impossible to use bytes as keys")
     def test_bytesFieldKeys(self):
         """
         Field keys can be bytes containing utf-8 encoded Unicode.
