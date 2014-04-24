@@ -11,6 +11,8 @@ import threading
 from uuid import uuid4
 from itertools import count
 
+from six import text_type as unicode
+
 try:
     from twisted.python.failure import Failure
 except ImportError:

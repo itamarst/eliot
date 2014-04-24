@@ -20,9 +20,9 @@ except ImportError:
 else:
     # Make sure we always import this if Twisted is available, so broken
     # logwriter.py causes a failure:
-    from eliot.logwriter import ThreadedFileWriter
+    from ..logwriter import ThreadedFileWriter
 
-from eliot import Logger, removeDestination
+from .. import Logger, removeDestination
 
 
 class BlockingFile(object):

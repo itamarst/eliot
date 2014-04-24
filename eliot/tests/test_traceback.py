@@ -26,13 +26,15 @@ class TracebackLoggingTests(TestCase):
         """
         L{writeTraceback} writes the current traceback to the log.
         """
+        e = None
         def raiser():
             raise RuntimeError("because")
         try:
             raiser()
-        except Exception as e:
+        except Exception as exception:
             expectedTraceback = traceback.format_exc()
             writeTraceback(logger, "some:system")
+            e = exception
         lines = expectedTraceback.split("\n")
         # Remove source code lines:
         expectedTraceback = "\n".join(
@@ -100,7 +102,8 @@ class TracebackLoggingTests(TestCase):
         _writeTracebackMessage(logger, "sys", *exc_info)
         serialized = logger.serialize()[0]
         assertContainsFields(self, serialized,
-                             {"exception": "exceptions.KeyError",
+                             {"exception":
+                              "%s.KeyError" % (KeyError.__module__,),
                               "reason": "123"})
         logger.flushTracebacks(KeyError)
 
