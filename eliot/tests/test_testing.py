@@ -195,7 +195,7 @@ class LoggedActionTests(TestCase):
         L{LoggedAction.ofType} returns a list of L{LoggedAction} created by the
         specified L{ActionType}.
         """
-        ACTION = ActionType("myaction", [], [], [], "An action!")
+        ACTION = ActionType("myaction", [], [], "An action!")
         logger = MemoryLogger()
         # index 0
         with startAction(logger, "test"):
@@ -219,7 +219,7 @@ class LoggedActionTests(TestCase):
         L{LoggedAction.ofType} returns an empty list if actions of the given
         type cannot be found.
         """
-        ACTION = ActionType("myaction", [], [], [], "An action!")
+        ACTION = ActionType("myaction", [], [], "An action!")
         logger = MemoryLogger()
         self.assertEqual(LoggedAction.ofType(logger.messages, ACTION), [])
 
@@ -229,7 +229,7 @@ class LoggedActionTests(TestCase):
         L{LoggedAction.descendants} returns all descendants of the
         L{LoggedAction}.
         """
-        ACTION = ActionType("myaction", [], [], [], "An action!")
+        ACTION = ActionType("myaction", [], [], "An action!")
         logger = MemoryLogger()
         # index 0
         with ACTION(logger):
@@ -644,9 +644,9 @@ class AssertHasMessageTests(TestCase):
 
 
 ACTION1 = ActionType("action1", [Field.forTypes("x", [int], "A number")],
-                     [Field.forTypes("result", [int], "A number")], [],
+                     [Field.forTypes("result", [int], "A number")],
                      "A action for testing.")
-ACTION2 = ActionType("action2", [], [], [], "A action for testing.")
+ACTION2 = ActionType("action2", [], [], "A action for testing.")
 
 
 class AssertHasActionTests(TestCase):
