@@ -181,6 +181,24 @@ While running the block of code within the ``with`` statement new actions create
 If there is no parent the action will be considered a task.
 If you want to ignore the context and create a top-level task you can use the ``eliot.startTask`` API.
 
+You can also explicitly finish an action by calling ``eliot.Action.finish``.
+If called with an exception it indicates the action finished unsuccessfully.
+If called with no arguments that the action finished successfully.
+Keep in mind that code within the context block that is run after the action is finished will still be in that action's context.
+
+.. code-block:: python
+
+     from eliot import startAction, Logger
+
+     logger = Logger()
+
+     with startAction(logger, u"yourapp:subsystem:frob") as action:
+         x = _beep()
+         try:
+             frobinate(x)
+         except FrobError as e:
+             action.finish(e)
+
 You can add fields to both the start message and the success/failure messages.
 
 .. code-block:: python

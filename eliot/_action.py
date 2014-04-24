@@ -89,6 +89,8 @@ class Action(object):
     @ivar _successFields: Fields to be included in successful finish message.
 
     @ivar _failureFields: Fields to be included in a failed finish message.
+
+    @ivar _finished: L{True} if the L{Action} has finished, otherwise L{False}.
     """
     def __init__(self, logger, task_uuid, task_level, action_type,
                  serializers=None):
@@ -124,6 +126,7 @@ class Action(object):
                                 "action_type": action_type,
                                 }
         self._serializers = serializers
+        self._finished = False
 
 
     def _incrementMessageCounter(self):
@@ -154,7 +157,7 @@ class Action(object):
         Message(fields, serializer).write(self._logger, self)
 
 
-    def _finish(self, exception=None):
+    def finish(self, exception=None):
         """
         Log the finish message.
 
@@ -169,6 +172,9 @@ class Action(object):
             an C{"exception"} field is added with the given L{Exception} and the
             fields added with L{Action.addFailureFields} are used.
         """
+        if self._finished:
+            return
+        self._finished = True
         serializer = None
         if exception is None:
             fields = self._successFields
@@ -258,7 +264,7 @@ class Action(object):
                 exception = result.value
             else:
                 exception = None
-            self._finish(exception)
+            self.finish(exception)
             return result
         deferred.addBoth(done)
 
@@ -296,7 +302,7 @@ class Action(object):
         Pop this action off the execution context, log finish message.
         """
         _context.pop()
-        self._finish(exception)
+        self.finish(exception)
 
 
 
