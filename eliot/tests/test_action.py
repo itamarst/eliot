@@ -374,7 +374,7 @@ class ActionTests(TestCase):
         L{Action.finish} with an exception passes the failure
         L{eliot._validation._MessageSerializer} to the message it creates.
         """
-        serializers = ActionType("sys:thename", [], [],
+        serializers = ActionType("sys:thename", [],
                                  [Field("key", lambda x: x, "")],
                                  "")._serializers
         class Logger(list):
