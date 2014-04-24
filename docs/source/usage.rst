@@ -197,6 +197,9 @@ You can add fields to both the start message and the success messages.
          # Fields added to success message only:
          action.addSuccessFields(result=result)
 
+If you want to include some extra information in case of failures beyond the exception you can always log a regular message with that information.
+Since the message will be recorded inside the context of the action its information will be clearly tied to the result of the action by the person (or code!) reading the logs later on.
+
 
 Twisted
 ^^^^^^^
