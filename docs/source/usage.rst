@@ -462,7 +462,7 @@ The result will be a list of traceback message dictionaries for the particular e
             messages = logger.flushTracebacks(OSError)
             self.assertEqual(len(messages), 1)
 
-        @validateLogging(assertMythingLogging)
+        @validateLogging(assertMythingBadPathLogging)
         def test_mythingBadPath(self, logger):
              mything = MyThing()
              mything.logger = logger
