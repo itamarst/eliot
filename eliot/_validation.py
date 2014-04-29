@@ -150,9 +150,9 @@ class Field(object):
 
 def fields(**keys):
     """
-    Succinct factory for for L{MessageType} and L{ActionType} field definitions.
+    Factory for for L{MessageType} and L{ActionType} field definitions.
 
-    @param keys: A L{dict} mapping key names to the expected type of the
+    @param **keys: A L{dict} mapping key names to the expected type of the
         field's values.
 
     @return: A L{list} of L{Field} instances.

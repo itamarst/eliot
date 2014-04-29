@@ -325,7 +325,7 @@ It also takes a list of ``Field`` instances and a description.
                                         u"We've just registered a new user.")
 
 Since this syntax is rather verbose a utility function called ``fields`` is provided which creates a ``list`` of ``Field`` instances for you, with support to specifying the types of the fields.
-The equivalent to the code above would be:
+The equivalent to the code above is:
 
 .. code-block:: python
 
