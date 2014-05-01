@@ -10,6 +10,7 @@ from __future__ import unicode_literals
 import threading
 from uuid import uuid4
 from itertools import count
+from contextlib import contextmanager
 
 from six import text_type as unicode
 
@@ -274,6 +275,20 @@ class Action(object):
         @param fields: Additional fields to add to the result message.
         """
         self._successFields.update(fields)
+
+
+    @contextmanager
+    def context(self):
+        """
+        Create a context manager that ensures code runs within action's context.
+
+        The action does NOT finish when the context is exited.
+        """
+        _context.push(self)
+        try:
+            yield
+        finally:
+            _context.pop()
 
 
     # Python context manager implementation:

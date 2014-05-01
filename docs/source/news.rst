@@ -13,3 +13,4 @@ Features:
 * Added a simpler API (``fields()``) for defining fields for ``ActionType`` and ``MessageType``.
 * Added support for Python 3.3.
 * Actions can now be explicitly finished using a public API: ``Action.finish()``.
+* ``Action.context()`` context manager allows setting an action context without finishing the action when exiting the block.

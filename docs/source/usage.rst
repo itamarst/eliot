@@ -181,7 +181,9 @@ While running the block of code within the ``with`` statement new actions create
 If there is no parent the action will be considered a task.
 If you want to ignore the context and create a top-level task you can use the ``eliot.startTask`` API.
 
-You can also explicitly finish an action by calling ``eliot.Action.finish``.
+Sometimes you want to have the action be the context for other messages but not finish automatically when the block finishes.
+You can do so with ``Action.context()``.
+You can explicitly finish an action by calling ``eliot.Action.finish``.
 If called with an exception it indicates the action finished unsuccessfully.
 If called with no arguments that the action finished successfully.
 Keep in mind that code within the context block that is run after the action is finished will still be in that action's context.
@@ -192,14 +194,19 @@ Keep in mind that code within the context block that is run after the action is 
 
      logger = Logger()
 
-     with startAction(logger, u"yourapp:subsystem:frob") as action:
-         x = _beep()
-         try:
+     action = startAction(logger, u"yourapp:subsystem:frob"):
+     try:
+         with action.context():
+             x = _beep()
+         with action.context():
              frobinate(x)
-         except FrobError as e:
-             action.finish(e)
+         # Action still isn't finished, need to so explicitly.
+     except FrobError as :
+         action.finish(e)
+     else:
+         action.finish()
 
-You can add fields to both the start message and the success messages.
+You can add fields to both the start message and the success message.
 
 .. code-block:: python
 
