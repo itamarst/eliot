@@ -41,7 +41,7 @@ setup(
     name='eliot',
     version=get_version(),
     description="Logging as Storytelling",
-    install_requires=["six"],
+    install_requires=["six", "zope.interface"],
     keywords="logging",
     license="APL2",
     packages=["eliot", "eliot.tests"],
