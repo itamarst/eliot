@@ -251,6 +251,8 @@ A variant also exists for ``Deferred`` callbacks, which just has slightly differ
 
 Second, you can tell the action that it will finish when a ``Deferred`` fires:
 
+.. code-block:: python
+
      from eliot import startAction, Logger
 
      logger = Logger()
@@ -391,7 +393,7 @@ Now that you've got some code emitting log messages (or even better, before you'
 Given good test coverage all code branches should already be covered by tests unrelated to logging.
 Logging can be considered just another aspect of testing those code branches.
 Rather than recreating all those tests as separate functions Eliot provides a decorator the allows adding logging assertions to existing tests.
-``unittest.TestCase`` test methods decorated with ``eliot.testing.validateLogging`` will be called with a ``logger`` keyword argument, a ``eliot.MemoryLogger`` instance, which should replace any ``eliot.Logger` in objects being tested.
+``unittest.TestCase`` test methods decorated with ``eliot.testing.validateLogging`` will be called with a ``logger`` keyword argument, a ``eliot.MemoryLogger`` instance, which should replace any ``eliot.Logger`` in objects being tested.
 The ``validateLogging`` decorator takes an argument: another function that takes the ``TestCase`` instance as its first argument (``self``), and the ``logger`` as its second argument.
 This function can make assertions about logging after the main test function has run.
 You can also pass additional arguments and keyword arguments to ``@validateLogging``, in which case the assertion function will get called with them as well.
@@ -626,5 +628,14 @@ While validation only happens in ``MemoryLogger.validate`` (either manually or w
 Eliot tries to very hard never to raise exceptions from the log writing code path so as not to prevent actual code from running.
 If a message fails to serialize then a ``eliot:traceback`` message will be logged, along with a ``eliot:serialization_failure`` message with an attempt at showing the message that failed to serialize.
 
-    {"exception": "exceptions.ValueError", "timestamp": "2013-11-22T14:16:51.386745Z", "traceback": "Traceback (most recent call last):\n  File \"/home/itamarst/Customers/HybridLogic/HybridCluster/src/eliot/_output.py\", line 114, in write\n  File \"/home/itamarst/Customers/HybridLogic/HybridCluster/src/eliot/_validation.py\", line 197, in serialize\n  File \"/home/itamarst/Customers/HybridLogic/HybridCluster/src/eliot/_validation.py\", line 83, in serialize\nValueError: invalid literal for int() with base 10: 'hello'\n", "system": "eliot:output", "reason": "invalid literal for int() with base 10: 'hello'", "message_type": "eliot:traceback"}
-    {"timestamp": "2013-11-22T14:16:51.386827Z", "message": "{u\"u'message_type'\": u\"'test'\", u\"u'field'\": u\"'hello'\", u\"u'timestamp'\": u\"'2013-11-22T14:16:51.386634Z'\"}", "message_type": "eliot:serialization_failure"}
+.. code-block:: json
+
+    {"exception": "exceptions.ValueError",
+     "timestamp": "2013-11-22T14:16:51.386745Z",
+     "traceback": "Traceback (most recent call last):\n  ... ValueError: invalid literal for int() with base 10: 'hello'\n",
+     "system": "eliot:output",
+     "reason": "invalid literal for int() with base 10: 'hello'",
+     "message_type": "eliot:traceback"}
+    {"timestamp": "2013-11-22T14:16:51.386827Z",
+     "message": "{u\"u'message_type'\": u\"'test'\", u\"u'field'\": u\"'hello'\", u\"u'timestamp'\": u\"'2013-11-22T14:16:51.386634Z'\"}",
+     "message_type": "eliot:serialization_failure"}
