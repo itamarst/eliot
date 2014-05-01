@@ -14,7 +14,7 @@ env:
 
 install: pip install tox
 
-script: tox -e $TOX_ENV
+script: tox -e ${TOX_ENV}
 
 notifications:
     email: false
