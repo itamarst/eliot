@@ -7,8 +7,6 @@ from __future__ import unicode_literals
 from unittest import TestCase, SkipTest
 from threading import Thread
 
-from six import text_type as unicode
-
 try:
     import twisted
     from twisted.internet.defer import Deferred
