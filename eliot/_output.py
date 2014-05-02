@@ -42,16 +42,16 @@ class Destinations(object):
         self._destinations = []
 
 
-    def send(self, serializedMessage):
+    def send(self, message):
         """
         Deliver a message to all destinations.
 
-        @param serializedMessage: A serialized message dictionary.
-        @type serializedMessage: C{bytes}
+        @param message: A message dictionary that can be serialized to JSON.
+        @type serialize: L{bytes}
         """
         for dest in self._destinations:
             try:
-                dest(serializedMessage)
+                dest(message)
             except:
                 # Remember how we said destinations should never raise an
                 # exception? That's because we drop them on the floor. You do
@@ -63,9 +63,10 @@ class Destinations(object):
         """
         Add a new destination.
 
-        @param destination: A callable that takes serialized messages,
-           i.e. C{bytes}. Destinations should never ever throw an
-           exception. Seriously.
+        A destination should never ever throw an exception. Seriously.
+        A destination should not mutate the dictionary it is given.
+
+        @param destination: A callable that takes message dictionaries,
         """
         self._destinations.append(destination)
 
@@ -94,8 +95,8 @@ class ILogger(Interface):
             L{eliot._validation._MessageSerializer} which can be used to validate
             this message.
 
-        @param dictionary: The message to write out. It may be mutated
-            in-place by the logger.
+        @param dictionary: The message to write out. The given dictionary
+             will not be mutated.
         @type dictionary: C{dict}
         """
 
@@ -109,10 +110,6 @@ class Logger(object):
     You will typically want to create one of these for every chunk of code
     whose messages you want to unit test in isolation, e.g. a class. The tests
     can then replace a specific L{Logger} with a L{MemoryLogger}.
-
-    We use JSON for now. Msgpack is faster and more compact, and worth
-    investigating, but I suspect the external toolchain will be less happy
-    with it (e.g. lots of stuff assumes one log message per line).
     """
     _destinations = Destinations()
 
@@ -140,10 +137,11 @@ class Logger(object):
         """
         Serialize the dictionary, and write it to C{self._destinations}.
         """
+        dictionary = dictionary.copy()
         try:
             if serializer is not None:
                 serializer.serialize(dictionary)
-            self._destinations.send(json.dumps(dictionary))
+            self._destinations.send(dictionary)
         except:
             writeTraceback(self, "eliot:output")
             msg = Message({"message_type": "eliot:serialization_failure",

@@ -157,7 +157,7 @@ class ThreadedFileWriterTests(TestCase):
 
     def test_write(self):
         """
-        L{ThreadedFileWriter.write} queues a message that is then written by the
+        Messages passed to L{ThreadedFileWriter.write} are then written by the
         writer thread with a newline added.
         """
         f = BytesIO()
@@ -165,11 +165,11 @@ class ThreadedFileWriterTests(TestCase):
         writer.startService()
         self.addCleanup(writer.stopService)
 
-        writer(b"hello")
+        writer({"hello": 123})
         start = time.time()
         while not f.getvalue() and time.time() - start < 5:
             time.sleep(0.0001)
-        self.assertEqual(f.getvalue(), b"hello\n")
+        self.assertEqual(f.getvalue(), b'{"hello": 123}\n')
 
 
     def test_stopServiceFinishesWriting(self):
@@ -183,7 +183,7 @@ class ThreadedFileWriterTests(TestCase):
         writer.startService()
 
         for i in range(100):
-            writer(b"write")
+            writer({u"write": 123})
         threads = threading.enumerate()
         writer.stopService()
         # Make sure writes didn't happen before the stopService, thus making the
@@ -193,7 +193,7 @@ class ThreadedFileWriterTests(TestCase):
         start = time.time()
         while threading.enumerate() == threads and time.time() - start < 5:
             time.sleep(0.0001)
-        self.assertEqual(f.getvalue(), b"write\n" * 100)
+        self.assertEqual(f.getvalue(), b'{"write": 123}\n' * 100)
 
 
     def test_stopServiceResult(self):
@@ -206,13 +206,13 @@ class ThreadedFileWriterTests(TestCase):
         writer = ThreadedFileWriter(f, reactor)
         writer.startService()
 
-        writer(b"write")
+        writer({"hello": 123})
         threads = threading.enumerate()
         d = writer.stopService()
         f.unblock()
 
         def done(_):
-            self.assertEqual(f.getvalue(), b"write\n")
+            self.assertEqual(f.getvalue(), b'{"hello": 123}\n')
             self.assertNotEqual(threading.enumerate(), threads)
         d.addCallback(done)
         return d

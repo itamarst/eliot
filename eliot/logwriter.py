@@ -17,6 +17,7 @@ else:
     from twisted.internet.selectreactor import SelectReactor as Reactor
 
 from . import addDestination, removeDestination
+from ._output import json
 
 
 class ThreadedFileWriter(Service):
@@ -86,7 +87,8 @@ class ThreadedFileWriter(Service):
 
         @param data: C{bytes} to write to disk.
         """
-        self._reactor.callFromThread(self._logFile.write, data + b'\n')
+        self._reactor.callFromThread(self._logFile.write,
+                                     json.dumps(data) + b'\n')
 
 
     def _writer(self):
