@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from six import PY3
 
 import sys
-import time
+
 if PY3:
     from .. import _py3json as json
 else:
