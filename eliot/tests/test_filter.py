@@ -17,7 +17,6 @@ from io import BytesIO
 import inspect
 
 from ..filter import EliotFilter, main, USAGE
-from .. import tai64n
 
 
 class EliotFilterTests(TestCase):
@@ -58,21 +57,10 @@ class EliotFilterTests(TestCase):
         self.assertEqual(result, 123)
 
 
-    def test_timestamp(self):
-        """
-        The timestamp field in C{J} is decoded to a L{datetime}.
-        """
-        timestamp = int(time.time())
-        dt = datetime.utcfromtimestamp(timestamp)
-        message = {"timestamp": tai64n.encode(timestamp)}
-        result = self.evaluateExpression("list(J['timestamp'].utctimetuple())",
-                                         message)
-        self.assertEqual(result, list(dt.utctimetuple()))
-
-
     def test_otherLocals(self):
         """
-        The expression has access to L{datetime} and L{timedelta} in its built-ins.
+        The expression has access to L{datetime} and L{timedelta} in its
+        built-ins.
         """
         result = self.evaluateExpression(
             "isinstance(datetime.utcnow() - datetime.utcnow(), timedelta)", {})
@@ -81,14 +69,12 @@ class EliotFilterTests(TestCase):
 
     def test_datetimeSerialization(self):
         """
-        Any L{datetime} in result will be serialized using L{datetime.isoformat}.
+        Any L{datetime} in results will be serialized using L{datetime.isoformat}.
         """
-        timestamp = int(time.time())
-        dt = datetime.utcfromtimestamp(timestamp)
-        message = json.dumps({"timestamp": tai64n.encode(timestamp)})
+        dt = datetime(2012, 12, 31)
         f = BytesIO()
-        EliotFilter("J", [message], f).run()
-        expected = json.dumps({"timestamp": dt.isoformat()}) + b"\n"
+        EliotFilter("datetime(2012, 12, 31)", ["{}"], f).run()
+        expected = json.dumps(dt.isoformat()) + b"\n"
         self.assertEqual(f.getvalue(), expected)
 
 
@@ -151,8 +137,8 @@ class MainTests(TestCase):
 
     def test_noArguments(self):
         """
-        If given no arguments, usage documentation is printed to stderr and C{1} is
-        returned.
+        If given no arguments, usage documentation is printed to stderr and C{1}
+        is returned.
         """
         sys = FakeSys(["eliotfilter"], b"")
         result = main(sys)

@@ -7,8 +7,6 @@ from __future__ import unicode_literals
 import time
 from uuid import uuid4
 
-from . import tai64n
-
 
 class Message(object):
     """
@@ -78,7 +76,7 @@ class Message(object):
         """
         Return the current time.
         """
-        return tai64n.encode(self._time())
+        return self._time()
 
 
     def write(self, logger, action=None):
