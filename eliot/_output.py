@@ -47,7 +47,7 @@ class Destinations(object):
         Deliver a message to all destinations.
 
         @param message: A message dictionary that can be serialized to JSON.
-        @type serialize: L{bytes}
+        @type message: L{dict}
         """
         for dest in self._destinations:
             try:
