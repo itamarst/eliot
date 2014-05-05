@@ -81,6 +81,17 @@ class DeferredContextTests(TestCase):
             lambda x: None, lambda x: None))
 
 
+    # XXX remaining tests:
+    # DeferedContext.addCallbacks adds callback that runs in context of action that it was created with.
+    # DeferedContext.addCallbacks adds errback that runs in context of action that it was created with.
+    # copy finishAfter tests for addActionFinish
+    # After DeferredContext.addActionFinish is called, additional calls to addCallbacks result in AlreadyFinished exception.
+
+
+    # Having made sure DeferredContext.addCallbacks does the right thing
+    # regarding action contexts, for addCallback/addErrback/addBoth we only
+    # need to ensure that they call DeferredContext.addCallbacks.
+
     def test_addCallbackCallsAddCallbacks(self):
         """
         L{DeferredContext.addCallback} passes its arguments on to
@@ -107,3 +118,59 @@ class DeferredContextTests(TestCase):
         result = Deferred()
         context = DeferredContext(result)
         self.assertIs(context, context.addCallback(lambda x: None))
+
+
+    def test_addErrbackCallsAddCallbacks(self):
+        """
+        L{DeferredContext.addErrback} passes its arguments on to
+        L{DeferredContext.addCallbacks}.
+        """
+        result = Deferred()
+        context = DeferredContext(result)
+        called = []
+        def addCallbacks(callback, errback,
+                         callbackArgs=None, callbackKeywords=None,
+                         errbackArgs=None, errbackKeywords=None):
+            called.append((callback, errback, callbackArgs, callbackKeywords,
+                           errbackArgs, errbackKeywords))
+        context.addCallbacks = addCallbacks
+        f = lambda x, y, z: None
+        context.addErrback(f, 2, z=3)
+        self.assertEqual(called, [(_passthrough, f, None, None, (2,), {"z": 3})])
+
+
+    def test_addErrbackReturnsSelf(self):
+        """
+        L{DeferredContext.addErrback} returns the L{DeferredContext}.
+        """
+        result = Deferred()
+        context = DeferredContext(result)
+        self.assertIs(context, context.addErrback(lambda x: None))
+
+
+    def test_addBothCallsAddCallbacks(self):
+        """
+        L{DeferredContext.addBoth} passes its arguments on to
+        L{DeferredContext.addCallbacks}.
+        """
+        result = Deferred()
+        context = DeferredContext(result)
+        called = []
+        def addCallbacks(callback, errback,
+                         callbackArgs=None, callbackKeywords=None,
+                         errbackArgs=None, errbackKeywords=None):
+            called.append((callback, errback, callbackArgs, callbackKeywords,
+                           errbackArgs, errbackKeywords))
+        context.addCallbacks = addCallbacks
+        f = lambda x, y, z: None
+        context.addBoth(f, 2, z=3)
+        self.assertEqual(called, [(f, f, (2,), {"z": 3}, (2,), {"z": 3})])
+
+
+    def test_addBothReturnsSelf(self):
+        """
+        L{DeferredContext.addBoth} returns the L{DeferredContext}.
+        """
+        result = Deferred()
+        context = DeferredContext(result)
+        self.assertIs(context, context.addBoth(lambda x: None))

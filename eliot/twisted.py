@@ -87,6 +87,21 @@ class DeferredContext(object):
         @raises AlreadyFinished: L{DeferredContext.finishAfter} has been
             called. This indicates a programmer error.
         """
+        return self.addCallbacks(_passthrough, errback, errbackArgs=args,
+                                 errbackKeywords=kw)
+
+
+    def addBoth(self, callback, *args, **kw):
+        """
+        Add a single callback as both success and failure callbacks.
+
+        @return: C{self}
+        @rtype: L{DeferredContext}
+
+        @raises AlreadyFinished: L{DeferredContext.finishAfter} has been
+            called. This indicates a programmer error.
+        """
+        return self.addCallbacks(callback, callback, args, kw, args, kw)
 
 
     def addActionFinish(self):
