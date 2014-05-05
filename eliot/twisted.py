@@ -76,7 +76,7 @@ class DeferredContext(object):
         """
 
 
-    def finishAfter(self):
+    def addActionFinish(self):
         """
         Indicates all callbacks that should run within the action's context have
         been added, and that the action should therefore finish once those
