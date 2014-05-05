@@ -5,6 +5,11 @@ APIs for using Eliot from Twisted.
 from __future__ import absolute_import, unicode_literals
 
 
+def _passthrough(result):
+    return result
+
+
+
 class AlreadyFinished(Exception):
     """
     L{DeferredContext.addCallbacks} or similar method was called after
@@ -53,6 +58,7 @@ class DeferredContext(object):
         self.result.addCallbacks(callback, errback, callbackArgs,
                                  callbackKeywords, errbackArgs,
                                  errbackKeywords)
+        return self
 
 
     def addCallback(self, callback, *args, **kw):
@@ -66,8 +72,8 @@ class DeferredContext(object):
         @raises AlreadyFinished: L{DeferredContext.finishAfter} has been
             called. This indicates a programmer error.
         """
-        #return self.addCallbacks(callback, callbackArgs=args,
-        #                         callbackKeywords=kw)
+        return self.addCallbacks(callback, _passthrough, callbackArgs=args,
+                                 callbackKeywords=kw)
 
 
     def addErrback(self, errback, *args, **kw):
