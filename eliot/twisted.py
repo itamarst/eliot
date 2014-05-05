@@ -2,10 +2,13 @@
 APIs for using Eliot from Twisted.
 """
 
+from __future__ import absolute_import, unicode_literals
+
+
 class AlreadyFinished(Exception):
     """
     L{DeferredContext.addCallbacks} or similar method was called after
-    L{DeferredContext.finishAfter}.
+    L{DeferredContext.addActionFinish}.
 
     This indicates a programming bug, e.g. forgetting to unwrap the
     underlying L{Deferred} when passing on to some other piece of code that
@@ -31,9 +34,10 @@ class DeferredContext(object):
 
         The action to use will be taken from the call context.
         """
+        self.result = deferred
 
 
-    def addCallbacks(self, callback, errback=None,
+    def addCallbacks(self, callback, errback,
                      callbackArgs=None, callbackKeywords=None,
                      errbackArgs=None, errbackKeywords=None):
         """
@@ -46,6 +50,9 @@ class DeferredContext(object):
         @raises AlreadyFinished: L{DeferredContext.finishAfter} has been
             called. This indicates a programmer error.
         """
+        self.result.addCallbacks(callback, errback, callbackArgs,
+                                 callbackKeywords, errbackArgs,
+                                 errbackKeywords)
 
 
     def addCallback(self, callback, *args, **kw):
@@ -59,8 +66,8 @@ class DeferredContext(object):
         @raises AlreadyFinished: L{DeferredContext.finishAfter} has been
             called. This indicates a programmer error.
         """
-        return self.addCallbacks(callback, callbackArgs=args,
-                                 callbackKeywords=kw)
+        #return self.addCallbacks(callback, callbackArgs=args,
+        #                         callbackKeywords=kw)
 
 
     def addErrback(self, errback, *args, **kw):

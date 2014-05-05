@@ -5,7 +5,7 @@ Actions have a beginning and an eventual end, and can be nested. Tasks are
 top-level actions.
 """
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 import threading
 from uuid import uuid4
