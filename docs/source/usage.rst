@@ -54,7 +54,7 @@ Messages and Loggers
 --------------------
 
 At its base, Eliot outputs structured messages composed of named fields.
-Eliot messages are eventually serialized to JSON structs.
+Eliot messages are typically serialized to JSON objects.
 Fields therefore can have Unicode names, so either ``unicode`` or ``bytes`` containing UTF-8 encoded Unicode.
 Message values must be supported by JSON: ``int``, ``float``, ``None``, ``unicode``, UTF-8 encoded Unicode as ``bytes``, ``dict`` or ``list``.
 The latter two can only be composed of other supported types.
@@ -125,15 +125,16 @@ Destinations
 ------------
 
 Destinations are how messages get written out by the ``Logger`` class.
-A destination is a callable that takes some bytes, specifically a serialized JSON message.
-For example:
+A destination is a callable that takes a message dictionary.
+For example, if we want to write out a JSON message per line we can do:
 
 .. code-block:: python
 
+    import json
     from eliot import addDestination
 
     def stdout(message):
-        sys.stdout.write(message + b"\n")
+        sys.stdout.write(json.dumps(message) + b"\n")
     addDestination(stdout)
 
 For Twisted users ``eliot.logwriter.ThreadedFileWriter`` is a logging destination that writes to a file-like object in a thread.
@@ -193,7 +194,9 @@ While running the block of code within the ``with`` statement new actions create
 If there is no parent the action will be considered a task.
 If you want to ignore the context and create a top-level task you can use the ``eliot.startTask`` API.
 
-You can also explicitly finish an action by calling ``eliot.Action.finish``.
+Sometimes you want to have the action be the context for other messages but not finish automatically when the block finishes.
+You can do so with ``Action.context()``.
+You can explicitly finish an action by calling ``eliot.Action.finish``.
 If called with an exception it indicates the action finished unsuccessfully.
 If called with no arguments that the action finished successfully.
 Keep in mind that code within the context block that is run after the action is finished will still be in that action's context.
@@ -204,14 +207,19 @@ Keep in mind that code within the context block that is run after the action is 
 
      logger = Logger()
 
-     with startAction(logger, u"yourapp:subsystem:frob") as action:
-         x = _beep()
-         try:
+     action = startAction(logger, u"yourapp:subsystem:frob"):
+     try:
+         with action.context():
+             x = _beep()
+         with action.context():
              frobinate(x)
-         except FrobError as e:
-             action.finish(e)
+         # Action still isn't finished, need to so explicitly.
+     except FrobError as :
+         action.finish(e)
+     else:
+         action.finish()
 
-You can add fields to both the start message and the success messages.
+You can add fields to both the start message and the success message.
 
 .. code-block:: python
 
@@ -262,6 +270,8 @@ A variant also exists for ``Deferred`` callbacks, which just has slightly differ
      d.addCallback(action.runCallback, gotResult, x=1)
 
 Second, you can tell the action that it will finish when a ``Deferred`` fires:
+
+.. code-block:: python
 
      from eliot import startAction, Logger
 
@@ -328,11 +338,23 @@ It also takes a list of ``Field`` instances and a description.
 
 .. code-block:: python
 
-    from eliot import MessageType
+    from eliot import MessageType, Field
+    USERNAME = Field.forTypes("username", [str])
+    AGE = Field.forTypes("age", [int])
 
     LOG_USER_REGISTRATION = MessageType(u"yourapp:authentication:registration",
                                         [USERNAME, AGE],
                                         u"We've just registered a new user.")
+
+Since this syntax is rather verbose a utility function called ``fields`` is provided which creates a ``list`` of ``Field`` instances for you, with support to specifying the types of the fields.
+The equivalent to the code above is:
+
+.. code-block:: python
+
+    from eliot import MessageType, fields
+
+    LOG_USER_REGISTRATION = MessageType(u"yourapp:authentication:registration",
+                                        fields(username=str, age=int))
 
 Given a ``MessageType`` you can create a ``Message`` instance with the ``message_type`` field pre-populated.
 You can then use it the way you would normally use ``Message``, e.g. ``bind()`` or ``write()``.
@@ -358,13 +380,14 @@ Unlike a ``MessageType`` you need two sets of fields: one for action start, one 
 
 .. code-block:: python
 
-    from eliot import ActionType, Field, Logger
+    from eliot import ActionType, fields, Logger
 
     LOG_USER_SIGNIN = ActionType(u"yourapp:authentication:signin",
                                  # Start message fields:
-                                 [USERNAME],
+                                 fields(username=str),
                                  # Success message fields:
-                                 [Field.forTypes(u"status", [int], u"Status code for the user")],
+                                 fields(status=int),
+                                 # Description:
                                  u"A user is attempting to sign in.")
 
 Calling the resulting instance is equivalent to ``startAction``.
@@ -390,7 +413,7 @@ Now that you've got some code emitting log messages (or even better, before you'
 Given good test coverage all code branches should already be covered by tests unrelated to logging.
 Logging can be considered just another aspect of testing those code branches.
 Rather than recreating all those tests as separate functions Eliot provides a decorator the allows adding logging assertions to existing tests.
-``unittest.TestCase`` test methods decorated with ``eliot.testing.validateLogging`` will be called with a ``logger`` keyword argument, a ``eliot.MemoryLogger`` instance, which should replace any ``eliot.Logger` in objects being tested.
+``unittest.TestCase`` test methods decorated with ``eliot.testing.validateLogging`` will be called with a ``logger`` keyword argument, a ``eliot.MemoryLogger`` instance, which should replace any ``eliot.Logger`` in objects being tested.
 The ``validateLogging`` decorator takes an argument: another function that takes the ``TestCase`` instance as its first argument (``self``), and the ``logger`` as its second argument.
 This function can make assertions about logging after the main test function has run.
 You can also pass additional arguments and keyword arguments to ``@validateLogging``, in which case the assertion function will get called with them as well.
@@ -474,7 +497,7 @@ The result will be a list of traceback message dictionaries for the particular e
             messages = logger.flushTracebacks(OSError)
             self.assertEqual(len(messages), 1)
 
-        @validateLogging(assertMythingLogging)
+        @validateLogging(assertMythingBadPathLogging)
         def test_mythingBadPath(self, logger):
              mything = MyThing()
              mything.logger = logger
@@ -625,5 +648,14 @@ While validation only happens in ``MemoryLogger.validate`` (either manually or w
 Eliot tries to very hard never to raise exceptions from the log writing code path so as not to prevent actual code from running.
 If a message fails to serialize then a ``eliot:traceback`` message will be logged, along with a ``eliot:serialization_failure`` message with an attempt at showing the message that failed to serialize.
 
-    {"exception": "exceptions.ValueError", "timestamp": "2013-11-22T14:16:51.386745Z", "traceback": "Traceback (most recent call last):\n  File \"/home/itamarst/Customers/HybridLogic/HybridCluster/src/eliot/_output.py\", line 114, in write\n  File \"/home/itamarst/Customers/HybridLogic/HybridCluster/src/eliot/_validation.py\", line 197, in serialize\n  File \"/home/itamarst/Customers/HybridLogic/HybridCluster/src/eliot/_validation.py\", line 83, in serialize\nValueError: invalid literal for int() with base 10: 'hello'\n", "system": "eliot:output", "reason": "invalid literal for int() with base 10: 'hello'", "message_type": "eliot:traceback"}
-    {"timestamp": "2013-11-22T14:16:51.386827Z", "message": "{u\"u'message_type'\": u\"'test'\", u\"u'field'\": u\"'hello'\", u\"u'timestamp'\": u\"'2013-11-22T14:16:51.386634Z'\"}", "message_type": "eliot:serialization_failure"}
+.. code-block:: json
+
+    {"exception": "exceptions.ValueError",
+     "timestamp": "2013-11-22T14:16:51.386745Z",
+     "traceback": "Traceback (most recent call last):\n  ... ValueError: invalid literal for int() with base 10: 'hello'\n",
+     "system": "eliot:output",
+     "reason": "invalid literal for int() with base 10: 'hello'",
+     "message_type": "eliot:traceback"}
+    {"timestamp": "2013-11-22T14:16:51.386827Z",
+     "message": "{u\"u'message_type'\": u\"'test'\", u\"u'field'\": u\"'hello'\", u\"u'timestamp'\": u\"'2013-11-22T14:16:51.386634Z'\"}",
+     "message_type": "eliot:serialization_failure"}

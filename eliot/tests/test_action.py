@@ -7,8 +7,6 @@ from __future__ import unicode_literals
 from unittest import TestCase, SkipTest
 from threading import Thread
 
-from six import text_type as unicode
-
 try:
     import twisted
     from twisted.internet.defer import Deferred
@@ -328,6 +326,53 @@ class ActionTests(TestCase):
         action = Action(MemoryLogger(), "", "", "")
         try:
             with action:
+                1/0
+        except ZeroDivisionError:
+            pass
+        else:
+            self.fail("no exception")
+        self.assertIs(currentAction(), None)
+
+
+    def test_withContextSetsContext(self):
+        """
+        L{Action.context().__enter__} sets the action as the current action.
+        """
+        action = Action(MemoryLogger(), "", "", "")
+        with action.context():
+            self.assertIs(currentAction(), action)
+
+
+    def test_withContextUnsetOnReturn(self):
+        """
+        L{Action.context().__exit__} unsets the action on successful block
+        finish.
+        """
+        action = Action(MemoryLogger(), "", "", "")
+        with action.context():
+            pass
+        self.assertIs(currentAction(), None)
+
+
+    def test_withContextNoLogging(self):
+        """
+        L{Action.context().__exit__} does not log any messages.
+        """
+        logger = MemoryLogger()
+        action = Action(logger, "", "", "")
+        with action.context():
+            pass
+        self.assertFalse(logger.messages)
+
+
+    def test_withContextUnsetOnRaise(self):
+        """
+        L{Action.conext().__exit__} unsets the action if the block raises an
+        exception.
+        """
+        action = Action(MemoryLogger(), "", "", "")
+        try:
+            with action.context():
                 1/0
         except ZeroDivisionError:
             pass

@@ -9,7 +9,7 @@ from unittest import TestCase
 from six import text_type as unicode
 
 from .._validation import (
-    Field, MessageType, ActionType, ValidationError,
+    Field, MessageType, ActionType, ValidationError, fields,
     _MessageSerializer,
     )
 from .._action import startAction, startTask
@@ -111,6 +111,14 @@ class FieldTests(TestCase):
         """
         field = Field("path", identity, u"A path!")
         self.assertEqual(field.description, u"A path!")
+
+
+    def test_optionalDescription(self):
+        """
+        L{Field} can be constructed with no description.
+        """
+        field = Field("path", identity)
+        self.assertEqual(field.description, "")
 
 
     def test_key(self):
@@ -231,6 +239,38 @@ class FieldForValueTests(TestCase):
         """
         field = Field.forValue("key", 1234, "description")
         self.assertEqual(field.serialize(None), 1234)
+
+
+
+class FieldsTests(TestCase):
+    """
+    Tests for L{fields}.
+    """
+    def test_keys(self):
+        """
+        L{fields} creates L{Field} instances with the given keys.
+        """
+        l = fields(key=int, status=str)
+        self.assertEqual({(type(field), field.key) for field in l},
+                         {(Field, "key"), (Field, "status")})
+
+
+    def test_validTypes(self):
+        """
+        The L{Field} instances constructed by L{fields} validate the specified
+        types.
+        """
+        field, = fields(key=int)
+        self.assertRaises(ValidationError, field.validate, "abc")
+
+
+    def test_noSerialization(self):
+        """
+        The L{Field} instances constructed by L{fields} do no special
+        serialization.
+        """
+        field, = fields(key=int)
+        self.assertEqual(field.serialize("abc"), "abc")
 
 
 
@@ -464,6 +504,14 @@ class MessageTypeTests(TestCase):
         """
         messageType = self.messageType()
         self.assertEqual(messageType.description, u"A message type")
+
+
+    def test_optionalDescription(self):
+        """
+        L{MessageType} can be constructed without a description.
+        """
+        messageType = MessageType("name", [])
+        self.assertEqual(messageType.description, "")
 
 
 
@@ -740,6 +788,14 @@ class ActionTypeTests(TestCase):
         """
         actionType = self.actionType()
         self.assertEqual(actionType.description, "An action type")
+
+
+    def test_optionalDescription(self):
+        """
+        L{ActionType} can be constructed without a description.
+        """
+        actionType = ActionType("name", [], [])
+        self.assertEqual(actionType.description, "")
 
 
 

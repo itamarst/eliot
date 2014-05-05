@@ -1,24 +1,20 @@
 language: python
+python: 2.7
 
 env:
-  - TWISTED=Twisted RUNTESTS=trial
+    - TOX_ENV=pypy
+    - TOX_ENV=py27
+    - TOX_ENV=py33
+    - TOX_ENV=py27-twisted-132
+    - TOX_ENV=py27-twisted-trunk
+    - TOX_ENV=py33-twisted-trunk
+    - TOX_ENV=pyflakes
+    - TOX_ENV=pyflakes3
+    - TOX_ENV=sphinx
 
-python:
-  - 2.7
-  - pypy
+install: pip install tox
 
-matrix:
-  include:
-    - python: 3.3
-      env: TWISTED=git+https://github.com/twisted/twisted.git RUNTESTS="python -m unittest discover"
-
-
-install:
-  - python setup.py --version
-  - pip install -q $TWISTED --use-mirrors
-  - python setup.py -q install
-
-script: $RUNTESTS eliot.tests
+script: tox -e "${TOX_ENV}"
 
 notifications:
-  email: false
+    email: false
