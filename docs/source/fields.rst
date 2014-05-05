@@ -17,7 +17,7 @@ Each message is uniquely identified by the combined values in these fields.
 
 In addition, the following field will also be present:
 
-* ``timestamp``: Number of seconds since Unix epoch.
+* ``timestamp``: Number of seconds since Unix epoch as a ``float`` (the output of ``time.time()``).
   Since system time may move backwards and resolution may not be high enough this cannot be relied on for message ordering.
 
 Assuming you are using ``MessageType`` and ``ActionType`` every logged message will have either ``message_type`` or ``action_type`` fields depending whether they originated as a standalone message or as the start or end of an action.
