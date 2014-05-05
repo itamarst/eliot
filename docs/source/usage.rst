@@ -148,7 +148,7 @@ Success in this case simply means no exception was thrown; the result of an acti
 Log messages are emitted for action start and finish.
 
 Actions are also nested; one action can be the parent of another.
-An action's parent is deduced from the Python call stack.
+An action's parent is deduced from the Python call stack and context managers like ``Action.context()``.
 Log messages will also note the action they are part of if they can deduce it from the call stack.
 The result of all this is that you can trace the operation of your code as it logs various actions, and see a narrative of what happened and what caused it to happen.
 
