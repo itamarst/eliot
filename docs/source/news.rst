@@ -4,8 +4,9 @@ What's New
 0.4.0
 ^^^^^
 
-Incompatible changes from v0.3:
+Incompatible changes from 0.3.0:
 
+* ``Logger`` no longer does JSON serialization; it's up to destinations to decide how to serialize the dictionaries they receive.
 * ``ActionType`` no longer supports defining additional failure fields, and therefore accepts one argument less.
 
 Features:
