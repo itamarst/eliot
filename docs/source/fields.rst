@@ -15,6 +15,11 @@ Each message is uniquely identified by the combined values in these fields.
   ``"/"`` indicates the root action (i.e. the task).
 * ``action_counter``: The index of the message within the current action.
 
+In addition, the following field will also be present:
+
+* ``timestamp``: Number of seconds since Unix epoch as a ``float`` (the output of ``time.time()``).
+  Since system time may move backwards and resolution may not be high enough this cannot be relied on for message ordering.
+
 Assuming you are using ``MessageType`` and ``ActionType`` every logged message will have either ``message_type`` or ``action_type`` fields depending whether they originated as a standalone message or as the start or end of an action.
 Present in regular messages:
 
