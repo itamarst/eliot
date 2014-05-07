@@ -4,6 +4,8 @@ APIs for using Eliot from Twisted.
 
 from __future__ import absolute_import, unicode_literals
 
+from twisted.python.failure import Failure
+
 from ._action import currentAction
 
 __all__ = ["AlreadyFinished", "DeferredContext"]
@@ -124,3 +126,11 @@ class DeferredContext(object):
         been added, and that the action should therefore finish once those
         callbacks have fired.
         """
+        def done(result):
+            if isinstance(result, Failure):
+                exception = result.value
+            else:
+                exception = None
+            self._action.finish(exception)
+            return result
+        self.result.addBoth(done)

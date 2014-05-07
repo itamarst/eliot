@@ -8,10 +8,12 @@ from functools import wraps
 
 from twisted.internet.defer import Deferred, succeed, fail
 from twisted.trial.unittest import TestCase
+from twisted.python.failure import Failure
 
 from ..twisted import DeferredContext, AlreadyFinished, _passthrough
-from .._action import startAction, currentAction
+from .._action import startAction, currentAction, Action
 from .._output import MemoryLogger
+from ..testing import assertContainsFields
 
 
 class PassthroughTests(TestCase):
@@ -173,10 +175,93 @@ class DeferredContextTests(TestCase):
         self.assertEqual(self.successResultOf(d), [exception, 1])
 
 
+    def test_addActionFinishNoImmediateLogging(self):
+        """
+        L{DeferredContext.addActionFinish} does not log anything if the
+        L{Deferred} hasn't fired yet.
+        """
+        d = Deferred()
+        logger = MemoryLogger()
+        action = Action(logger, "uuid", "/1/", "sys:me")
+        with action.context():
+            DeferredContext(d).addActionFinish()
+        self.assertFalse(logger.messages)
+
+
+    def test_addActionFinishSuccess(self):
+        """
+        When the L{Deferred} referred to by L{DeferredContext.addActionFinish}
+        fires successfully, a finish message is logged.
+        """
+        d = Deferred()
+        logger = MemoryLogger()
+        action = Action(logger, "uuid", "/1/", "sys:me")
+        with action.context():
+            DeferredContext(d).addActionFinish()
+        d.callback("result")
+        assertContainsFields(self, logger.messages[0],
+                             {"task_uuid": "uuid",
+                              "task_level": "/1/",
+                              "action_type": "sys:me",
+                              "action_status": "succeeded"})
+
+
+    def test_addActionFinishSuccessPassThrough(self):
+        """
+        L{DeferredContext.addActionFinish} passes through a successful result
+        unchanged.
+        """
+        d = Deferred()
+        logger = MemoryLogger()
+        action = Action(logger, "uuid", "/1/", "sys:me")
+        with action.context():
+            DeferredContext(d).addActionFinish()
+        d.callback("result")
+        result = []
+        d.addCallback(result.append)
+        self.assertEqual(result, ["result"])
+
+
+    def test_addActionFinishFailure(self):
+        """
+        When the L{Deferred} referred to in L{DeferredContext.addActionFinish}
+        fires with an exception, a finish message is logged.
+        """
+        d = Deferred()
+        logger = MemoryLogger()
+        action = Action(logger, "uuid", "/1/", "sys:me")
+        with action.context():
+            DeferredContext(d).addActionFinish()
+        exception = RuntimeError("because")
+        d.errback(exception)
+        assertContainsFields(self, logger.messages[0],
+                             {"task_uuid": "uuid",
+                              "task_level": "/1/",
+                              "action_type": "sys:me",
+                              "action_status": "failed",
+                              "reason": "because",
+                              "exception":
+                              "%s.RuntimeError" % (RuntimeError.__module__,)})
+        d.addErrback(lambda _: None) # don't let Failure go to Twisted logs
+
+
+    def test_addActionFinishFailurePassThrough(self):
+        """
+        L{DeferredContext.addActionFinish} passes through a failed result
+        unchanged.
+        """
+        d = Deferred()
+        logger = MemoryLogger()
+        action = Action(logger, "uuid", "/1/", "sys:me")
+        with action.context():
+            DeferredContext(d).addActionFinish()
+        failure = Failure(RuntimeError())
+        d.errback(failure)
+        result = []
+        d.addErrback(result.append)
+        self.assertEqual(result, [failure])
+
     # XXX remaining tests:
-
-
-    # copy finishAfter tests for addActionFinish
     # After DeferredContext.addActionFinish is called, additional calls to addCallbacks result in AlreadyFinished exception.
     # addActionFinish returns the Deferred.
 
