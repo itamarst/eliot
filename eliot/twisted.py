@@ -4,6 +4,11 @@ APIs for using Eliot from Twisted.
 
 from __future__ import absolute_import, unicode_literals
 
+from ._action import currentAction
+
+__all__ = ["AlreadyFinished", "DeferredContext"]
+
+
 
 def _passthrough(result):
     return result
@@ -31,15 +36,20 @@ class DeferredContext(object):
     allows indicating which callbacks to wait for before the action is
     finished.
 
+    The action to use will be taken from the call context.
+
     @ivar result: The wrapped L{Deferred}.
     """
     def __init__(self, deferred):
         """
         @param deferred: L{twisted.internet.defer.Deferred} to wrap.
-
-        The action to use will be taken from the call context.
         """
         self.result = deferred
+        self._action = currentAction()
+        if self._action is None:
+            raise RuntimeError(
+                "DeferredContext() should only be created in the context of an "
+                "eliot.Action.")
 
 
     def addCallbacks(self, callback, errback,
@@ -55,8 +65,12 @@ class DeferredContext(object):
         @raises AlreadyFinished: L{DeferredContext.finishAfter} has been
             called. This indicates a programmer error.
         """
-        self.result.addCallbacks(callback, errback, callbackArgs,
-                                 callbackKeywords, errbackArgs,
+        def callbackWithContext(*args, **kwargs):
+            self._action.run(callback, *args, **kwargs)
+        def errbackWithContext(*args, **kwargs):
+            self._action.run(errback, *args, **kwargs)
+        self.result.addCallbacks(callbackWithContext, errbackWithContext,
+                                 callbackArgs, callbackKeywords, errbackArgs,
                                  errbackKeywords)
         return self
 

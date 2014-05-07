@@ -2,13 +2,16 @@
 Tests for L{eliot.twisted}.
 """
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, unicode_literals, print_function
 
 from unittest import TestCase
+from functools import wraps
 
-from twisted.internet.defer import Deferred
+from twisted.internet.defer import Deferred, succeed, fail
 
 from ..twisted import DeferredContext, AlreadyFinished, _passthrough
+from .._action import startAction, currentAction
+from .._output import MemoryLogger
 
 
 class PassthroughTests(TestCase):
@@ -24,10 +27,35 @@ class PassthroughTests(TestCase):
 
 
 
+def withActionContext(f):
+    """
+    Decorator that calls a function with an action context.
+
+    @param f: A function.
+    """
+    logger = MemoryLogger()
+    action = startAction(logger, "test")
+    @wraps(f)
+    def test(self):
+        with action.context():
+            return f(self)
+    return test
+
+
+
 class DeferredContextTests(TestCase):
     """
     Tests for L{DeferredContext}.
     """
+    def test_requireContext(self):
+        """
+        L{DeferredContext} raises a L{RuntimeError} if it is called without an
+        action context.
+        """
+        self.assertRaises(RuntimeError, DeferredContext, Deferred())
+
+
+    @withActionContext
     def test_result(self):
         """
         The passed-in L{Deferred} is available as the L{DeferredContext}'s
@@ -38,6 +66,7 @@ class DeferredContextTests(TestCase):
         self.assertIs(context.result, result)
 
 
+    @withActionContext
     def test_addCallbacksCallbackToDeferred(self):
         """
         L{DeferredContext.addCallbacks} passes the given callback and its
@@ -54,6 +83,7 @@ class DeferredContextTests(TestCase):
         self.assertEqual(called, [(0, 1, 2)])
 
 
+    @withActionContext
     def test_addCallbacksErrbackToDeferred(self):
         """
         L{DeferredContext.addCallbacks} passes the given errback and its
@@ -71,6 +101,7 @@ class DeferredContextTests(TestCase):
         self.assertEqual(called, [(1, 2)])
 
 
+    @withActionContext
     def test_addCallbacksReturnSelf(self):
         """
         L{DeferredContext.addCallbacks} returns the L{DeferredContext}.
@@ -81,17 +112,56 @@ class DeferredContextTests(TestCase):
             lambda x: None, lambda x: None))
 
 
+    def test_addCallbacksCallbackContext(self):
+        """
+        L{DeferedContext.addCallbacks} adds a callback that runs in context of
+        action that the L{DeferredContext} was created with.
+        """
+        logger = MemoryLogger()
+        action1 = startAction(logger, "test")
+        action2 = startAction(logger, "test")
+        context = []
+        d = succeed(None)
+        with action1.context():
+            d = DeferredContext(d)
+            with action2.context():
+                d.addCallbacks(lambda x: context.append(currentAction()),
+                               lambda x: x)
+        self.assertEqual(context, [action1])
+
+
+    def test_addCallbacksErrbackContext(self):
+        """
+        L{DeferedContext.addCallbacks} adds an errback that runs in context of
+        action that the L{DeferredContext} was created with.
+        """
+        logger = MemoryLogger()
+        action1 = startAction(logger, "test")
+        action2 = startAction(logger, "test")
+        context = []
+        d = fail(RuntimeError())
+        with action1.context():
+            d = DeferredContext(d)
+            with action2.context():
+                d.addCallbacks(lambda x: x,
+                               lambda x: context.append(currentAction()))
+        self.assertEqual(context, [action1])
+
+
     # XXX remaining tests:
-    # DeferedContext.addCallbacks adds callback that runs in context of action that it was created with.
+
     # DeferedContext.addCallbacks adds errback that runs in context of action that it was created with.
+    # A callback added with DeferredContext.addCallbacks has its result passed on to the next callback.
+    # An errback added with DeferredContext.addCallbacks has its result passed on to the next callback.
     # copy finishAfter tests for addActionFinish
     # After DeferredContext.addActionFinish is called, additional calls to addCallbacks result in AlreadyFinished exception.
-
+    # addActionFinish returns the Deferred.
 
     # Having made sure DeferredContext.addCallbacks does the right thing
     # regarding action contexts, for addCallback/addErrback/addBoth we only
     # need to ensure that they call DeferredContext.addCallbacks.
 
+    @withActionContext
     def test_addCallbackCallsAddCallbacks(self):
         """
         L{DeferredContext.addCallback} passes its arguments on to
@@ -111,6 +181,7 @@ class DeferredContextTests(TestCase):
         self.assertEqual(called, [(f, _passthrough, (2,), {"z": 3}, None, None)])
 
 
+    @withActionContext
     def test_addCallbackReturnsSelf(self):
         """
         L{DeferredContext.addCallback} returns the L{DeferredContext}.
@@ -120,6 +191,7 @@ class DeferredContextTests(TestCase):
         self.assertIs(context, context.addCallback(lambda x: None))
 
 
+    @withActionContext
     def test_addErrbackCallsAddCallbacks(self):
         """
         L{DeferredContext.addErrback} passes its arguments on to
@@ -139,6 +211,7 @@ class DeferredContextTests(TestCase):
         self.assertEqual(called, [(_passthrough, f, None, None, (2,), {"z": 3})])
 
 
+    @withActionContext
     def test_addErrbackReturnsSelf(self):
         """
         L{DeferredContext.addErrback} returns the L{DeferredContext}.
@@ -148,6 +221,7 @@ class DeferredContextTests(TestCase):
         self.assertIs(context, context.addErrback(lambda x: None))
 
 
+    @withActionContext
     def test_addBothCallsAddCallbacks(self):
         """
         L{DeferredContext.addBoth} passes its arguments on to
@@ -167,6 +241,7 @@ class DeferredContextTests(TestCase):
         self.assertEqual(called, [(f, f, (2,), {"z": 3}, (2,), {"z": 3})])
 
 
+    @withActionContext
     def test_addBothReturnsSelf(self):
         """
         L{DeferredContext.addBoth} returns the L{DeferredContext}.
