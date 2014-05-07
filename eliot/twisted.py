@@ -48,6 +48,7 @@ class DeferredContext(object):
         """
         self.result = deferred
         self._action = currentAction()
+        self._finishAdded = False
         if self._action is None:
             raise RuntimeError(
                 "DeferredContext() should only be created in the context of an "
@@ -67,6 +68,8 @@ class DeferredContext(object):
         @raises AlreadyFinished: L{DeferredContext.finishAfter} has been
             called. This indicates a programmer error.
         """
+        if self._finishAdded:
+            raise AlreadyFinished()
         def callbackWithContext(*args, **kwargs):
             return self._action.run(callback, *args, **kwargs)
         def errbackWithContext(*args, **kwargs):
@@ -125,7 +128,12 @@ class DeferredContext(object):
         Indicates all callbacks that should run within the action's context have
         been added, and that the action should therefore finish once those
         callbacks have fired.
+
+        @return: The wrapped L{Deferred}.
         """
+        if self._finishAdded:
+            raise AlreadyFinished()
+        self._finishAdded = True
         def done(result):
             if isinstance(result, Failure):
                 exception = result.value
@@ -134,3 +142,4 @@ class DeferredContext(object):
             self._action.finish(exception)
             return result
         self.result.addBoth(done)
+        return self.result

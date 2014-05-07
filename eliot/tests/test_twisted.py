@@ -261,9 +261,40 @@ class DeferredContextTests(TestCase):
         d.addErrback(result.append)
         self.assertEqual(result, [failure])
 
-    # XXX remaining tests:
-    # After DeferredContext.addActionFinish is called, additional calls to addCallbacks result in AlreadyFinished exception.
-    # addActionFinish returns the Deferred.
+
+    @withActionContext
+    def test_addActionFinishRaisesAfterAddActionFinish(self):
+        """
+        After L{DeferredContext.addActionFinish} is called, additional calls to
+        L{DeferredContext.addActionFinish} result in a L{AlreadyFinished}
+        exception.
+        """
+        d = DeferredContext(Deferred())
+        d.addActionFinish()
+        self.assertRaises(AlreadyFinished, d.addActionFinish)
+
+
+    @withActionContext
+    def test_addCallbacksRaisesAfterAddActionFinish(self):
+        """
+        After L{DeferredContext.addActionFinish} is called, additional calls to
+        L{DeferredContext.addCallbacks} result in a L{AlreadyFinished}
+        exception.
+        """
+        d = DeferredContext(Deferred())
+        d.addActionFinish()
+        self.assertRaises(AlreadyFinished, d.addCallbacks, lambda x: x,
+                          lambda x: x)
+
+
+    @withActionContext
+    def test_addActionFinishResult(self):
+        """
+        L{DeferredContext.addActionFinish} returns the L{Deferred}.
+        """
+        d = Deferred()
+        self.assertIs(d, DeferredContext(d).addActionFinish())
+
 
     # Having made sure DeferredContext.addCallbacks does the right thing
     # regarding action contexts, for addCallback/addErrback/addBoth we only
