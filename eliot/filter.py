@@ -14,8 +14,6 @@ from datetime import datetime, timedelta
 
 from six import PY3
 
-from . import tai64n
-
 if PY3:
     from . import _py3json as json
 else:
@@ -82,9 +80,6 @@ class EliotFilter(object):
 
         @return: The resulting object.
         """
-        if "timestamp" in message:
-            message["timestamp"] = datetime.utcfromtimestamp(
-                tai64n.decode(message["timestamp"]))
         return eval(self.code, globals(), {"J": message,
                                            "timedelta": timedelta,
                                            "datetime": datetime,
@@ -95,22 +90,25 @@ class EliotFilter(object):
 USAGE = b"""\
 Usage: cat eliot.log | python -m eliot.filter <expr>
 
-<expr> is a Python expression. It will have a local `J` containing decoded JSON,
-with the "timestamp" field converted to a `datetime.datetime` object. `datetime`
-and `timedelta` are also available as locals, containing the corresponding
-classes. `SKIP` is also available, if it's the expression result that indicates
-nothing should be output.
+Read JSON-expression per line from stdin, and filter it using a Python
+expression <expr>.
 
-The output will be written to stdout using JSON
-serialization. `datetime.datetime` objects will be serialized to ISO format.
+The expression will have a local `J` containing decoded JSON. `datetime` and
+`timedelta` from Python's `datetime` module are also available as locals,
+containing the corresponding classes. `SKIP` is also available, if it's the
+expression result that indicates nothing should be output.
+
+The output will be written to stdout using JSON serialization. `datetime`
+objects will be serialized to ISO format.
 
 Examples:
 
-- Convert tai64n to human-readable timestamps:
+- Pass through the messages unchanged:
 
     $ cat eliot.log | python -m eliot.filter J
 
-- Retrieve a specific field from a specific message type:
+- Retrieve a specific field from a specific message type, dropping messages
+  of other types:
 
     $ cat eliot.log | python -m eliot.filter \\
         "J['field'] if J.get('message_type') == 'my:message' else SKIP"

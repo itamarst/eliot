@@ -54,7 +54,7 @@ Messages and Loggers
 --------------------
 
 At its base, Eliot outputs structured messages composed of named fields.
-Eliot messages are eventually serialized to JSON structs.
+Eliot messages are typically serialized to JSON objects.
 Fields therefore can have Unicode names, so either ``unicode`` or ``bytes`` containing UTF-8 encoded Unicode.
 Message values must be supported by JSON: ``int``, ``float``, ``None``, ``unicode``, UTF-8 encoded Unicode as ``bytes``, ``dict`` or ``list``.
 The latter two can only be composed of other supported types.
@@ -125,15 +125,16 @@ Destinations
 ------------
 
 Destinations are how messages get written out by the ``Logger`` class.
-A destination is a callable that takes some bytes, specifically a serialized JSON message.
-For example:
+A destination is a callable that takes a message dictionary.
+For example, if we want to write out a JSON message per line we can do:
 
 .. code-block:: python
 
+    import json
     from eliot import addDestination
 
     def stdout(message):
-        sys.stdout.write(message + b"\n")
+        sys.stdout.write(json.dumps(message) + b"\n")
     addDestination(stdout)
 
 For Twisted users ``eliot.logwriter.ThreadedFileWriter`` is a logging destination that writes to a file-like object in a thread.
@@ -148,10 +149,22 @@ Success in this case simply means no exception was thrown; the result of an acti
 Log messages are emitted for action start and finish.
 
 Actions are also nested; one action can be the parent of another.
-A top-level action with no parent is called a task.
-An action's parent is deduced from the Python call stack.
+An action's parent is deduced from the Python call stack and context managers like ``Action.context()``.
 Log messages will also note the action they are part of if they can deduce it from the call stack.
 The result of all this is that you can trace the operation of your code as it logs various actions, and see a narrative of what happened and what caused it to happen.
+
+A top-level action with no parent is called a task, the root cause of all its child actions.
+E.g. a webserver receiving a new HTTP request would create a task for that new request.
+Log messages emitted from Eliot are therefore logically structured as a forest: trees of actions with tasks at the root.
+
+While the logical structure of log messages is a forest, the actual output is effectively a list of dictionaries (e.g. a series of JSON messages written to a file).
+To bridge the gap between the two structures each output message contains enough information to recreate the logical relationship between it and other messages:
+
+1. The task, identified using a UUID.
+2. The specific action within that task's action tree.
+3. A per-action counter that is incremented for each new output message directly within that action.
+
+See the :doc:`Fields <fields>` documentation for details.
 
 Here's a basic example of logging an action:
 

@@ -103,14 +103,14 @@ class MessageTests(TestCase):
     def test_writeAddsTimestamp(self):
         """
         L{Message.write} adds a C{"timestamp"} field to the dictionary written
-        to the logger, with the current time in TAI64N format.
+        to the logger, with the current time in seconds since the epoch.
         """
         logger = MemoryLogger()
         msg = Message.new(key=4)
-        msg._time = lambda: 1387299889.153187625
+        timestamp = 1387299889.153187625
+        msg._time = lambda: timestamp
         msg.write(logger)
-        self.assertEqual(logger.messages[0]["timestamp"],
-                         "@4000000052b0843b092174b9")
+        self.assertEqual(logger.messages[0]["timestamp"], timestamp)
 
 
     def test_explicitAction(self):
