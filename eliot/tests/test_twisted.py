@@ -6,11 +6,18 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from functools import wraps
 
-from twisted.internet.defer import Deferred, succeed, fail
-from twisted.trial.unittest import TestCase
-from twisted.python.failure import Failure
+try:
+    from twisted.internet.defer import Deferred, succeed, fail
+    from twisted.trial.unittest import TestCase
+    from twisted.python.failure import Failure
+except ImportError:
+    # Make tests not run at all.
+    TestCase = object
+else:
+    # Make sure we always import this if Twisted is available, so broken
+    # logwriter.py causes a failure:
+    from ..twisted import DeferredContext, AlreadyFinished, _passthrough
 
-from ..twisted import DeferredContext, AlreadyFinished, _passthrough
 from .._action import startAction, currentAction, Action
 from .._output import MemoryLogger
 from ..testing import assertContainsFields
