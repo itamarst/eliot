@@ -65,7 +65,7 @@ class DeferredContext(object):
         @return: C{self}
         @rtype: L{DeferredContext}
 
-        @raises AlreadyFinished: L{DeferredContext.finishAfter} has been
+        @raises AlreadyFinished: L{DeferredContext.addActionFinish} has been
             called. This indicates a programmer error.
         """
         if self._finishAdded:
@@ -88,7 +88,7 @@ class DeferredContext(object):
         @return: C{self}
         @rtype: L{DeferredContext}
 
-        @raises AlreadyFinished: L{DeferredContext.finishAfter} has been
+        @raises AlreadyFinished: L{DeferredContext.addActionFinish} has been
             called. This indicates a programmer error.
         """
         return self.addCallbacks(callback, _passthrough, callbackArgs=args,
@@ -103,7 +103,7 @@ class DeferredContext(object):
         @return: C{self}
         @rtype: L{DeferredContext}
 
-        @raises AlreadyFinished: L{DeferredContext.finishAfter} has been
+        @raises AlreadyFinished: L{DeferredContext.addActionFinish} has been
             called. This indicates a programmer error.
         """
         return self.addCallbacks(_passthrough, errback, errbackArgs=args,
@@ -117,7 +117,7 @@ class DeferredContext(object):
         @return: C{self}
         @rtype: L{DeferredContext}
 
-        @raises AlreadyFinished: L{DeferredContext.finishAfter} has been
+        @raises AlreadyFinished: L{DeferredContext.addActionFinish} has been
             called. This indicates a programmer error.
         """
         return self.addCallbacks(callback, callback, args, kw, args, kw)
@@ -130,6 +130,9 @@ class DeferredContext(object):
         callbacks have fired.
 
         @return: The wrapped L{Deferred}.
+
+        @raises AlreadyFinished: L{DeferredContext.addActionFinish} has been
+            called previously. This indicates a programmer error.
         """
         if self._finishAdded:
             raise AlreadyFinished()
