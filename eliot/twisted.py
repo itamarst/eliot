@@ -66,9 +66,9 @@ class DeferredContext(object):
             called. This indicates a programmer error.
         """
         def callbackWithContext(*args, **kwargs):
-            self._action.run(callback, *args, **kwargs)
+            return self._action.run(callback, *args, **kwargs)
         def errbackWithContext(*args, **kwargs):
-            self._action.run(errback, *args, **kwargs)
+            return self._action.run(errback, *args, **kwargs)
         self.result.addCallbacks(callbackWithContext, errbackWithContext,
                                  callbackArgs, callbackKeywords, errbackArgs,
                                  errbackKeywords)

@@ -4,10 +4,10 @@ Tests for L{eliot.twisted}.
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from unittest import TestCase
 from functools import wraps
 
 from twisted.internet.defer import Deferred, succeed, fail
+from twisted.trial.unittest import TestCase
 
 from ..twisted import DeferredContext, AlreadyFinished, _passthrough
 from .._action import startAction, currentAction
@@ -148,11 +148,34 @@ class DeferredContextTests(TestCase):
         self.assertEqual(context, [action1])
 
 
+    @withActionContext
+    def test_addCallbacksCallbackResult(self):
+        """
+        A callback added with DeferredContext.addCallbacks has its result passed
+        on to the next callback.
+        """
+        d = succeed(0)
+        d = DeferredContext(d)
+        d.addCallbacks(lambda x: [x, 1], lambda x: x)
+        self.assertEqual(self.successResultOf(d), [0, 1])
+
+
+    @withActionContext
+    def test_addCallbacksErrbackResult(self):
+        """
+        An errback added with DeferredContext.addCallbacks has its result passed
+        on to the next callback.
+        """
+        exception = ZeroDivisionError()
+        d = fail(exception)
+        d = DeferredContext(d)
+        d.addCallbacks(lambda x: x, lambda x: [x.value, 1])
+        self.assertEqual(self.successResultOf(d), [exception, 1])
+
+
     # XXX remaining tests:
 
-    # DeferedContext.addCallbacks adds errback that runs in context of action that it was created with.
-    # A callback added with DeferredContext.addCallbacks has its result passed on to the next callback.
-    # An errback added with DeferredContext.addCallbacks has its result passed on to the next callback.
+
     # copy finishAfter tests for addActionFinish
     # After DeferredContext.addActionFinish is called, additional calls to addCallbacks result in AlreadyFinished exception.
     # addActionFinish returns the Deferred.
