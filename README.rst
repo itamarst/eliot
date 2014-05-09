@@ -17,8 +17,11 @@ Features:
 
 This is a **PREVIEW** and does not guarantee version stability across versions.
 
-Eliot is released by `HybridCluster`_ under the Apache 2.0 License
-and maintained by Itamar Turner-Trauring.
+Eliot is released by `HybridCluster`_ under the Apache 2.0 License and maintained by Itamar Turner-Trauring.
+
+To install::
+
+     $ pip install eliot
 
 Downloads are available on `PyPI`_.
 
