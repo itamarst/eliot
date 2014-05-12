@@ -4,12 +4,16 @@ Tests for L{eliot.twisted}.
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+import traceback
 from functools import wraps
+from pprint import pformat
 
 try:
     from twisted.internet.defer import Deferred, succeed, fail
     from twisted.trial.unittest import TestCase
     from twisted.python.failure import Failure
+    from twisted.python.log import LogPublisher, textFromEventDict
+    from twisted.python import log as twlog
 except ImportError:
     # Make tests not run at all.
     TestCase = object
@@ -21,8 +25,10 @@ else:
 
 from .._action import startAction, currentAction, Action
 from .._output import MemoryLogger, Logger
+from .._message import Message
 from ..testing import assertContainsFields
-from .. import removeDestination
+from .. import removeDestination, addDestination
+from .._traceback import writeTraceback
 from .test_filter import FakeSys
 
 
@@ -440,7 +446,7 @@ class RedirectLogsForTrialTests(TestCase):
         L{redirectLogsForTrial}.
         """
         originalDestinations = Logger._destinations._destinations[:]
-        redirectLogsForTrial(FakeSys([b"myprogram.py"], b""))
+        redirectLogsForTrial(FakeSys(["myprogram.py"], b""))
         self.assertEqual(Logger._destinations._destinations,
                          originalDestinations)
 
@@ -450,21 +456,74 @@ class RedirectLogsForTrialTests(TestCase):
         When not running under I{trial} L{None} is returned.
         """
         self.assertIs(
-            None, redirectLogsForTrial(FakeSys([b"myprogram.py"], b"")))
+            None, redirectLogsForTrial(FakeSys(["myprogram.py"], b"")))
 
+
+
+    def redirectToLogPublisher(self):
+        """
+        Redirect Eliot logs to a Twisted log publisher.
+
+        @return: L{list} of L{str} - the written, formatted Twisted log messages.
+        """
+        written = []
+        publisher = LogPublisher()
+        publisher.addObserver(lambda m: written.append(textFromEventDict(m)))
+        destination = redirectLogsForTrial(FakeSys(["trial"], b""), publisher)
+        self.addCleanup(removeDestination, destination)
+        return written
+
+
+    def redirectToList(self):
+        """
+        Redirect Eliot logs to a list.
+
+        @return: L{list} of written messages.
+        """
+        written = []
+        destination = written.append
+        addDestination(destination)
+        self.addCleanup(removeDestination, destination)
+        return written
 
 
     def test_normalMessages(self):
         """
         Regular eliot messages are pretty-printed to the given L{LogPublisher}.
         """
+        writtenToTwisted = self.redirectToLogPublisher()
+        written = self.redirectToList()
+        logger = Logger()
+        Message.new(x=123, y=456).write(logger)
+        self.assertEqual(writtenToTwisted,
+                         ["ELIOT: %s" % (pformat(written[0]),)])
 
 
     def test_tracebackMessages(self):
         """
-        Traceback eliot messages are written to the given L{LogPublisher} as a
-        string, and additionally with the traceback formatted for easier reading.
+        Traceback eliot messages are written to the given L{LogPublisher} with
+        the traceback formatted for easier reading.
         """
+        writtenToTwisted = self.redirectToLogPublisher()
+        written = self.redirectToList()
+        logger = Logger()
+
+        def raiser():
+            raise RuntimeError("because")
+        try:
+            raiser()
+        except Exception:
+            expectedTraceback = traceback.format_exc()
+            writeTraceback(logger, "some:system")
+
+        lines = expectedTraceback.split("\n")
+        # Remove source code lines:
+        expectedTraceback = "\n".join(
+            [l for l in lines if not l.startswith("    ")])
+
+        self.assertEqual(writtenToTwisted,
+                         ["ELIOT: %s" % (pformat(written[0]),),
+                          "ELIOT Extracted Traceback:\n%s" % expectedTraceback])
 
 
     def test_defaults(self):

@@ -5,6 +5,7 @@ APIs for using Eliot from Twisted.
 from __future__ import absolute_import, unicode_literals
 
 import os
+from pprint import pformat
 
 from twisted.python.failure import Failure
 
@@ -179,13 +180,9 @@ def redirectLogsForTrial(_sys=None, _log=None):
     @return: The destination added to Eliot if any, otherwise L{None}.
     """
     def _logEliotMessage(message):
-        return '''
-        msg("ELIOT: " + data)
-        if "eliot:traceback" in data:
-            # Don't bother decoding every single log message...
-            decoded = loads(data)
-            if decoded.get(u"message_type") == u"eliot:traceback":
-                msg("ELIOT Extracted Traceback:\n" + decoded["traceback"])'''
+        _log.msg("ELIOT: " + pformat(message))
+        if message.get("message_type") == "eliot:traceback":
+            _log.msg("ELIOT Extracted Traceback:\n" + message["traceback"])
 
     if os.path.basename(_sys.argv[0]) == 'trial':
         addDestination(_logEliotMessage)
