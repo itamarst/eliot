@@ -16,11 +16,14 @@ except ImportError:
 else:
     # Make sure we always import this if Twisted is available, so broken
     # logwriter.py causes a failure:
-    from ..twisted import DeferredContext, AlreadyFinished, _passthrough
+    from ..twisted import (
+        DeferredContext, AlreadyFinished, _passthrough, redirectLogsForTrial)
 
 from .._action import startAction, currentAction, Action
-from .._output import MemoryLogger
+from .._output import MemoryLogger, Logger
 from ..testing import assertContainsFields
+from .. import removeDestination
+from .test_filter import FakeSys
 
 
 class PassthroughTests(TestCase):
@@ -395,3 +398,77 @@ class DeferredContextTests(TestCase):
         result = Deferred()
         context = DeferredContext(result)
         self.assertIs(context, context.addBoth(lambda x: None))
+
+
+
+class RedirectLogsForTrialTests(TestCase):
+    """
+    Tests for L{redirectLogsForTrial}.
+    """
+    def assertDestinationAdded(self, programPath):
+        """
+        Assert that when running under the given program a new destination is
+        added by L{redirectLogsForTrial}.
+
+        @param programPath: A path to a program, as L{str}.
+        """
+        destination = redirectLogsForTrial(FakeSys([programPath], b""))
+        # If this was not added as destination, removing it will raise an
+        # exception:
+        removeDestination(destination)
+
+
+    def test_withTrial(self):
+        """
+        When running under just I{trial} a new destination is added by
+        L{redirectLogsForTrial}.
+        """
+        self.assertDestinationAdded("trial")
+
+
+    def test_withTrialPath(self):
+        """
+        When running under a path that ends with I{trial} a new destination is
+        added by L{redirectLogsForTrial}.
+        """
+        self.assertDestinationAdded("/usr/bin/trial")
+
+
+    def test_withoutTrialNoDestination(self):
+        """
+        When not running under I{trial} no destination is added by
+        L{redirectLogsForTrial}.
+        """
+        originalDestinations = Logger._destinations._destinations[:]
+        redirectLogsForTrial(FakeSys([b"myprogram.py"], b""))
+        self.assertEqual(Logger._destinations._destinations,
+                         originalDestinations)
+
+
+    def test_withoutTrialResult(self):
+        """
+        When not running under I{trial} L{None} is returned.
+        """
+        self.assertIs(
+            None, redirectLogsForTrial(FakeSys([b"myprogram.py"], b"")))
+
+
+
+    def test_normalMessages(self):
+        """
+        Regular eliot messages are pretty-printed to the given L{LogPublisher}.
+        """
+
+
+    def test_tracebackMessages(self):
+        """
+        Traceback eliot messages are written to the given L{LogPublisher} as a
+        string, and additionally with the traceback formatted for easier reading.
+        """
+
+
+    def test_defaults(self):
+        """
+        By default L{redirectLogsForTrial} looks at L{sys.argv} and
+        L{twisted.python.log} for trial detection and log output.
+        """

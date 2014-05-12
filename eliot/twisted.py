@@ -4,11 +4,15 @@ APIs for using Eliot from Twisted.
 
 from __future__ import absolute_import, unicode_literals
 
+import os
+
 from twisted.python.failure import Failure
 
 from ._action import currentAction
+from . import addDestination
 
-__all__ = ["AlreadyFinished", "DeferredContext"]
+
+__all__ = ["AlreadyFinished", "DeferredContext", "redirectLogsForTrial"]
 
 
 
@@ -146,3 +150,43 @@ class DeferredContext(object):
             return result
         self.result.addBoth(done)
         return self.result
+
+
+
+def redirectLogsForTrial(_sys=None, _log=None):
+    """
+    When run inside a I{trial} process redirect Eliot log messages to
+    Twisted's logging system, otherwise do nothing.
+
+    This allows reading Eliot logs output by running unit tests with
+    I{trial} in its normal log location: C{_trial_temp/test.log}.
+
+    This function can usually be safely called in all programs since it will
+    have no side-effects if used outside of trial. The only exception is you
+    are redirecting Twisted logs to Eliot; you should make sure not call
+    this function in that case so as to prevent infinite loops.
+
+    Currently this works by checking if C{sys.argv[0]} is called C{trial}; a
+    better mechanism would require
+    https://twistedmatrix.com/trac/ticket/6939 to be fixed.
+
+    @param _sys: An object similar to, and by default identical to, Python's
+        L{sys} module.
+
+    @param _log: An object similar to, and by default identical to,
+        L{twisted.python.log}.
+
+    @return: The destination added to Eliot if any, otherwise L{None}.
+    """
+    def _logEliotMessage(message):
+        return '''
+        msg("ELIOT: " + data)
+        if "eliot:traceback" in data:
+            # Don't bother decoding every single log message...
+            decoded = loads(data)
+            if decoded.get(u"message_type") == u"eliot:traceback":
+                msg("ELIOT Extracted Traceback:\n" + decoded["traceback"])'''
+
+    if os.path.basename(_sys.argv[0]) == 'trial':
+        addDestination(_logEliotMessage)
+        return _logEliotMessage
