@@ -154,7 +154,7 @@ class DeferredContext(object):
 
 
 
-def redirectLogsForTrial(_sys=None, _log=None):
+def redirectLogsForTrial(sys=None, log=None):
     """
     When run inside a I{trial} process redirect Eliot log messages to
     Twisted's logging system, otherwise do nothing.
@@ -171,19 +171,19 @@ def redirectLogsForTrial(_sys=None, _log=None):
     better mechanism would require
     https://twistedmatrix.com/trac/ticket/6939 to be fixed.
 
-    @param _sys: An object similar to, and by default identical to, Python's
+    @param sys: An object similar to, and by default identical to, Python's
         L{sys} module.
 
-    @param _log: An object similar to, and by default identical to,
+    @param log: An object similar to, and by default identical to,
         L{twisted.python.log}.
 
     @return: The destination added to Eliot if any, otherwise L{None}.
     """
     def _logEliotMessage(message):
-        _log.msg("ELIOT: " + pformat(message))
+        log.msg("ELIOT: " + pformat(message))
         if message.get("message_type") == "eliot:traceback":
-            _log.msg("ELIOT Extracted Traceback:\n" + message["traceback"])
+            log.msg("ELIOT Extracted Traceback:\n" + message["traceback"])
 
-    if os.path.basename(_sys.argv[0]) == 'trial':
+    if os.path.basename(sys.argv[0]) == 'trial':
         addDestination(_logEliotMessage)
         return _logEliotMessage
