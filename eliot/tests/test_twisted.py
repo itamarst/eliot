@@ -5,6 +5,8 @@ Tests for L{eliot.twisted}.
 from __future__ import absolute_import, unicode_literals, print_function
 
 import traceback
+import sys
+import inspect
 from functools import wraps
 from pprint import pformat
 
@@ -531,3 +533,5 @@ class RedirectLogsForTrialTests(TestCase):
         By default L{redirectLogsForTrial} looks at L{sys.argv} and
         L{twisted.python.log} for trial detection and log output.
         """
+        self.assertEqual(inspect.getargspec(redirectLogsForTrial).defaults,
+                         (sys, twlog))

@@ -5,8 +5,10 @@ APIs for using Eliot from Twisted.
 from __future__ import absolute_import, unicode_literals
 
 import os
+import sys
 from pprint import pformat
 
+from twisted.python import log
 from twisted.python.failure import Failure
 
 from ._action import currentAction
@@ -154,7 +156,7 @@ class DeferredContext(object):
 
 
 
-def redirectLogsForTrial(sys=None, log=None):
+def redirectLogsForTrial(sys=sys, log=log):
     """
     When run inside a I{trial} process redirect Eliot log messages to
     Twisted's logging system, otherwise do nothing.
