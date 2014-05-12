@@ -259,9 +259,28 @@ Twisted Support
 ^^^^^^^^^^^^^^^
 
 If you are using the Twisted networking framework an additional set of APIs is available.
+To understand why, consider the following example:
 
-For ``Deferred`` usage manually wrapping all callbacks would be tedious.
-Instead ``eliot.twisted.DeferredContext`` is provided.
+.. code-block:: python
+
+     from eliot import startAction, Logger
+
+     logger = Logger()
+
+
+     def go():
+         action = startAction(logger, u"yourapp:subsystem:frob")
+         with action:
+             d = Deferred()
+             d.addCallback(gotResult, x=1)
+             return d
+
+This has two problems.
+First, ``gotResult`` is not going to run in the context of the action.
+Second, the action finishes once the ``with`` block finishes, i.e. before ``gotResult`` runs.
+If we want ``gotResult`` to be run in the context of the action and to delay the action finish we need to do some extra work, and manually wrapping all callbacks would be tedious.
+
+To solve this problem you can use the ``eliot.twisted.DeferredContext`` class.
 It grabs the action context when it is first created and provides the same API as ``Deferred`` (``addCallbacks`` and friends), with the difference that added callbacks run in the context of the action.
 When all callbacks have been added you can indicate that the action should finish after those callbacks have run by calling ``DeferredContext.addActionFinish``.
 As you would expect, if the ``Deferred`` fires with a regular result that will result in success message.
