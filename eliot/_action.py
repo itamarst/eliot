@@ -8,18 +8,11 @@ top-level actions.
 from __future__ import unicode_literals, absolute_import
 
 import threading
-import warnings
 from uuid import uuid4
 from itertools import count
 from contextlib import contextmanager
 
 from six import text_type as unicode
-
-try:
-    from twisted.python.failure import Failure
-except ImportError:
-    # Twisted is supported but not required.
-    pass
 
 from ._message import Message
 from ._util import safeunicode
@@ -230,50 +223,6 @@ class Action(object):
             return f(*args, **kwargs)
         finally:
             _context.pop()
-
-
-    def runCallback(self, result, f, *args, **kwargs):
-        """
-        DEPRECATED. Use L{eliot.twisted.DeferredContext} instead.
-
-        Run the given L{Deferred} callback function with this L{Action} as its
-        execution context.
-
-        E.g., instead of:
-
-            d.addCallback(lambda result: action.run(f, result, "additional"))
-
-        You can do:
-
-            d.addCallback(action.runCallback, f, "additional")
-        """
-        warnings.warn("Use eliot.twisted instead.", DeprecationWarning,
-                      stacklevel=2)
-        return self.run(f, result, *args, **kwargs)
-
-
-    def finishAfter(self, deferred):
-        """
-        DEPRECATED. Use L{eliot.twisted.DeferredContext} instead.
-
-        Indicate this L{Action} will finish when the given
-        L{twisted.internet.defer.Deferred} fires.
-
-        The L{Action} will more specifically only finish when all previously
-        added callbacks have finished.
-
-        Should only be called once.
-        """
-        warnings.warn("Use eliot.twisted instead.", DeprecationWarning,
-                      stacklevel=2)
-        def done(result):
-            if isinstance(result, Failure):
-                exception = result.value
-            else:
-                exception = None
-            self.finish(exception)
-            return result
-        deferred.addBoth(done)
 
 
     def addSuccessFields(self, **fields):
