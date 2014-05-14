@@ -15,8 +15,6 @@ Features:
 * Designed for JSON output, usable by Logstash/Elasticsearch.
 * Supports CPython 2.7, 3.3 and PyPy.
 
-This is a **PREVIEW** and does not guarantee version stability across versions.
-
 Eliot is released by `HybridCluster`_ under the Apache 2.0 License and maintained by Itamar Turner-Trauring.
 
 To install::
