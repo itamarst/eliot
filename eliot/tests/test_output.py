@@ -461,9 +461,14 @@ class LoggerTests(TestCase):
                               '%s.RuntimeError' % (RuntimeError.__module__,),
                               'message_type': 'eliot:traceback'})
         self.assertIn("RuntimeError: oops", tracebackMessage['traceback'])
+        # Calling _safeUnicodeDictionary multiple times leads to
+        # inconsistent results due to hash ordering, so compare contents:
         assertContainsFields(self, written[1],
-                             {"message_type": "eliot:serialization_failure",
-                              "message": logger._safeUnicodeDictionary(message)})
+                             {"message_type": "eliot:serialization_failure"})
+        self.assertEqual(eval(written[1]["message"]),
+                         dict((repr(key), repr(value)) for
+                              (key, value) in message.items()))
+
 
 
 
