@@ -138,6 +138,15 @@ For example, if we want to write out a JSON message per line we can do:
     addDestination(stdout)
 
 For Twisted users ``eliot.logwriter.ThreadedFileWriter`` is a logging destination that writes to a file-like object in a thread.
+This is useful because it keeps the Twisted thread from blocking if writing to the log file is slow.
+``ThreadedFileWriter`` is a Twisted ``Service`` and starting it will call ``addDestination`` for you and stopping it will call ``removeDestination``; there is no need to call those directly.
+
+.. literalinclude:: ../../examples/logfile.py
+
+If you want log rotation you can pass in one of the classes from `twisted.python.logfile`_ as the destination file.
+
+.. _twisted.python.logfile: https://twistedmatrix.com/documents/current/api/twisted.python.logfile.html
+
 
 
 Actions and Tasks
