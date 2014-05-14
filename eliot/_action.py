@@ -5,7 +5,7 @@ Actions have a beginning and an eventual end, and can be nested. Tasks are
 top-level actions.
 """
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 import threading
 from uuid import uuid4
@@ -13,12 +13,6 @@ from itertools import count
 from contextlib import contextmanager
 
 from six import text_type as unicode
-
-try:
-    from twisted.python.failure import Failure
-except ImportError:
-    # Twisted is supported but not required.
-    pass
 
 from ._message import Message
 from ._util import safeunicode
@@ -144,7 +138,7 @@ class Action(object):
         will be logged.
 
         In general you shouldn't call this yourself, instead using a C{with}
-        block or L{Action.finishAfter}.
+        block or L{Action.finish}.
         """
         fields["action_status"] = "started"
         fields.update(self._identification)
@@ -163,7 +157,7 @@ class Action(object):
         will be logged.
 
         In general you shouldn't call this yourself, instead using a C{with}
-        block or L{Action.finishAfter}.
+        block or L{Action.finish}.
 
         @param exception: C{None}, in which case the fields added with
             L{Action.addSuccessFields} are used. Or an L{Exception}, in
@@ -231,42 +225,6 @@ class Action(object):
             _context.pop()
 
 
-    def runCallback(self, result, f, *args, **kwargs):
-        """
-        Run the given L{Deferred} callback function with this L{Action} as its
-        execution context.
-
-        E.g., instead of:
-
-            d.addCallback(lambda result: action.run(f, result, "additional"))
-
-        You can do:
-
-            d.addCallback(action.runCallback, f, "additional")
-        """
-        return self.run(f, result, *args, **kwargs)
-
-
-    def finishAfter(self, deferred):
-        """
-        Indicate this L{Action} will finish when the given
-        L{twisted.internet.defer.Deferred} fires.
-
-        The L{Action} will more specifically only finish when all previously
-        added callbacks have finished.
-
-        Should only be called once.
-        """
-        def done(result):
-            if isinstance(result, Failure):
-                exception = result.value
-            else:
-                exception = None
-            self.finish(exception)
-            return result
-        deferred.addBoth(done)
-
-
     def addSuccessFields(self, **fields):
         """
         Add fields to be included in the result message when the action
@@ -314,8 +272,8 @@ def startAction(logger, action_type, _serializers=None, **fields):
     Create a child L{Action}, figuring out the parent L{Action} from execution
     context, and log the start message.
 
-    You should either use the result as a Python context manager, or use the
-    C{finishAfter} API with a L{twisted.internet.defer.Deferred}. For example:
+    You can use the result as a Python context manager, or use the
+    L{Action.finish} API to explicitly finish it.
 
          with startAction(logger, "yourapp:subsystem:dosomething",
                           entry=x) as action:
@@ -323,13 +281,15 @@ def startAction(logger, action_type, _serializers=None, **fields):
               result = something(x * 2)
               action.addSuccessFields(result=result)
 
-    Or perhaps:
+    Or alternatively:
 
          action = startAction(logger, "yourapp:subsystem:dosomething",
                               entry=x)
-         d = action.run(doSomethingReturningADeferred)
-         d.addCallback(action.runCallback, aCallback)
-         action.finishAfter(d)
+         with action.context():
+              do(x)
+              result = something(x * 2)
+              action.addSuccessFields(result=result)
+         action.finish()
 
     @param logger: The L{eliot.ILogger} to which to write messages.
 

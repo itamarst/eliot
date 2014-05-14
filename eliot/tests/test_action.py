@@ -4,15 +4,8 @@ Tests for L{eliot._action}.
 
 from __future__ import unicode_literals
 
-from unittest import TestCase, SkipTest
+from unittest import TestCase
 from threading import Thread
-
-try:
-    import twisted
-    from twisted.internet.defer import Deferred
-    from twisted.python.failure import Failure
-except ImportError:
-    twisted = None
 
 from .._action import (
     Action, _ExecutionContext, currentAction, startTask, startAction,
@@ -268,38 +261,6 @@ class ActionTests(TestCase):
         self.assertIs(currentAction(), None)
 
 
-    def test_runCallback(self):
-        """
-        L{Action.runCallback} calls L{Action.run} with the first and second
-        arguments swapped.
-        """
-        ran = []
-        class TestAction(Action):
-            def run(self, *args, **kwargs):
-                ran.append((args, kwargs))
-                return Action.run(self, *args, **kwargs)
-
-        def f(result, extra, extra2):
-            pass
-
-        action = TestAction(None, "", "", "")
-        action.runCallback("hi", f, 2, extra2=3)
-        self.assertEqual(ran, [((f, "hi", 2), {"extra2": 3})])
-
-
-
-    def test_runCallbackResult(self):
-        """
-        L{Action.runCallback} returns the result of the function it runs.
-        """
-        def f(result, extra):
-            return result + extra
-
-        action = Action(None, "", "", "")
-        result = action.runCallback("hi", f, "bye")
-        self.assertEqual(result, "hibye")
-
-
     def test_withSetsContext(self):
         """
         L{Action.__enter__} sets the action as the current action.
@@ -551,99 +512,6 @@ class ActionTests(TestCase):
             act.finish()
         # Only initial finish message is logged:
         self.assertEqual(len(logger.messages), 1)
-
-
-
-class TwistedActionTests(TestCase):
-    """
-    Tests for Twisted-specific L{Action} APIs.
-    """
-    def setUp(self):
-        if twisted is None:
-            raise SkipTest("Twisted not available")
-
-
-    def test_finishAfterNoImmediateLogging(self):
-        """
-        L{Action.finishAfter} does not log anything if the L{Deferred} hasn't
-        fired yet.
-        """
-        d = Deferred()
-        logger = MemoryLogger()
-        action = Action(logger, "uuid", "/1/", "sys:me")
-        action.finishAfter(d)
-        self.assertFalse(logger.messages)
-
-
-    def test_finishAfterSuccess(self):
-        """
-        When the L{Deferred} passed to L{Action.finishAfter} fires
-        successfully, a finish message is logged with any success bindings
-        added.
-        """
-        d = Deferred()
-        logger = MemoryLogger()
-        action = Action(logger, "uuid", "/1/", "sys:me")
-        action.addSuccessFields(x=2)
-        action.finishAfter(d)
-        d.callback("result")
-        assertContainsFields(self, logger.messages[0],
-                             {"task_uuid": "uuid",
-                              "task_level": "/1/",
-                              "action_type": "sys:me",
-                              "action_status": "succeeded",
-                              "x": 2})
-
-
-    def test_finishAfterSuccessPassThrough(self):
-        """
-        L{Action.finishAfter} passes through a successful result unchanged.
-        """
-        d = Deferred()
-        logger = MemoryLogger()
-        action = Action(logger, "uuid", "/1/", "sys:me")
-        action.finishAfter(d)
-        d.callback("result")
-        result = []
-        d.addCallback(result.append)
-        self.assertEqual(result, ["result"])
-
-
-    def test_finishAfterFailure(self):
-        """
-        When the L{Deferred} passed to L{Action.finishAfter} fires
-        with an exception, a finish message is logged.
-        """
-        d = Deferred()
-        logger = MemoryLogger()
-        action = Action(logger, "uuid", "/1/", "sys:me")
-        action.finishAfter(d)
-        exception = RuntimeError("because")
-        d.errback(exception)
-        assertContainsFields(self, logger.messages[0],
-                             {"task_uuid": "uuid",
-                              "task_level": "/1/",
-                              "action_type": "sys:me",
-                              "action_status": "failed",
-                              "reason": "because",
-                              "exception":
-                              "%s.RuntimeError" % (RuntimeError.__module__,)})
-        d.addErrback(lambda _: None) # don't let Failure go to Twisted logs
-
-
-    def test_finishAfterFailurePassThrough(self):
-        """
-        L{Action.finishAfter} passes through a failed result unchanged.
-        """
-        d = Deferred()
-        logger = MemoryLogger()
-        action = Action(logger, "uuid", "/1/", "sys:me")
-        action.finishAfter(d)
-        failure = Failure(RuntimeError())
-        d.errback(failure)
-        result = []
-        d.addErrback(result.append)
-        self.assertEqual(result, [failure])
 
 
 
