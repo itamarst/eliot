@@ -8,7 +8,7 @@ from twisted.internet import task
 from twisted.web import client, http
 from twisted.python.util import FancyStrMixin
 
-from eliot import startAction, Logger, addDestination
+from eliot import startAction, Logger, addDestination, writeFailure
 from eliot.twisted import DeferredContext
 
 def _pprint(message):
@@ -69,6 +69,7 @@ def main(reactor, url):
         d.addCallback(_logResponse, log)
         d.addCallback(client.readBody)
         d.addCallback(_logBody, log)
+        d.addErrback(writeFailure, _logger, u'twisted_actions:main')
         d.addActionFinish()
     return d.result
 
