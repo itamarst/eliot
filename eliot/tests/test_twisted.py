@@ -424,7 +424,10 @@ class RedirectLogsForTrialTests(TestCase):
         destination = redirectLogsForTrial(FakeSys([programPath], b""))
         # If this was not added as destination, removing it will raise an
         # exception:
-        removeDestination(destination)
+        try:
+            removeDestination(destination)
+        except ValueError:
+            self.fail("Destination was not added.")
 
 
     def test_withTrial(self):
