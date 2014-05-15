@@ -6,7 +6,6 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 import traceback
 import sys
-import inspect
 from functools import wraps
 from pprint import pformat
 
