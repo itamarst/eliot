@@ -550,7 +550,8 @@ class RedirectLogsForTrialTests(TestCase):
 
         self.assertEqual(writtenToTwisted,
                          ["ELIOT: %s" % (pformat(written[0]),),
-                          "ELIOT Extracted Traceback:\n%s" % expectedTraceback])
+                          "ELIOT Extracted Traceback:\n%s" % (expectedTraceback,)
+                      ])
 
 
     def test_defaults(self):
