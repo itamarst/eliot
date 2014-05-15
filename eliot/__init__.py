@@ -1,15 +1,5 @@
 """
-Eliot: Logging as Storytelling
-
-    Suppose we turn from outside estimates of a man, to wonder, with keener
-    interest, what is the report of his own consciousness about his doings or
-    capacity: with what hindrances he is carrying on his daily labors; what
-    fading of hopes, or what deeper fixity of self-delusion the years are
-    marking off within him; and with what spirit he wrestles against universal
-    pressure, which will one day be too heavy for him, and bring his heart to
-    its final pause.
-
-        -- George Eliot, "Middlemarch"
+Eliot: Logging as Storytelling.
 """
 
 from ._version import __version__

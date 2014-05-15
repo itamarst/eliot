@@ -45,7 +45,7 @@ setup(
     keywords="logging",
     license="APL2",
     packages=["eliot", "eliot.tests"],
-    url="https://github.com/HybridLogic/eliot/",
+    url="https://github.com/hybridcluster/eliot/",
     maintainer='Itamar Turner-Trauring',
     maintainer_email='itamar@hybridcluster.com',
     long_description=read('README.rst'),
