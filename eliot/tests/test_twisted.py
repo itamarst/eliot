@@ -31,7 +31,7 @@ from .._message import Message
 from ..testing import assertContainsFields
 from .. import removeDestination, addDestination
 from .._traceback import writeTraceback
-from .test_filter import FakeSys
+from .common import FakeSys
 
 
 class PassthroughTests(TestCase):
