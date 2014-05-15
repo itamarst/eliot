@@ -169,9 +169,11 @@ def redirectLogsForTrial(sys=sys, log=log):
     are redirecting Twisted logs to Eliot; you should make sure not call
     this function in that case so as to prevent infinite loops.
 
-    Currently this works by checking if C{sys.argv[0]} is called C{trial}; a
-    better mechanism would require
-    https://twistedmatrix.com/trac/ticket/6939 to be fixed.
+    Currently this works by checking if C{sys.argv[0]} is called C{trial};
+    the ideal mechanism would require
+    https://twistedmatrix.com/trac/ticket/6939 to be fixed, but probably
+    there are better solutions even without that -
+    https://github.com/hybridcluster/eliot/issues/76 covers those.
 
     @param sys: An object similar to, and by default identical to, Python's
         L{sys} module.
