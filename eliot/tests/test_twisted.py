@@ -432,27 +432,46 @@ class RedirectLogsForTrialTests(TestCase):
 
     def test_withTrial(self):
         """
-        When running under just I{trial} a new destination is added by
+        When C{sys.argv[0]} is C{"trial"} a new destination is added by
         L{redirectLogsForTrial}.
         """
         self.assertDestinationAdded("trial")
 
 
-    def test_withTrialPath(self):
+    def test_withAbsoluteTrialPath(self):
         """
-        When running under a path that ends with I{trial} a new destination is
-        added by L{redirectLogsForTrial}.
+        When C{sys.argv[0]} is an absolute path ending with C{"trial"} a new
+        destination is added by L{redirectLogsForTrial}.
         """
         self.assertDestinationAdded("/usr/bin/trial")
 
 
+    def test_withRelativeTrialPath(self):
+        """
+        When C{sys.argv[0]} is a relative path ending with C{"trial"} a new
+        destination is added by L{redirectLogsForTrial}.
+        """
+        self.assertDestinationAdded("./trial")
+
+
     def test_withoutTrialNoDestination(self):
         """
-        When not running under I{trial} no destination is added by
+        When C{sys.argv[0]} is not C{"trial"} no destination is added by
         L{redirectLogsForTrial}.
         """
         originalDestinations = Logger._destinations._destinations[:]
         redirectLogsForTrial(FakeSys(["myprogram.py"], b""))
+        self.assertEqual(Logger._destinations._destinations,
+                         originalDestinations)
+
+
+    def test_trialAsPathNoDestination(self):
+        """
+        When C{sys.argv[0]} has C{"trial"} as directory name but not program
+        name no destination is added by L{redirectLogsForTrial}.
+        """
+        originalDestinations = Logger._destinations._destinations[:]
+        redirectLogsForTrial(FakeSys(["./trial/myprogram.py"], b""))
         self.assertEqual(Logger._destinations._destinations,
                          originalDestinations)
 
