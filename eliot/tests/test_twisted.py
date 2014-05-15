@@ -489,7 +489,8 @@ class RedirectLogsForTrialTests(TestCase):
         """
         Redirect Eliot logs to a Twisted log publisher.
 
-        @return: L{list} of L{str} - the written, formatted Twisted log messages.
+        @return: L{list} of L{str} - the written, formatted Twisted log
+            messages will eventually be added to it.
         """
         written = []
         publisher = LogPublisher()
@@ -503,7 +504,8 @@ class RedirectLogsForTrialTests(TestCase):
         """
         Redirect Eliot logs to a list.
 
-        @return: L{list} of written messages.
+        @return: L{list} that will have eventually have the written Eliot
+            messages added to it.
         """
         written = []
         destination = written.append
