@@ -418,7 +418,8 @@ class RedirectLogsForTrialTests(TestCase):
         Assert that when running under the given program a new destination is
         added by L{redirectLogsForTrial}.
 
-        @param programPath: A path to a program, as L{str}.
+        @param programPath: A path to a program.
+        @type programPath: L{str}
         """
         destination = redirectLogsForTrial(FakeSys([programPath], b""))
         # If this was not added as destination, removing it will raise an
