@@ -4,23 +4,34 @@ Tests for L{eliot.twisted}.
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+import traceback
+import sys
 from functools import wraps
+from pprint import pformat
 
 try:
     from twisted.internet.defer import Deferred, succeed, fail
     from twisted.trial.unittest import TestCase
     from twisted.python.failure import Failure
+    from twisted.python.log import LogPublisher, textFromEventDict
+    from twisted.python import log as twlog
 except ImportError:
     # Make tests not run at all.
     TestCase = object
 else:
     # Make sure we always import this if Twisted is available, so broken
     # logwriter.py causes a failure:
-    from ..twisted import DeferredContext, AlreadyFinished, _passthrough
+    from ..twisted import (
+        DeferredContext, AlreadyFinished, _passthrough, redirectLogsForTrial,
+        _RedirectLogsForTrial)
 
 from .._action import startAction, currentAction, Action
-from .._output import MemoryLogger
+from .._output import MemoryLogger, Logger
+from .._message import Message
 from ..testing import assertContainsFields
+from .. import removeDestination, addDestination
+from .._traceback import writeTraceback
+from .common import FakeSys
 
 
 class PassthroughTests(TestCase):
@@ -395,3 +406,193 @@ class DeferredContextTests(TestCase):
         result = Deferred()
         context = DeferredContext(result)
         self.assertIs(context, context.addBoth(lambda x: None))
+
+
+
+class RedirectLogsForTrialTests(TestCase):
+    """
+    Tests for L{redirectLogsForTrial}.
+    """
+    def assertDestinationAdded(self, programPath):
+        """
+        Assert that when running under the given program a new destination is
+        added by L{redirectLogsForTrial}.
+
+        @param programPath: A path to a program.
+        @type programPath: L{str}
+        """
+        destination = _RedirectLogsForTrial(FakeSys([programPath], b""),
+                                            LogPublisher())()
+        # If this was not added as destination, removing it will raise an
+        # exception:
+        try:
+            removeDestination(destination)
+        except ValueError:
+            self.fail("Destination was not added.")
+
+
+    def test_withTrial(self):
+        """
+        When C{sys.argv[0]} is C{"trial"} a new destination is added by
+        L{redirectLogsForTrial}.
+        """
+        self.assertDestinationAdded("trial")
+
+
+    def test_withAbsoluteTrialPath(self):
+        """
+        When C{sys.argv[0]} is an absolute path ending with C{"trial"} a new
+        destination is added by L{redirectLogsForTrial}.
+        """
+        self.assertDestinationAdded("/usr/bin/trial")
+
+
+    def test_withRelativeTrialPath(self):
+        """
+        When C{sys.argv[0]} is a relative path ending with C{"trial"} a new
+        destination is added by L{redirectLogsForTrial}.
+        """
+        self.assertDestinationAdded("./trial")
+
+
+    def test_withoutTrialNoDestination(self):
+        """
+        When C{sys.argv[0]} is not C{"trial"} no destination is added by
+        L{redirectLogsForTrial}.
+        """
+        originalDestinations = Logger._destinations._destinations[:]
+        _RedirectLogsForTrial(FakeSys(["myprogram.py"], b""), LogPublisher())()
+        self.assertEqual(Logger._destinations._destinations,
+                         originalDestinations)
+
+
+    def test_trialAsPathNoDestination(self):
+        """
+        When C{sys.argv[0]} has C{"trial"} as directory name but not program
+        name no destination is added by L{redirectLogsForTrial}.
+        """
+        originalDestinations = Logger._destinations._destinations[:]
+        _RedirectLogsForTrial(FakeSys(["./trial/myprogram.py"], b""),
+                              LogPublisher())()
+        self.assertEqual(Logger._destinations._destinations,
+                         originalDestinations)
+
+
+    def test_withoutTrialResult(self):
+        """
+        When not running under I{trial} L{None} is returned.
+        """
+        self.assertIs(
+            None, _RedirectLogsForTrial(FakeSys(["myprogram.py"], b""),
+                                        LogPublisher())())
+
+
+    def test_noDuplicateAdds(self):
+        """
+        If a destination has already been added, calling L{redirectLogsForTrial}
+        a second time does not add another destination.
+        """
+        redirect = _RedirectLogsForTrial(FakeSys(["trial"], b""), LogPublisher())
+        destination = redirect()
+        self.addCleanup(removeDestination, destination)
+        originalDestinations = Logger._destinations._destinations[:]
+        redirect()
+        self.assertEqual(Logger._destinations._destinations,
+                         originalDestinations)
+
+
+    def test_noDuplicateAddsResult(self):
+        """
+        If a destination has already been added, calling L{redirectLogsForTrial}
+        a second time returns L{None}.
+        """
+        redirect = _RedirectLogsForTrial(FakeSys(["trial"], b""), LogPublisher())
+        destination = redirect()
+        self.addCleanup(removeDestination, destination)
+        result = redirect()
+        self.assertIs(result, None)
+
+
+    def redirectToLogPublisher(self):
+        """
+        Redirect Eliot logs to a Twisted log publisher.
+
+        @return: L{list} of L{str} - the written, formatted Twisted log
+            messages will eventually be added to it.
+        """
+        written = []
+        publisher = LogPublisher()
+        publisher.addObserver(lambda m: written.append(textFromEventDict(m)))
+        destination = _RedirectLogsForTrial(FakeSys(["trial"], b""), publisher)()
+        self.addCleanup(removeDestination, destination)
+        return written
+
+
+    def redirectToList(self):
+        """
+        Redirect Eliot logs to a list.
+
+        @return: L{list} that will have eventually have the written Eliot
+            messages added to it.
+        """
+        written = []
+        destination = written.append
+        addDestination(destination)
+        self.addCleanup(removeDestination, destination)
+        return written
+
+
+    def test_normalMessages(self):
+        """
+        Regular eliot messages are pretty-printed to the given L{LogPublisher}.
+        """
+        writtenToTwisted = self.redirectToLogPublisher()
+        written = self.redirectToList()
+        logger = Logger()
+        Message.new(x=123, y=456).write(logger)
+        self.assertEqual(writtenToTwisted,
+                         ["ELIOT: %s" % (pformat(written[0]),)])
+
+
+    def test_tracebackMessages(self):
+        """
+        Traceback eliot messages are written to the given L{LogPublisher} with
+        the traceback formatted for easier reading.
+        """
+        writtenToTwisted = self.redirectToLogPublisher()
+        written = self.redirectToList()
+        logger = Logger()
+
+        def raiser():
+            raise RuntimeError("because")
+        try:
+            raiser()
+        except Exception:
+            expectedTraceback = traceback.format_exc()
+            writeTraceback(logger, "some:system")
+
+        lines = expectedTraceback.split("\n")
+        # Remove source code lines:
+        expectedTraceback = "\n".join(
+            [l for l in lines if not l.startswith("    ")])
+
+        self.assertEqual(writtenToTwisted,
+                         ["ELIOT: %s" % (pformat(written[0]),),
+                          "ELIOT Extracted Traceback:\n%s" % (expectedTraceback,)
+                      ])
+
+
+    def test_publicAPI(self):
+        """
+        L{redirectLogsForTrial} is an instance of L{_RedirectLogsForTrial}.
+        """
+        self.assertIsInstance(redirectLogsForTrial, _RedirectLogsForTrial)
+
+
+    def test_defaults(self):
+        """
+        By default L{redirectLogsForTrial} looks at L{sys.argv} and
+        L{twisted.python.log} for trial detection and log output.
+        """
+        self.assertEqual((redirectLogsForTrial._sys, redirectLogsForTrial._log),
+                         (sys, twlog))

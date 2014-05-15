@@ -4,11 +4,18 @@ APIs for using Eliot from Twisted.
 
 from __future__ import absolute_import, unicode_literals
 
+import os
+import sys
+from pprint import pformat
+
+from twisted.python import log
 from twisted.python.failure import Failure
 
 from ._action import currentAction
+from . import addDestination
 
-__all__ = ["AlreadyFinished", "DeferredContext"]
+
+__all__ = ["AlreadyFinished", "DeferredContext", "redirectLogsForTrial"]
 
 
 
@@ -146,3 +153,72 @@ class DeferredContext(object):
             return result
         self.result.addBoth(done)
         return self.result
+
+
+
+class _RedirectLogsForTrial(object):
+    """
+    When called inside a I{trial} process redirect Eliot log messages to
+    Twisted's logging system, otherwise do nothing.
+
+    This allows reading Eliot logs output by running unit tests with
+    I{trial} in its normal log location: C{_trial_temp/test.log}.
+
+    This function can usually be safely called in all programs since it will
+    have no side-effects if used outside of trial. The only exception is you
+    are redirecting Twisted logs to Eliot; you should make sure not call
+    this function in that case so as to prevent infinite loops. In addition,
+    calling the function multiple times has the same effect as calling it
+    once.
+
+    (This is not thread-safe at the moment, so in theory multiple threads
+    calling this might result in multiple destinatios being added - see
+    https://github.com/hybridcluster/eliot/issues/78).
+
+    Currently this works by checking if C{sys.argv[0]} is called C{trial};
+    the ideal mechanism would require
+    https://twistedmatrix.com/trac/ticket/6939 to be fixed, but probably
+    there are better solutions even without that -
+    https://github.com/hybridcluster/eliot/issues/76 covers those.
+
+    @ivar _sys: An object similar to, and typically identical to, Python's
+        L{sys} module.
+
+    @ivar _log: An object similar to, and typically identical to,
+        L{twisted.python.log}.
+
+    @ivar _redirected: L{True} if trial logs have been redirected once already.
+    """
+    def __init__(self, sys, log):
+        self._sys = sys
+        self._log = log
+        self._redirected = False
+
+
+    def _logEliotMessage(self, message):
+        """
+        Log an Eliot message to Twisted's log.
+
+        @param message: A rendered Eliot message.
+        @type message: L{dict}
+        """
+        self._log.msg("ELIOT: " + pformat(message))
+        if message.get("message_type") == "eliot:traceback":
+            self._log.msg("ELIOT Extracted Traceback:\n" + message["traceback"])
+
+
+    def __call__(self):
+        """
+        Do the redirect if necessary.
+
+        @return: The destination added to Eliot if any, otherwise L{None}.
+        """
+        if (os.path.basename(self._sys.argv[0]) == 'trial' and
+            not self._redirected):
+            self._redirected = True
+            addDestination(self._logEliotMessage)
+            return self._logEliotMessage
+
+
+
+redirectLogsForTrial = _RedirectLogsForTrial(sys, log)

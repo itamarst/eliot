@@ -22,5 +22,4 @@ Features:
 * Actions can now be explicitly finished using a public API: ``Action.finish()``.
 * ``Action.context()`` context manager allows setting an action context without finishing the action when exiting the block.
 * Added a new API for Twisted ``Deferred`` support: ``eliot.twisted.DeferredContext``.
-
-
+* ``eliot.twisted.redirectLogsForTrial`` will redirect Eliot logs to Twisted's logs when running under the ``trial`` test runner.
