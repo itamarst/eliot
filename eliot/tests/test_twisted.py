@@ -23,7 +23,8 @@ else:
     # Make sure we always import this if Twisted is available, so broken
     # logwriter.py causes a failure:
     from ..twisted import (
-        DeferredContext, AlreadyFinished, _passthrough, redirectLogsForTrial)
+        DeferredContext, AlreadyFinished, _passthrough, redirectLogsForTrial,
+        _RedirectLogsForTrial)
 
 from .._action import startAction, currentAction, Action
 from .._output import MemoryLogger, Logger
@@ -421,7 +422,8 @@ class RedirectLogsForTrialTests(TestCase):
         @param programPath: A path to a program.
         @type programPath: L{str}
         """
-        destination = redirectLogsForTrial(FakeSys([programPath], b""))
+        destination = _RedirectLogsForTrial(FakeSys([programPath], b""),
+                                            LogPublisher())()
         # If this was not added as destination, removing it will raise an
         # exception:
         try:
@@ -460,7 +462,7 @@ class RedirectLogsForTrialTests(TestCase):
         L{redirectLogsForTrial}.
         """
         originalDestinations = Logger._destinations._destinations[:]
-        redirectLogsForTrial(FakeSys(["myprogram.py"], b""))
+        _RedirectLogsForTrial(FakeSys(["myprogram.py"], b""), LogPublisher())()
         self.assertEqual(Logger._destinations._destinations,
                          originalDestinations)
 
@@ -471,7 +473,8 @@ class RedirectLogsForTrialTests(TestCase):
         name no destination is added by L{redirectLogsForTrial}.
         """
         originalDestinations = Logger._destinations._destinations[:]
-        redirectLogsForTrial(FakeSys(["./trial/myprogram.py"], b""))
+        _RedirectLogsForTrial(FakeSys(["./trial/myprogram.py"], b""),
+                              LogPublisher())()
         self.assertEqual(Logger._destinations._destinations,
                          originalDestinations)
 
@@ -481,8 +484,34 @@ class RedirectLogsForTrialTests(TestCase):
         When not running under I{trial} L{None} is returned.
         """
         self.assertIs(
-            None, redirectLogsForTrial(FakeSys(["myprogram.py"], b"")))
+            None, _RedirectLogsForTrial(FakeSys(["myprogram.py"], b""),
+                                        LogPublisher())())
 
+
+    def test_noDuplicateAdds(self):
+        """
+        If a destination has already been added, calling L{redirectLogsForTrial}
+        a second time does not add another destination.
+        """
+        redirect = _RedirectLogsForTrial(FakeSys(["trial"], b""), LogPublisher())
+        destination = redirect()
+        self.addCleanup(removeDestination, destination)
+        originalDestinations = Logger._destinations._destinations[:]
+        redirect()
+        self.assertEqual(Logger._destinations._destinations,
+                         originalDestinations)
+
+
+    def test_noDuplicateAddsResult(self):
+        """
+        If a destination has already been added, calling L{redirectLogsForTrial}
+        a second time returns L{None}.
+        """
+        redirect = _RedirectLogsForTrial(FakeSys(["trial"], b""), LogPublisher())
+        destination = redirect()
+        self.addCleanup(removeDestination, destination)
+        result = redirect()
+        self.assertIs(result, None)
 
 
     def redirectToLogPublisher(self):
@@ -495,7 +524,7 @@ class RedirectLogsForTrialTests(TestCase):
         written = []
         publisher = LogPublisher()
         publisher.addObserver(lambda m: written.append(textFromEventDict(m)))
-        destination = redirectLogsForTrial(FakeSys(["trial"], b""), publisher)
+        destination = _RedirectLogsForTrial(FakeSys(["trial"], b""), publisher)()
         self.addCleanup(removeDestination, destination)
         return written
 
@@ -554,10 +583,17 @@ class RedirectLogsForTrialTests(TestCase):
                       ])
 
 
+    def test_publicAPI(self):
+        """
+        L{redirectLogsForTrial} is an instance of L{_RedirectLogsForTrial}.
+        """
+        self.assertIsInstance(redirectLogsForTrial, _RedirectLogsForTrial)
+
+
     def test_defaults(self):
         """
         By default L{redirectLogsForTrial} looks at L{sys.argv} and
         L{twisted.python.log} for trial detection and log output.
         """
-        self.assertEqual(inspect.getargspec(redirectLogsForTrial).defaults,
+        self.assertEqual((redirectLogsForTrial._sys, redirectLogsForTrial._log),
                          (sys, twlog))
