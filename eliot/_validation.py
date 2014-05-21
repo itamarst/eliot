@@ -372,8 +372,8 @@ class ActionType(object):
         """
         Start a new L{eliot.Action} of this type with the given start fields.
 
-        You can use the result as a Python context manager, or use the
-        L{eliot.Action.finish} API.
+        You should either use the result as a Python context manager, or use the
+        C{finishAfter} API with a L{twisted.internet.defer.Deferred}. For example:
 
              LOG_DOSOMETHING = ActionType("yourapp:subsystem:dosomething",
                                       [Field.forTypes("entry", [int], "")],
@@ -388,8 +388,9 @@ class ActionType(object):
         Or perhaps:
 
              action = LOG_DOSOMETHING(logger, entry=x)
-             action.run(doSomething)
-             action.finish()
+             d = action.run(doSomethingReturningADeferred)
+             d.addCallback(action.runCallback, aCallback)
+             action.finishAfter(d)
 
         @param logger: A L{eliot.ILogger} provider to which the action's
             messages will be written.

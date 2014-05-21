@@ -5,10 +5,9 @@ Actions have a beginning and an eventual end, and can be nested. Tasks are
 top-level actions.
 """
 
-from __future__ import unicode_literals, absolute_import
+from __future__ import unicode_literals
 
 import threading
-import warnings
 from uuid import uuid4
 from itertools import count
 from contextlib import contextmanager
@@ -145,7 +144,7 @@ class Action(object):
         will be logged.
 
         In general you shouldn't call this yourself, instead using a C{with}
-        block or L{Action.finish}.
+        block or L{Action.finishAfter}.
         """
         fields["action_status"] = "started"
         fields.update(self._identification)
@@ -164,7 +163,7 @@ class Action(object):
         will be logged.
 
         In general you shouldn't call this yourself, instead using a C{with}
-        block or L{Action.finish}.
+        block or L{Action.finishAfter}.
 
         @param exception: C{None}, in which case the fields added with
             L{Action.addSuccessFields} are used. Or an L{Exception}, in
@@ -234,8 +233,6 @@ class Action(object):
 
     def runCallback(self, result, f, *args, **kwargs):
         """
-        DEPRECATED. Use L{eliot.twisted.DeferredContext} instead.
-
         Run the given L{Deferred} callback function with this L{Action} as its
         execution context.
 
@@ -247,15 +244,11 @@ class Action(object):
 
             d.addCallback(action.runCallback, f, "additional")
         """
-        warnings.warn("Use eliot.twisted instead.", DeprecationWarning,
-                      stacklevel=2)
         return self.run(f, result, *args, **kwargs)
 
 
     def finishAfter(self, deferred):
         """
-        DEPRECATED. Use L{eliot.twisted.DeferredContext} instead.
-
         Indicate this L{Action} will finish when the given
         L{twisted.internet.defer.Deferred} fires.
 
@@ -264,8 +257,6 @@ class Action(object):
 
         Should only be called once.
         """
-        warnings.warn("Use eliot.twisted instead.", DeprecationWarning,
-                      stacklevel=2)
         def done(result):
             if isinstance(result, Failure):
                 exception = result.value
@@ -323,8 +314,8 @@ def startAction(logger, action_type, _serializers=None, **fields):
     Create a child L{Action}, figuring out the parent L{Action} from execution
     context, and log the start message.
 
-    You can use the result as a Python context manager, or use the
-    L{Action.finish} API to explicitly finish it.
+    You should either use the result as a Python context manager, or use the
+    C{finishAfter} API with a L{twisted.internet.defer.Deferred}. For example:
 
          with startAction(logger, "yourapp:subsystem:dosomething",
                           entry=x) as action:
@@ -332,15 +323,13 @@ def startAction(logger, action_type, _serializers=None, **fields):
               result = something(x * 2)
               action.addSuccessFields(result=result)
 
-    Or alternatively:
+    Or perhaps:
 
          action = startAction(logger, "yourapp:subsystem:dosomething",
                               entry=x)
-         with action.context():
-              do(x)
-              result = something(x * 2)
-              action.addSuccessFields(result=result)
-         action.finish()
+         d = action.run(doSomethingReturningADeferred)
+         d.addCallback(action.runCallback, aCallback)
+         action.finishAfter(d)
 
     @param logger: The L{eliot.ILogger} to which to write messages.
 
