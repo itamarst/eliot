@@ -2,7 +2,7 @@
 Implementation of hooks and APIs for outputting log messages.
 """
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 from six import text_type as unicode, PY3
 if PY3:

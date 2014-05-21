@@ -147,6 +147,13 @@ If you want log rotation you can pass in one of the classes from `twisted.python
 
 .. _twisted.python.logfile: https://twistedmatrix.com/documents/current/api/twisted.python.logfile.html
 
+If you're using Twisted's ``trial`` program to run your tests you can redirect your Eliot logs to Twisted's logs by calling ``eliot.twisted.redirectLogsForTrial()``.
+This function will automatically detect whether or not it is running under ``trial``.
+If it is then you will be able to read your Eliot logs in ``_trial_temp/test.log``, where ``trial`` writes out logs by default.
+If it is not running under ``trial`` it will not do anything.
+In addition calling it multiple times has the same effect as calling it once.
+As a result you can simply call it in your package's ``__init__.py`` and rely on it doing the right thing.
+Take care if you are separately redirecting Twisted logs to Eliot; you should make sure not to call ``redirectLogsForTrial`` in that case so as to prevent infinite loops.
 
 
 Actions and Tasks
@@ -175,10 +182,6 @@ To bridge the gap between the two structures each output message contains enough
 
 See the :doc:`Fields <fields>` documentation for details.
 
-
-Synchronous Code
-^^^^^^^^^^^^^^^^
-
 Here's a basic example of logging an action:
 
 .. code-block:: python
@@ -203,6 +206,10 @@ While running the block of code within the ``with`` statement new actions create
 If there is no parent the action will be considered a task.
 If you want to ignore the context and create a top-level task you can use the ``eliot.startTask`` API.
 
+
+Non-Finishing Contexts
+^^^^^^^^^^^^^^^^^^^^^^
+
 Sometimes you want to have the action be the context for other messages but not finish automatically when the block finishes.
 You can do so with ``Action.context()``.
 You can explicitly finish an action by calling ``eliot.Action.finish``.
@@ -223,12 +230,28 @@ Keep in mind that code within the context block that is run after the action is 
          with action.context():
              frobinate(x)
          # Action still isn't finished, need to so explicitly.
-     except FrobError as :
+     except FrobError as e:
          action.finish(e)
      else:
          action.finish()
 
-You can add fields to both the start message and the success message.
+You can also explicitly run a function within the action context:
+
+.. code-block:: python
+
+     from eliot import startAction, Logger
+
+     logger = Logger()
+
+     action = startAction(logger, u"yourapp:subsystem:frob")
+     # Call doSomething(x=1) in context of action, return its result:
+     result = action.run(doSomething, x=1)
+
+
+Action Fields
+^^^^^^^^^^^^^
+
+You can add fields to both the start message and the success message of an action.
 
 .. code-block:: python
 
@@ -248,23 +271,11 @@ If you want to include some extra information in case of failures beyond the exc
 Since the message will be recorded inside the context of the action its information will be clearly tied to the result of the action by the person (or code!) reading the logs later on.
 
 
-Twisted
-^^^^^^^
+Twisted Support
+^^^^^^^^^^^^^^^
 
-If you are using Twisted an additional set of APIs is available.
-First, since code running in an event loop may not all be in same call stack you can explicitly run a function within the action context.
-
-.. code-block:: python
-
-     from eliot import startAction, Logger
-
-     logger = Logger()
-
-     action = startAction(logger, u"yourapp:subsystem:frob")
-     # Call doSomething(x=1) in context of action, return its result:
-     result = action.run(doSomething, x=1)
-
-A variant also exists for ``Deferred`` callbacks, which just has slightly different argument order:
+If you are using the Twisted networking framework an additional set of APIs is available.
+To understand why, consider the following example:
 
 .. code-block:: python
 
@@ -272,28 +283,44 @@ A variant also exists for ``Deferred`` callbacks, which just has slightly differ
 
      logger = Logger()
 
-     action = startAction(logger, u"yourapp:subsystem:frob")
-     d = Deferred()
-     # Call doSomething(deferredResult, x=1) in context of action, return its
-     # result:
-     d.addCallback(action.runCallback, gotResult, x=1)
 
-Second, you can tell the action that it will finish when a ``Deferred`` fires:
+     def go():
+         action = startAction(logger, u"yourapp:subsystem:frob")
+         with action:
+             d = Deferred()
+             d.addCallback(gotResult, x=1)
+             return d
 
-.. code-block:: python
+This has two problems.
+First, ``gotResult`` is not going to run in the context of the action.
+Second, the action finishes once the ``with`` block finishes, i.e. before ``gotResult`` runs.
+If we want ``gotResult`` to be run in the context of the action and to delay the action finish we need to do some extra work, and manually wrapping all callbacks would be tedious.
 
-     from eliot import startAction, Logger
-
-     logger = Logger()
-
-     action = startAction(logger, u"yourapp:subsystem:frob")
-     d = action.run(doSomething, x=1)
-     d.addCallback(action.runCallback, gotResult)
-     # When Deferred has result at this point, the action is considered finished:
-     action.finishAfter(d)
-
+To solve this problem you can use the ``eliot.twisted.DeferredContext`` class.
+It grabs the action context when it is first created and provides the same API as ``Deferred`` (``addCallbacks`` and friends), with the difference that added callbacks run in the context of the action.
+When all callbacks have been added you can indicate that the action should finish after those callbacks have run by calling ``DeferredContext.addActionFinish``.
 As you would expect, if the ``Deferred`` fires with a regular result that will result in success message.
 If the ``Deferred`` fires with an errback that will result in failure message.
+Finally, you can unwrap the ``DeferredContext`` and access the wrapped ``Deferred`` by accessing its ``result`` attribute.
+
+.. code-block:: python
+
+     from eliot import startAction, Logger
+     from eliot.twisted import DeferredContext
+
+     logger = Logger()
+
+
+     def go():
+         action = startAction(logger, u"yourapp:subsystem:frob")
+         with action.context():
+             d = DeferredContext(Deferred())
+             # gotResult(result, x=1) will be called in the context of the action:
+             d.addCallback(gotResult, x=1)
+             # After gotResult finishes, finish the action:
+             d.addActionFinish()
+             # Return the underlying Deferred:
+             return d.result
 
 
 Type System
