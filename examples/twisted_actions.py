@@ -13,11 +13,11 @@ from twisted.python.util import FancyStrMixin
 from eliot import startAction, Logger, addDestination, writeFailure
 from eliot.twisted import DeferredContext
 
-def _pprint(message):
+def printMessage(message):
     pprint(message)
     print('\n\n\n')
 
-addDestination(_pprint)
+addDestination(printMessage)
 
 
 _logger = Logger()
@@ -33,7 +33,7 @@ class UnexpectedResponse(FancyStrMixin, Exception):
         self.code = code
 
 
-def _checkStatus(response):
+def checkStatus(response):
     """
     Raise an exception if the response code is not OK. The exception will be
     logged.
@@ -43,7 +43,7 @@ def _checkStatus(response):
     return response
 
 
-def _logResponse(response, log):
+def logResponse(response, log):
     """
     Add HTTP header information to the success log.
     """
@@ -51,7 +51,7 @@ def _logResponse(response, log):
     return response
 
 
-def _logBody(body, log):
+def logBody(body, log):
     """
     Add a snippet of the response body to the success log.
     """
@@ -67,10 +67,10 @@ def main(reactor, url):
     d = agent.request('GET', url)
     with log.context():
         d = DeferredContext(d)
-        d.addCallback(_checkStatus)
-        d.addCallback(_logResponse, log)
+        d.addCallback(checkStatus)
+        d.addCallback(logResponse, log)
         d.addCallback(client.readBody)
-        d.addCallback(_logBody, log)
+        d.addCallback(logBody, log)
         d.addErrback(writeFailure, _logger, u'twisted_actions:main')
         d.addActionFinish()
     return d.result
