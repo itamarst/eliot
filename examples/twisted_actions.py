@@ -2,6 +2,7 @@
 """
 Download a URL and log information about the response.
 """
+from __future__ import print_function, absolute_import
 import sys
 from pprint import pprint
 
@@ -14,7 +15,7 @@ from eliot.twisted import DeferredContext
 
 def _pprint(message):
     pprint(message)
-    print '\n\n\n'
+    print('\n\n\n')
 
 addDestination(_pprint)
 
