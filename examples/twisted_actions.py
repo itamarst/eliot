@@ -1,3 +1,4 @@
+# Copyright Hybrid Logic Ltd.  See LICENSE file for details.
 """
 Download a URL and log information about the response.
 """
