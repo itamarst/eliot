@@ -7,9 +7,9 @@ import sys
 import time
 import json
 
-from eliot import Message, Logger, addDestination
+from eliot import Message, Logger, add_destination
 
-addDestination(lambda message: sys.stdout.write(json.dumps(message) + "\n"))
+add_destination(lambda message: sys.stdout.write(json.dumps(message) + "\n"))
 _logger = Logger()
 
 
