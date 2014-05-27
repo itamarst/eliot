@@ -66,20 +66,21 @@ def main(reactor, url):
     agent = client.Agent(reactor)
     d = agent.request('GET', url)
     with action.context():
-        d = DeferredContext(d)
-        d.addCallback(checkStatus)
-        d.addCallback(logResponse, action)
-        d.addCallback(client.readBody)
-        d.addCallback(logBody, action)
+        dc = DeferredContext(d)
+        dc.addCallback(checkStatus)
+        dc.addCallback(logResponse, action)
+        dc.addCallback(client.readBody)
+        dc.addCallback(logBody, action)
         def writeAndReturnFailure(failure, logger, system):
             try:
                 failure.trap(UnexpectedHTTPResponse)
             except:
                 writeFailure(failure, logger, system)
             return failure
-        d.addErrback(writeAndReturnFailure, _logger, u'twisted_actions:main')
-        d.addActionFinish()
-    return d.result
+        dc.addErrback(writeAndReturnFailure, _logger, u'twisted_actions:main')
+        dc.addActionFinish()
+    d.addErrback(lambda failure: None)
+    return d
 
 
 if __name__ == '__main__':
