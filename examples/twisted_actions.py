@@ -23,7 +23,7 @@ addDestination(printMessage)
 _logger = Logger()
 
 
-class UnexpectedResponse(FancyStrMixin, Exception):
+class UnexpectedHTTPResponse(FancyStrMixin, Exception):
     """
     Response code was not 200
     """
@@ -39,7 +39,7 @@ def checkStatus(response):
     logged.
     """
     if response.code != http.OK:
-        raise UnexpectedResponse(response.code)
+        raise UnexpectedHTTPResponse(response.code)
     return response
 
 
@@ -72,7 +72,10 @@ def main(reactor, url):
         d.addCallback(client.readBody)
         d.addCallback(logBody, action)
         def writeAndReturnFailure(failure, logger, system):
-            writeFailure(failure, logger, system)
+            try:
+                failure.trap(UnexpectedHTTPResponse)
+            except:
+                writeFailure(failure, logger, system)
             return failure
         d.addErrback(writeAndReturnFailure, _logger, u'twisted_actions:main')
         d.addActionFinish()
