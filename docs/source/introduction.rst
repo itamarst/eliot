@@ -128,7 +128,7 @@ In our example we have one task (the honeymoon), an action (travel). We will lea
 .. code-block:: python
 
   from __future__ import unicode_literals
-  from eliot import Logger, Message, startAction, startTask
+  from eliot import Logger, Message, start_action, start_task
 
   logger = Logger()
 
@@ -148,7 +148,7 @@ In our example we have one task (the honeymoon), an action (travel). We will lea
       # __init__ and load unchanged from above.
 
       def travel(self, person):
-          with startAction(logger, "place:travel",
+          with start_action(logger, "place:travel",
                            person=unicode(person),
                            place=self.name):
               for thing in self.contained:
@@ -159,7 +159,7 @@ In our example we have one task (the honeymoon), an action (travel). We will lea
 
 
   def honeymoon(family):
-      with startTask(logger, "honeymoon",
+      with start_task(logger, "honeymoon",
                      family=[unicode(person) for person in family]):
           rome = Place.load("Rome, Italy")
           for person in family:

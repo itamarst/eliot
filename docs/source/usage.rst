@@ -1,6 +1,14 @@
 Using Eliot
 ===========
 
+A Note On Naming
+----------------
+
+Eliot APIs provide both PEP 8 style (e.g. ``write_traceback()``) and Twisted style (e.g. ``writeTraceback()``) method and function names.
+The only exceptions are pyunit-style assertions (e.g. ``assertContainsFields()``) and Twisted-specific APIs since both use camel-case by default.
+Code examples below may use either style; both will work.
+
+
 Introduction
 ------------
 
@@ -23,8 +31,8 @@ Here's an example demonstrating how we create a message type, bind some values a
     _LOCATION = Field(u"location", lambda loc: [loc.x, loc.y], u"The location.")
     # These fields are just basic supported types, in this case int and unicode
     # respectively:
-    _COUNT = Field.forTypes(u"count", [int], u"The number of items to deliver.")
-    _NAME = Field.forTypes(u"name", [unicode], u"The name of the delivery person.")
+    _COUNT = Field.for_types(u"count", [int], u"The number of items to deliver.")
+    _NAME = Field.for_types(u"name", [unicode], u"The name of the delivery person.")
 
     # This is a type definition for a message. It is used to hook up
     # serialization of field values, and for message validation in unit tests:
@@ -36,14 +44,14 @@ Here's an example demonstrating how we create a message type, bind some values a
 
     logger = Logger()
 
-    def deliverPizzas(deliveries):
-        person = getFreeDeliveryPerson()
+    def deliver_pizzas(deliveries):
+        person = get_free_delivery_person()
         # Create a base message with some, but not all, of the fields filled in:
-        baseMessage = LOG_DELIVERY_SCHEDULED(name=person.name)
+        base_message = LOG_DELIVERY_SCHEDULED(name=person.name)
         for location, count in deliveries:
-            deliveryDatabase.insert(person, location, count)
+            delivery_database.insert(person, location, count)
             # Bind additional message fields and then log the resulting message:
-            message = baseMessage.bind(count=count, location=location)
+            message = base_message.bind(count=count, location=location)
             message.write(logger)
 
 
@@ -89,7 +97,7 @@ You can also log tracebacks when your code hits an unexpected exception:
 
 .. code-block:: python
 
-    from eliot import Logger, writeTraceback
+    from eliot import Logger, write_traceback
 
     class YourClass(object):
         logger = Logger()
@@ -98,7 +106,7 @@ You can also log tracebacks when your code hits an unexpected exception:
             try:
                  dosomething()
             except:
-                 writeTraceback(self.logger, u"yourapp:yourclass")
+                 write_traceback(self.logger, u"yourapp:yourclass")
 
 When using Twisted you would do:
 
@@ -131,15 +139,15 @@ For example, if we want to write out a JSON message per line we can do:
 .. code-block:: python
 
     import json
-    from eliot import addDestination
+    from eliot import add_destination
 
     def stdout(message):
         sys.stdout.write(json.dumps(message) + b"\n")
-    addDestination(stdout)
+    add_destination(stdout)
 
 For Twisted users ``eliot.logwriter.ThreadedFileWriter`` is a logging destination that writes to a file-like object in a thread.
 This is useful because it keeps the Twisted thread from blocking if writing to the log file is slow.
-``ThreadedFileWriter`` is a Twisted ``Service`` and starting it will call ``addDestination`` for you and stopping it will call ``removeDestination``; there is no need to call those directly.
+``ThreadedFileWriter`` is a Twisted ``Service`` and starting it will call ``add_destination`` for you and stopping it will call ``remove_destination``; there is no need to call those directly.
 
 .. literalinclude:: ../../examples/logfile.py
 
@@ -186,11 +194,11 @@ Here's a basic example of logging an action:
 
 .. code-block:: python
 
-     from eliot import startAction, Logger
+     from eliot import start_action, Logger
 
      logger = Logger()
 
-     with startAction(logger, u"yourapp:subsystem:frob"):
+     with start_action(logger, u"yourapp:subsystem:frob"):
          x = _beep()
          frobinate(x)
 
@@ -202,9 +210,9 @@ Notice that the action has a name, with a subsystem prefix.
 Again, this should be a logical name.
 
 Note that all code called within this block is within the context of this action.
-While running the block of code within the ``with`` statement new actions created with ``startAction`` will get the top-level ``startAction`` as their parent.
+While running the block of code within the ``with`` statement new actions created with ``start_action`` will get the top-level ``start_action`` as their parent.
 If there is no parent the action will be considered a task.
-If you want to ignore the context and create a top-level task you can use the ``eliot.startTask`` API.
+If you want to ignore the context and create a top-level task you can use the ``eliot.start_task`` API.
 
 
 Non-Finishing Contexts
@@ -219,11 +227,11 @@ Keep in mind that code within the context block that is run after the action is 
 
 .. code-block:: python
 
-     from eliot import startAction, Logger
+     from eliot import start_action, Logger
 
      logger = Logger()
 
-     action = startAction(logger, u"yourapp:subsystem:frob"):
+     action = start_action(logger, u"yourapp:subsystem:frob"):
      try:
          with action.context():
              x = _beep()
@@ -239,13 +247,13 @@ You can also explicitly run a function within the action context:
 
 .. code-block:: python
 
-     from eliot import startAction, Logger
+     from eliot import start_action, Logger
 
      logger = Logger()
 
-     action = startAction(logger, u"yourapp:subsystem:frob")
-     # Call doSomething(x=1) in context of action, return its result:
-     result = action.run(doSomething, x=1)
+     action = start_action(logger, u"yourapp:subsystem:frob")
+     # Call do_something(x=1) in context of action, return its result:
+     result = action.run(do_something, x=1)
 
 
 Action Fields
@@ -255,17 +263,17 @@ You can add fields to both the start message and the success message of an actio
 
 .. code-block:: python
 
-     from eliot import startAction, Logger
+     from eliot import start_action, Logger
 
      logger = Logger()
 
-     with startAction(logger, u"yourapp:subsystem:frob",
+     with start_action(logger, u"yourapp:subsystem:frob",
                       # Fields added to start message only:
                       key=123, foo=u"bar") as action:
          x = _beep(123)
          result = frobinate(x)
          # Fields added to success message only:
-         action.addSuccessFields(result=result)
+         action.add_success_fields(result=result)
 
 If you want to include some extra information in case of failures beyond the exception you can always log a regular message with that information.
 Since the message will be recorded inside the context of the action its information will be clearly tied to the result of the action by the person (or code!) reading the logs later on.
@@ -338,8 +346,8 @@ You can also pass in an extra validation function.
 If you pass this function in it will be called with values that are being validated; if it raises ``eliot.ValidationError`` that value will fail validation.
 
 A couple of utility functions allow creating specific types of ``Field`` instances.
-``Field.forValue`` returns a ``Field`` that only can have a single value.
-More generally useful, ``Field.forTypes`` returns a ``Field`` that can only be one of certain specific types: some subset of ``unicode``, ``bytes``, ``int``, ``float``, ``bool``, ``list`` and ``dict`` as well as ``None`` which technically isn't a class.
+``Field.for_value`` returns a ``Field`` that only can have a single value.
+More generally useful, ``Field.for_types`` returns a ``Field`` that can only be one of certain specific types: some subset of ``unicode``, ``bytes``, ``int``, ``float``, ``bool``, ``list`` and ``dict`` as well as ``None`` which technically isn't a class.
 As always, ``bytes`` must only contain UTF-8 encoded Unicode.
 
 .. code-block:: python
@@ -360,7 +368,7 @@ As always, ``bytes`` must only contain UTF-8 encoded Unicode.
     def _validateAge(value):
         if value is not None and value < 0:
              raise ValidationError("Field 'age' must be positive:", value)
-    AGE = Field.forTypes(u"age", [int, None],
+    AGE = Field.for_types(u"age", [int, None],
                          u"The age of the user, might be None if unknown",
                          _validateAge)
 
@@ -375,8 +383,8 @@ It also takes a list of ``Field`` instances and a description.
 .. code-block:: python
 
     from eliot import MessageType, Field
-    USERNAME = Field.forTypes("username", [str])
-    AGE = Field.forTypes("age", [int])
+    USERNAME = Field.for_types("username", [str])
+    AGE = Field.for_types("age", [int])
 
     LOG_USER_REGISTRATION = MessageType(u"yourapp:authentication:registration",
                                         [USERNAME, AGE],
@@ -426,8 +434,8 @@ Unlike a ``MessageType`` you need two sets of fields: one for action start, one 
                                  # Description:
                                  u"A user is attempting to sign in.")
 
-Calling the resulting instance is equivalent to ``startAction``.
-For ``startTask`` you can call ``LOG_USER_SIGNIN.asTask``.
+Calling the resulting instance is equivalent to ``start_action``.
+For ``start_task`` you can call ``LOG_USER_SIGNIN.as_task``.
 
 .. code-block:: python
 
@@ -436,7 +444,7 @@ For ``startTask`` you can call ``LOG_USER_SIGNIN.asTask``.
     def signin(user, password):
          with LOG_USER_SIGNIN(logger, username=user) as action:
              status = user.authenticate(password)
-             action.addSuccessFields(status=status)
+             action.add_success_fields(status=status)
          return status
 
 Again, as with ``MessageType``, field values will be serialized using the ``Field`` definitions in the ``ActionType``.
@@ -449,10 +457,10 @@ Now that you've got some code emitting log messages (or even better, before you'
 Given good test coverage all code branches should already be covered by tests unrelated to logging.
 Logging can be considered just another aspect of testing those code branches.
 Rather than recreating all those tests as separate functions Eliot provides a decorator the allows adding logging assertions to existing tests.
-``unittest.TestCase`` test methods decorated with ``eliot.testing.validateLogging`` will be called with a ``logger`` keyword argument, a ``eliot.MemoryLogger`` instance, which should replace any ``eliot.Logger`` in objects being tested.
-The ``validateLogging`` decorator takes an argument: another function that takes the ``TestCase`` instance as its first argument (``self``), and the ``logger`` as its second argument.
+``unittest.TestCase`` test methods decorated with ``eliot.testing.validate_logging`` will be called with a ``logger`` keyword argument, a ``eliot.MemoryLogger`` instance, which should replace any ``eliot.Logger`` in objects being tested.
+The ``validate_logging`` decorator takes an argument: another function that takes the ``TestCase`` instance as its first argument (``self``), and the ``logger`` as its second argument.
 This function can make assertions about logging after the main test function has run.
-You can also pass additional arguments and keyword arguments to ``@validateLogging``, in which case the assertion function will get called with them as well.
+You can also pass additional arguments and keyword arguments to ``@validate_logging``, in which case the assertion function will get called with them as well.
 
 Let's unit test some code that relies on the ``LOG_USER_REGISTRATION`` object we created earlier.
 
@@ -480,7 +488,7 @@ Here's how we'd test it:
 
     from unittest import TestCase
     from eliot import MemoryLogger
-    from eliot.testing import assertContainsFields, validateLogging
+    from eliot.testing import assertContainsFields, validate_logging
 
     from myapp.registration import UserRegistration
     from myapp.logtypes import LOG_USER_REGISTRATION
@@ -498,7 +506,7 @@ Here's how we'd test it:
                                   u"password": u"password",
                                   u"age": 12}))
 
-        @validateLogging(assertRegistrationLogging)
+        @validate_logging(assertRegistrationLogging)
         def test_registration(self, logger):
             """
             Registration adds entries to the in-memory database.
@@ -509,31 +517,31 @@ Here's how we'd test it:
             self.assertEqual(registry.db[u"john"], (u"passsword", 12))
 
 
-Besides calling an the given validation function the ``@validateLogging`` decorator will also validate the logged messages after the test is done.
+Besides calling an the given validation function the ``@validate_logging`` decorator will also validate the logged messages after the test is done.
 E.g. it will make sure they are JSON encodable.
 Messages were created using ``ActionType`` and ``MessageType`` will be validated using the applicable ``Field`` definitions.
 You can also call ``MemoryLogger.validate`` yourself to validate written messages.
-If you don't want any additional logging assertions you can decorate your test function using ``@validateLogging(None)``.
+If you don't want any additional logging assertions you can decorate your test function using ``@validate_logging(None)``.
 
 
 Testing Tracebacks
 ^^^^^^^^^^^^^^^^^^
 
-Tests decorated with ``@validateLogging`` will fail if there are any tracebacks logged to the given ``MemoryLogger`` (using ``writeTraceback`` or ``writeFailure``) on the theory that these are unexpected errors indicating a bug.
-If you expected a particular exception to be logged you can call ``MemoryLogger.flushTracebacks``, after which it will no longer cause a test failure.
+Tests decorated with ``@validate_logging`` will fail if there are any tracebacks logged to the given ``MemoryLogger`` (using ``write_traceback`` or ``writeFailure``) on the theory that these are unexpected errors indicating a bug.
+If you expected a particular exception to be logged you can call ``MemoryLogger.flush_tracebacks``, after which it will no longer cause a test failure.
 The result will be a list of traceback message dictionaries for the particular exception.
 
 .. code-block:: python
 
     from unittest import TestCase
-    from eliot.testing import validateLogging
+    from eliot.testing import validate_logging
 
     class MyTests(TestCase):
         def assertMythingBadPathLogging(self, logger):
-            messages = logger.flushTracebacks(OSError)
+            messages = logger.flush_tracebacks(OSError)
             self.assertEqual(len(messages), 1)
 
-        @validateLogging(assertMythingBadPathLogging)
+        @validate_logging(assertMythingBadPathLogging)
         def test_mythingBadPath(self, logger):
              mything = MyThing()
              mything.logger = logger
@@ -550,10 +558,10 @@ The simplest method is using the ``assertHasMessage`` utility function which ass
 
 .. code-block:: python
 
-    from eliot.testing import assertHasMessage, validateLogging
+    from eliot.testing import assertHasMessage, validate_logging
 
     class LoggingTests(TestCase):
-        @validateLogging(assertHasMessage, LOG_USER_REGISTRATION,
+        @validate_logging(assertHasMessage, LOG_USER_REGISTRATION,
                          {u"username": u"john",
                           u"password": u"password",
                           u"age": 12})
@@ -570,26 +578,26 @@ The simplest method is using the ``assertHasMessage`` utility function which ass
 ``assertHasMessage`` returns the found message and can therefore be used within more complex assertions. ``assertHasAction`` provides similar functionality for actions (see example below).
 
 More generally, ``eliot.testing.LoggedAction`` and ``eliot.testing.LoggedMessage`` are utility classes to aid such testing.
-``LoggedMessage.ofType`` lets you find all messages of a specific ``MessageType``.
+``LoggedMessage.of_type`` lets you find all messages of a specific ``MessageType``.
 A ``LoggedMessage`` has an attribute ``message`` which contains the logged message dictionary.
 For example, we could rewrite the registration logging test above like so:
 
 .. code-block:: python
 
-    from eliot.testing import LoggedMessage, validateLogging
+    from eliot.testing import LoggedMessage, validate_logging
 
     class LoggingTests(TestCase):
         def assertRegistrationLogging(self, logger):
             """
             Logging assertions for test_registration.
             """
-            logged = LoggedMessage.ofType(logger.messages, LOG_USER_REGISTRATION)[0]
+            logged = LoggedMessage.of_type(logger.messages, LOG_USER_REGISTRATION)[0]
             assertContainsFields(self, logged.message,
                                  {u"username": u"john",
                                   u"password": u"password",
                                   u"age": 12}))
 
-        @validateLogging(assertRegistrationLogging)
+        @validate_logging(assertRegistrationLogging)
         def test_registration(self, logger):
             """
             Registration adds entries to the in-memory database.
@@ -600,8 +608,8 @@ For example, we could rewrite the registration logging test above like so:
             self.assertEqual(registry.db[u"john"], (u"passsword", 12))
 
 
-Similarly, ``LoggedAction.ofType`` finds all logged actions of a specific ``ActionType``.
-A ``LoggedAction`` instance has ``startMessage`` and ``endMessage`` containing the respective message dictionaries, and a ``children`` attribute containing a list of child ``LoggedAction`` and ``LoggedMessage``.
+Similarly, ``LoggedAction.of_type`` finds all logged actions of a specific ``ActionType``.
+A ``LoggedAction`` instance has ``start_message`` and ``end_message`` containing the respective message dictionaries, and a ``children`` attribute containing a list of child ``LoggedAction`` and ``LoggedMessage``.
 That is, a ``LoggedAction`` knows about the messages logged within its context.
 ``LoggedAction`` also has a utility method ``descendants()`` that returns an iterable of all its descendants.
 We can thus assert that a particular message (or action) was logged within the context of another action.
@@ -629,21 +637,21 @@ The test would look like this:
 
 .. code-block:: python
 
-    from eliot.testing import LoggedAction, LoggedMessage, validateLogging
+    from eliot.testing import LoggedAction, LoggedMessage, validate_logging
     import searcher
 
     class LoggingTests(TestCase):
-        @validateLogging(None)
+        @validate_logging(None)
         def test_logging(self, logger):
             searcher = Search()
             searcher.logger = logger
             servers = [buildServer(), buildServer()]
 
             searcher.search(servers, "users", "theuser")
-            action = LoggedAction.ofType(logger.messages, searcher.LOG_SEARCH)[0]
-            messages = LoggedMessage.ofType(logger.messages, searcher.LOG_CHECK)
+            action = LoggedAction.of_type(logger.messages, searcher.LOG_SEARCH)[0]
+            messages = LoggedMessage.of_type(logger.messages, searcher.LOG_CHECK)
             # The action start message had the appropriate fields:
-            assertContainsFields(self, action.startMessage,
+            assertContainsFields(self, action.start_message,
                                  {"database": "users", "key": "theuser"})
             # Messages were logged in the context of the action
             self.assertEqual(action.children, messages)
@@ -655,11 +663,11 @@ Or we can simplify further by using ``assertHasMessage`` and ``assertHasAction``
 
 .. code-block:: python
 
-    from eliot.testing import LoggedAction, LoggedMessage, validateLogging
+    from eliot.testing import LoggedAction, LoggedMessage, validate_logging
     import searcher
 
     class LoggingTests(TestCase):
-        @validateLogging(None)
+        @validate_logging(None)
         def test_logging(self, logger):
             searcher = Search()
             searcher.logger = logger
@@ -671,7 +679,7 @@ Or we can simplify further by using ``assertHasMessage`` and ``assertHasAction``
                                                   "key": "theuser"})
 
             # Messages were logged in the context of the action
-            messages = LoggedMessage.ofType(logger.messages, searcher.LOG_CHECK)
+            messages = LoggedMessage.of_type(logger.messages, searcher.LOG_CHECK)
             self.assertEqual(action.children, messages)
             # Each message had the respective server set.
             self.assertEqual(servers, [msg.message["server"] for msg in messages])
@@ -680,7 +688,7 @@ Or we can simplify further by using ``assertHasMessage`` and ``assertHasAction``
 Serialization Errors
 --------------------
 
-While validation only happens in ``MemoryLogger.validate`` (either manually or when run by ``@validateLogging``), serialization must run in the normal logging code path.
+While validation only happens in ``MemoryLogger.validate`` (either manually or when run by ``@validate_logging``), serialization must run in the normal logging code path.
 Eliot tries to very hard never to raise exceptions from the log writing code path so as not to prevent actual code from running.
 If a message fails to serialize then a ``eliot:traceback`` message will be logged, along with a ``eliot:serialization_failure`` message with an attempt at showing the message that failed to serialize.
 
