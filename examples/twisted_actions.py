@@ -23,7 +23,7 @@ addDestination(printMessage)
 _logger = Logger()
 
 
-class UnexpectedHTTPResponse(FancyStrMixin, Exception):
+class UnhandledHTTPResponse(FancyStrMixin, Exception):
     """
     Response code was not 200
     """
@@ -39,7 +39,7 @@ def checkStatus(response):
     logged.
     """
     if response.code != http.OK:
-        raise UnexpectedHTTPResponse(response.code)
+        raise UnhandledHTTPResponse(response.code)
     return response
 
 
@@ -72,8 +72,12 @@ def main(reactor, url):
         dc.addCallback(client.readBody)
         dc.addCallback(logBody, action)
         def writeAndReturnFailure(failure, logger, system):
+            """
+            We only want to log a full traceback for unexpected
+            exceptions. Things like DNS lookup errors or TimeoutErrors.
+            """
             try:
-                failure.trap(UnexpectedHTTPResponse)
+                failure.trap(UnhandledHTTPResponse)
             except:
                 writeFailure(failure, logger, system)
             return failure
