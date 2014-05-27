@@ -71,7 +71,10 @@ def main(reactor, url):
         d.addCallback(logResponse, action)
         d.addCallback(client.readBody)
         d.addCallback(logBody, action)
-        d.addErrback(writeFailure, _logger, u'twisted_actions:main')
+        def writeAndReturnFailure(failure, logger, system):
+            writeFailure(failure, logger, system)
+            return failure
+        d.addErrback(writeAndReturnFailure, _logger, u'twisted_actions:main')
         d.addActionFinish()
     return d.result
 
