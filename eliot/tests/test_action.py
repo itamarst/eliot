@@ -631,3 +631,15 @@ class StartActionAndTaskTests(TestCase):
                                   "action_type": "sys:do",
                                   "action_status": "started",
                                   "key": "value"})
+
+
+
+class PEP8Tests(TestCase):
+    """
+    Tests for PEP 8 method compatibility.
+    """
+    def test_add_success_fields(self):
+        """
+        L{Action.addSuccessFields} is the same as L{Action.add_success_fields}.
+        """
+        self.assertEqual(Action.addSuccessFields, Action.add_success_fields)

@@ -235,6 +235,10 @@ class Action(object):
         self._successFields.update(fields)
 
 
+    # PEP 8 variant:
+    add_success_fields = addSuccessFields
+
+
     @contextmanager
     def context(self):
         """
