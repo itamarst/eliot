@@ -5,6 +5,30 @@ Eliot provides a structured logging and tracing system for Python that generates
 Actions start and eventually finish, successfully or not.
 Log messages thus tell a story: what happened and what caused it.
 
+Here's what your logs might look like before using Eliot::
+
+    Going to validate http://example.com/index.html.
+    Started download attempted.
+    Download succeeded!
+    Missing <title> element in "/html/body".
+    Bad HTML entity in "/html/body/p[2]".
+    2 validation errors found!
+
+After switching to Eliot you'll get a tree of messages with both message contents and causal relationships encoded in a structured format:
+
+* ``{"action_type": "validate_page", "action_status": "started", "url": "http://example.com/index.html"}``
+
+  * ``{"action_type": "download", "action_status": "started"}``
+  * ``{"action_type": "download", "action_status": "succeeded"}``
+  * ``{"action_type": "validate_html", "action_status": "started"}``
+
+    * ``{"message_type": "validation_error", "error_type": "missing_title", "xpath": "/html/head"}``
+    * ``{"message_type": "validation_error", "error_type": "bad_entity", "xpath": "/html/body/p[2]"}``
+
+  * ``{"action_type": "validate_html", "action_status": "failed", "exception": "validator.ValidationFailed"}``
+
+* ``{"action_type": "validate_page", "action_status": "failed", "exception": "validator.ValidationFailed"}``
+
 Features:
 
 * Structured, typed log messages.
