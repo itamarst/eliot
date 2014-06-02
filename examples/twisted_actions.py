@@ -58,6 +58,20 @@ def logBody(body, log):
     log.addSuccessFields(body=body[:100])
 
 
+
+def writeAndReturnFailure(failure, logger, system):
+    """
+    Log a full traceback for unexpected exceptions. Things like DNS lookup
+    errors or TimeoutErrors.
+    """
+    try:
+        failure.trap(UnhandledHTTPResponse)
+    except:
+        writeFailure(failure, logger, system)
+    return failure
+
+
+
 def main(reactor, url):
     """
     Download a URL, check and log the response.
@@ -71,16 +85,6 @@ def main(reactor, url):
         dc.addCallback(logResponse, action)
         dc.addCallback(client.readBody)
         dc.addCallback(logBody, action)
-        def writeAndReturnFailure(failure, logger, system):
-            """
-            We only want to log a full traceback for unexpected
-            exceptions. Things like DNS lookup errors or TimeoutErrors.
-            """
-            try:
-                failure.trap(UnhandledHTTPResponse)
-            except:
-                writeFailure(failure, logger, system)
-            return failure
         dc.addErrback(writeAndReturnFailure, _logger, u'twisted_actions:main')
         dc.addActionFinish()
     d.addErrback(lambda failure: None)
