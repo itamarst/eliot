@@ -63,9 +63,9 @@ def main(reactor, url):
     Download a URL, check and log the response.
     """
     action = startAction(_logger, u'twisted_actions:main')
-    agent = client.Agent(reactor)
-    d = agent.request('GET', url)
     with action.context():
+        agent = client.Agent(reactor)
+        d = agent.request('GET', url)
         dc = DeferredContext(d)
         dc.addCallback(checkStatus)
         dc.addCallback(logResponse, action)
