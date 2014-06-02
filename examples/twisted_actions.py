@@ -20,7 +20,7 @@ def printMessage(message):
 addDestination(printMessage)
 
 
-_logger = Logger()
+logger = Logger()
 
 
 class UnhandledHTTPResponse(FancyStrMixin, Exception):
@@ -76,7 +76,7 @@ def main(reactor, url):
     """
     Download a URL, check and log the response.
     """
-    action = startAction(_logger, u'twisted_actions:main')
+    action = startAction(logger, u'twisted_actions:main')
     with action.context():
         agent = client.Agent(reactor)
         d = agent.request('GET', url)
@@ -85,7 +85,7 @@ def main(reactor, url):
         dc.addCallback(logResponse, action)
         dc.addCallback(client.readBody)
         dc.addCallback(logBody, action)
-        dc.addErrback(writeAndReturnFailure, _logger, u'twisted_actions:main')
+        dc.addErrback(writeAndReturnFailure, logger, u'twisted_actions:main')
         dc.addActionFinish()
     d.addErrback(lambda failure: None)
     return d
