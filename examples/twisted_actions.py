@@ -8,7 +8,7 @@ from pprint import pprint
 
 from twisted.internet import task
 from twisted.web import client, http
-from twisted.python.util import FancyStrMixin
+from twisted.python import failure, util
 
 from eliot import startAction, Logger, addDestination, writeFailure
 from eliot.twisted import DeferredContext
@@ -23,7 +23,7 @@ addDestination(printMessage)
 logger = Logger()
 
 
-class UnhandledHTTPResponse(FancyStrMixin, Exception):
+class UnhandledHTTPResponse(util.FancyStrMixin, Exception):
     """
     Response code was not 200
     """
@@ -87,9 +87,11 @@ def main(reactor, url):
         dc.addCallback(logBody, action)
         dc.addErrback(writeAndReturnFailure, logger, u'twisted_actions:main')
         dc.addActionFinish()
-    d.addErrback(lambda failure: None)
+
+    # Exit with status code 1 if there are errors.
+    d.addErrback(lambda e: failure.Failure(SystemExit(1)))
     return d
 
 
 if __name__ == '__main__':
-    task.react(main, sys.argv[1:])
+    raise SystemExit(task.react(main, sys.argv[1:]))
