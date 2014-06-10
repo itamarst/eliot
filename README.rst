@@ -1,3 +1,6 @@
+.. image:: https://badge.waffle.io/hybridcluster/eliot.png?label=ready&title=Ready 
+ :target: https://waffle.io/hybridcluster/eliot
+ :alt: 'Stories in Ready'
 Eliot: Logging as Storytelling
 ==============================
 
