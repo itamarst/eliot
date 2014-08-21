@@ -4,10 +4,12 @@ Using Eliot
 A Note On Naming
 ----------------
 
-Eliot APIs provide both PEP 8 style (e.g. ``write_traceback()``) and Twisted style (e.g. ``writeTraceback()``) method and function names.
+Eliot APIs provide both `PEP 8`_ style (e.g. ``write_traceback()``) and `Twisted`_ (e.g. ``writeTraceback()``) method and function names.
 The only exceptions are pyunit-style assertions (e.g. ``assertContainsFields()``) and Twisted-specific APIs since both use camel-case by default.
 Code examples below may use either style; both will work.
 
+.. _PEP 8: http://legacy.python.org/dev/peps/pep-0008/
+.. _Twisted: https://twistedmatrix.com/documents/current/core/development/policy/coding-standard.html
 
 Introduction
 ------------
