@@ -107,6 +107,10 @@ class Field(object):
         return klass(key, lambda _: value, description, validate)
 
 
+    # PEP 8 variant:
+    for_value = forValue
+
+
     @classmethod
     def forTypes(klass, key, classes, description, extraValidator=None):
         """
@@ -145,6 +149,10 @@ class Field(object):
                 extraValidator(value)
 
         return klass(key, lambda v: v, description, extraValidator=validate)
+
+
+    # PEP 8 variant:
+    for_types = forTypes
 
 
 
@@ -418,6 +426,10 @@ class ActionType(object):
         """
         return self._startTask(logger, self.action_type, self._serializers,
                                **fields)
+
+
+    # PEP 8 variant:
+    as_task = asTask
 
 
 

@@ -48,14 +48,25 @@ class LoggedAction(namedtuple(
     """
     An action whose start and finish messages have been logged.
 
-    @ivar startMessage: A C{dict}, the start message contents.
+    @ivar startMessage: A C{dict}, the start message contents. Also
+        available as C{start_message}.
 
     @ivar endMessage: A C{dict}, the end message contents (in both success and
-        failure cases).
+        failure cases). Also available as C{end_message}.
 
     @ivar children: A C{list} of direct child L{LoggedMessage} and
         L{LoggedAction} instances.
     """
+    @property
+    def start_message(self):
+        return self.startMessage
+
+
+    @property
+    def end_message(self):
+        return self.endMessage
+
+
     @classmethod
     def fromMessages(klass, uuid, level, messages):
         """
@@ -113,6 +124,10 @@ class LoggedAction(namedtuple(
         return klass(startMessage, endMessage, children)
 
 
+    # PEP 8 variant:
+    from_messages = fromMessages
+
+
     @classmethod
     def ofType(klass, messages, actionType):
         """
@@ -133,6 +148,10 @@ class LoggedAction(namedtuple(
                                                  message["task_level"],
                                                  messages))
         return result
+
+
+    # PEP 8 variant:
+    of_type = ofType
 
 
     def descendants(self):
@@ -183,6 +202,10 @@ class LoggedMessage(namedtuple("LoggedMessage", "message")):
             if message.get("message_type") == messageType.message_type:
                 result.append(klass(message))
         return result
+
+
+    # PEP 8 variant:
+    of_type = ofType
 
 
 
@@ -250,6 +273,11 @@ def validateLogging(assertion, *assertionArgs, **assertionKwargs):
 
 
 
+# PEP 8 variant:
+validate_logging = validateLogging
+
+
+
 def assertHasMessage(testCase, logger, messageType, fields=None):
     """
     Assert that the given logger has a message of the given type, and the first
@@ -311,8 +339,8 @@ def assertHasAction(testCase, logger, actionType, succeeded, startFields=None,
         superset of the given C{dict} as its end fields. If C{None} then
         fields are not checked.
 
-    @return: The first found L{LoggedAction} of the given type, if field validation
-        succeeded.
+    @return: The first found L{LoggedAction} of the given type, if field
+        validation succeeded.
 
     @raises AssertionError: No action was found, or the fields were not superset
         of given fields.

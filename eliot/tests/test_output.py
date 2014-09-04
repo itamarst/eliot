@@ -485,3 +485,17 @@ class JSONTests(TestCase):
         d = {"hello \u1234".encode("utf-8"): "\u5678".encode("utf-8")}
         result = json.dumps(d)
         self.assertEqual(json.loads(result), {"hello \u1234": "\u5678"})
+
+
+
+class PEP8Tests(TestCase):
+    """
+    Tests for PEP 8 method compatibility.
+    """
+    def test_flush_tracebacks(self):
+        """
+        L{MemoryLogger.flush_tracebacks} is the same as
+        L{MemoryLogger.flushTracebacks}
+        """
+        self.assertEqual(MemoryLogger.flush_tracebacks,
+                         MemoryLogger.flushTracebacks)

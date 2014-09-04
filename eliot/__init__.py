@@ -14,11 +14,25 @@ addDestination = Logger._destinations.add
 removeDestination = Logger._destinations.remove
 
 
+# PEP 8 variants:
+start_action = startAction
+start_task = startTask
+write_traceback = writeTraceback
+write_failure = writeFailure
+add_destination = addDestination
+remove_destination = removeDestination
+
+
+
 __all__ = ["Message", "writeTraceback", "writeFailure",
            "startAction", "startTask", "Action",
            "Field", "fields", "MessageType", "ActionType",
            "ILogger", "Logger", "MemoryLogger", "addDestination",
            "removeDestination",
+
+           # PEP 8 variants:
+           "write_traceback", "write_failure", "start_action", "start_task",
+           "add_destination", "remove_destination",
 
            "__version__",
            ]

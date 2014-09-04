@@ -28,3 +28,50 @@ class PublicAPITests(TestCase):
         attached to L{Logger}.
         """
         self.assertEqual(eliot.removeDestination, Logger._destinations.remove)
+
+
+
+class PEP8Tests(TestCase):
+    """
+    Tests for the PEP 8 variant of the the public API.
+    """
+    def test_add_destination(self):
+        """
+        L{eliot.addDestionation} is the same as L{eliot.add_destination}.
+        """
+        self.assertIs(eliot.add_destination, eliot.addDestination)
+
+
+    def test_remove_destination(self):
+        """
+        L{eliot.removeDestionation} is the same as L{eliot.remove_destination}.
+        """
+        self.assertIs(eliot.remove_destination, eliot.removeDestination)
+
+
+    def test_write_traceback(self):
+        """
+        L{eliot.writeTraceback} is the same as L{eliot.write_traceback}.
+        """
+        self.assertIs(eliot.write_traceback, eliot.writeTraceback)
+
+
+    def test_write_failure(self):
+        """
+        L{eliot.writeFailure} is the same as L{eliot.write_failure}.
+        """
+        self.assertIs(eliot.write_failure, eliot.writeFailure)
+
+
+    def test_start_task(self):
+        """
+        L{eliot.startTask} is the same as L{eliot.start_task}.
+        """
+        self.assertIs(eliot.start_task, eliot.startTask)
+
+
+    def test_start_action(self):
+        """
+        L{eliot.startAction} is the same as L{eliot.start_action}.
+        """
+        self.assertIs(eliot.start_action, eliot.startAction)
