@@ -9,6 +9,7 @@ from unittest import TestCase
 from ..testing import (
     issuperset, assertContainsFields, LoggedAction, LoggedMessage,
     validateLogging, UnflushedTracebacks, assertHasMessage, assertHasAction,
+    validate_logging,
     )
 from .._output import MemoryLogger
 from .._action import startAction
@@ -741,3 +742,58 @@ class AssertHasActionTests(TestCase):
             assertHasAction(test, logger, ACTION1, True,
                             {"x": 123}, {"result": 5}),
             LoggedAction.ofType(logger.messages, ACTION1)[0])
+
+
+
+class PEP8Tests(TestCase):
+    """
+    Tests for PEP 8 method compatibility.
+    """
+    def test_LoggedAction_from_messages(self):
+        """
+        L{LoggedAction.from_messages} is the same as
+        L{LoggedAction.fromMessages}.
+        """
+        self.assertEqual(LoggedAction.from_messages, LoggedAction.fromMessages)
+
+
+    def test_LoggedAction_of_type(self):
+        """
+        L{LoggedAction.of_type} is the same as
+        L{LoggedAction.ofType}.
+        """
+        self.assertEqual(LoggedAction.of_type, LoggedAction.ofType)
+
+
+    def test_LoggedAction_end_message(self):
+        """
+        L{LoggedAction.end_message} is the same as L{LoggedAction.endMessage}.
+        """
+        action = LoggedAction({1: 2}, {3: 4}, [])
+        self.assertEqual(action.end_message, action.endMessage)
+
+
+    def test_LoggedAction_start_message(self):
+        """
+        L{LoggedAction.start_message} is the same as
+        L{LoggedAction.startMessage}.
+        """
+        action = LoggedAction({1: 2}, {3: 4}, [])
+        self.assertEqual(action.start_message, action.startMessage)
+
+
+    def test_LoggedMessage_of_type(self):
+        """
+        L{LoggedMessage.of_type} is the same as
+        L{LoggedMessage.ofType}.
+        """
+        self.assertEqual(LoggedMessage.of_type, LoggedMessage.ofType)
+
+
+    def test_validate_logging(self):
+        """
+        L{validate_logging} is the same as L{validateLogging}.
+        """
+        self.assertEqual(validate_logging, validateLogging)
+
+

@@ -890,3 +890,29 @@ class EndToEndValidationTests(TestCase):
                 raise RuntimeError("hello")
         self.assertRaises(RuntimeError, run)
         self.assertEqual(logger.messages[1]["reason"], "hello")
+
+
+
+class PEP8Tests(TestCase):
+    """
+    Tests for PEP 8 method compatibility.
+    """
+    def test_for_value(self):
+        """
+        L{Field.for_value} is the same as L{Field.forValue}.
+        """
+        self.assertEqual(Field.for_value, Field.forValue)
+
+
+    def test_for_types(self):
+        """
+        L{Field.for_types} is the same as L{Field.forTypes}.
+        """
+        self.assertEqual(Field.for_types, Field.forTypes)
+
+
+    def test_as_task(self):
+        """
+        L{ActionType.as_task} is the same as L{ActionType.asTask}.
+        """
+        self.assertEqual(ActionType.as_task, ActionType.asTask)

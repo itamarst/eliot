@@ -1,6 +1,15 @@
 What's New
 ==========
 
+0.5.0
+^^^^^
+
+Features:
+
+* Most public methods and functions now have underscore-based equivalents to the camel case versions, e.g. ``eliot.write_traceback`` and ``eliot.writeTraceback``, for use in PEP 8 styled programs.
+  Twisted-facing APIs and pyunit assertions do not provide these additional APIs, as camel-case is the native idiom.
+
+
 0.4.0
 ^^^^^
 

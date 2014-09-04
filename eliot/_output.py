@@ -208,6 +208,10 @@ class MemoryLogger(object):
         return result
 
 
+    # PEP 8 variant:
+    flush_tracebacks = flushTracebacks
+
+
     def write(self, dictionary, serializer=None):
         """
         Add the dictionary to list of messages.
