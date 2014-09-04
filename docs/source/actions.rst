@@ -1,8 +1,8 @@
 Logging Actions and Tasks
 =========================
 
-Actions
--------
+Actions: A Start and a Finish
+-----------------------------
 
 A higher-level construct than messages is the concept of an action.
 An action can be started, and then finishes either successfully or with some sort of an exception.
@@ -14,8 +14,8 @@ An action's parent is deduced from the Python call stack and context managers li
 Log messages will also note the action they are part of if they can deduce it from the call stack.
 The result of all this is that you can trace the operation of your code as it logs various actions, and see a narrative of what happened and what caused it to happen.
 
-Tasks
------
+Tasks: Top-level Actions
+------------------------
 
 A top-level action with no parent is called a task, the root cause of all its child actions.
 E.g. a web server receiving a new HTTP request would create a task for that new request.
