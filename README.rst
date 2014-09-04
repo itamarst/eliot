@@ -33,7 +33,7 @@ Features:
 
 * Structured, typed log messages.
 * Ability to log actions, not just point-in-time information: log messages become a trace of program execution.
-* Excellent support for unit testing your logging code.
+* Excellent support for unit testing your code's logging.
 * Emphasis on performance, including no blocking I/O in logging code path.
 * Optional Twisted support.
 * Designed for JSON output, usable by Logstash/Elasticsearch.
