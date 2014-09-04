@@ -1,6 +1,9 @@
 Unit Testing
 ============
 
+Validate Logging in Tests
+-------------------------
+
 Now that you've got some code emitting log messages (or even better, before you've written the code) you can write unit tests to verify it.
 Given good test coverage all code branches should already be covered by tests unrelated to logging.
 Logging can be considered just another aspect of testing those code branches.
@@ -73,7 +76,7 @@ If you don't want any additional logging assertions you can decorate your test f
 
 
 Testing Tracebacks
-^^^^^^^^^^^^^^^^^^
+------------------
 
 Tests decorated with ``@validate_logging`` will fail if there are any tracebacks logged to the given ``MemoryLogger`` (using ``write_traceback`` or ``writeFailure``) on the theory that these are unexpected errors indicating a bug.
 If you expected a particular exception to be logged you can call ``MemoryLogger.flush_tracebacks``, after which it will no longer cause a test failure.
@@ -99,7 +102,7 @@ The result will be a list of traceback message dictionaries for the particular e
 
 
 Testing Message and Action Structure
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------
 
 Eliot provides utilities for making assertions about the structure of individual messages and actions.
 The simplest method is using the ``assertHasMessage`` utility function which asserts that a message of a given ``MessageType`` has the given fields:

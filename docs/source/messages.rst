@@ -1,6 +1,9 @@
 Logging Messages
 ================
 
+Messages
+--------
+
 At its base, Eliot outputs structured messages composed of named fields.
 Eliot messages are typically serialized to JSON objects.
 Fields therefore can have Unicode names, so either ``unicode`` or ``bytes`` containing UTF-8 encoded Unicode.

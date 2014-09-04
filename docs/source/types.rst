@@ -6,7 +6,7 @@ Introduction
 
 So far we've been creating messages and actions in an unstructured manner.
 This means it's harder to support types that aren't built-in and to validate message structure.
-Moroever there's no documentation of what fields messages and action messages expect.
+Moreover there's no documentation of what fields messages and action messages expect.
 To improve this we introduce the preferred API for creating actions and standalone messages: ``ActionType`` and ``MessageType``.
 Here's an example demonstrating how we create a message type, bind some values and then log the message:
 
