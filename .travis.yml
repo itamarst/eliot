@@ -1,9 +1,15 @@
 language: python
 python: 2.7
 
-install: pip install tox
+install: pip install tox coverage coveralls
 
-script: tox
+script:
+  - tox
+  - coverage combine
+  - coverage report --show-missing
+
+after_success:
+  - coveralls
 
 notifications:
     email: false
