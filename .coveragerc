@@ -1,6 +1,8 @@
 [run]
 # Branch analysis coverage:
 branch = True
+# Only measure our package:
+source = eliot
 # No need to measure coverage of tests:
 omit =
     eliot/tests/*

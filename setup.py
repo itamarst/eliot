@@ -42,12 +42,6 @@ setup(
     version=get_version(),
     description="Logging as Storytelling",
     install_requires=["six", "zope.interface"],
-    extras_require={
-        "dev": [
-            # Allows us to measure code coverage:
-            "pytest-cov",
-        ]
-    },
     keywords="logging",
     license="APL2",
     packages=["eliot", "eliot.tests"],
