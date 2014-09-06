@@ -1,6 +1,10 @@
 Eliot: Logging as Storytelling
 ==============================
 
+.. image:: https://coveralls.io/repos/ClusterHQ/eliot/badge.png
+           :target: https://coveralls.io/r/ClusterHQ/eliot
+           :alt: Coveralls test coverage information
+
 Eliot provides a structured logging and tracing system for Python that generates log messages describing a forest of nested actions.
 Actions start and eventually finish, successfully or not.
 Log messages thus tell a story: what happened and what caused it.
