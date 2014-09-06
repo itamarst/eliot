@@ -45,7 +45,7 @@ setup(
     extras_require={
         "dev": [
             # Allows us to measure code coverage:
-            "coverage",
+            "pytest-cov",
         ]
     },
     keywords="logging",

@@ -1,0 +1,9 @@
+[run]
+# Branch analysis coverage:
+branch = True
+# No need to measure coverage of tests:
+omit =
+    eliot/tests/*
+# We will do multiple runs in different tox envs, so keep them all; we'll
+# combine them in the Travis-CI build and then upload that to coveralls.io:
+parallel = True
