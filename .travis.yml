@@ -5,6 +5,7 @@ install: pip install tox coverage coveralls
 
 script:
   - tox
+  # Combine all the coverage reports from the different tox envs:
   - coverage combine
   - coverage report --show-missing
 
