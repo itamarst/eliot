@@ -37,11 +37,13 @@ Features:
 
 * Structured, typed log messages.
 * Ability to log actions, not just point-in-time information: log messages become a trace of program execution.
-* Excellent support for unit testing your logging code.
+* Excellent support for unit testing your code's logging.
 * Emphasis on performance, including no blocking I/O in logging code path.
 * Optional Twisted support.
 * Designed for JSON output, usable by Logstash/Elasticsearch.
 * Supports CPython 2.7, 3.3 and PyPy.
+* Eliot APIs provide both `PEP 8`_ style (e.g. ``write_traceback()``) and `Twisted`_ (e.g. ``writeTraceback()``) method and function names.
+  The only exceptions are pyunit-style assertions (e.g. ``assertContainsFields()``) and Twisted-specific APIs since both use camelCase by default.
 
 Eliot is released by `ClusterHQ`_ under the Apache 2.0 License.
 
@@ -55,6 +57,8 @@ Documentation can be found on `Read The Docs`_.
 
 Bugs and feature requests should be filed at the project `Github page`_.
 
+.. _PEP 8: http://legacy.python.org/dev/peps/pep-0008/
+.. _Twisted: https://twistedmatrix.com/documents/current/core/development/policy/coding-standard.html
 .. _Read the Docs: https://eliot.readthedocs.org/
 .. _Github page: https://github.com/ClusterHQ/eliot
 .. _PyPI: https://pypi.python.org/pypi/eliot
