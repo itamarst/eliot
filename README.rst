@@ -1,7 +1,7 @@
 Eliot: Logging as Storytelling
 ==============================
 
-.. image:: https://coveralls.io/repos/ClusterHQ/eliot/badge.png
+.. image:: https://coveralls.io/repos/ClusterHQ/eliot/badge.png?branch=master
            :target: https://coveralls.io/r/ClusterHQ/eliot
            :alt: Coveralls test coverage information
 
