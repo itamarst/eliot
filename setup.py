@@ -42,6 +42,12 @@ setup(
     version=get_version(),
     description="Logging as Storytelling",
     install_requires=["six", "zope.interface"],
+    extras_require={
+        "dev": [
+            # Allows us to measure code coverage:
+            "coverage",
+        ]
+    },
     keywords="logging",
     license="Apache 2.0",
     packages=["eliot", "eliot.tests"],
