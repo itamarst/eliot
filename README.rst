@@ -1,6 +1,10 @@
 Eliot: Logging as Storytelling
 ==============================
 
+.. image:: https://travis-ci.org/ClusterHQ/eliot.png?branch=master
+           :target: http://travis-ci.org/ClusterHQ/eliot
+           :alt: Build Status
+
 Eliot provides a structured logging and tracing system for Python that generates log messages describing a forest of nested actions.
 Actions start and eventually finish, successfully or not.
 Log messages thus tell a story: what happened and what caused it.
@@ -41,7 +45,7 @@ Features:
 * Eliot APIs provide both `PEP 8`_ style (e.g. ``write_traceback()``) and `Twisted`_ (e.g. ``writeTraceback()``) method and function names.
   The only exceptions are pyunit-style assertions (e.g. ``assertContainsFields()``) and Twisted-specific APIs since both use camelCase by default.
 
-Eliot is released by `HybridCluster`_ under the Apache 2.0 License.
+Eliot is released by `ClusterHQ`_ under the Apache 2.0 License.
 
 To install::
 
@@ -56,10 +60,6 @@ Bugs and feature requests should be filed at the project `Github page`_.
 .. _PEP 8: http://legacy.python.org/dev/peps/pep-0008/
 .. _Twisted: https://twistedmatrix.com/documents/current/core/development/policy/coding-standard.html
 .. _Read the Docs: https://eliot.readthedocs.org/
-.. _Github page: https://github.com/hybridcluster/eliot
+.. _Github page: https://github.com/ClusterHQ/eliot
 .. _PyPI: https://pypi.python.org/pypi/eliot
-.. _HybridCluster: https://hybridcluster.github.io
-
-.. image:: https://travis-ci.org/hybridcluster/eliot.png?branch=master
-           :target: http://travis-ci.org/hybridcluster/eliot
-           :alt: Build Status
+.. _ClusterHQ: https://clusterhq.com
