@@ -49,10 +49,10 @@ setup(
         ]
     },
     keywords="logging",
-    license="APL2",
+    license="Apache 2.0",
     packages=["eliot", "eliot.tests"],
-    url="https://github.com/hybridcluster/eliot/",
+    url="https://github.com/ClusterHQ/eliot/",
     maintainer='Itamar Turner-Trauring',
-    maintainer_email='itamar@hybridcluster.com',
+    maintainer_email='itamar@clusterhq.com',
     long_description=read('README.rst'),
 )

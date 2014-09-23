@@ -173,13 +173,13 @@ class _RedirectLogsForTrial(object):
 
     (This is not thread-safe at the moment, so in theory multiple threads
     calling this might result in multiple destinatios being added - see
-    https://github.com/hybridcluster/eliot/issues/78).
+    https://github.com/clusterhq/eliot/issues/78).
 
     Currently this works by checking if C{sys.argv[0]} is called C{trial};
     the ideal mechanism would require
     https://twistedmatrix.com/trac/ticket/6939 to be fixed, but probably
     there are better solutions even without that -
-    https://github.com/hybridcluster/eliot/issues/76 covers those.
+    https://github.com/clusterhq/eliot/issues/76 covers those.
 
     @ivar _sys: An object similar to, and typically identical to, Python's
         L{sys} module.
