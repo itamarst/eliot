@@ -28,7 +28,7 @@ To bridge the gap between the two structures each output message contains enough
 2. The specific action within that task's action tree.
 3. A per-action counter that is incremented for each new output message directly within that action.
 
-See the :doc:`Fields <fields>` documentation for details.
+See the :doc:`Fields <fields>` documentation for more details about the way these fields define a tree structure.
 
 Logging Actions
 ---------------
@@ -65,7 +65,7 @@ Sometimes you want to have the action be the context for other messages but not 
 You can do so with ``Action.context()``.
 You can explicitly finish an action by calling ``eliot.Action.finish``.
 If called with an exception it indicates the action finished unsuccessfully.
-If called with no arguments that the action finished successfully.
+If called with no arguments it indicates that the action finished successfully.
 Keep in mind that code within the context block that is run after the action is finished will still be in that action's context.
 
 .. code-block:: python
