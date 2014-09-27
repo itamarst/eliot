@@ -281,3 +281,40 @@ class MemoryLogger(object):
         self.messages = []
         self.serializers = []
         self.tracebackMessages = []
+
+
+
+def pretty_print():
+    """
+    Print human-readable messages to stdout.
+    """
+    import sys
+    from datetime import datetime
+
+    skip = {"timestamp", "task_uuid", "task_level", "action_counter",
+            "message_type", "action_type", "action_status"}
+
+    def add_field(previous, key, value):
+        add = "%s: %s" % (key, json.dumps(value))
+        if previous:
+            return previous + " " + add
+        else:
+            return add
+
+    def write(message):
+        remaining = ""
+        for field in ["action_type", "message_type", "action_status"]:
+            if field in message:
+                remaining = add_field(remaining, field, message[field])
+        for (key, value) in message.items():
+            if key not in skip:
+                remaining = add_field(remaining, key, value)
+        sys.stdout.write("%sZ %s\n    %s#%s %s\n" % (
+            datetime.utcfromtimestamp(message["timestamp"]).isoformat(),
+            message["task_uuid"],
+            message["task_level"],
+            message["action_counter"],
+            remaining))
+
+    from eliot import add_destination
+    add_destination(write)

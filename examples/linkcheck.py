@@ -5,15 +5,14 @@ Link checking: action logging demonstrating the flow of code.
 """
 
 import sys
-import json
 
 from lxml import html
 import requests
 
 
-from eliot import start_action, Logger, add_destination
+from eliot import start_action, Logger, pretty_print
+pretty_print()
 
-add_destination(lambda message: sys.stdout.write(json.dumps(message) + "\n"))
 _logger = Logger()
 
 
@@ -26,7 +25,7 @@ def download(url):
 
 def check_links(url):
     """Return dictionary of bad links in given HTML page."""
-    with start_action(_logger, "check_links", url=url):
+    with start_action(_logger, "check_links", url=url) as action:
         response = download(url)
         bad_links = {}
         document = html.fromstring(response.text)
@@ -36,6 +35,7 @@ def check_links(url):
                 download(linked_url)
             except Exception as e:
                 bad_links[linked_url] = e
+        action.add_success_fields(failed_links=list(bad_links))
         return bad_links
 
 
