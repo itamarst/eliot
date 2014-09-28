@@ -294,27 +294,39 @@ def pretty_print():
     skip = {"timestamp", "task_uuid", "task_level", "action_counter",
             "message_type", "action_type", "action_status"}
 
-    def add_field(previous, key, value):
-        add = "%s: %s" % (key, json.dumps(value))
+    def add_field(previous, key, value, depth):
+        add = "%s: %s\n" % (key, json.dumps(value))
         if previous:
-            return previous + " " + add
+            return previous + (" " * depth) + "  " + add
         else:
-            return add
+            return "  " + add
 
     def write(message):
         remaining = ""
+        depth = len(message["task_level"])
         for field in ["action_type", "message_type", "action_status"]:
             if field in message:
-                remaining = add_field(remaining, field, message[field])
+                remaining = add_field(remaining, field, message[field], depth)
         for (key, value) in message.items():
             if key not in skip:
-                remaining = add_field(remaining, key, value)
-        sys.stdout.write("%sZ %s\n    %s#%s %s\n" % (
-            datetime.utcfromtimestamp(message["timestamp"]).isoformat(),
-            message["task_uuid"],
-            message["task_level"],
-            message["action_counter"],
-            remaining))
+                remaining = add_field(remaining, key, value, depth)
+        status = message.get("action_status")
+        if status == "started":
+            prefix = '\u2514[\u2026 '
+        elif status == "succeeded":
+            prefix = '  \u2713]'#"\u250C"
+        elif status == "failed":
+            prefix = "  \u2717]"
+        else:
+            prefix = "  -"
+        sys.stdout.write(
+            "%s %sZ %s\n%s%s\n" % (
+                prefix,
+                datetime.utcfromtimestamp(message["timestamp"]).time().isoformat(),
+                message["task_uuid"],
+                message["task_level"],
+                remaining,
+            ))
 
     from eliot import add_destination
     add_destination(write)
