@@ -299,11 +299,11 @@ def pretty_print():
         if previous:
             return previous + (" " * depth) + "  " + add
         else:
-            return "  " + add
+            return "   " + add
 
     def write(message):
         remaining = ""
-        depth = len(message["task_level"])
+        depth = 1
         for field in ["action_type", "message_type", "action_status"]:
             if field in message:
                 remaining = add_field(remaining, field, message[field], depth)
@@ -311,20 +311,21 @@ def pretty_print():
             if key not in skip:
                 remaining = add_field(remaining, key, value, depth)
         status = message.get("action_status")
+        level = message["task_level"]
         if status == "started":
-            prefix = '\u2514[\u2026 '
+            prefix = '[  ' + level
         elif status == "succeeded":
-            prefix = '  \u2713]'#"\u250C"
+            prefix = '\u2713] ' + level
         elif status == "failed":
-            prefix = "  \u2717]"
+            prefix = "\u2717] " + level
         else:
-            prefix = "  -"
+            prefix = " - " + level
         sys.stdout.write(
-            "%s %sZ %s\n%s%s\n" % (
+            "%s#%s %s %sZ\n%s\n" % (
                 prefix,
-                datetime.utcfromtimestamp(message["timestamp"]).time().isoformat(),
+                message["action_counter"],
                 message["task_uuid"],
-                message["task_level"],
+                datetime.utcfromtimestamp(message["timestamp"]).time().isoformat(),
                 remaining,
             ))
 
