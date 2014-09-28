@@ -320,14 +320,16 @@ def pretty_print():
             prefix = "\u2717] " + level
         else:
             prefix = " - " + level
-        sys.stdout.write(
-            "%s#%s %s %sZ\n%s\n" % (
-                prefix,
-                message["action_counter"],
-                message["task_uuid"],
-                datetime.utcfromtimestamp(message["timestamp"]).time().isoformat(),
-                remaining,
-            ))
+        output = "%s#%s %s %sZ\n%s\n" % (
+            prefix,
+            message["action_counter"],
+            message["task_uuid"],
+            datetime.utcfromtimestamp(message["timestamp"]).time().isoformat(),
+            remaining,
+        )
+        if not sys.stdout.isatty():
+            output = output.encode("utf-8")
+        sys.stdout.write(output)
 
     from eliot import add_destination
     add_destination(write)
