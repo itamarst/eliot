@@ -17,15 +17,16 @@ _logger = Logger()
 
 
 def download(url):
-    with start_action(_logger, "download", url=url):
+    with start_action(_logger, "download", url=url) as action:
         response = requests.get(url)
         response.raise_for_status()
+        action.add_success_fields(final_url=response.url)
         return response
 
 
 def check_links(url):
     """Return dictionary of bad links in given HTML page."""
-    with start_action(_logger, "check_links", url=url) as action:
+    with start_action(_logger, "check_links", url=url):
         response = download(url)
         bad_links = {}
         document = html.fromstring(response.text)
@@ -35,7 +36,6 @@ def check_links(url):
                 download(linked_url)
             except Exception as e:
                 bad_links[linked_url] = e
-        action.add_success_fields(failed_links=list(bad_links))
         return bad_links
 
 
