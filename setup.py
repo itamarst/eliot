@@ -41,7 +41,14 @@ setup(
     name='eliot',
     version=get_version(),
     description="Logging as Storytelling",
-    install_requires=["six", "zope.interface"],
+    install_requires=[
+        # Python 3 compatibility:
+        "six",
+        # Internal code documentation:
+        "zope.interface",
+        # Struct-like objects:
+        "characteristic",
+    ],
     extras_require={
         "dev": [
             # Allows us to measure code coverage:
