@@ -1,5 +1,5 @@
-Logging Messages
-================
+Logging Messages and Tracebacks
+===============================
 
 Messages
 --------

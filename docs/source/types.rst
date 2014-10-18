@@ -1,5 +1,5 @@
-Typed Messages and Actions
-==========================
+Using Types to Create Messages and Actions
+==========================================
 
 Why Typing?
 -----------

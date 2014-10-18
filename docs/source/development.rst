@@ -1,5 +1,5 @@
-Development
-^^^^^^^^^^^
+Contributing to Eliot
+^^^^^^^^^^^^^^^^^^^^^
 
 To run the full test suite, the Daemontools package should be installed.
 
