@@ -57,7 +57,8 @@ copyright = u'2014, ClusterHQ'
 import eliot
 version = eliot.__version__
 # Versioneer adds -dirty suffix to version if checkout is dirty, and
-# therefore ReadTheDocs somehow ends up with this prefix, so strip it out.
+# therefore ReadTheDocs somehow ends up with this in its version, so strip
+# it out.
 if version.endswith("-dirty"):
     version = version[:-len("-dirty")]
 # The full version, including alpha/beta/rc tags.
