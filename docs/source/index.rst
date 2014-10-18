@@ -9,6 +9,7 @@ Contents:
    actions
    types
    types-testing
+   elasticsearch
    twisted
    fields
    threads
