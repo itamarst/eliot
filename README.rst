@@ -61,6 +61,8 @@ Documentation can be found on `Read The Docs`_.
 
 Bugs and feature requests should be filed at the project `Github page`_.
 
+You can ask for help on IRC at the ``#eliot`` channel on ``irc.freenode.net``.
+
 .. _PEP 8: http://legacy.python.org/dev/peps/pep-0008/
 .. _Twisted: https://twistedmatrix.com/documents/current/core/development/policy/coding-standard.html
 .. _Read the Docs: https://eliot.readthedocs.org/
