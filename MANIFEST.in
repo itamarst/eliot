@@ -4,3 +4,5 @@ include requirements-dev.txt
 recursive-include docs *
 prune docs/_build
 recursive-include benchmarks *
+include versioneer.py
+include eliot/_version.py

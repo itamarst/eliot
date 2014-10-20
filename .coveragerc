@@ -3,9 +3,10 @@
 branch = True
 # Only measure our package:
 source = eliot
-# No need to measure coverage of tests:
+# No need to measure coverage of tests, or versioneer's code:
 omit =
     eliot/tests/*
+    eliot/_version.py
 # We will do multiple runs in different tox envs, so keep them all; we'll
 # combine them in the Travis-CI build and then upload that to coveralls.io:
 parallel = True
