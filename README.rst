@@ -45,7 +45,7 @@ Features:
 * Emphasis on performance, including no blocking I/O in logging code path.
 * Optional Twisted support.
 * Designed for JSON output, usable by Logstash/Elasticsearch.
-* Supports CPython 2.7, 3.3 and PyPy.
+* Supports CPython 2.7, 3.3, 3.4 and PyPy.
 * Eliot APIs provide both `PEP 8`_ style (e.g. ``write_traceback()``) and `Twisted`_ (e.g. ``writeTraceback()``) method and function names.
   The only exceptions are pyunit-style assertions (e.g. ``assertContainsFields()``) and Twisted-specific APIs since both use camelCase by default.
 
@@ -60,6 +60,8 @@ Downloads are available on `PyPI`_.
 Documentation can be found on `Read The Docs`_.
 
 Bugs and feature requests should be filed at the project `Github page`_.
+
+You can ask for help on IRC at the ``#eliot`` channel on ``irc.freenode.net``.
 
 .. _PEP 8: http://legacy.python.org/dev/peps/pep-0008/
 .. _Twisted: https://twistedmatrix.com/documents/current/core/development/policy/coding-standard.html
