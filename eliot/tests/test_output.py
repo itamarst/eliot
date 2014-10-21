@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 from unittest import TestCase, skipIf
 
-from six import PY3, text_type as unicode
+from six import PY3
 
 from zope.interface.verify import verifyClass
 
