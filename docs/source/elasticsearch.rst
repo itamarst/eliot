@@ -2,9 +2,10 @@ Using Logstash and ElasticSearch to Process Eliot Logs
 ======================================================
 
 `ElasticSearch`_ is a search and analytics engine which can be used to store Eliot logging output.
-The logs can then be viewed using `Kibana`_ web UI, searched with the ElasticSearch query API, or on the command-line using the `logstash-cli`_ tool.
+The logs can then be browsed by humans using the `Kibana`_ web UI, or on the command-line using the `logstash-cli`_ tool.
+Automated systems can access the logs using the ElasticSearch query API.
 `Logstash`_ is a log processing tool that can be used to load Eliot log files into ElasticSearch.
-The combination of ElasticSearch, Logstash and Kibana is sometimes referred to as ELK.
+The combination of ElasticSearch, Logstash, and Kibana is sometimes referred to as ELK.
 
 .. _logstash-cli: https://github.com/jedi4ever/logstash-cli
 .. _Logstash: http://logstash.net/
