@@ -1,20 +1,11 @@
-import os
-
 from setuptools import setup
 
-
-def get_version():
-    """
-    Get the version from version module without importing more than
-    necessary.
-    """
-    version_module_path = os.path.join(os.path.dirname(__file__), "eliot",
-                                       "_version.py")
-
-    # The version module contains a variable called __version__
-    with open(version_module_path) as version_module:
-        exec(version_module.read())
-    return locals()["__version__"]
+import versioneer
+versioneer.VCS = 'git'
+versioneer.versionfile_source = 'eliot/_version.py'
+versioneer.versionfile_build = 'eliot/_version.py'
+versioneer.tag_prefix = ''
+versioneer.parentdir_prefix = 'eliot-'
 
 
 def read(path):
@@ -35,11 +26,13 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy',
     ],
     name='eliot',
-    version=get_version(),
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     description="Logging as Storytelling",
     install_requires=[
         # Python 3 compatibility:

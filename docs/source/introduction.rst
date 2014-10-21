@@ -1,5 +1,5 @@
-Introduction
-============
+Why Eliot?
+==========
 
 .. epigraph::
 

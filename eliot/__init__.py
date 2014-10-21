@@ -1,9 +1,6 @@
 """
 Eliot: Logging as Storytelling.
 """
-
-from ._version import __version__
-
 # Expose the public API:
 from ._message import Message
 from ._action import startAction, startTask, Action
@@ -37,3 +34,7 @@ __all__ = ["Message", "writeTraceback", "writeFailure",
 
            "__version__",
            ]
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
