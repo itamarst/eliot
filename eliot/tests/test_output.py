@@ -410,9 +410,9 @@ class LoggerTests(TestCase):
         dictionary = {badobject(): 123,
                       123: badobject()}
         badMessage = "eliot: unknown, unicode() raised exception"
-        self.assertEqual(Logger()._safeUnicodeDictionary(dictionary),
-                         unicode({badMessage: "123",
-                                  "123": badMessage}))
+        self.assertEqual(eval(Logger()._safeUnicodeDictionary(dictionary)),
+                         {badMessage: "123",
+                          "123": badMessage})
 
 
     def test_safeUnicodeDictionaryFallback(self):
