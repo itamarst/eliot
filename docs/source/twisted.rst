@@ -6,6 +6,8 @@ Eliot provides a variety of APIs to support integration with the `Twisted`_ netw
 .. _Twisted: https://twistedmatrix.com
 
 
+.. _ThreadedFileWriter:
+
 Destinations
 ------------
 

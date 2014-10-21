@@ -4,6 +4,7 @@ Implementation of hooks and APIs for outputting log messages.
 
 from __future__ import unicode_literals, absolute_import
 
+from characteristic import attributes
 from six import text_type as unicode, PY3
 if PY3:
     from . import _py3json as json
@@ -281,3 +282,28 @@ class MemoryLogger(object):
         self.messages = []
         self.serializers = []
         self.tracebackMessages = []
+
+
+
+@attributes(["file"])
+class _FileDestination(object):
+    """
+    Callable that writes JSON messages to a file.
+
+    @ivar file: The file to which messages will be written.
+    """
+    def __call__(self, message):
+        """
+        @param message: A message dictionary.
+        """
+        self.file.write(json.dumps(message) + b"\n")
+
+
+
+def to_file(output_file):
+    """
+    Add a destination that writes a JSON message per line to the given file.
+
+    @param output_file: A file-like object.
+    """
+    Logger._destinations.add(_FileDestination(file=output_file))

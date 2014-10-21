@@ -5,13 +5,15 @@ Tests for L{eliot._output}.
 from __future__ import unicode_literals
 
 from unittest import TestCase, skipIf
+from io import BytesIO
 
 from six import PY3, text_type as unicode
 
 from zope.interface.verify import verifyClass
 
 from .._output import (
-    MemoryLogger, ILogger, Destinations, Logger, json
+    MemoryLogger, ILogger, Destinations, Logger, json, to_file,
+    _FileDestination,
     )
 from .._validation import ValidationError, Field, _MessageSerializer
 from .._traceback import writeTraceback
@@ -471,7 +473,6 @@ class LoggerTests(TestCase):
 
 
 
-
 class JSONTests(TestCase):
     """
     Tests for the L{json} object exposed by L{eliot._output}.
@@ -499,3 +500,34 @@ class PEP8Tests(TestCase):
         """
         self.assertEqual(MemoryLogger.flush_tracebacks,
                          MemoryLogger.flushTracebacks)
+
+
+
+class ToFileTests(TestCase):
+    """
+    Tests for L{to_file}.
+    """
+    def test_to_file_adds_destination(self):
+        """
+        L{to_file} adds a L{_FileDestination} destination with the given file.
+        """
+        f = object()
+        to_file(f)
+        expected = _FileDestination(file=f)
+        self.addCleanup(Logger._destinations.remove, expected)
+        self.assertIn(expected, Logger._destinations._destinations)
+
+
+    def test_filedestination_writes_json(self):
+        """
+        L{_FileDestination} writes JSON-encoded messages.
+        """
+        message1 = {"x": 123}
+        message2 = {"y": None, "x": "abc"}
+        f = BytesIO()
+        destination = _FileDestination(file=f)
+        destination(message1)
+        destination(message2)
+        self.assertEqual(
+            [json.loads(line) for line in f.getvalue().splitlines()],
+            [message1, message2])

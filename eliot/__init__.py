@@ -4,7 +4,7 @@ Eliot: Logging as Storytelling.
 # Expose the public API:
 from ._message import Message
 from ._action import startAction, startTask, Action
-from ._output import ILogger, Logger, MemoryLogger
+from ._output import ILogger, Logger, MemoryLogger, to_file
 from ._validation import Field, fields, MessageType, ActionType
 from ._traceback import writeTraceback, writeFailure
 addDestination = Logger._destinations.add
@@ -30,6 +30,7 @@ __all__ = ["Message", "writeTraceback", "writeFailure",
            # PEP 8 variants:
            "write_traceback", "write_failure", "start_action", "start_task",
            "add_destination", "remove_destination",
+           "to_file",
 
            "__version__",
            ]
