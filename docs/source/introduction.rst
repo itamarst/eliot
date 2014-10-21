@@ -1,5 +1,5 @@
-Why Eliot is Better: Structured Action Logging
-==============================================
+Why Eliot?
+==========
 
 .. epigraph::
 
