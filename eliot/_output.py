@@ -293,14 +293,17 @@ class _FileDestination(object):
     @ivar file: The file to which messages will be written.
     """
     def __call__(self, message):
+        """
+        @param message: A message dictionary.
+        """
         self.file.write(json.dumps(message) + b"\n")
 
 
 
-def to_file(f):
+def to_file(output_file):
     """
     Add a destination that writes a JSON message per line to the given file.
 
-    @param f: A file-like object.
+    @param output_file: A file-like object.
     """
-    Logger._destinations.add(_FileDestination(file=f))
+    Logger._destinations.add(_FileDestination(file=output_file))
