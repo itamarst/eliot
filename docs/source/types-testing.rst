@@ -1,5 +1,5 @@
-Unit Testing
-============
+Unit Testing Your Logging
+=========================
 
 Validate Logging in Tests
 -------------------------

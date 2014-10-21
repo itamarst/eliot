@@ -1,5 +1,5 @@
-Twisted Support
-===============
+Using Eliot with Twisted
+========================
 
 Eliot provides a variety of APIs to support integration with the `Twisted`_ networking framework.
 

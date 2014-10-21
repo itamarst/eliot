@@ -1,5 +1,5 @@
-Destinations: Outputting Logs
-=============================
+Configuring Logging Output
+==========================
 
 Destinations are how messages get written out by the ``Logger`` class.
 A destination is a callable that takes a message dictionary.
