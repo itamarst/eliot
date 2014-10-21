@@ -1,5 +1,5 @@
 Thread Safety
-^^^^^^^^^^^^^
+=============
 
 Eliot will be thread-safe, but work still needs to be done to ensure this.
 Particular issues are discussed below.
