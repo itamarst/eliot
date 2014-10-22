@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 from unittest import TestCase, skipIf
 from io import BytesIO
 
-from six import PY3, text_type as unicode
+from six import PY3
 
 from zope.interface.verify import verifyClass
 
@@ -412,9 +412,9 @@ class LoggerTests(TestCase):
         dictionary = {badobject(): 123,
                       123: badobject()}
         badMessage = "eliot: unknown, unicode() raised exception"
-        self.assertEqual(Logger()._safeUnicodeDictionary(dictionary),
-                         unicode({badMessage: "123",
-                                  "123": badMessage}))
+        self.assertEqual(eval(Logger()._safeUnicodeDictionary(dictionary)),
+                         {badMessage: "123",
+                          "123": badMessage})
 
 
     def test_safeUnicodeDictionaryFallback(self):
