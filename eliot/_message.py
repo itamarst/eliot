@@ -101,9 +101,8 @@ class Message(object):
         contents = self._contents.copy()
         contents["timestamp"] = self._timestamp()
         if action is not None:
-            contents["action_counter"] = action._incrementMessageCounter()
             contents["task_uuid"] = action._identification["task_uuid"]
-            contents["task_level"] = action._identification["task_level"]
+            contents["task_level"] = action._next_task_level()
         logger.write(contents, self._serializer)
 
 

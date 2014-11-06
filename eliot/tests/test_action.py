@@ -151,8 +151,7 @@ class ActionTests(TestCase):
         action._start({"key": "value"})
         assertContainsFields(self, logger.messages[0],
                              {"task_uuid": "unique",
-                              "task_level": "/",
-                              "action_counter": 0,
+                              "task_level": "/1",
                               "action_type": "sys:thename",
                               "action_status": "started",
                               "key": "value"})
@@ -184,11 +183,11 @@ class ActionTests(TestCase):
         action = Action(logger, "unique", "/", "sys:thename")
         logger2 = MemoryLogger()
         child = action.child(logger2, "newsystem:newname")
-        self.assertIs(child._logger, logger2)
-        self.assertEqual(child._identification,
-                         {"task_uuid": "unique",
-                          "task_level": "/1/",
-                          "action_type": "newsystem:newname"})
+        self.assertEqual([child._logger, child._identification,
+                          child._task_level],
+                         [logger2, {"task_uuid": "unique",
+                          "action_type": "newsystem:newname"},
+                          "/1/"])
 
 
     def test_childLevel(self):
@@ -201,9 +200,9 @@ class ActionTests(TestCase):
         child1 = action.child(logger, "newsystem:newname")
         child2 = action.child(logger, "newsystem:newname")
         child1_1 = child1.child(logger, "newsystem:other")
-        self.assertEqual(child1._identification["task_level"], "/1/")
-        self.assertEqual(child2._identification["task_level"], "/2/")
-        self.assertEqual(child1_1._identification["task_level"], "/1/1/")
+        self.assertEqual(child1._task_level, "/1/")
+        self.assertEqual(child2._task_level, "/2/")
+        self.assertEqual(child1_1._task_level, "/1/1/")
 
 
     def test_childSerializers(self):
@@ -352,7 +351,7 @@ class ActionTests(TestCase):
         action.finish()
         assertContainsFields(self, logger.messages[0],
                              {"task_uuid": "unique",
-                              "task_level": "/",
+                              "task_level": "/1",
                               "action_type": "sys:thename",
                               "action_status": "succeeded"})
 
@@ -433,7 +432,7 @@ class ActionTests(TestCase):
         self.assertEqual(len(logger.messages), 1)
         assertContainsFields(self, logger.messages[0],
                              {"task_uuid": "uuid",
-                              "task_level": "/1/",
+                              "task_level": "/1/1",
                               "action_type": "sys:me",
                               "action_status": "succeeded"})
 
@@ -458,7 +457,7 @@ class ActionTests(TestCase):
         self.assertEqual(len(logger.messages), 1)
         assertContainsFields(self, logger.messages[0],
                              {"task_uuid": "uuid",
-                              "task_level": "/1/",
+                              "task_level": "/1/1",
                               "action_type": "sys:me",
                               "action_status": "failed",
                               "reason": "because",
@@ -490,13 +489,13 @@ class ActionTests(TestCase):
                              {"x": 1, "y": 2, "z": 3})
 
 
-    def test_incrementMessageCounter(self):
+    def test_next_task_level(self):
         """
-        Each call to L{Action._incrementMessageCounter} increments a counter.
+        Each call to L{Action._next_task_level()} increments a counter.
         """
         action = Action(MemoryLogger(), "uuid", "/1/", "sys:me")
-        self.assertEqual([action._incrementMessageCounter() for i in range(5)],
-                         list(range(5)))
+        self.assertEqual([action._next_task_level() for i in range(5)],
+                         ["/1/1", "/1/2", "/1/3", "/1/4", "/1/5"])
 
 
     def test_multipleFinishCalls(self):
@@ -526,7 +525,7 @@ class StartActionAndTaskTests(TestCase):
         logger = MemoryLogger()
         action = startTask(logger, "sys:do")
         self.assertIsInstance(action, Action)
-        self.assertEqual(action._identification["task_level"], "/")
+        self.assertEqual(action._task_level, "/")
 
 
     def test_startTaskSerializers(self):
@@ -570,7 +569,7 @@ class StartActionAndTaskTests(TestCase):
         action = startTask(logger, "sys:do", key="value")
         assertContainsFields(self, logger.messages[0],
                              {"task_uuid": action._identification["task_uuid"],
-                              "task_level": "/",
+                              "task_level": "/1",
                               "action_type": "sys:do",
                               "action_status": "started",
                               "key": "value"})
@@ -584,7 +583,7 @@ class StartActionAndTaskTests(TestCase):
         logger = MemoryLogger()
         action = startAction(logger, "sys:do")
         self.assertIsInstance(action, Action)
-        self.assertEqual(action._identification["task_level"], "/")
+        self.assertEqual(action._task_level, "/")
 
 
     def test_startActionNoParentLogStart(self):
@@ -596,7 +595,7 @@ class StartActionAndTaskTests(TestCase):
         action = startAction(logger, "sys:do", key="value")
         assertContainsFields(self, logger.messages[0],
                              {"task_uuid": action._identification["task_uuid"],
-                              "task_level": "/",
+                              "task_level": "/1",
                               "action_type": "sys:do",
                               "action_status": "started",
                               "key": "value"})
@@ -613,7 +612,7 @@ class StartActionAndTaskTests(TestCase):
             action = startAction(logger, "sys:do")
             self.assertIsInstance(action, Action)
             self.assertEqual(action._identification["task_uuid"], "uuid")
-            self.assertEqual(action._identification["task_level"], "/2/1/")
+            self.assertEqual(action._task_level, "/2/1/")
 
 
     def test_startActionWithParentLogStart(self):
@@ -627,7 +626,7 @@ class StartActionAndTaskTests(TestCase):
             startAction(logger, "sys:do", key="value")
             assertContainsFields(self, logger.messages[0],
                                  {"task_uuid": "uuid",
-                                  "task_level": "/1/",
+                                  "task_level": "/1/1",
                                   "action_type": "sys:do",
                                   "action_status": "started",
                                   "key": "value"})
