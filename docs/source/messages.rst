@@ -15,16 +15,24 @@ Typically you will create a ``Logger`` per top-level class you are testing.
 
 .. code-block:: python
 
-    from eliot import Message, Logger
+    from eliot import Message
 
     class YourClass(object):
-        logger = Logger()
-
         def run(self):
             # Create a message with two fields, "key" and "value":
             msg = Message.new(key=123, value=u"hello")
             # Write the message:
-            msg.write(self.logger)
+            msg.write()
+
+More succinctly:
+
+.. code-block:: python
+
+    from eliot import Message
+
+    class YourClass(object):
+        def run(self):
+            Message.write(key=123, value=u"hello")
 
 You can also create a new ``Message`` from an existing one by binding new values.
 New values will override ones on the base ``Message``, but ``bind()`` does not mutate the original ``Message``.
@@ -44,19 +52,17 @@ You can also log tracebacks when your code hits an unexpected exception:
 
 .. code-block:: python
 
-    from eliot import Logger, write_traceback
+    from eliot import write_traceback
 
     class YourClass(object):
-        logger = Logger()
 
         def run(self):
             try:
                  dosomething()
             except:
-                 write_traceback(self.logger, u"yourapp:yourclass")
+                 write_traceback(system=u"yourapp:yourclass")
 
-The final argument to ``write_traceback`` is the "system".
-This should be a Unicode string, a logical description of what subsystem in your application generated the message.
+The ``system`` should be a Unicode string, a logical description of what subsystem in your application generated the message.
 Colons are used as namespace separators by convention to discourage the use of Python modules and namespaces.
 System strings should involve code structure rather than file structure.
 This means they will not have to change if you decide to refactor your implementation.

@@ -8,7 +8,7 @@ Now that you've got some code emitting log messages (or even better, before you'
 Given good test coverage all code branches should already be covered by tests unrelated to logging.
 Logging can be considered just another aspect of testing those code branches.
 Rather than recreating all those tests as separate functions Eliot provides a decorator the allows adding logging assertions to existing tests.
-``unittest.TestCase`` test methods decorated with ``eliot.testing.validate_logging`` will be called with a ``logger`` keyword argument, a ``eliot.MemoryLogger`` instance, which should replace any ``eliot.Logger`` in objects being tested.
+``unittest.TestCase`` test methods decorated with ``eliot.testing.validate_logging`` will be called with a ``logger`` keyword argument, a ``eliot.MemoryLogger`` instance.
 The ``validate_logging`` decorator takes an argument: another function that takes the ``TestCase`` instance as its first argument (``self``), and the ``logger`` as its second argument.
 This function can make assertions about logging after the main test function has run.
 You can also pass additional arguments and keyword arguments to ``@validate_logging``, in which case the assertion function will get called with them as well.
@@ -18,11 +18,9 @@ Let's unit test some code that relies on the ``LOG_USER_REGISTRATION`` object we
 
 .. code-block:: python
 
-      from eliot import Logger
       from myapp.logtypes import LOG_USER_REGISTRATION
 
       class UserRegistration(object):
-          logger = Logger()
 
           def __init__(self):
               self.db = {}
@@ -30,7 +28,7 @@ Let's unit test some code that relies on the ``LOG_USER_REGISTRATION`` object we
           def register(self, username, password, age):
               self.db[username] = (password, age)
               LOG_USER_REGISTRATION(
-                   username=username, password=password, age=age).write(self.logger)
+                   username=username, password=password, age=age).write()
 
 
 Here's how we'd test it:
@@ -39,7 +37,7 @@ Here's how we'd test it:
 
     from unittest import TestCase
     from eliot import MemoryLogger
-    from eliot.testing import assertContainsFields, validate_logging
+    from eliot.testing import assertContainsFields, validate_all_logging
 
     from myapp.registration import UserRegistration
     from myapp.logtypes import LOG_USER_REGISTRATION
@@ -57,13 +55,12 @@ Here's how we'd test it:
                                   u"password": u"password",
                                   u"age": 12}))
 
-        @validate_logging(assertRegistrationLogging)
+        @validate_all_logging(assertRegistrationLogging)
         def test_registration(self, logger):
             """
             Registration adds entries to the in-memory database.
             """
             registry = UserRegistration()
-            registry.logger = logger
             registry.register(u"john", u"password", 12)
             self.assertEqual(registry.db[u"john"], (u"passsword", 12))
 
@@ -85,17 +82,16 @@ The result will be a list of traceback message dictionaries for the particular e
 .. code-block:: python
 
     from unittest import TestCase
-    from eliot.testing import validate_logging
+    from eliot.testing import validate_all_logging
 
     class MyTests(TestCase):
         def assertMythingBadPathLogging(self, logger):
             messages = logger.flush_tracebacks(OSError)
             self.assertEqual(len(messages), 1)
 
-        @validate_logging(assertMythingBadPathLogging)
+        @validate_all_logging(assertMythingBadPathLogging)
         def test_mythingBadPath(self, logger):
              mything = MyThing()
-             mything.logger = logger
              # Trigger an error that will cause a OSError traceback to be logged:
              self.assertFalse(mything.load("/nonexistent/path"))
 
@@ -109,19 +105,18 @@ The simplest method is using the ``assertHasMessage`` utility function which ass
 
 .. code-block:: python
 
-    from eliot.testing import assertHasMessage, validate_logging
+    from eliot.testing import assertHasMessage, validate_all_logging
 
     class LoggingTests(TestCase):
         @validate_logging(assertHasMessage, LOG_USER_REGISTRATION,
                          {u"username": u"john",
                           u"password": u"password",
                           u"age": 12})
-        def test_registration(self, logger):
+        def test_registration(self):
             """
             Registration adds entries to the in-memory database.
             """
             registry = UserRegistration()
-            registry.logger = logger
             registry.register(u"john", u"password", 12)
             self.assertEqual(registry.db[u"john"], (u"passsword", 12))
 
@@ -135,7 +130,7 @@ For example, we could rewrite the registration logging test above like so:
 
 .. code-block:: python
 
-    from eliot.testing import LoggedMessage, validate_logging
+    from eliot.testing import LoggedMessage, validate_all_logging
 
     class LoggingTests(TestCase):
         def assertRegistrationLogging(self, logger):
@@ -148,7 +143,7 @@ For example, we could rewrite the registration logging test above like so:
                                   u"password": u"password",
                                   u"age": 12}))
 
-        @validate_logging(assertRegistrationLogging)
+        @validate_all_logging(assertRegistrationLogging)
         def test_registration(self, logger):
             """
             Registration adds entries to the in-memory database.
@@ -173,12 +168,10 @@ For example, let's say we have some code like this:
     LOG_CHECK = MessageType(...)
 
     class Search:
-        logger = Logger()
-
         def search(self, servers, database, key):
-            with LOG_SEARCH(self.logger, database=database, key=key):
+            with LOG_SEARCH(database=database, key=key):
             for server in servers:
-                LOG_CHECK(server=server).write(self.logger)
+                LOG_CHECK(server=server).write()
                 if server.check(database, key):
                     return True
             return False
@@ -188,14 +181,13 @@ The test would look like this:
 
 .. code-block:: python
 
-    from eliot.testing import LoggedAction, LoggedMessage, validate_logging
+    from eliot.testing import LoggedAction, LoggedMessage, validate_all_logging
     import searcher
 
     class LoggingTests(TestCase):
-        @validate_logging(None)
+        @validate_all_logging(None)
         def test_logging(self, logger):
             searcher = Search()
-            searcher.logger = logger
             servers = [buildServer(), buildServer()]
 
             searcher.search(servers, "users", "theuser")
@@ -214,14 +206,13 @@ Or we can simplify further by using ``assertHasMessage`` and ``assertHasAction``
 
 .. code-block:: python
 
-    from eliot.testing import LoggedAction, LoggedMessage, validate_logging
+    from eliot.testing import LoggedAction, LoggedMessage, validate_all_logging
     import searcher
 
     class LoggingTests(TestCase):
-        @validate_logging(None)
+        @validate_all_logging(None)
         def test_logging(self, logger):
             searcher = Search()
-            searcher.logger = logger
             servers = [buildServer(), buildServer()]
 
             searcher.search(servers, "users", "theuser")
@@ -234,3 +225,10 @@ Or we can simplify further by using ``assertHasMessage`` and ``assertHasAction``
             self.assertEqual(action.children, messages)
             # Each message had the respective server set.
             self.assertEqual(servers, [msg.message["server"] for msg in messages])
+
+
+Restriction Testing to Specific Messages
+----------------------------------------
+
+If you want to only look at certain messages when testing you can log to a specific ``eliot.Logger`` object rather than the global one.
+The unit test should then override that instance with the given ``eliot.MemoryLogger`` to ensure only those messages
