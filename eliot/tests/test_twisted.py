@@ -219,7 +219,7 @@ class DeferredContextTests(TestCase):
         d.callback("result")
         assertContainsFields(self, logger.messages[0],
                              {"task_uuid": "uuid",
-                              "task_level": "/1/",
+                              "task_level": "/1/1",
                               "action_type": "sys:me",
                               "action_status": "succeeded"})
 
@@ -254,7 +254,7 @@ class DeferredContextTests(TestCase):
         d.errback(exception)
         assertContainsFields(self, logger.messages[0],
                              {"task_uuid": "uuid",
-                              "task_level": "/1/",
+                              "task_level": "/1/1",
                               "action_type": "sys:me",
                               "action_status": "failed",
                               "reason": "because",

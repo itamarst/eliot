@@ -4,6 +4,7 @@ Tests for L{eliot._message}.
 
 from __future__ import unicode_literals
 
+from six import text_type as unicode
 from unittest import TestCase
 import time
 
