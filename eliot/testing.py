@@ -80,7 +80,9 @@ class LoggedAction(namedtuple(
 
         @param uuid: The uuid of the task (C{unicode}).
 
-        @param level: The action level, e.g. C{"/1/2/"}.
+        @param level: The C{task_level} of action
+            start messages is C{"/1/2/1"} then the action level would be
+            C{"/1/2/"}.
 
         @param messages: A list of message C{dict}s.
 
@@ -93,12 +95,16 @@ class LoggedAction(namedtuple(
         startMessage = None
         endMessage = None
         children = []
+        levelPrefix = level.split("/")[:-1]
+
         for message in messages:
             if message["task_uuid"] != uuid:
                 # Different task altogether:
                 continue
 
-            if message["task_level"] == level:
+            messageLevel = message["task_level"].split("/")
+
+            if messageLevel[:-1] == levelPrefix:
                 status = message.get("action_status")
                 if status == "started":
                     startMessage = message
@@ -107,18 +113,14 @@ class LoggedAction(namedtuple(
                 else:
                     # Presumably a message in this action:
                     children.append(LoggedMessage(message))
-            elif "action_type" in message:
-                messageLevel = message["task_level"]
-                # If parent level is /1/, /2/ is a sibling, /1/2/ is a direct
-                # child and /1/2/1/ is a grandchild. We only want direct
-                # children.
-                if (messageLevel.startswith(level) and
-                    messageLevel[len(level):].count("/") == 1 and
-                    message["action_status"] == "started"):
-                    # Passing in all messages is inefficient, but probably fine
-                    # given we'll only testing with small numbers of messages.
-                    child = klass.fromMessages(uuid, messageLevel, messages)
-                    children.append(child)
+            elif (len(messageLevel) == len(levelPrefix) + 2 and
+                  messageLevel[:-2] == levelPrefix and
+                  messageLevel[-1] == "1"):
+                # If start message level is /1, /1/2/1 implies first
+                # message of a direct child.
+                child = klass.fromMessages(
+                    uuid, message["task_level"], messages)
+                children.append(child)
         if startMessage is None or endMessage is None:
             raise ValueError(uuid, level)
         return klass(startMessage, endMessage, children)
