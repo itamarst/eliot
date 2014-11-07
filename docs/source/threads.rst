@@ -25,7 +25,17 @@ The server that receives the request then extracts the identifier:
 
 .. literalinclude:: ../../examples/server.py
 
-Here's what the combined logs look like:
+Here's what the combined logs look like when sorted by ``task_level``::
+
+    task_uuid='40be6df2' task_level='/1' action_type='main' action_status='started'
+    task_uuid='40be6df2' task_level='/2/1' action_type='http_request' action_status='started'
+    task_uuid='40be6df2' task_level='/2/2~1' action_type='remote_task' action_status='started'
+    task_uuid='40be6df2' task_level='/2/2~2/1' action_type='add' action_status='started' x=1 y=3
+    task_uuid='40be6df2' task_level='/2/2~2/2' action_type='add' action_status='succeeded' result=4
+    task_uuid='40be6df2' task_level='/2/2~3' action_type='remote_task' action_status='succeeded'
+    task_uuid='40be6df2' task_level='/2/3' action_type='http_request' action_status='succeeded' response='4'
+    task_uuid='40be6df2' task_level='/3' action_type='main' action_status='succeeded'
+
 
 
 Cross-Thread Tasks
@@ -35,13 +45,13 @@ Cross-Thread Tasks
 If you want your task to span multiple threads use the API described above.
 
 
-Serialized Tasks Should Only Be Used Once
------------------------------------------
+Ensuring Message Uniqueness
+---------------------------
 
-Every time a remote operation is retried a new ``Action`` should be started and serialized along with the operation.
+Serialized task identifiers should be used at most once.
+For example, every time a remote operation is retried a new call to ``serialize_task_id()`` should be made to create a new identifier.
 Otherwise there is a chance that you will end up with messages that have duplicate identification (i.e. two messages with matching ``task_uuid`` and ``task_level`` values), making it more difficult to trace causality.
 
-More generally you should make sure a serialized task identifier is only used once.
 If this is not possible you may wish to start a new Eliot task upon receiving a remote request, while still making sure to log the serialized remote task identifier.
 The inclusion of the remote task identifier will allow manual or automated reconstruction of the cross-process relationship between the original and new tasks.
 

@@ -117,6 +117,16 @@ class Action(object):
         self._serializers = serializers
         self._finished = False
 
+    def serialize_task_id(self):
+        return "{}@{}~".format(self._identification["task_uuid"],
+                               self._nextTaskLevel())
+
+    @classmethod
+    def continue_task(cls, logger, task_id):
+        uuid, task_level = task_id.split("@")
+        action = cls(logger, uuid, task_level, "remote_task")
+        action._start({})
+        return action
 
     def _nextTaskLevel(self):
         """
@@ -131,7 +141,7 @@ class Action(object):
 
     def _start(self, fields):
         """
-        Log the finish message.
+        Log the start message.
 
         The action identification fields, and any additional given fields,
         will be logged.
