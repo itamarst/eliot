@@ -1,6 +1,12 @@
 What's New
 ==========
 
+0.6.0
+^^^^^
+
+*Incompatible output format change:* In previous versions the ordering of messages and actions was ambiguous and could not be deduced from out-of-order logs.
+To fix this the ``action_counter`` field was removed and now all messages can be uniquely located within a specific task by the values in an improved ``task_level`` field.
+
 0.5.0
 ^^^^^
 
@@ -17,7 +23,7 @@ Features:
 0.4.0
 ^^^^^
 
-Note that this is the last release that will make incompatible changes without interim deprecation warnings.
+Note that this is the last release that will make incompatible API changes without interim deprecation warnings.
 
 
 Incompatible changes from 0.3.0:

@@ -4,6 +4,7 @@ Tests for L{eliot._message}.
 
 from __future__ import unicode_literals
 
+from six import text_type as unicode
 from unittest import TestCase
 import time
 
@@ -126,8 +127,7 @@ class MessageTests(TestCase):
         del written["timestamp"]
         self.assertEqual(written,
                          {"task_uuid": "unique",
-                          "task_level": "/",
-                          "action_counter": 0,
+                          "task_level": "/1",
                           "key": 2})
 
 
@@ -146,8 +146,7 @@ class MessageTests(TestCase):
         del written["timestamp"]
         self.assertEqual(written,
                          {"task_uuid": "unique",
-                          "task_level": "/",
-                          "action_counter": 0,
+                          "task_level": "/1",
                           "key": 2})
 
 
@@ -157,26 +156,27 @@ class MessageTests(TestCase):
         L{Action}, the process-specific global L{Action} is used.
 
         This ensures all messages have a unique identity, as specified by
-        task_uuid/task_level/action_counter.
+        task_uuid/task_level.
         """
         logger = MemoryLogger()
         msg = Message.new(key=2)
         msg.write(logger)
         written = logger.messages[0]
         del written["timestamp"]
+        nextTaskLevel = _defaultAction._nextTaskLevel()
+        prefix, suffix = nextTaskLevel.split("/", 1)
+        expectedTaskLevel = "{}/{}".format(prefix, unicode(int(suffix) - 1))
         self.assertEqual(written,
                          {"task_uuid":
                               _defaultAction._identification["task_uuid"],
-                          "task_level": "/",
-                          "action_counter":
-                              _defaultAction._incrementMessageCounter() - 1,
+                          "task_level": expectedTaskLevel,
                           "key": 2})
 
 
     def test_actionCounter(self):
         """
         Each message written within the context of an L{Action} gets its
-        C{action_counter} field incremented.
+        C{task_level} field incremented.
         """
         logger = MemoryLogger()
         msg = Message.new(key=2)
@@ -185,8 +185,8 @@ class MessageTests(TestCase):
                 msg.write(logger)
         # We expect 6 messages: start action, 4 standalone messages, finish
         # action:
-        self.assertEqual([m["action_counter"] for m in logger.messages],
-                         list(range(6)))
+        self.assertEqual([m["task_level"] for m in logger.messages],
+                         ["/1", "/2", "/3", "/4", "/5", "/6"])
 
 
     def test_writePassesSerializer(self):
