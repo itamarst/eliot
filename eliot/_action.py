@@ -127,7 +127,7 @@ class Action(object):
         @return: L{bytes} encoding the current location within the task.
         """
         return "{}@{}".format(self._identification["task_uuid"],
-                              self._nextTaskLevel())
+                              self._nextTaskLevel()).encode("ascii")
 
 
     @classmethod
