@@ -19,7 +19,11 @@ This second process deserializes the identifier and uses it as a context for its
 
 In the following example the task identifier is added as a header to a HTTP request:
 
+.. literalinclude:: ../../examples/client.py
+
 The server that receives the request then extracts the identifier:
+
+.. literalinclude:: ../../examples/server.py
 
 Here's what the combined logs look like:
 
