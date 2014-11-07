@@ -13,7 +13,7 @@ Cross-Process Tasks
 -------------------
 
 ``eliot.Action.serialize_task_id()`` can be used to create some ``bytes`` identifying a particular location within a task.
-``eliot.Action.deserialize()`` is a context manager that converts a serialized task identifier into an ``eliot.Action``.
+``eliot.Action.continue_task()`` converts a serialized task identifier into an ``eliot.Action`` and then starts the ``Action``.
 The process which created the task serializes the task identifier and sends it over the network to the process which will continue the task.
 This second process deserializes the identifier and uses it as a context for its own messages.
 
@@ -29,10 +29,10 @@ Here's what the combined logs look like when sorted by ``task_level``::
 
     task_uuid='40be6df2' task_level='/1' action_type='main' action_status='started'
     task_uuid='40be6df2' task_level='/2/1' action_type='http_request' action_status='started'
-    task_uuid='40be6df2' task_level='/2/2~1' action_type='remote_task' action_status='started'
+    task_uuid='40be6df2' task_level='/2/2~1' action_type='eliot:remote_task' action_status='started'
     task_uuid='40be6df2' task_level='/2/2~2/1' action_type='add' action_status='started' x=1 y=3
     task_uuid='40be6df2' task_level='/2/2~2/2' action_type='add' action_status='succeeded' result=4
-    task_uuid='40be6df2' task_level='/2/2~3' action_type='remote_task' action_status='succeeded'
+    task_uuid='40be6df2' task_level='/2/2~3' action_type='eliot:remote_task' action_status='succeeded'
     task_uuid='40be6df2' task_level='/2/3' action_type='http_request' action_status='succeeded' response='4'
     task_uuid='40be6df2' task_level='/3' action_type='main' action_status='succeeded'
 
