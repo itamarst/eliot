@@ -163,7 +163,7 @@ class MessageTests(TestCase):
         msg.write(logger)
         written = logger.messages[0]
         del written["timestamp"]
-        next_task_level = _defaultAction._next_task_level()
+        next_task_level = _defaultAction._nextTaskLevel()
         prefix, suffix = next_task_level.split("/", 1)
         expected_task_level = "%s/%s" % (prefix, unicode(int(suffix) - 1))
         self.assertEqual(written,

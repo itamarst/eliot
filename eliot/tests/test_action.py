@@ -489,12 +489,12 @@ class ActionTests(TestCase):
                              {"x": 1, "y": 2, "z": 3})
 
 
-    def test_next_task_level(self):
+    def test_nextTaskLevel(self):
         """
-        Each call to L{Action._next_task_level()} increments a counter.
+        Each call to L{Action._nextTaskLevel()} increments a counter.
         """
         action = Action(MemoryLogger(), "uuid", "/1/", "sys:me")
-        self.assertEqual([action._next_task_level() for i in range(5)],
+        self.assertEqual([action._nextTaskLevel() for i in range(5)],
                          ["/1/1", "/1/2", "/1/3", "/1/4", "/1/5"])
 
 
