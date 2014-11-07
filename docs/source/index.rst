@@ -7,12 +7,12 @@ Contents:
    messages
    output
    actions
+   threads
    types
    types-testing
    elasticsearch
    twisted
    fields
-   threads
    development
    news
    :maxdepth: 2
