@@ -80,9 +80,8 @@ class LoggedAction(namedtuple(
 
         @param uuid: The uuid of the task (C{unicode}).
 
-        @param level: The C{task_level} of action
-            start messages is C{"/1/2/1"} then the action level would be
-            C{"/1/2/"}.
+        @param level: The C{task_level} of the action's start message,
+            e.g. C{"/1/2/1"}.
 
         @param messages: A list of message C{dict}s.
 
