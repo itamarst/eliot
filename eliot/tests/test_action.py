@@ -688,7 +688,7 @@ class SerializationTests(TestCase):
                           newAction._task_level],
                          [Action, {"task_uuid": "uniq456",
                                    "action_type": "eliot:remote_task"},
-                          "/3/4/1~"])
+                          "/3/4/1/"])
 
     def test_continueTaskStartsAction(self):
         """
@@ -701,6 +701,6 @@ class SerializationTests(TestCase):
         Action.continueTask(logger, taskId)
         assertContainsFields(self, logger.messages[0],
                              {"task_uuid": "uniq456",
-                              "task_level": "/3/4/1~1",
+                              "task_level": "/3/4/1/1",
                               "action_type": "eliot:remote_task",
                               "action_status": "started"})

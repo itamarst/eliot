@@ -144,7 +144,7 @@ class Action(object):
         @return: The new L{Action} instance.
         """
         uuid, task_level = task_id.decode("ascii").split("@")
-        action = cls(logger, uuid, task_level + "~", "eliot:remote_task")
+        action = cls(logger, uuid, task_level + "/", "eliot:remote_task")
         action._start({})
         return action
 

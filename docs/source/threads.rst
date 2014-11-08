@@ -29,10 +29,10 @@ Here's what the combined logs look like when sorted by ``task_level``::
 
     task_uuid='40be6df2' task_level='/1' action_type='main' action_status='started'
     task_uuid='40be6df2' task_level='/2/1' action_type='http_request' action_status='started'
-    task_uuid='40be6df2' task_level='/2/2~1' action_type='eliot:remote_task' action_status='started'
-    task_uuid='40be6df2' task_level='/2/2~2/1' action_type='add' action_status='started' x=1 y=3
-    task_uuid='40be6df2' task_level='/2/2~2/2' action_type='add' action_status='succeeded' result=4
-    task_uuid='40be6df2' task_level='/2/2~3' action_type='eliot:remote_task' action_status='succeeded'
+    task_uuid='40be6df2' task_level='/2/2/1' action_type='eliot:remote_task' action_status='started'
+    task_uuid='40be6df2' task_level='/2/2/2/1' action_type='add' action_status='started' x=1 y=3
+    task_uuid='40be6df2' task_level='/2/2/2/2' action_type='add' action_status='succeeded' result=4
+    task_uuid='40be6df2' task_level='/2/2/3' action_type='eliot:remote_task' action_status='succeeded'
     task_uuid='40be6df2' task_level='/2/3' action_type='http_request' action_status='succeeded' response='4'
     task_uuid='40be6df2' task_level='/3' action_type='main' action_status='succeeded'
 
