@@ -52,6 +52,8 @@ For example, here's what the combined logs from running the client against the s
     task_uuid='40be6df2' task_level='/3' action_type='main'
        action_status='failed' exception='requests.exception.HTTPError' reason='500 Server Error: INTERNAL SERVER ERROR'
 
+The reason the client received a 500 error code is completely obvious in these logs.
+
 
 Cross-Thread Tasks
 ------------------
