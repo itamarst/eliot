@@ -13,9 +13,10 @@ logger = Logger()
 
 app = Flask("server")
 
-def add(x, y):
-    with start_action(logger, "add", x=x, y=y) as action:
-        result = x + y
+
+def divide(x, y):
+    with start_action(logger, "divide", x=x, y=y) as action:
+        result = x / y
         action.add_success_fields(result=result)
         return result
 
@@ -25,7 +26,7 @@ def main():
     with Action.continue_task(logger, request.headers["x-eliot-task-id"]):
         x = int(request.args["x"])
         y = int(request.args["y"])
-        return str(add(x, y))
+        return str(divide(x, y))
 
 
 if __name__ == '__main__':

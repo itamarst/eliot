@@ -11,14 +11,18 @@ to_file(sys.stdout)
 logger = Logger()
 
 
-def request():
-    with start_action(logger, "http_request") as action:
+def request(x, y):
+    with start_action(logger, "http_request", x=x, y=y) as action:
         task_id = action.serialize_task_id()
-        response = requests.get("http://localhost:5000/?x=1&y=3",
-                                headers={"x-eliot-task-id": task_id})
-        action.add_success_fields(response=response.text)
+        response = requests.get(
+            "http://localhost:5000/?x={}&y={}".format(x, y),
+            headers={"x-eliot-task-id": task_id})
+        response.raise_for_status()  # ensure this is a successful response
+        result = float(response.text)
+        action.add_success_fields(result=result)
+        return result
 
 
 if __name__ == '__main__':
     with start_action(logger, "main"):
-        request()
+        request(int(sys.argv[1]), int(sys.argv[2]))
