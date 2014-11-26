@@ -9,7 +9,7 @@ from threading import Thread
 
 from .._action import (
     Action, _ExecutionContext, currentAction, startTask, startAction,
-    )
+    TaskLevel)
 from .._output import MemoryLogger
 from .._validation import ActionType, Field, _ActionSerializers
 from ..testing import assertContainsFields
@@ -704,3 +704,46 @@ class SerializationTests(TestCase):
                               "task_level": "/3/4/1/1",
                               "action_type": "eliot:remote_task",
                               "action_status": "started"})
+
+
+
+class TaskLevelTests(TestCase):
+    """
+    Tests for L{TaskLevel}.
+    """
+    def test_nextChild(self):
+        """
+        L{TaskLevel.nextChild} increments a counter and adds it to the current
+        level.
+        """
+        root = TaskLevel(level=[])
+        child1 = root.nextChild()
+        child2 = root.nextChild()
+        child3 = root.nextChild()
+        child3_1 = child3.nextChild()
+        child3_2 = child3.nextChild()
+        child4 = root.nextChild()
+        self.assertEqual([child1, child2, child3_1, child3_2, child4],
+                         [TaskLevel(level=[1]), TaskLevel(level=[2]),
+                          TaskLevel(level=[3, 1]), TaskLevel(level=[3, 2]),
+                          TaskLevel(level=[4])])
+
+
+    def test_toString(self):
+        """
+        L{TaskLevel.toString} serializes the object to a Unicode string.
+        """
+        root = TaskLevel(level=[])
+        root.nextChild()
+        child2_1 = root.nextChild().nextChild()
+        self.assertEqual([root.toString(), child2_1.toString()],
+                         ["/", "/2/1"])
+
+
+    def test_toString(self):
+        """
+        L{TaskLevel.toString} deserializes the output of L{TaskLevel.toString}.
+        """
+        self.assertEqual([TaskLevel.fromString("/"), TaskLevel.fromString("/2/1")],
+                         [TaskLevel(level=[]), TaskLevel(level=[2, 1])])
+
