@@ -7,6 +7,12 @@ What's New
 *Incompatible output format change:* In previous versions the ordering of messages and actions was ambiguous and could not be deduced from out-of-order logs.
 To fix this the ``action_counter`` field was removed and now all messages can be uniquely located within a specific task by the values in an improved ``task_level`` field.
 
+Features:
+
+* :ref:`eliot.add_global_fields <add_global_fields>` allows adding fields with specific values to all Eliot messages logged by your program.
+  This can be used to e.g. distinguish between log messages from different processes by including relevant identifying information.
+
+
 0.5.0
 ^^^^^
 
