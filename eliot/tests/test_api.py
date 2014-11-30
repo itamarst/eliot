@@ -30,7 +30,7 @@ class PublicAPITests(TestCase):
         self.assertEqual(eliot.removeDestination, Logger._destinations.remove)
 
 
-    def test_removeDestination(self):
+    def test_addGlobalFields(self):
         """
         L{eliot.addGlobalFields} calls the corresponding method on the
         L{Destinations} attached to L{Logger}.
