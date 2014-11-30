@@ -322,6 +322,33 @@ class DestinationsTests(TestCase):
         self.assertRaises(ValueError, destinations.remove, [].append)
 
 
+    def test_addGlobalFields(self):
+        """
+        L{Destinations.addGlobalFields} adds the given fields and values to
+        the messages being passed in.
+        """
+        destinations = Destinations()
+        dest = []
+        destinations.add(dest.append)
+        destinations.addGlobalFields(x=123, y="hello")
+        destinations.send({"z": 456})
+        self.assertEqual(dest, [{"x": 123, "y": "hello", "z": 456}])
+
+
+    def test_addGlobalFieldsCumulative(self):
+        """
+        L{Destinations.addGlobalFields} adds the given fields to those set by
+        previous calls.
+        """
+        destinations = Destinations()
+        dest = []
+        destinations.add(dest.append)
+        destinations.addGlobalFields(x=123, y="hello")
+        destinations.addGlobalFields(x=456, z=456)
+        destinations.send({"msg": "X"})
+        self.assertEqual(dest, [{"x": 456, "y": "hello", "z": 456, "msg": "X"}])
+
+
 
 def makeLogger():
     """

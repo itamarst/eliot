@@ -41,15 +41,29 @@ class Destinations(object):
     """
     def __init__(self):
         self._destinations = []
+        self._globalFields = {}
+
+
+    def addGlobalFields(self, **fields):
+        """
+        Add fields that will be included in all messages sent through this
+        destination.
+
+        @param fields: Keyword arguments mapping field names to values.
+        """
+        self._globalFields.update(fields)
 
 
     def send(self, message):
         """
         Deliver a message to all destinations.
 
+        The passed in message might be mutated.
+
         @param message: A message dictionary that can be serialized to JSON.
         @type message: L{dict}
         """
+        message.update(self._globalFields)
         for dest in self._destinations:
             try:
                 dest(message)
