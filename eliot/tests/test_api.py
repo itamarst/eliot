@@ -30,6 +30,15 @@ class PublicAPITests(TestCase):
         self.assertEqual(eliot.removeDestination, Logger._destinations.remove)
 
 
+    def test_removeDestination(self):
+        """
+        L{eliot.addGlobalFields} calls the corresponding method on the
+        L{Destinations} attached to L{Logger}.
+        """
+        self.assertEqual(eliot.addGlobalFields,
+                         Logger._destinations.addGlobalFields)
+
+
 
 class PEP8Tests(TestCase):
     """
@@ -47,6 +56,13 @@ class PEP8Tests(TestCase):
         L{eliot.removeDestionation} is the same as L{eliot.remove_destination}.
         """
         self.assertIs(eliot.remove_destination, eliot.removeDestination)
+
+
+    def test_add_global_fields(self):
+        """
+        L{eliot.add_global_fields} is the same as L{eliot.addGlobalFields}.
+        """
+        self.assertIs(eliot.add_global_fields, eliot.addGlobalFields)
 
 
     def test_write_traceback(self):
