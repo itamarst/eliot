@@ -9,6 +9,8 @@ For example, one server may send a request to another server over a network and 
 To make this as easy as possible Eliot supports serializing task identifiers for transfer over the network (or between threads), allowing tasks to span multiple processes.
 
 
+.. _cross process tasks:
+
 Cross-Process Tasks
 -------------------
 
