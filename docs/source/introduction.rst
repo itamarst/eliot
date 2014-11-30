@@ -56,7 +56,7 @@ A story may involve many characters in many places at many times.
 The novelist has the power to present the internal consciousness of not just one character but many: their ways of thinking, their different perceptions of reality.
 
 Similarly, actions in a distributed system may span multiple processes.
-An incoming request to one server may cause a ripple of effects reaching many other processes; the logs from a single process in isolation are insufficient what happened and why.
+An incoming request to one server may cause a ripple of effects reaching many other processes; the logs from a single process in isolation are insufficient to understand what happened and why.
 
 
 The Solution: Eliot
