@@ -7,6 +7,11 @@ What's New
 *Incompatible output format change:* In previous versions the ordering of messages and actions was ambiguous and could not be deduced from out-of-order logs.
 To fix this the ``action_counter`` field was removed and now all messages can be uniquely located within a specific task by the values in an improved ``task_level`` field.
 
+Features:
+
+* Eliot tasks can now :ref:`span multiple processes and threads <cross process tasks>`, allowing for easy tracing of actions in complex and distributed applications.
+
+
 0.5.0
 ^^^^^
 

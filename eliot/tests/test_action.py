@@ -642,3 +642,65 @@ class PEP8Tests(TestCase):
         L{Action.addSuccessFields} is the same as L{Action.add_success_fields}.
         """
         self.assertEqual(Action.addSuccessFields, Action.add_success_fields)
+
+
+    def test_serialize_task_id(self):
+        """
+        L{Action.serialize_task_id} is the same as L{Action.serializeTaskId}.
+        """
+        self.assertEqual(Action.serialize_task_id, Action.serializeTaskId)
+
+
+    def test_continue_task(self):
+        """
+        L{Action.continue_task} is the same as L{Action.continueTask}.
+        """
+        self.assertEqual(Action.continue_task, Action.continueTask)
+
+
+
+class SerializationTests(TestCase):
+    """
+    Tests for L{Action} serialization and deserialization.
+    """
+    def test_serializeTaskId(self):
+        """
+        L{Action.serializeTaskId} result is composed of the task UUID and an
+        incremented task level.
+        """
+        action = Action(None, "uniq123", "/1/2/", "mytype")
+        self.assertEqual([action._nextTaskLevel(),
+                          action.serializeTaskId(), action._nextTaskLevel()],
+                         ["/1/2/1", b"uniq123@/1/2/2", "/1/2/3"])
+
+
+    def test_continueTaskReturnsAction(self):
+        """
+        L{Action.continueTask} returns an L{Action} whose C{task_level} and
+        C{task_uuid} are derived from those in the given serialized task
+        identifier.
+        """
+        originalAction = Action(None, "uniq456", "/3/4/", "mytype")
+        taskId = originalAction.serializeTaskId()
+
+        newAction = Action.continueTask(MemoryLogger(), taskId)
+        self.assertEqual([newAction.__class__, newAction._identification,
+                          newAction._task_level],
+                         [Action, {"task_uuid": "uniq456",
+                                   "action_type": "eliot:remote_task"},
+                          "/3/4/1/"])
+
+    def test_continueTaskStartsAction(self):
+        """
+        L{Action.continueTask} starts the L{Action} it creates.
+        """
+        originalAction = Action(None, "uniq456", "/3/4/", "mytype")
+        taskId = originalAction.serializeTaskId()
+        logger = MemoryLogger()
+
+        Action.continueTask(logger, taskId)
+        assertContainsFields(self, logger.messages[0],
+                             {"task_uuid": "uniq456",
+                              "task_level": "/3/4/1/1",
+                              "action_type": "eliot:remote_task",
+                              "action_status": "started"})
