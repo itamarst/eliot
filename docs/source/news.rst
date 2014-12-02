@@ -9,7 +9,7 @@ To fix this the ``action_counter`` field was removed and now all messages can be
 
 Features:
 
-* Eliot tasks can now span multiple processes and threads, allowing for easy tracing of actions in complex and distributed applications.
+* Eliot tasks can now :ref:`span multiple processes and threads <cross process tasks>`, allowing for easy tracing of actions in complex and distributed applications.
 
 
 0.5.0
