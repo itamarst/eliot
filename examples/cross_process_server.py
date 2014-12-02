@@ -6,7 +6,8 @@ from __future__ import unicode_literals
 import sys
 from flask import Flask, request
 
-from eliot import Logger, to_file, Action, start_action
+from eliot import Logger, to_file, Action, start_action, add_global_fields
+add_global_fields(process="server")
 to_file(sys.stdout)
 logger = Logger()
 

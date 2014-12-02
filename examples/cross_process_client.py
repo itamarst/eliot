@@ -6,7 +6,8 @@ from __future__ import unicode_literals
 import sys
 import requests
 
-from eliot import Logger, to_file, start_action
+from eliot import Logger, to_file, start_action, add_global_fields
+add_global_fields(process="client")
 to_file(sys.stdout)
 logger = Logger()
 
