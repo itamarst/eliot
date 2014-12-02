@@ -1,6 +1,8 @@
 Using Types to Structure Messages and Actions
 =============================================
 
+.. _type system:
+
 Why Typing?
 -----------
 

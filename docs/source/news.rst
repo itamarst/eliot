@@ -9,6 +9,7 @@ To fix this the ``action_counter`` field was removed and now all messages can be
 
 Features:
 
+* Eliot tasks can now :ref:`span multiple processes and threads <cross process tasks>`, allowing for easy tracing of actions in complex and distributed applications.
 * :ref:`eliot.add_global_fields <add_global_fields>` allows adding fields with specific values to all Eliot messages logged by your program.
   This can be used to e.g. distinguish between log messages from different processes by including relevant identifying information.
 

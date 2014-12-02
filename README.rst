@@ -9,9 +9,10 @@ Eliot: Logging as Storytelling
            :target: http://travis-ci.org/ClusterHQ/eliot
            :alt: Build Status
 
-Eliot provides a structured logging and tracing system for Python that generates log messages describing a forest of nested actions.
+Eliot is a Python logging system designed for complex applications, especially distributed systems.
+Eliot's structured logs are traces of the system's actions both within and across process boundaries.
 Actions start and eventually finish, successfully or not.
-Log messages thus tell a story: what happened and what caused it.
+Instead of isolated facts the log messages are thus a story: a series of causal events.
 
 Here's what your logs might look like before using Eliot::
 
@@ -41,6 +42,7 @@ Features:
 
 * Structured, typed log messages.
 * Ability to log actions, not just point-in-time information: log messages become a trace of program execution.
+* Logged actions can span processes and threads.
 * Excellent support for unit testing your code's logging.
 * Emphasis on performance, including no blocking I/O in logging code path.
 * Optional Twisted support.

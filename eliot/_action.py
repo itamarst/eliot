@@ -118,6 +118,42 @@ class Action(object):
         self._finished = False
 
 
+    def serializeTaskId(self):
+        """
+        Create a unique identifier for the current location within the task.
+
+        The format is C{b"<task_uuid>@<task_level>"}.
+
+        @return: L{bytes} encoding the current location within the task.
+        """
+        return "{}@{}".format(self._identification["task_uuid"],
+                              self._nextTaskLevel()).encode("ascii")
+
+
+    @classmethod
+    def continueTask(cls, logger, task_id):
+        """
+        Start a new action which is part of a serialized task.
+
+        @param logger: The L{eliot.ILogger} to which to write
+            messages.
+
+        @param task_id: A serialized task identifier, the output of
+            L{Action.serialize_task_id}.
+
+        @return: The new L{Action} instance.
+        """
+        uuid, task_level = task_id.decode("ascii").split("@")
+        action = cls(logger, uuid, task_level + "/", "eliot:remote_task")
+        action._start({})
+        return action
+
+
+    # PEP 8 variants:
+    serialize_task_id = serializeTaskId
+    continue_task = continueTask
+
+
     def _nextTaskLevel(self):
         """
         Return the next C{task_level} for messages within this action.
@@ -131,7 +167,7 @@ class Action(object):
 
     def _start(self, fields):
         """
-        Log the finish message.
+        Log the start message.
 
         The action identification fields, and any additional given fields,
         will be logged.

@@ -49,9 +49,20 @@ Actions also generate other actions: a marriage leads to a trip to Rome, the tri
 You might want to trace an action from beginning to end, e.g. to measure how long it took to run. You might want to know what high-level action caused a particular unexpected low-level action. You might want to know what actions a specific entity was involved with. None of these are possible in most logging systems since they have no concept of actions to begin with.
 
 
+Problem #4: Cross-Process Actions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A story may involve many characters in many places at many times.
+The novelist has the power to present the internal consciousness of not just one character but many: their ways of thinking, their different perceptions of reality.
+
+Similarly, actions in a distributed system may span multiple processes.
+An incoming request to one server may cause a ripple of effects reaching many other processes; the logs from a single process in isolation are insufficient to understand what happened and why.
+
+
 The Solution: Eliot
 ^^^^^^^^^^^^^^^^^^^
-Eliot is designed to solve all of these problems. For simplicity's sake this example focuses on problems 1 and 3; problem 2 is covered by the serialization layer discussed later in the documentation.
+Eliot is designed to solve all of these problems.
+For simplicity's sake this example focuses on problems 1 and 3; problem 2 is covered by the :ref:`type system <type system>` and problem 4 by :ref:`cross-process actions <cross process tasks>`.
 
 .. code-block:: python
 
