@@ -21,11 +21,11 @@ This second process deserializes the identifier and uses it as a context for its
 
 In the following example the task identifier is added as a header to a HTTP request:
 
-.. literalinclude:: ../../examples/client.py
+.. literalinclude:: ../../examples/cross_process_client.py
 
 The server that receives the request then extracts the identifier:
 
-.. literalinclude:: ../../examples/server.py
+.. literalinclude:: ../../examples/cross_process_server.py
 
 Tracing logs across multiple processes makes debugging problems dramatically easier.
 For example, here's what the combined logs from running the client against the server might look like when sorted by ``task_level`` and formatted to be more readable::
