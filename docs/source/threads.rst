@@ -28,7 +28,14 @@ The server that receives the request then extracts the identifier:
 .. literalinclude:: ../../examples/cross_process_server.py
 
 Tracing logs across multiple processes makes debugging problems dramatically easier.
-For example, here's what the combined logs from running the client against the server might look like when sorted by ``task_level`` and formatted to be more readable::
+For example, let's run the following:
+
+.. code-block:: shell
+
+   $ python examples/cross_process_server.py &
+   $ python examples/cross_process_client.py 5 0
+
+Here's what the combined logs from the client and server might look like when sorted by ``task_level`` and formatted to be more readable::
 
     task_uuid='40be6df2' task_level='/1' action_type='main'
         action_status='started'
