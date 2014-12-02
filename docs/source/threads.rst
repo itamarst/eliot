@@ -37,28 +37,28 @@ For example, let's run the following:
 
 Here's what the combined logs from the client and server might look like when sorted by ``task_level`` and formatted to be more readable::
 
-    task_uuid='40be6df2' task_level='/1' action_type='main'
+    process='client' task_uuid='40be6df2' task_level='/1' action_type='main'
         action_status='started'
 
-    task_uuid='40be6df2' task_level='/2/1' action_type='http_request'
+    process='client' task_uuid='40be6df2' task_level='/2/1' action_type='http_request'
         action_status='started' x=5 y=0
 
-    task_uuid='40be6df2' task_level='/2/2/1' action_type='eliot:remote_task'
+    process='server' task_uuid='40be6df2' task_level='/2/2/1' action_type='eliot:remote_task'
         action_status='started'
 
-    task_uuid='40be6df2' task_level='/2/2/2/1' action_type='divide'
+    process='server' task_uuid='40be6df2' task_level='/2/2/2/1' action_type='divide'
         action_status='started' x=5 y=0
 
-    task_uuid='40be6df2' task_level='/2/2/2/2' action_type='divide'
+    process='server' task_uuid='40be6df2' task_level='/2/2/2/2' action_type='divide'
         action_status='failed' exception='exceptions.ZeroDivisionError' reason='integer division or modulo by zero'
 
-    task_uuid='40be6df2' task_level='/2/2/3' action_type='eliot:remote_task'
+    process='server' task_uuid='40be6df2' task_level='/2/2/3' action_type='eliot:remote_task'
         action_status='failed' exception='exceptions.ZeroDivisionError' reason='integer division or modulo by zero'
 
-    task_uuid='40be6df2' task_level='/2/3' action_type='http_request'
+    process='client' task_uuid='40be6df2' task_level='/2/3' action_type='http_request'
        action_status='failed' exception='requests.exception.HTTPError' reason='500 Server Error: INTERNAL SERVER ERROR'
 
-    task_uuid='40be6df2' task_level='/3' action_type='main'
+    process='client' task_uuid='40be6df2' task_level='/3' action_type='main'
        action_status='failed' exception='requests.exception.HTTPError' reason='500 Server Error: INTERNAL SERVER ERROR'
 
 The reason the client received a 500 error code is completely obvious in these logs.
