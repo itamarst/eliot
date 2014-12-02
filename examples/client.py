@@ -11,7 +11,7 @@ to_file(sys.stdout)
 logger = Logger()
 
 
-def request(x, y):
+def remote_divide(x, y):
     with start_action(logger, "http_request", x=x, y=y) as action:
         task_id = action.serialize_task_id()
         response = requests.get(
@@ -25,4 +25,4 @@ def request(x, y):
 
 if __name__ == '__main__':
     with start_action(logger, "main"):
-        request(int(sys.argv[1]), int(sys.argv[2]))
+        remote_divide(int(sys.argv[1]), int(sys.argv[2]))
