@@ -108,9 +108,10 @@ class Message(object):
 
 
 # Import at end to deal with circular imports:
-from ._action import currentAction, Action
+from ._action import currentAction, Action, TaskLevel
 
 # The default Action to use as a context for messages, if no other Action is the
 # context. This ensures all messages have a unique identity, as specified by
 # task_uuid/task_level.
-_defaultAction = Action(None, u"%s" % (uuid4(),), "/", "eliot:default")
+_defaultAction = Action(None, u"%s" % (uuid4(),), TaskLevel(level=[]),
+                        "eliot:default")
