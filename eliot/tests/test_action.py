@@ -748,9 +748,10 @@ class TaskLevelTests(TestCase):
                          ["/", "/2/1"])
 
 
-    def test_toString(self):
+    def test_fromString(self):
         """
-        L{TaskLevel.toString} deserializes the output of L{TaskLevel.toString}.
+        L{TaskLevel.fromString} deserializes the output of
+        L{TaskLevel.toString}.
         """
         self.assertEqual([TaskLevel.fromString("/"), TaskLevel.fromString("/2/1")],
                          [TaskLevel(level=[]), TaskLevel(level=[2, 1])])
