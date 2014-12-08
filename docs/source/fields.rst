@@ -6,12 +6,17 @@ Built-in Fields
 
 A number of fields are reserved by Eliot's built-in message structure and should not be added to messages you create.
 
+.. _task fields:
+
+Task Fields
+^^^^^^^^^^^
+
 The following fields are present in all messages.
 Each message is uniquely identified by the combined values in these fields.
 
 * ``task_uuid``: The task (top-level action) this message is part of.
 * ``task_level``: The specific location of this message within the task's tree of actions.
-  For example, ``"/3/2/4"`` indicates the message is the 4th child of the 2nd child of the 3rd child of the task.
+  For example, ``[3, 2, 4]`` indicates the message is the 4th child of the 2nd child of the 3rd child of the task.
 
 Consider the following code sample:
 
@@ -26,16 +31,20 @@ Consider the following code sample:
          with start_action(logger, u"child"):
              Message.new(x="2").write(logger)
 
-If you sort the resulting messages by their ``task_level`` (in ASCII sort order) you will get the tree of messages:
+If you sort the resulting messages by their ``task_level`` you will get the tree of messages:
 
-* ``task_level="/1" action_type="parent" action_status="started"``
-* ``task_level="/2" x="1"``
+* ``task_level=[1] action_type="parent" action_status="started"``
+* ``task_level=[2] x="1"``
 
-    * ``task_level="/3/1" action_type="child" action_status="started"``
-    * ``task_level="/3/2" x="2"``
-    * ``task_level="/3/3" action_type="child" action_status="finished"``
+    * ``task_level=[3, 1] action_type="child" action_status="started"``
+    * ``task_level=[3, 2] x="2"``
+    * ``task_level=[3, 3] action_type="child" action_status="finished"``
 
-* ``task_level="/4" action_type="parent" action_status="finished"``
+* ``task_level=[4] action_type="parent" action_status="finished"``
+
+
+Other Built-In Fields
+^^^^^^^^^^^^^^^^^^^^^
 
 In addition, the following field will also be present:
 

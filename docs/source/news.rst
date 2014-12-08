@@ -4,8 +4,10 @@ What's New
 0.6.0
 ^^^^^
 
-*Incompatible output format change:* In previous versions the ordering of messages and actions was ambiguous and could not be deduced from out-of-order logs.
-To fix this the ``action_counter`` field was removed and now all messages can be uniquely located within a specific task by the values in an improved ``task_level`` field.
+.. warning::
+
+    Incompatible output format change! In previous versions the ordering of messages and actions was ambiguous and could not be deduced from out-of-order logs, and even where it was possible sorting correctly was difficult.
+    To fix this the ``action_counter`` field was removed and now all messages can be uniquely located within a specific task by the values in an :ref:`improved task_level field <task fields>`.
 
 Features:
 
