@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from unittest import TestCase
 from threading import Thread
+from warnings import catch_warnings, simplefilter
 
 from .._action import (
     Action, _ExecutionContext, currentAction, startTask, startAction,
@@ -514,6 +515,27 @@ class ActionTests(TestCase):
             act.finish()
         # Only initial finish message is logged:
         self.assertEqual(len(logger.messages), 1)
+
+
+    def test_stringActionCompatibility(self):
+        """
+        L{Action} can be initialized with a string version of a L{TaskLevel},
+        for backwards compatibility.
+        """
+        logger = MemoryLogger()
+        action = Action(logger, "uuid", "/1/2/", "sys:me")
+        self.assertEqual(action._task_level, TaskLevel(level=[1, 2]))
+
+
+    def test_stringActionCompatibilityWarning(self):
+        """
+        Calling L{Action} with a string results in a L{DeprecationWarning}
+        """
+        logger = MemoryLogger()
+        with catch_warnings(record=True) as warnings:
+            simplefilter("always")  # Catch all warnings
+            Action(logger, "uuid", "/1/2/", "sys:me")
+            self.assertEqual(warnings[-1].category, DeprecationWarning)
 
 
 

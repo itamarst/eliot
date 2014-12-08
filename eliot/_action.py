@@ -11,6 +11,7 @@ import threading
 from uuid import uuid4
 from itertools import count
 from contextlib import contextmanager
+from warnings import warn
 
 from characteristic import attributes
 
@@ -146,6 +147,10 @@ class Action(object):
         self._numberOfMessages = iter(count())
         self._successFields = {}
         self._logger = logger
+        if isinstance(task_level, unicode):
+            warn("Action should be initialized with a TaskLevel",
+                 DeprecationWarning, stacklevel=2)
+            task_level = TaskLevel.fromString(task_level)
         self._task_level = task_level
         self._identification = {"task_uuid": task_uuid,
                                 "action_type": action_type,
