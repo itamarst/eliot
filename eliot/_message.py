@@ -102,7 +102,7 @@ class Message(object):
         contents["timestamp"] = self._timestamp()
         if action is not None:
             contents["task_uuid"] = action._identification["task_uuid"]
-            contents["task_level"] = action._nextTaskLevel()
+            contents["task_level"] = action._nextTaskLevel().level
         logger.write(contents, self._serializer)
 
 
