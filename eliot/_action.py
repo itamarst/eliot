@@ -97,6 +97,12 @@ class TaskLevel(object):
         return TaskLevel(level=self.level + [next(self._numberOfMessages) + 1])
 
 
+    # PEP 8 compatibility:
+    from_string = fromString
+    to_string = toString
+    next_child = nextChild
+
+
 
 class Action(object):
     """

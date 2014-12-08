@@ -661,6 +661,28 @@ class PEP8Tests(TestCase):
         self.assertEqual(Action.continue_task, Action.continueTask)
 
 
+    def test_from_string(self):
+        """
+        L{TaskLevel.from_string} is the same as as L{TaskLevel.fromString}.
+        """
+        self.assertEqual(TaskLevel.from_string, TaskLevel.fromString)
+
+
+    def test_to_string(self):
+        """
+        L{TaskLevel.to_string} is the same as as L{TaskLevel.toString}.
+        """
+        self.assertEqual(TaskLevel.to_string, TaskLevel.toString)
+
+
+    def test_next_child(self):
+        """
+        L{TaskLevel.next_child} is the same as as L{TaskLevel.nextChild}.
+        """
+        self.assertEqual(TaskLevel.next_child, TaskLevel.nextChild)
+
+
+
 
 class SerializationTests(TestCase):
     """
