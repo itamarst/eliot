@@ -86,15 +86,32 @@ class TaskLevel(object):
 
 
     @classmethod
-    def fromString(cls,string):
+    def fromString(cls, string):
+        """
+        Convert a serialized Unicode string to a L{TaskLevel}.
+
+        @param string: Output of L{TaskLevel.toString}.
+
+        @return: L{TaskLevel} parsed from the string.
+        """
         return cls(level=[int(i) for i in string.split("/") if i])
 
 
     def toString(self):
+        """
+        Convert to a Unicode string, for serialization purposes.
+
+        @return: L{unicode} representation of the L{TaskLevel}.
+        """
         return "/" + "/".join(map(unicode, self.level))
 
 
     def nextChild(self):
+        """
+        Return the next child L{TaskLevel}.
+
+        @return: L{TaskLevel} which is child of this one.
+        """
         return TaskLevel(level=self.level + [next(self._numberOfMessages) + 1])
 
 
