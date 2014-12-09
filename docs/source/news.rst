@@ -15,6 +15,10 @@ Features:
 * :ref:`eliot.add_global_fields <add_global_fields>` allows adding fields with specific values to all Eliot messages logged by your program.
   This can be used to e.g. distinguish between log messages from different processes by including relevant identifying information.
 
+Bug fixes:
+
+* On Python 3 files that accept unicode (e.g. ``sys.stdout``) should now work.
+
 
 0.5.0
 ^^^^^
