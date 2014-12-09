@@ -94,14 +94,14 @@ class LoggedAction(namedtuple(
         startMessage = None
         endMessage = None
         children = []
-        levelPrefix = level.split("/")[:-1]
+        levelPrefix = level[:-1]
 
         for message in messages:
             if message["task_uuid"] != uuid:
                 # Different task altogether:
                 continue
 
-            messageLevel = message["task_level"].split("/")
+            messageLevel = message["task_level"]
 
             if messageLevel[:-1] == levelPrefix:
                 status = message.get("action_status")
@@ -114,8 +114,8 @@ class LoggedAction(namedtuple(
                     children.append(LoggedMessage(message))
             elif (len(messageLevel) == len(levelPrefix) + 2 and
                   messageLevel[:-2] == levelPrefix and
-                  messageLevel[-1] == "1"):
-                # If start message level is /1, /1/2/1 implies first
+                  messageLevel[-1] == 1):
+                # If start message level is [1], [1, 2, 1] implies first
                 # message of a direct child.
                 child = klass.fromMessages(
                     uuid, message["task_level"], messages)
