@@ -1,5 +1,5 @@
-Eliot: Logging as Storytelling
-==============================
+Eliot: Logging for Complex & Distributed Systems
+================================================
 
 .. image:: https://coveralls.io/repos/ClusterHQ/eliot/badge.png?branch=master
            :target: https://coveralls.io/r/ClusterHQ/eliot
@@ -14,29 +14,34 @@ Eliot's structured logs are traces of the system's actions both within and acros
 Actions start and eventually finish, successfully or not.
 Instead of isolated facts the log messages are thus a story: a series of causal events.
 
-Here's what your logs might look like before using Eliot::
+Structured, action-oriented logging is a great help when debugging problems.
+For example, here are the combined logs of a request originating from a client process being sent to a server.
+Notice how easy it is to figure out the cause of the problem, even though it's opaque to the client::
 
-    Going to validate http://example.com/index.html.
-    Started download attempted.
-    Download succeeded!
-    Missing <title> element in "/html/body".
-    Bad HTML entity in "/html/body/p[2]".
-    2 validation errors found!
+    process='client' task_uuid='40be6df2' task_level=[1] action_type='main'
+        action_status='started'
 
-After switching to Eliot you'll get a tree of messages with both message contents and causal relationships encoded in a structured format:
+    process='client' task_uuid='40be6df2' task_level=[2, 1] action_type='http_request'
+        action_status='started' x=5 y=0
 
-* ``{"action_type": "validate_page", "action_status": "started", "url": "http://example.com/index.html"}``
+    process='server' task_uuid='40be6df2' task_level=[2, 2, 1] action_type='eliot:remote_task'
+        action_status='started'
 
-  * ``{"action_type": "download", "action_status": "started"}``
-  * ``{"action_type": "download", "action_status": "succeeded"}``
-  * ``{"action_type": "validate_html", "action_status": "started"}``
+    process='server' task_uuid='40be6df2' task_level=[2, 2, 2, 1] action_type='divide'
+        action_status='started' x=5 y=0
 
-    * ``{"message_type": "validation_error", "error_type": "missing_title", "xpath": "/html/head"}``
-    * ``{"message_type": "validation_error", "error_type": "bad_entity", "xpath": "/html/body/p[2]"}``
+    process='server' task_uuid='40be6df2' task_level=[2, 2, 2, 2] action_type='divide'
+        action_status='failed' exception='exceptions.ZeroDivisionError' reason='integer division or modulo by zero'
 
-  * ``{"action_type": "validate_html", "action_status": "failed", "exception": "validator.ValidationFailed"}``
+    process='server' task_uuid='40be6df2' task_level=[2, 2, 3] action_type='eliot:remote_task'
+        action_status='failed' exception='exceptions.ZeroDivisionError' reason='integer division or modulo by zero'
 
-* ``{"action_type": "validate_page", "action_status": "failed", "exception": "validator.ValidationFailed"}``
+    process='client' task_uuid='40be6df2' task_level=[2, 3] action_type='http_request'
+       action_status='failed' exception='requests.exception.HTTPError' reason='500 Server Error: INTERNAL SERVER ERROR'
+
+    process='client' task_uuid='40be6df2' task_level=[3] action_type='main'
+       action_status='failed' exception='requests.exception.HTTPError' reason='500 Server Error: INTERNAL SERVER ERROR'
+
 
 Features:
 

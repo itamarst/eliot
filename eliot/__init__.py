@@ -1,5 +1,5 @@
 """
-Eliot: Logging as Storytelling.
+Eliot: Logging for Complex & Distributed Systems.
 """
 # Expose the public API:
 from ._message import Message
