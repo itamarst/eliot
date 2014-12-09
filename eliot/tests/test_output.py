@@ -4,17 +4,18 @@ Tests for L{eliot._output}.
 
 from __future__ import unicode_literals
 
+from sys import stdout
 from unittest import TestCase, skipIf
 # Make sure to use StringIO that only accepts unicode:
 from io import BytesIO, StringIO
 import json as pyjson
 
-from six import PY3
+from six import PY3, PY2
 
 from zope.interface.verify import verifyClass
 
 from .._output import (
-    MemoryLogger, ILogger, Destinations, Logger, json, to_file,
+    MemoryLogger, ILogger, Destinations, Logger, fast_json as json, to_file,
     _FileDestination,
     )
 from .._validation import ValidationError, Field, _MessageSerializer
@@ -540,7 +541,7 @@ class ToFileTests(TestCase):
         """
         L{to_file} adds a L{_FileDestination} destination with the given file.
         """
-        f = object()
+        f = stdout
         to_file(f)
         expected = _FileDestination(file=f)
         self.addCleanup(Logger._destinations.remove, expected)
@@ -563,6 +564,7 @@ class ToFileTests(TestCase):
             [message1, message2])
 
 
+    @skipIf(PY2, "Python 2 files always accept bytes")
     def test_filedestination_writes_json_unicode(self):
         """
         L{_FileDestination} writes JSON-encoded messages to files that accept

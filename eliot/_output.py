@@ -4,11 +4,13 @@ Implementation of hooks and APIs for outputting log messages.
 
 from __future__ import unicode_literals, absolute_import
 
+import json as pyjson
+
 from characteristic import attributes
 from six import text_type as unicode, PY3
 if PY3:
-    from . import _py3json as json
-    pyjson = json
+    from . import _py3json as fast_json
+    slow_json = fast_json
 else:
     try:
         # ujson has some issues, in particular it is far too lenient on bad
@@ -17,11 +19,11 @@ else:
         # better. We import built-in module for use by the validation code
         # path, since we want to validate messages encode in all JSON
         # encoders.
-        import ujson as json
-        import json as pyjson
+        import ujson as fast_json
+        import json as slow_json
     except ImportError:
-        import json
-        pyjson = json
+        import json as fast_json
+        slow_json = fast_json
 
 
 
@@ -30,6 +32,7 @@ from zope.interface import Interface, implementer
 from ._traceback import writeTraceback, TRACEBACK_MESSAGE
 from ._message import Message
 from ._util import saferepr
+
 
 
 class Destinations(object):
@@ -263,8 +266,8 @@ class MemoryLogger(object):
 
             # Make sure we can be encoded with different JSON encoder, since
             # ujson has different behavior in some cases:
-            json.dumps(dictionary)
-            pyjson.dumps(dictionary)
+            fast_json.dumps(dictionary)
+            slow_json.dumps(dictionary)
 
 
     def serialize(self):
@@ -304,13 +307,37 @@ class _FileDestination(object):
     """
     Callable that writes JSON messages to a file.
 
+    On Python 3 the file may support either C{bytes} or C{unicode}.
+
     @ivar file: The file to which messages will be written.
+
+    @ivar _dumps: Function that serializes an object to JSON.
+
+    @ivar _linebreak: C{"\n"} as either bytes or unicode.
     """
+
+    def __init__(self):
+        unicodeFile = False
+        if PY3:
+            try:
+                self.file.write(b"")
+            except TypeError:
+                unicodeFile = True
+
+        if unicodeFile:
+            # On Python 3 native json module outputs unicode:
+            self._dumps = pyjson.dumps
+            self._linebreak = u"\n"
+        else:
+            self._dumps = fast_json.dumps
+            self._linebreak = b"\n"
+
+
     def __call__(self, message):
         """
         @param message: A message dictionary.
         """
-        self.file.write(json.dumps(message) + b"\n")
+        self.file.write(self._dumps(message) + self._linebreak)
 
 
 

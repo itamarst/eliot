@@ -8,6 +8,9 @@ import time
 import threading
 # Make sure to use StringIO that only accepts unicode:
 from io import BytesIO, StringIO
+from unittest import skipIf
+
+from six import PY2
 
 try:
     from zope.interface.verify import verifyClass
@@ -173,6 +176,7 @@ class ThreadedFileWriterTests(TestCase):
         self.assertEqual(f.getvalue(), b'{"hello": 123}\n')
 
 
+    @skipIf(PY2, "Python 2 files always accept bytes")
     def test_write_unicode(self):
         """
         Messages passed to L{ThreadedFileWriter.write} are then written by the
