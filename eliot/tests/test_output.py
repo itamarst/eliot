@@ -5,7 +5,9 @@ Tests for L{eliot._output}.
 from __future__ import unicode_literals
 
 from unittest import TestCase, skipIf
-from io import BytesIO
+# Make sure to use StringIO that only accepts unicode:
+from io import BytesIO, StringIO
+import json as pyjson
 
 from six import PY3
 
@@ -545,9 +547,10 @@ class ToFileTests(TestCase):
         self.assertIn(expected, Logger._destinations._destinations)
 
 
-    def test_filedestination_writes_json(self):
+    def test_filedestination_writes_json_bytes(self):
         """
-        L{_FileDestination} writes JSON-encoded messages.
+        L{_FileDestination} writes JSON-encoded messages to file that accepts
+        bytes.
         """
         message1 = {"x": 123}
         message2 = {"y": None, "x": "abc"}
@@ -558,3 +561,15 @@ class ToFileTests(TestCase):
         self.assertEqual(
             [json.loads(line) for line in f.getvalue().splitlines()],
             [message1, message2])
+
+
+    def test_filedestination_writes_json_unicode(self):
+        """
+        L{_FileDestination} writes JSON-encoded messages to files that accept
+        Unicode.
+        """
+        message = {"x": "\u1234"}
+        f = StringIO()
+        destination = _FileDestination(file=f)
+        destination(message)
+        self.assertEqual(pyjson.loads(f.getvalue()), message)
