@@ -307,7 +307,9 @@ class _FileDestination(object):
     """
     Callable that writes JSON messages to a file.
 
-    On Python 3 the file may support either C{bytes} or C{unicode}.
+    On Python 3 the file may support either C{bytes} or C{unicode}.  On
+    Python 2 only C{bytes} are supported since that is what all files expect
+    in practice.
 
     @ivar file: The file to which messages will be written.
 
