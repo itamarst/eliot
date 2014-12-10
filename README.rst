@@ -9,10 +9,8 @@ Eliot: Logging for Complex & Distributed Systems
            :target: http://travis-ci.org/ClusterHQ/eliot
            :alt: Build Status
 
-Eliot is a Python logging system designed for complex applications, especially distributed systems.
-Eliot's structured logs are traces of the system's actions both within and across process boundaries.
-Actions start and eventually finish, successfully or not.
-Instead of isolated facts the log messages are thus a story: a series of causal events.
+Eliot is a Python logging system designed not only for simple applications but for complex applications as well, including distributed systems.
+Eliot supports simple structured messages but can also record a causal chain of actions happening within and across process boundaries: a logical trace of the system's operation.
 
 Structured, action-oriented logging is a great help when debugging problems.
 For example, here are the combined logs of a request originating from a client process being sent to a server.
