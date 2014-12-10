@@ -11,7 +11,7 @@ For example, if we want each message to be encoded in JSON and written on a new 
     from eliot import add_destination
 
     def stdout(message):
-        sys.stdout.write(json.dumps(message) + b"\n")
+        sys.stdout.write(json.dumps(message) + "\n")
     add_destination(stdout)
 
 

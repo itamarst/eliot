@@ -4,16 +4,19 @@ Tests for L{eliot._output}.
 
 from __future__ import unicode_literals
 
+from sys import stdout
 from unittest import TestCase, skipIf
-from io import BytesIO
+# Make sure to use StringIO that only accepts unicode:
+from io import BytesIO, StringIO
+import json as pyjson
 
-from six import PY3
+from six import PY3, PY2
 
 from zope.interface.verify import verifyClass
 
 from .._output import (
-    MemoryLogger, ILogger, Destinations, Logger, json, to_file,
-    _FileDestination,
+    MemoryLogger, ILogger, Destinations, Logger, fast_json as json, to_file,
+    FileDestination,
     )
 from .._validation import ValidationError, Field, _MessageSerializer
 from .._traceback import writeTraceback
@@ -104,7 +107,8 @@ class MemoryLoggerTests(TestCase):
 
     def test_JSON(self):
         """
-        L{MemoryLogger.validate} will encode the output of serialization to JSON.
+        L{MemoryLogger.validate} will encode the output of serialization to
+        JSON.
         """
         serializer = _MessageSerializer(
             [Field.forValue("message_type", "type", u"The type"),
@@ -536,25 +540,39 @@ class ToFileTests(TestCase):
     """
     def test_to_file_adds_destination(self):
         """
-        L{to_file} adds a L{_FileDestination} destination with the given file.
+        L{to_file} adds a L{FileDestination} destination with the given file.
         """
-        f = object()
+        f = stdout
         to_file(f)
-        expected = _FileDestination(file=f)
+        expected = FileDestination(file=f)
         self.addCleanup(Logger._destinations.remove, expected)
         self.assertIn(expected, Logger._destinations._destinations)
 
 
-    def test_filedestination_writes_json(self):
+    def test_filedestination_writes_json_bytes(self):
         """
-        L{_FileDestination} writes JSON-encoded messages.
+        L{FileDestination} writes JSON-encoded messages to a file that accepts
+        bytes.
         """
         message1 = {"x": 123}
         message2 = {"y": None, "x": "abc"}
-        f = BytesIO()
-        destination = _FileDestination(file=f)
+        bytes_f = BytesIO()
+        destination = FileDestination(file=bytes_f)
         destination(message1)
         destination(message2)
         self.assertEqual(
-            [json.loads(line) for line in f.getvalue().splitlines()],
+            [json.loads(line) for line in bytes_f.getvalue().splitlines()],
             [message1, message2])
+
+
+    @skipIf(PY2, "Python 2 files always accept bytes")
+    def test_filedestination_writes_json_unicode(self):
+        """
+        L{FileDestination} writes JSON-encoded messages to file that only
+        accepts Unicode.
+        """
+        message = {"x": "\u1234"}
+        unicode_f = StringIO()
+        destination = FileDestination(file=unicode_f)
+        destination(message)
+        self.assertEqual(pyjson.loads(unicode_f.getvalue()), message)
