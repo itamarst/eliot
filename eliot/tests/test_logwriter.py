@@ -78,6 +78,10 @@ class BlockingFile(object):
 class ThreadedFileWriterTests(TestCase):
     """
     Tests for L{ThreadedFileWriter}.
+
+    Many of these tests involve interactions across threads, so they
+    arbitrarily wait for up to 5 seconds to reduce chances of slow thread
+    switching causing the test to fail.
     """
     def test_interface(self):
         """
