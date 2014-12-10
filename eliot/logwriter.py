@@ -17,7 +17,7 @@ else:
     from twisted.internet.selectreactor import SelectReactor as Reactor
 
 from . import addDestination, removeDestination
-from ._output import _FileDestination
+from ._output import FileDestination
 
 
 class ThreadedFileWriter(Service):
@@ -51,7 +51,7 @@ class ThreadedFileWriter(Service):
         @param reactor: The main reactor.
         """
         self._logFile = logFile
-        self._destination = _FileDestination(file=logFile)
+        self._destination = FileDestination(file=logFile)
         self._reactor = Reactor()
         # Ick. See https://twistedmatrix.com/trac/ticket/6982 for real solution.
         self._reactor._registerAsIOThread = False

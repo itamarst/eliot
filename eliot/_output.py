@@ -303,7 +303,7 @@ class MemoryLogger(object):
 
 
 @attributes(["file"])
-class _FileDestination(object):
+class FileDestination(object):
     """
     Callable that writes JSON messages to a file.
 
@@ -349,4 +349,4 @@ def to_file(output_file):
 
     @param output_file: A file-like object.
     """
-    Logger._destinations.add(_FileDestination(file=output_file))
+    Logger._destinations.add(FileDestination(file=output_file))

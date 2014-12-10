@@ -16,7 +16,7 @@ from zope.interface.verify import verifyClass
 
 from .._output import (
     MemoryLogger, ILogger, Destinations, Logger, fast_json as json, to_file,
-    _FileDestination,
+    FileDestination,
     )
 from .._validation import ValidationError, Field, _MessageSerializer
 from .._traceback import writeTraceback
@@ -107,7 +107,8 @@ class MemoryLoggerTests(TestCase):
 
     def test_JSON(self):
         """
-        L{MemoryLogger.validate} will encode the output of serialization to JSON.
+        L{MemoryLogger.validate} will encode the output of serialization to
+        JSON.
         """
         serializer = _MessageSerializer(
             [Field.forValue("message_type", "type", u"The type"),
@@ -539,24 +540,24 @@ class ToFileTests(TestCase):
     """
     def test_to_file_adds_destination(self):
         """
-        L{to_file} adds a L{_FileDestination} destination with the given file.
+        L{to_file} adds a L{FileDestination} destination with the given file.
         """
         f = stdout
         to_file(f)
-        expected = _FileDestination(file=f)
+        expected = FileDestination(file=f)
         self.addCleanup(Logger._destinations.remove, expected)
         self.assertIn(expected, Logger._destinations._destinations)
 
 
     def test_filedestination_writes_json_bytes(self):
         """
-        L{_FileDestination} writes JSON-encoded messages to file that accepts
+        L{FileDestination} writes JSON-encoded messages to file that accepts
         bytes.
         """
         message1 = {"x": 123}
         message2 = {"y": None, "x": "abc"}
         f = BytesIO()
-        destination = _FileDestination(file=f)
+        destination = FileDestination(file=f)
         destination(message1)
         destination(message2)
         self.assertEqual(
@@ -567,11 +568,11 @@ class ToFileTests(TestCase):
     @skipIf(PY2, "Python 2 files always accept bytes")
     def test_filedestination_writes_json_unicode(self):
         """
-        L{_FileDestination} writes JSON-encoded messages to files that accept
+        L{FileDestination} writes JSON-encoded messages to files that accept
         Unicode.
         """
         message = {"x": "\u1234"}
         f = StringIO()
-        destination = _FileDestination(file=f)
+        destination = FileDestination(file=f)
         destination(message)
         self.assertEqual(pyjson.loads(f.getvalue()), message)
