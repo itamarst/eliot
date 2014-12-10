@@ -551,28 +551,28 @@ class ToFileTests(TestCase):
 
     def test_filedestination_writes_json_bytes(self):
         """
-        L{FileDestination} writes JSON-encoded messages to file that accepts
+        L{FileDestination} writes JSON-encoded messages to a file that accepts
         bytes.
         """
         message1 = {"x": 123}
         message2 = {"y": None, "x": "abc"}
-        f = BytesIO()
-        destination = FileDestination(file=f)
+        bytes_f = BytesIO()
+        destination = FileDestination(file=bytes_f)
         destination(message1)
         destination(message2)
         self.assertEqual(
-            [json.loads(line) for line in f.getvalue().splitlines()],
+            [json.loads(line) for line in bytes_f.getvalue().splitlines()],
             [message1, message2])
 
 
     @skipIf(PY2, "Python 2 files always accept bytes")
     def test_filedestination_writes_json_unicode(self):
         """
-        L{FileDestination} writes JSON-encoded messages to files that accept
-        Unicode.
+        L{FileDestination} writes JSON-encoded messages to file that only
+        accepts Unicode.
         """
         message = {"x": "\u1234"}
-        f = StringIO()
-        destination = FileDestination(file=f)
+        unicode_f = StringIO()
+        destination = FileDestination(file=unicode_f)
         destination(message)
-        self.assertEqual(pyjson.loads(f.getvalue()), message)
+        self.assertEqual(pyjson.loads(unicode_f.getvalue()), message)
