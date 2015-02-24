@@ -246,6 +246,18 @@ class FieldsTests(TestCase):
     """
     Tests for L{fields}.
     """
+    def test_fields(self):
+        """
+        L{fields} accepts positional arguments of L{Field} instances and
+        combines them with fields specied as keyword arguments.
+        """
+        a_field = Field(u'akey', identity)
+        l = fields(a_field, another=str)
+        self.assertEqual(
+            {(type(field), field.key) for field in l},
+            {(Field, 'akey'), (Field, 'another')})
+
+
     def test_keys(self):
         """
         L{fields} creates L{Field} instances with the given keys.

@@ -156,16 +156,19 @@ class Field(object):
 
 
 
-def fields(**keys):
+def fields(*fields, **keys):
     """
     Factory for for L{MessageType} and L{ActionType} field definitions.
+
+    @param *fields: A L{tuple} of L{Field} instances.
 
     @param **keys: A L{dict} mapping key names to the expected type of the
         field's values.
 
     @return: A L{list} of L{Field} instances.
     """
-    return [Field.forTypes(key, [value], "") for key, value in keys.items()]
+    return list(fields) + [
+        Field.forTypes(key, [value], "") for key, value in keys.items()]
 
 
 
