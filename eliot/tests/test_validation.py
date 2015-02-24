@@ -246,7 +246,7 @@ class FieldsTests(TestCase):
     """
     Tests for L{fields}.
     """
-    def test_fields(self):
+    def test_positional(self):
         """
         L{fields} accepts positional arguments of L{Field} instances and
         combines them with fields specied as keyword arguments.
