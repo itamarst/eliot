@@ -1,6 +1,12 @@
 What's New
 ==========
 
+0.7.0
+^^^^^
+
+ * Support positional ``Field``-instance arguments to ``fields()`` to make combining existing field types and simple fields more convenient.
+
+
 0.6.0
 ^^^^^
 
