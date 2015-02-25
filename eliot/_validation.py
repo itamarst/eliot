@@ -188,7 +188,12 @@ class _MessageSerializer(object):
         L{Field}.
     """
     def __init__(self, fields):
-        keys = [field.key for field in fields]
+        keys = []
+        for field in fields:
+            if not isinstance(field, Field):
+                raise TypeError(
+                    'Expected a Field instance but got', field)
+            keys.append(field.key)
         if len(set(keys)) != len(keys):
             raise ValueError(keys, "Duplicate field name")
         if "action_type" in keys:

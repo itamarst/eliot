@@ -395,6 +395,20 @@ class MessageSerializerTests(TestCase):
                                    "extra": 123})
 
 
+    def test_fieldInstances(self):
+        """
+        Fields to L{_MessageSerializer.__init__} should be instances of
+        L{Field}.
+        """
+        a_field = Field('a_key', identity)
+        arg = object()
+        with self.assertRaises(TypeError) as cm:
+            _MessageSerializer([a_field, arg])
+        self.assertEqual(
+            (u'Expected a Field instance but got', arg),
+            cm.exception.args)
+
+
 
 class MessageTypeTests(TestCase):
     """
