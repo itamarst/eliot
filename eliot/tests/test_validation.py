@@ -253,6 +253,7 @@ class FieldsTests(TestCase):
         """
         a_field = Field(u'akey', identity)
         l = fields(a_field, another=str)
+        self.assertIn(a_field, l)
         self.assertEqual(
             {(type(field), field.key) for field in l},
             {(Field, 'akey'), (Field, 'another')})
