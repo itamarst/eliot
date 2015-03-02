@@ -156,16 +156,19 @@ class Field(object):
 
 
 
-def fields(**keys):
+def fields(*fields, **keys):
     """
     Factory for for L{MessageType} and L{ActionType} field definitions.
+
+    @param *fields: A L{tuple} of L{Field} instances.
 
     @param **keys: A L{dict} mapping key names to the expected type of the
         field's values.
 
     @return: A L{list} of L{Field} instances.
     """
-    return [Field.forTypes(key, [value], "") for key, value in keys.items()]
+    return list(fields) + [
+        Field.forTypes(key, [value], "") for key, value in keys.items()]
 
 
 
@@ -185,7 +188,12 @@ class _MessageSerializer(object):
         L{Field}.
     """
     def __init__(self, fields):
-        keys = [field.key for field in fields]
+        keys = []
+        for field in fields:
+            if not isinstance(field, Field):
+                raise TypeError(
+                    'Expected a Field instance but got', field)
+            keys.append(field.key)
         if len(set(keys)) != len(keys):
             raise ValueError(keys, "Duplicate field name")
         if "action_type" in keys:
