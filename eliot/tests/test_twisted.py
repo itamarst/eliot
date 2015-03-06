@@ -569,7 +569,7 @@ class RedirectLogsForTrialTests(TestCase):
             raiser()
         except Exception:
             expectedTraceback = traceback.format_exc()
-            writeTraceback(logger, "some:system")
+            writeTraceback(logger)
 
         lines = expectedTraceback.split("\n")
         # Remove source code lines:

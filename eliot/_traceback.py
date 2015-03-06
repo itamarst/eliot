@@ -7,18 +7,17 @@ from __future__ import unicode_literals
 import types
 import traceback
 import sys
+from warnings import warn
 
 from six import exec_
 
-from .serializers import identity
 from ._util import safeunicode
 from ._validation import MessageType, Field
 
 
 TRACEBACK_MESSAGE = MessageType(
     "eliot:traceback",
-    [Field("system", identity, "The system from which this traceback came."),
-     Field("reason", safeunicode, "The exception's value."),
+    [Field("reason", safeunicode, "The exception's value."),
      Field("traceback", safeunicode, "The traceback."),
      Field("exception", lambda typ: "%s.%s" % (typ.__module__, typ.__name__),
            "The exception type's FQPN.")],
@@ -26,7 +25,7 @@ TRACEBACK_MESSAGE = MessageType(
 
 
 
-def _writeTracebackMessage(logger, system, typ, exception, traceback):
+def _writeTracebackMessage(logger, typ, exception, traceback):
     """
     Write a traceback to the log.
 
@@ -36,7 +35,7 @@ def _writeTracebackMessage(logger, system, typ, exception, traceback):
 
     @param traceback: The traceback, a C{str}.
     """
-    msg = TRACEBACK_MESSAGE(system=system, reason=exception, traceback=traceback,
+    msg = TRACEBACK_MESSAGE(reason=exception, traceback=traceback,
                             exception=typ)
     msg.write(logger)
 
@@ -68,7 +67,7 @@ _traceback_no_io = _get_traceback_no_io()
 
 
 
-def writeTraceback(logger, system):
+def writeTraceback(logger, system=None):
     """
     Write the latest traceback to the log.
 
@@ -77,15 +76,19 @@ def writeTraceback(logger, system):
          try:
              dostuff()
          except:
-             writeTraceback(logger, "myapp:subsystem")
+             writeTraceback(logger)
     """
+    if system is not None:
+        warn("The `system` argument to writeTraceback is no longer used.",
+             DeprecationWarning, stacklevel=2)
+
     typ, exception, tb = sys.exc_info()
     traceback = "".join(_traceback_no_io.format_exception(typ, exception, tb))
-    _writeTracebackMessage(logger, system, typ, exception, traceback)
+    _writeTracebackMessage(logger, typ, exception, traceback)
 
 
 
-def writeFailure(failure, logger, system):
+def writeFailure(failure, logger, system=None):
     """
     Write a L{twisted.python.failure.Failure} to the log.
 
@@ -103,7 +106,11 @@ def writeFailure(failure, logger, system):
 
     @return: None
     """
+    if system is not None:
+        warn("The `system` argument to writeFailure is no longer used.",
+             DeprecationWarning, stacklevel=2)
+
     # Failure.getBriefTraceback does not include source code, so does not do
     # I/O.
-    _writeTracebackMessage(logger, system, failure.value.__class__,
+    _writeTracebackMessage(logger, failure.value.__class__,
                            failure.value, failure.getBriefTraceback())

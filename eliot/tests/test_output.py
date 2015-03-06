@@ -158,7 +158,7 @@ class MemoryLoggerTests(TestCase):
         try:
             raise exception
         except:
-            writeTraceback(logger, "mytest")
+            writeTraceback(logger)
 
 
     def test_tracebacksCauseTestFailure(self):
