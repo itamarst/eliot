@@ -8,13 +8,8 @@ Now that you've got some code emitting log messages (or even better, before you'
 Given good test coverage all code branches should already be covered by tests unrelated to logging.
 Logging can be considered just another aspect of testing those code branches.
 Rather than recreating all those tests as separate functions Eliot provides a decorator the allows adding logging assertions to existing tests.
-``unittest.TestCase`` test methods decorated with ``eliot.testing.validate_logging`` will be called with a ``logger`` keyword argument, a ``eliot.MemoryLogger`` instance.
-The ``validate_logging`` decorator takes an argument: another function that takes the ``TestCase`` instance as its first argument (``self``), and the ``logger`` as its second argument.
-This function can make assertions about logging after the main test function has run.
-You can also pass additional arguments and keyword arguments to ``@validate_logging``, in which case the assertion function will get called with them as well.
 
 Let's unit test some code that relies on the ``LOG_USER_REGISTRATION`` object we created earlier.
-
 
 .. code-block:: python
 
@@ -65,17 +60,17 @@ Here's how we'd test it:
             self.assertEqual(registry.db[u"john"], (u"passsword", 12))
 
 
-Besides calling an the given validation function the ``@validate_logging`` decorator will also validate the logged messages after the test is done.
+Besides calling an the given validation function the ``@validate_all_logging`` decorator will also validate the logged messages after the test is done.
 E.g. it will make sure they are JSON encodable.
 Messages were created using ``ActionType`` and ``MessageType`` will be validated using the applicable ``Field`` definitions.
 You can also call ``MemoryLogger.validate`` yourself to validate written messages.
-If you don't want any additional logging assertions you can decorate your test function using ``@validate_logging(None)``.
+If you don't want any additional logging assertions you can decorate your test function using ``@validate_all_logging(None)``.
 
 
 Testing Tracebacks
 ------------------
 
-Tests decorated with ``@validate_logging`` will fail if there are any tracebacks logged to the given ``MemoryLogger`` (using ``write_traceback`` or ``writeFailure``) on the theory that these are unexpected errors indicating a bug.
+Tests decorated with ``@validate_all_logging`` will fail if there are any tracebacks logged to the given ``MemoryLogger`` (using ``write_traceback`` or ``writeFailure``) on the theory that these are unexpected errors indicating a bug.
 If you expected a particular exception to be logged you can call ``MemoryLogger.flush_tracebacks``, after which it will no longer cause a test failure.
 The result will be a list of traceback message dictionaries for the particular exception.
 
@@ -108,7 +103,7 @@ The simplest method is using the ``assertHasMessage`` utility function which ass
     from eliot.testing import assertHasMessage, validate_all_logging
 
     class LoggingTests(TestCase):
-        @validate_logging(assertHasMessage, LOG_USER_REGISTRATION,
+        @validate_all_logging(assertHasMessage, LOG_USER_REGISTRATION,
                          {u"username": u"john",
                           u"password": u"password",
                           u"age": 12})
@@ -149,7 +144,6 @@ For example, we could rewrite the registration logging test above like so:
             Registration adds entries to the in-memory database.
             """
             registry = UserRegistration()
-            registry.logger = logger
             registry.register(u"john", u"password", 12)
             self.assertEqual(registry.db[u"john"], (u"passsword", 12))
 
@@ -231,4 +225,54 @@ Restriction Testing to Specific Messages
 ----------------------------------------
 
 If you want to only look at certain messages when testing you can log to a specific ``eliot.Logger`` object rather than the global one.
-The unit test should then override that instance with the given ``eliot.MemoryLogger`` to ensure only those messages
+The unit test should then use ``@validate_logging`` (as opposed to ``@validate_all_logging``) and then override that instance's logger with the given ``eliot.MemoryLogger`` to ensure only those messages are captured.
+
+.. code-block:: python
+
+    from eliot import Logger
+
+      from myapp.logtypes import LOG_USER_REGISTRATION
+
+      class UserRegistration(object):
+
+          logger = Logger()
+
+          def __init__(self):
+              self.db = {}
+
+          def register(self, username, password, age):
+              self.db[username] = (password, age)
+              msg = LOG_USER_REGISTRATION(
+                   username=username, password=password, age=age)
+              # Notice use of specific logger:
+              msg.write(self.logger)
+
+The tests would then do the following:
+
+.. code-block:: python
+
+    from eliot.testing import LoggedMessage, validate_logging
+
+    class LoggingTests(TestCase):
+        def assertRegistrationLogging(self, logger):
+            """
+            Logging assertions for test_registration.
+            """
+            logged = LoggedMessage.of_type(logger.messages, LOG_USER_REGISTRATION)[0]
+            assertContainsFields(self, logged.message,
+                                 {u"username": u"john",
+                                  u"password": u"password",
+                                  u"age": 12}))
+
+        # validate_logging only captures log messages logged to the MemoryLogger
+        # instance it passes to the test:
+        @validate_logging(assertRegistrationLogging)
+        def test_registration(self, logger):
+            """
+            Registration adds entries to the in-memory database.
+            """
+            registry = UserRegistration()
+            # Override logger with one used by test:
+            registry.logger = logger
+            registry.register(u"john", u"password", 12)
+            self.assertEqual(registry.db[u"john"], (u"passsword", 12))
