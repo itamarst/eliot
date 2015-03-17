@@ -490,7 +490,7 @@ class ValidateLoggingTests(TestCase):
                 try:
                     1 / 0
                 except ZeroDivisionError:
-                    writeTraceback(logger, "atest")
+                    writeTraceback(logger)
         test = MyTest()
         self.assertRaises(UnflushedTracebacks, test.debug)
 
@@ -573,7 +573,7 @@ class ValidateLoggingTests(TestCase):
                 try:
                     1 / 0
                 except ZeroDivisionError:
-                    writeTraceback(logger, "atest")
+                    writeTraceback(logger)
         test = MyTest()
         test.debug()
         self.assertTrue(test.flushed)

@@ -1,6 +1,8 @@
 Using Types to Structure Messages and Actions
 =============================================
 
+.. _type system:
+
 Why Typing?
 -----------
 
@@ -110,6 +112,17 @@ The equivalent to the code above is:
 
     LOG_USER_REGISTRATION = MessageType(u"yourapp:authentication:registration",
                                         fields(username=str, age=int))
+
+Or you can even use existing ``Field`` instances with ``fields``:
+
+.. code-block:: python
+
+    from eliot import MessageType, Field, fields
+
+    USERNAME = Field.for_types("username", [str])
+
+    LOG_USER_REGISTRATION = MessageType(u"yourapp:authentication:registration",
+                                        fields(USERNAME, age=int))
 
 Given a ``MessageType`` you can create a ``Message`` instance with the ``message_type`` field pre-populated.
 You can then use it the way you would normally use ``Message``, e.g. ``bind()`` or ``write()``.

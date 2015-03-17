@@ -1,6 +1,33 @@
 What's New
 ==========
 
+0.7.0
+^^^^^
+
+* Support positional ``Field``-instance arguments to ``fields()`` to make combining existing field types and simple fields more convenient.
+  Contributed by Jonathan Jacobs.
+* ``write_traceback`` and ``writeFailure`` no longer require a ``system`` argument, as the combination of traceback and action context should suffice to discover the origin of the problem.
+  This is a minor change to output format as the field is also omitted from the resulting ``eliot:traceback`` messages.
+
+0.6.0
+^^^^^
+
+.. warning::
+
+    Incompatible output format change! In previous versions the ordering of messages and actions was ambiguous and could not be deduced from out-of-order logs, and even where it was possible sorting correctly was difficult.
+    To fix this the ``action_counter`` field was removed and now all messages can be uniquely located within a specific task by the values in an :ref:`improved task_level field <task fields>`.
+
+Features:
+
+* Eliot tasks can now :ref:`span multiple processes and threads <cross process tasks>`, allowing for easy tracing of actions in complex and distributed applications.
+* :ref:`eliot.add_global_fields <add_global_fields>` allows adding fields with specific values to all Eliot messages logged by your program.
+  This can be used to e.g. distinguish between log messages from different processes by including relevant identifying information.
+
+Bug fixes:
+
+* On Python 3 files that accept unicode (e.g. ``sys.stdout``) should now work.
+
+
 0.5.0
 ^^^^^
 
@@ -17,7 +44,7 @@ Features:
 0.4.0
 ^^^^^
 
-Note that this is the last release that will make incompatible changes without interim deprecation warnings.
+Note that this is the last release that will make incompatible API changes without interim deprecation warnings.
 
 
 Incompatible changes from 0.3.0:

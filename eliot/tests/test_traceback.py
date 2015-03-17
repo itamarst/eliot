@@ -5,6 +5,7 @@ Tests for L{eliot._traceback}.
 from __future__ import unicode_literals
 
 from unittest import TestCase, SkipTest
+from warnings import catch_warnings, simplefilter
 import traceback
 import sys
 
@@ -14,7 +15,7 @@ except ImportError:
     Failure = None
 
 from .._traceback import writeTraceback, writeFailure, _writeTracebackMessage
-from ..testing import assertContainsFields, validateLogging
+from ..testing import assertContainsFields, validateLogging, MemoryLogger
 
 
 class TracebackLoggingTests(TestCase):
@@ -33,7 +34,7 @@ class TracebackLoggingTests(TestCase):
             raiser()
         except Exception as exception:
             expectedTraceback = traceback.format_exc()
-            writeTraceback(logger, "some:system")
+            writeTraceback(logger)
             e = exception
         lines = expectedTraceback.split("\n")
         # Remove source code lines:
@@ -41,8 +42,7 @@ class TracebackLoggingTests(TestCase):
             [l for l in lines if not l.startswith("    ")])
         message = logger.messages[0]
         assertContainsFields(self, message,
-                             {"system": "some:system",
-                              "message_type": "eliot:traceback",
+                             {"message_type": "eliot:traceback",
                               "exception": RuntimeError,
                               "reason": e,
                               "traceback": expectedTraceback})
@@ -62,11 +62,10 @@ class TracebackLoggingTests(TestCase):
         except:
             failure = Failure()
             expectedTraceback = failure.getBriefTraceback()
-            writeFailure(failure, logger, "some:system")
+            writeFailure(failure, logger)
         message = logger.messages[0]
         assertContainsFields(self, message,
-                             {"system": "some:system",
-                              "message_type": "eliot:traceback",
+                             {"message_type": "eliot:traceback",
                               "exception": RuntimeError,
                               "reason": failure.value,
                               "traceback": expectedTraceback})
@@ -84,7 +83,7 @@ class TracebackLoggingTests(TestCase):
         try:
             raise RuntimeError("because")
         except:
-            result = writeFailure(Failure(), logger, "some:system")
+            result = writeFailure(Failure(), logger)
         self.assertIs(result, None)
         logger.flushTracebacks(RuntimeError)
 
@@ -99,7 +98,7 @@ class TracebackLoggingTests(TestCase):
             raise KeyError(123)
         except:
             exc_info = sys.exc_info()
-        _writeTracebackMessage(logger, "sys", *exc_info)
+        _writeTracebackMessage(logger, *exc_info)
         serialized = logger.serialize()[0]
         assertContainsFields(self, serialized,
                              {"exception":
@@ -121,7 +120,40 @@ class TracebackLoggingTests(TestCase):
             raise BadException()
         except BadException:
             exc_info = sys.exc_info()
-        _writeTracebackMessage(logger, "sys", *exc_info)
+        _writeTracebackMessage(logger, *exc_info)
         self.assertEqual(logger.serialize()[0]["reason"],
                          "eliot: unknown, unicode() raised exception")
         logger.flushTracebacks(BadException)
+
+
+    def test_systemDeprecatedWriteTraceback(self):
+        """
+        L{writeTraceback} warns with C{DeprecationWarning} if a C{system}
+        argument is passed in.
+        """
+        logger = MemoryLogger()
+        with catch_warnings(record=True) as warnings:
+            simplefilter("always")
+            try:
+                raise Exception()
+            except:
+                writeTraceback(logger, "system")
+            self.assertEqual(warnings[-1].category, DeprecationWarning)
+
+
+    def test_systemDeprecatedWriteFailure(self):
+        """
+        L{writeTraceback} warns with C{DeprecationWarning} if a C{system}
+        argument is passed in.
+        """
+        if Failure is None:
+            raise SkipTest("Twisted unavailable")
+
+        logger = MemoryLogger()
+        with catch_warnings(record=True) as warnings:
+            simplefilter("always")
+            try:
+                raise Exception()
+            except:
+                writeFailure(Failure(), logger, "system")
+            self.assertEqual(warnings[-1].category, DeprecationWarning)

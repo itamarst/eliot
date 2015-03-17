@@ -17,7 +17,7 @@ else:
     from twisted.internet.selectreactor import SelectReactor as Reactor
 
 from . import addDestination, removeDestination
-from ._output import json
+from ._output import FileDestination
 
 
 class ThreadedFileWriter(Service):
@@ -51,6 +51,7 @@ class ThreadedFileWriter(Service):
         @param reactor: The main reactor.
         """
         self._logFile = logFile
+        self._destination = FileDestination(file=logFile)
         self._reactor = Reactor()
         # Ick. See https://twistedmatrix.com/trac/ticket/6982 for real solution.
         self._reactor._registerAsIOThread = False
@@ -82,13 +83,12 @@ class ThreadedFileWriter(Service):
 
     def __call__(self, data):
         """
-        Write given bytes to the queue, to be written by the writer thread with a
-        newline added.
+        Add the data to the queue, to be serialized to JSON and written by the
+        writer thread with a newline added.
 
         @param data: C{bytes} to write to disk.
         """
-        self._reactor.callFromThread(self._logFile.write,
-                                     json.dumps(data) + b'\n')
+        self._reactor.callFromThread(self._destination, data)
 
 
     def _writer(self):

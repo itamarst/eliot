@@ -60,9 +60,4 @@ You can also log tracebacks when your code hits an unexpected exception:
             try:
                  dosomething()
             except:
-                 write_traceback(system=u"yourapp:yourclass")
-
-The ``system`` should be a Unicode string, a logical description of what subsystem in your application generated the message.
-Colons are used as namespace separators by convention to discourage the use of Python modules and namespaces.
-System strings should involve code structure rather than file structure.
-This means they will not have to change if you decide to refactor your implementation.
+                 write_traceback()

@@ -25,7 +25,7 @@ else:
         DeferredContext, AlreadyFinished, _passthrough, redirectLogsForTrial,
         _RedirectLogsForTrial)
 
-from .._action import startAction, currentAction, Action
+from .._action import startAction, currentAction, Action, TaskLevel
 from .._output import MemoryLogger, Logger
 from .._message import Message
 from ..testing import assertContainsFields
@@ -200,7 +200,7 @@ class DeferredContextTests(TestCase):
         """
         d = Deferred()
         logger = MemoryLogger()
-        action = Action(logger, "uuid", "/1/", "sys:me")
+        action = Action(logger, "uuid", TaskLevel(level=[1]), "sys:me")
         with action.context():
             DeferredContext(d).addActionFinish()
         self.assertFalse(logger.messages)
@@ -213,13 +213,13 @@ class DeferredContextTests(TestCase):
         """
         d = Deferred()
         logger = MemoryLogger()
-        action = Action(logger, "uuid", "/1/", "sys:me")
+        action = Action(logger, "uuid", TaskLevel(level=[1]), "sys:me")
         with action.context():
             DeferredContext(d).addActionFinish()
         d.callback("result")
         assertContainsFields(self, logger.messages[0],
                              {"task_uuid": "uuid",
-                              "task_level": "/1/",
+                              "task_level": [1, 1],
                               "action_type": "sys:me",
                               "action_status": "succeeded"})
 
@@ -231,7 +231,7 @@ class DeferredContextTests(TestCase):
         """
         d = Deferred()
         logger = MemoryLogger()
-        action = Action(logger, "uuid", "/1/", "sys:me")
+        action = Action(logger, "uuid", TaskLevel(level=[1]), "sys:me")
         with action.context():
             DeferredContext(d).addActionFinish()
         d.callback("result")
@@ -247,14 +247,14 @@ class DeferredContextTests(TestCase):
         """
         d = Deferred()
         logger = MemoryLogger()
-        action = Action(logger, "uuid", "/1/", "sys:me")
+        action = Action(logger, "uuid", TaskLevel(level=[1]), "sys:me")
         with action.context():
             DeferredContext(d).addActionFinish()
         exception = RuntimeError("because")
         d.errback(exception)
         assertContainsFields(self, logger.messages[0],
                              {"task_uuid": "uuid",
-                              "task_level": "/1/",
+                              "task_level": [1, 1],
                               "action_type": "sys:me",
                               "action_status": "failed",
                               "reason": "because",
@@ -270,7 +270,7 @@ class DeferredContextTests(TestCase):
         """
         d = Deferred()
         logger = MemoryLogger()
-        action = Action(logger, "uuid", "/1/", "sys:me")
+        action = Action(logger, "uuid", TaskLevel(level=[1]), "sys:me")
         with action.context():
             DeferredContext(d).addActionFinish()
         failure = Failure(RuntimeError())
@@ -569,7 +569,7 @@ class RedirectLogsForTrialTests(TestCase):
             raiser()
         except Exception:
             expectedTraceback = traceback.format_exc()
-            writeTraceback(logger, "some:system")
+            writeTraceback(logger)
 
         lines = expectedTraceback.split("\n")
         # Remove source code lines:

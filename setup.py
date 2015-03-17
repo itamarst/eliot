@@ -29,11 +29,12 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy',
+        'Topic :: System :: Logging',
     ],
     name='eliot',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    description="Logging as Storytelling",
+    description="Logging for Complex & Distributed Systems",
     install_requires=[
         # Python 3 compatibility:
         "six",

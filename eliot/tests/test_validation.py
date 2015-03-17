@@ -246,6 +246,19 @@ class FieldsTests(TestCase):
     """
     Tests for L{fields}.
     """
+    def test_positional(self):
+        """
+        L{fields} accepts positional arguments of L{Field} instances and
+        combines them with fields specied as keyword arguments.
+        """
+        a_field = Field(u'akey', identity)
+        l = fields(a_field, another=str)
+        self.assertIn(a_field, l)
+        self.assertEqual(
+            {(type(field), field.key) for field in l},
+            {(Field, 'akey'), (Field, 'another')})
+
+
     def test_keys(self):
         """
         L{fields} creates L{Field} instances with the given keys.
@@ -381,6 +394,20 @@ class MessageSerializerTests(TestCase):
         self.assertEqual(message, {"message_type": "mymessage",
                                    "length": 8,
                                    "extra": 123})
+
+
+    def test_fieldInstances(self):
+        """
+        Fields to L{_MessageSerializer.__init__} should be instances of
+        L{Field}.
+        """
+        a_field = Field('a_key', identity)
+        arg = object()
+        with self.assertRaises(TypeError) as cm:
+            _MessageSerializer([a_field, arg])
+        self.assertEqual(
+            (u'Expected a Field instance but got', arg),
+            cm.exception.args)
 
 
 

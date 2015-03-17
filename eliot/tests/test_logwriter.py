@@ -6,7 +6,11 @@ from __future__ import unicode_literals
 
 import time
 import threading
-from io import BytesIO
+# Make sure to use StringIO that only accepts unicode:
+from io import BytesIO, StringIO
+from unittest import skipIf
+
+from six import PY2
 
 try:
     from zope.interface.verify import verifyClass
@@ -74,6 +78,10 @@ class BlockingFile(object):
 class ThreadedFileWriterTests(TestCase):
     """
     Tests for L{ThreadedFileWriter}.
+
+    Many of these tests involve interactions across threads, so they
+    arbitrarily wait for up to 5 seconds to reduce chances of slow thread
+    switching causing the test to fail.
     """
     def test_interface(self):
         """
@@ -170,6 +178,24 @@ class ThreadedFileWriterTests(TestCase):
         while not f.getvalue() and time.time() - start < 5:
             time.sleep(0.0001)
         self.assertEqual(f.getvalue(), b'{"hello": 123}\n')
+
+
+    @skipIf(PY2, "Python 2 files always accept bytes")
+    def test_write_unicode(self):
+        """
+        Messages passed to L{ThreadedFileWriter.write} are then written by the
+        writer thread with a newline added to files that accept unicode.
+        """
+        f = StringIO()
+        writer = ThreadedFileWriter(f, reactor)
+        writer.startService()
+        self.addCleanup(writer.stopService)
+
+        writer({"hello\u1234": 123})
+        start = time.time()
+        while not f.getvalue() and time.time() - start < 5:
+            time.sleep(0.0001)
+        self.assertEqual(f.getvalue(), '{"hello\u1234": 123}\n')
 
 
     def test_stopServiceFinishesWriting(self):

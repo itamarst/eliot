@@ -101,17 +101,17 @@ class Message(object):
         contents = self._contents.copy()
         contents["timestamp"] = self._timestamp()
         if action is not None:
-            contents["action_counter"] = action._incrementMessageCounter()
             contents["task_uuid"] = action._identification["task_uuid"]
-            contents["task_level"] = action._identification["task_level"]
+            contents["task_level"] = action._nextTaskLevel().level
         logger.write(contents, self._serializer)
 
 
 
 # Import at end to deal with circular imports:
-from ._action import currentAction, Action
+from ._action import currentAction, Action, TaskLevel
 
 # The default Action to use as a context for messages, if no other Action is the
 # context. This ensures all messages have a unique identity, as specified by
-# task_uuid/task_level/action_counter.
-_defaultAction = Action(None, u"%s" % (uuid4(),), "/", "eliot:default")
+# task_uuid/task_level.
+_defaultAction = Action(None, u"%s" % (uuid4(),), TaskLevel(level=[]),
+                        "eliot:default")

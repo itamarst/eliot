@@ -43,7 +43,7 @@ Logging Failures
 
         def run(self):
             d = dosomething()
-            d.addErrback(writeFailure, system=u"yourapp:yourclass")
+            d.addErrback(writeFailure)
 
 
 Actions and Deferreds
