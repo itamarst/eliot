@@ -161,7 +161,7 @@ class Logger(object):
                 serializer.serialize(dictionary)
             self._destinations.send(dictionary)
         except:
-            writeTraceback(self, "eliot:output")
+            writeTraceback(self)
             msg = Message({"message_type": "eliot:serialization_failure",
                            "message": self._safeUnicodeDictionary(dictionary)})
             msg.write(self)
