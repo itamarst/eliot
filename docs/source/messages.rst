@@ -10,8 +10,7 @@ Fields therefore can have Unicode names, so either ``unicode`` or ``bytes`` cont
 Message values must be supported by JSON: ``int``, ``float``, ``None``, ``unicode``, UTF-8 encoded Unicode as ``bytes``, ``dict`` or ``list``.
 The latter two can only be composed of other supported types.
 
-A ``Message`` is written to a ``Logger``, whose purpose is to create scope for unit tests to validate only specific messages.
-Typically you will create a ``Logger`` per top-level class you are testing.
+By default a ``Message`` is written to the global ``Logger``:
 
 .. code-block:: python
 
@@ -33,6 +32,26 @@ More succinctly:
     class YourClass(object):
         def run(self):
             Message.write(key=123, value=u"hello")
+
+You can also pass in a specific ``Logger``, which allows unit tests to validate only specific messages.
+
+
+.. code-block:: python
+
+    from eliot import Message, Logger
+
+    class YourClass(object):
+        logger = Logger()
+
+        def run(self):
+            # Create a message with two fields, "key" and "value":
+            msg = Message.new(key=123, value=u"hello")
+            # Write the message:
+            msg.write(self.logger)
+
+
+Message binding
+---------------
 
 You can also create a new ``Message`` from an existing one by binding new values.
 New values will override ones on the base ``Message``, but ``bind()`` does not mutate the original ``Message``.
