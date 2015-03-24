@@ -43,18 +43,6 @@ Here's a basic example of logging an action:
          x = get_data()
          store_data(x)
 
-You can also use a specific ``Logger``, if you want to write unit tests that only test specific log messages:
-
-.. code-block:: python
-
-     from eliot import start_action
-
-     logger = Logger()
-
-     with start_action(logger, action_type=u"store_data"):
-         x = get_data()
-         store_data(x)
-
 This will log an action start message and if the block finishes successfully an action success message.
 If an exception is thrown by the block then an action failure message will be logged along with the exception type and reason as additional fields.
 Each action thus results in two messages being logged: at the start and finish of the action.

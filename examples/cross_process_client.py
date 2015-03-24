@@ -6,14 +6,13 @@ from __future__ import unicode_literals
 import sys
 import requests
 
-from eliot import Logger, to_file, start_action, add_global_fields
+from eliot import to_file, start_action, add_global_fields
 add_global_fields(process="client")
 to_file(sys.stdout)
-logger = Logger()
 
 
 def remote_divide(x, y):
-    with start_action(logger, "http_request", x=x, y=y) as action:
+    with start_action(action_type="http_request", x=x, y=y) as action:
         task_id = action.serialize_task_id()
         response = requests.get(
             "http://localhost:5000/?x={}&y={}".format(x, y),
@@ -25,5 +24,5 @@ def remote_divide(x, y):
 
 
 if __name__ == '__main__':
-    with start_action(logger, "main"):
+    with start_action(action_type="main"):
         remote_divide(int(sys.argv[1]), int(sys.argv[2]))

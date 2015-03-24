@@ -225,7 +225,35 @@ Restriction Testing to Specific Messages
 ----------------------------------------
 
 If you want to only look at certain messages when testing you can log to a specific ``eliot.Logger`` object rather than the global one.
-The unit test should then use ``@validate_logging`` (as opposed to ``@validate_all_logging``) and then override that instance's logger with the given ``eliot.MemoryLogger`` to ensure only those messages are captured.
+
+You can log messages to a specific ``Logger``:
+
+.. code-block:: python
+
+    from eliot import Message, Logger
+
+    class YourClass(object):
+        logger = Logger()
+
+        def run(self):
+            # Create a message with two fields, "key" and "value":
+            msg = Message.new(key=123, value=u"hello")
+            # Write the message:
+            msg.write(self.logger)
+
+As well as actions:
+
+.. code-block:: python
+
+     from eliot import start_action
+
+     logger = Logger()
+
+     with start_action(logger, action_type=u"store_data"):
+         x = get_data()
+         store_data(x)
+
+Or actions created from ``ActionType``:
 
 .. code-block:: python
 
@@ -247,7 +275,12 @@ The unit test should then use ``@validate_logging`` (as opposed to ``@validate_a
               # Notice use of specific logger:
               msg.write(self.logger)
 
-The tests would then do the following:
+The tests would then need to do two things:
+
+1. Decorate your test with ``validate_logging`` instead of ``validate_all_logging``.
+2. Override the logger used by the logging code to use the one passed in to the test.
+
+For example:
 
 .. code-block:: python
 
@@ -275,4 +308,4 @@ The tests would then do the following:
             # Override logger with one used by test:
             registry.logger = logger
             registry.register(u"john", u"password", 12)
-            self.assertEqual(registry.db[u"john"], (u"passsword", 12))
+            self.assertEqual(registry.db[u"john"], (u"password", 12))

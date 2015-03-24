@@ -10,7 +10,7 @@ Fields therefore can have Unicode names, so either ``unicode`` or ``bytes`` cont
 Message values must be supported by JSON: ``int``, ``float``, ``None``, ``unicode``, UTF-8 encoded Unicode as ``bytes``, ``dict`` or ``list``.
 The latter two can only be composed of other supported types.
 
-By default a ``Message`` is written to the global ``Logger``:
+You can log a message like this:
 
 .. code-block:: python
 
@@ -22,22 +22,6 @@ By default a ``Message`` is written to the global ``Logger``:
             msg = Message.new(key=123, value=u"hello")
             # Write the message:
             msg.write()
-xo
-You can also pass in a specific ``Logger``, which allows unit tests to validate only specific messages.
-
-
-.. code-block:: python
-
-    from eliot import Message, Logger
-
-    class YourClass(object):
-        logger = Logger()
-
-        def run(self):
-            # Create a message with two fields, "key" and "value":
-            msg = Message.new(key=123, value=u"hello")
-            # Write the message:
-            msg.write(self.logger)
 
 
 Message binding
