@@ -363,7 +363,7 @@ class Action(object):
 
 
 
-def startAction(logger, action_type, _serializers=None, **fields):
+def startAction(logger=None, action_type="", _serializers=None, **fields):
     """
     Create a child L{Action}, figuring out the parent L{Action} from execution
     context, and log the start message.
@@ -387,7 +387,8 @@ def startAction(logger, action_type, _serializers=None, **fields):
               action.addSuccessFields(result=result)
          action.finish()
 
-    @param logger: The L{eliot.ILogger} to which to write messages.
+    @param logger: The L{eliot.ILogger} to which to write messages, or
+        C{None} to use the default one.
 
     @param action_type: The type of this action,
         e.g. C{"yourapp:subsystem:dosomething"}.
@@ -410,11 +411,12 @@ def startAction(logger, action_type, _serializers=None, **fields):
 
 
 
-def startTask(logger, action_type, _serializers=None, **fields):
+def startTask(logger=None, action_type=u"", _serializers=None, **fields):
     """
     Like L{action}, but creates a new top-level L{Action} with no parent.
 
-    @param logger: The L{eliot.ILogger} to which to write messages.
+    @param logger: The L{eliot.ILogger} to which to write messages, or
+        C{None} to use the default one.
 
     @param action_type: The type of this action,
         e.g. C{"yourapp:subsystem:dosomething"}.

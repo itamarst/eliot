@@ -14,7 +14,7 @@ from .._action import (
 from .._output import MemoryLogger
 from .._validation import ActionType, Field, _ActionSerializers
 from ..testing import assertContainsFields
-from .. import _action
+from .. import _action, add_destination, remove_destination
 
 
 class ExecutionContextTests(TestCase):
@@ -656,6 +656,37 @@ class StartActionAndTaskTests(TestCase):
                                   "action_status": "started",
                                   "key": "value"})
 
+
+    def test_startTaskNoLogger(self):
+        """
+        L{startTask} when no logger is given logs to the default ``Logger``.
+        """
+        messages = []
+        add_destination(messages.append)
+        self.addCleanup(remove_destination, messages.append)
+        action = startTask(action_type="sys:do", key="value")
+        assertContainsFields(self, messages[0],
+                             {"task_uuid": action._identification["task_uuid"],
+                              "task_level": [1],
+                              "action_type": "sys:do",
+                              "action_status": "started",
+                              "key": "value"})
+
+
+    def test_startActionNoLogger(self):
+        """
+        L{startAction} when no logger is given logs to the default ``Logger``.
+        """
+        messages = []
+        add_destination(messages.append)
+        self.addCleanup(remove_destination, messages.append)
+        action = startAction(action_type="sys:do", key="value")
+        assertContainsFields(self, messages[0],
+                             {"task_uuid": action._identification["task_uuid"],
+                              "task_level": [1],
+                              "action_type": "sys:do",
+                              "action_status": "started",
+                              "key": "value"})
 
 
 class PEP8Tests(TestCase):
