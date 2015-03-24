@@ -11,9 +11,9 @@ to_file(sys.stdout)
 
 
 def main():
-    Message.write(value="hello", another=1)
+    Message.new(value="hello", another=1).write()
     time.sleep(0.2)
-    Message.write(value="goodbye", another=2)
+    Message.new(value="goodbye", another=2).write()
 
 
 if __name__ == '__main__':

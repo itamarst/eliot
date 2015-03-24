@@ -22,17 +22,7 @@ By default a ``Message`` is written to the global ``Logger``:
             msg = Message.new(key=123, value=u"hello")
             # Write the message:
             msg.write()
-
-More succinctly:
-
-.. code-block:: python
-
-    from eliot import Message
-
-    class YourClass(object):
-        def run(self):
-            Message.write(key=123, value=u"hello")
-
+xo
 You can also pass in a specific ``Logger``, which allows unit tests to validate only specific messages.
 
 

@@ -19,7 +19,7 @@ def main(reactor):
     logWriter.startService()
 
     # Log a message:
-    Message.write(value="hello", another=1)
+    Message.new(value="hello", another=1).write()
 
     # Manually stop the service.
     done = logWriter.stopService()
