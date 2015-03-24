@@ -32,7 +32,7 @@ Here's how we'd test it:
 
     from unittest import TestCase
     from eliot import MemoryLogger
-    from eliot.testing import assertContainsFields, validate_all_logging
+    from eliot.testing import assertContainsFields, capture_logging
 
     from myapp.registration import UserRegistration
     from myapp.logtypes import LOG_USER_REGISTRATION
@@ -50,7 +50,7 @@ Here's how we'd test it:
                                   u"password": u"password",
                                   u"age": 12}))
 
-        @validate_all_logging(assertRegistrationLogging)
+        @capture_logging(assertRegistrationLogging)
         def test_registration(self, logger):
             """
             Registration adds entries to the in-memory database.
@@ -60,31 +60,31 @@ Here's how we'd test it:
             self.assertEqual(registry.db[u"john"], (u"passsword", 12))
 
 
-Besides calling an the given validation function the ``@validate_all_logging`` decorator will also validate the logged messages after the test is done.
+Besides calling an the given validation function the ``@capture_logging`` decorator will also validate the logged messages after the test is done.
 E.g. it will make sure they are JSON encodable.
 Messages were created using ``ActionType`` and ``MessageType`` will be validated using the applicable ``Field`` definitions.
 You can also call ``MemoryLogger.validate`` yourself to validate written messages.
-If you don't want any additional logging assertions you can decorate your test function using ``@validate_all_logging(None)``.
+If you don't want any additional logging assertions you can decorate your test function using ``@capture_logging(None)``.
 
 
 Testing Tracebacks
 ------------------
 
-Tests decorated with ``@validate_all_logging`` will fail if there are any tracebacks logged to the given ``MemoryLogger`` (using ``write_traceback`` or ``writeFailure``) on the theory that these are unexpected errors indicating a bug.
+Tests decorated with ``@capture_logging`` will fail if there are any tracebacks logged to the given ``MemoryLogger`` (using ``write_traceback`` or ``writeFailure``) on the theory that these are unexpected errors indicating a bug.
 If you expected a particular exception to be logged you can call ``MemoryLogger.flush_tracebacks``, after which it will no longer cause a test failure.
 The result will be a list of traceback message dictionaries for the particular exception.
 
 .. code-block:: python
 
     from unittest import TestCase
-    from eliot.testing import validate_all_logging
+    from eliot.testing import capture_logging
 
     class MyTests(TestCase):
         def assertMythingBadPathLogging(self, logger):
             messages = logger.flush_tracebacks(OSError)
             self.assertEqual(len(messages), 1)
 
-        @validate_all_logging(assertMythingBadPathLogging)
+        @capture_logging(assertMythingBadPathLogging)
         def test_mythingBadPath(self, logger):
              mything = MyThing()
              # Trigger an error that will cause a OSError traceback to be logged:
@@ -100,10 +100,10 @@ The simplest method is using the ``assertHasMessage`` utility function which ass
 
 .. code-block:: python
 
-    from eliot.testing import assertHasMessage, validate_all_logging
+    from eliot.testing import assertHasMessage, capture_logging
 
     class LoggingTests(TestCase):
-        @validate_all_logging(assertHasMessage, LOG_USER_REGISTRATION,
+        @capture_logging(assertHasMessage, LOG_USER_REGISTRATION,
                          {u"username": u"john",
                           u"password": u"password",
                           u"age": 12})
@@ -125,7 +125,7 @@ For example, we could rewrite the registration logging test above like so:
 
 .. code-block:: python
 
-    from eliot.testing import LoggedMessage, validate_all_logging
+    from eliot.testing import LoggedMessage, capture_logging
 
     class LoggingTests(TestCase):
         def assertRegistrationLogging(self, logger):
@@ -138,7 +138,7 @@ For example, we could rewrite the registration logging test above like so:
                                   u"password": u"password",
                                   u"age": 12}))
 
-        @validate_all_logging(assertRegistrationLogging)
+        @capture_logging(assertRegistrationLogging)
         def test_registration(self, logger):
             """
             Registration adds entries to the in-memory database.
@@ -175,11 +175,11 @@ The test would look like this:
 
 .. code-block:: python
 
-    from eliot.testing import LoggedAction, LoggedMessage, validate_all_logging
+    from eliot.testing import LoggedAction, LoggedMessage, capture_logging
     import searcher
 
     class LoggingTests(TestCase):
-        @validate_all_logging(None)
+        @capture_logging(None)
         def test_logging(self, logger):
             searcher = Search()
             servers = [buildServer(), buildServer()]
@@ -200,11 +200,11 @@ Or we can simplify further by using ``assertHasMessage`` and ``assertHasAction``
 
 .. code-block:: python
 
-    from eliot.testing import LoggedAction, LoggedMessage, validate_all_logging
+    from eliot.testing import LoggedAction, LoggedMessage, capture_logging
     import searcher
 
     class LoggingTests(TestCase):
-        @validate_all_logging(None)
+        @capture_logging(None)
         def test_logging(self, logger):
             searcher = Search()
             servers = [buildServer(), buildServer()]
@@ -277,7 +277,7 @@ Or actions created from ``ActionType``:
 
 The tests would then need to do two things:
 
-1. Decorate your test with ``validate_logging`` instead of ``validate_all_logging``.
+1. Decorate your test with ``validate_logging`` instead of ``capture_logging``.
 2. Override the logger used by the logging code to use the one passed in to the test.
 
 For example:

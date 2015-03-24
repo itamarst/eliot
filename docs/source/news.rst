@@ -5,7 +5,7 @@ What's New
 ^^^^^
 
 * Creating your own ``Logger`` instances is no longer necessary; all relevant APIs now default to using a global one.
-  A new testing decorator (``eliot.testing.validate_all_logging``) was added to capture global logging.
+  A new testing decorator (``eliot.testing.capture_logging``) was added to capture global logging.
 * Support positional ``Field``-instance arguments to ``fields()`` to make combining existing field types and simple fields more convenient.
   Contributed by Jonathan Jacobs.
 * ``write_traceback`` and ``writeFailure`` no longer require a ``system`` argument, as the combination of traceback and action context should suffice to discover the origin of the problem.

@@ -95,7 +95,7 @@ class Message(object):
             stack.
         """
         if logger is None:
-            logger = _DEFAULT_LOGGER
+            logger = _output._DEFAULT_LOGGER
         if action is None:
             action = currentAction()
         if action is None:
@@ -111,7 +111,7 @@ class Message(object):
 
 # Import at end to deal with circular imports:
 from ._action import currentAction, Action, TaskLevel
-from ._output import _DEFAULT_LOGGER
+from . import _output
 
 # The default Action to use as a context for messages, if no other Action is the
 # context. This ensures all messages have a unique identity, as specified by

@@ -9,13 +9,14 @@ from unittest import TestCase
 from ..testing import (
     issuperset, assertContainsFields, LoggedAction, LoggedMessage,
     validateLogging, UnflushedTracebacks, assertHasMessage, assertHasAction,
-    validate_logging,
+    validate_logging, capture_logging,
     )
 from .._output import MemoryLogger
 from .._action import startAction
 from .._message import Message
 from .._validation import ActionType, MessageType, ValidationError, Field
 from .._traceback import writeTraceback
+from .. import add_destination, remove_destination
 
 
 class IsSuperSetTests(TestCase):
@@ -381,10 +382,12 @@ class AssertContainsFields(TestCase):
 
 
 
-class ValidateLoggingTests(TestCase):
+class ValidateLoggingTestsMixin(object):
     """
-    Tests for L{validateLogging}.
+    Tests for L{validateLogging} and L{capture_logging}.
     """
+    validate = None
+
     def test_decoratedFunctionCalledWithMemoryLogger(self):
         """
         The underlying function decorated with L{validateLogging} is called with
@@ -393,12 +396,12 @@ class ValidateLoggingTests(TestCase):
         """
         result = []
         class MyTest(TestCase):
-            @validateLogging(None)
+            @self.validate(None)
             def test_foo(this, logger):
                 result.append((this, logger.__class__))
 
         theTest = MyTest("test_foo")
-        theTest.test_foo()
+        theTest.debug()
         self.assertEqual(result, [(theTest, MemoryLogger)])
 
 
@@ -409,13 +412,13 @@ class ValidateLoggingTests(TestCase):
         """
         result = []
         class MyTest(TestCase):
-            @validateLogging(None)
+            @self.validate(None)
             def test_foo(this, logger):
                 result.append(logger)
 
         theTest = MyTest("test_foo")
-        theTest.test_foo()
-        theTest.test_foo()
+        theTest.debug()
+        theTest.debug()
         self.assertIsNot(result[0], result[1])
 
 
@@ -424,7 +427,7 @@ class ValidateLoggingTests(TestCase):
         The result of the underlying function is returned by wrapper when called.
         """
         class MyTest(TestCase):
-            @validateLogging(None)
+            @self.validate(None)
             def test_foo(self, logger):
                 return 123
         self.assertEqual(MyTest("test_foo").test_foo(), 123)
@@ -437,13 +440,13 @@ class ValidateLoggingTests(TestCase):
         """
         exc = Exception()
         class MyTest(TestCase):
-            @validateLogging(None)
+            @self.validate(None)
             def test_foo(self, logger):
                 raise exc
 
         raised = None
         try:
-            MyTest("test_foo").test_foo()
+            MyTest("test_foo").debug()
         except Exception as e:
             raised = e
         self.assertIs(exc, raised)
@@ -454,7 +457,7 @@ class ValidateLoggingTests(TestCase):
         The wrapper has the same name as the wrapped function.
         """
         class MyTest(TestCase):
-            @validateLogging(None)
+            @self.validate(None)
             def test_foo(self, logger):
                 pass
         self.assertEqual(MyTest.test_foo.__name__, "test_foo")
@@ -468,7 +471,7 @@ class ValidateLoggingTests(TestCase):
         MESSAGE = MessageType("mymessage", [], "A message")
 
         class MyTest(TestCase):
-            @validateLogging(None)
+            @self.validate(None)
             def runTest(self, logger):
                 self.logger = logger
                 logger.write({"message_type": "wrongmessage"},
@@ -485,7 +488,7 @@ class ValidateLoggingTests(TestCase):
         test cleanup.
         """
         class MyTest(TestCase):
-            @validateLogging(None)
+            @self.validate(None)
             def runTest(self, logger):
                 try:
                     1 / 0
@@ -507,7 +510,7 @@ class ValidateLoggingTests(TestCase):
             def assertLogging(self, logger):
                 result.append((self, logger))
 
-            @validateLogging(assertLogging)
+            @self.validate(assertLogging)
             def runTest(self, logger):
                 self.logger = logger
 
@@ -528,7 +531,7 @@ class ValidateLoggingTests(TestCase):
             def assertLogging(self, logger, x, y):
                 result.append((self, logger, x, y))
 
-            @validateLogging(assertLogging, 1, y=2)
+            @self.validate(assertLogging, 1, y=2)
             def runTest(self, logger):
                 self.logger = logger
 
@@ -547,7 +550,7 @@ class ValidateLoggingTests(TestCase):
             def assertLogging(self, logger):
                 self.result.append(2)
 
-            @validateLogging(assertLogging)
+            @self.validate(assertLogging)
             def runTest(self, logger):
                 self.result = [1]
 
@@ -567,7 +570,7 @@ class ValidateLoggingTests(TestCase):
                 logger.flushTracebacks(ZeroDivisionError)
                 self.flushed = True
 
-            @validateLogging(assertLogging)
+            @self.validate(assertLogging)
             def runTest(self, logger):
                 self.flushed = False
                 try:
@@ -578,6 +581,53 @@ class ValidateLoggingTests(TestCase):
         test.debug()
         self.assertTrue(test.flushed)
 
+
+class ValidateLoggingTests(ValidateLoggingTestsMixin, TestCase):
+    """
+    Tests for L{validate_logging}.
+    """
+    validate = staticmethod(validate_logging)
+
+
+class CaptureLoggingTests(ValidateLoggingTestsMixin, TestCase):
+    """
+    Tests for L{capture_logging}.
+    """
+    validate = staticmethod(capture_logging)
+
+
+    def test_default_logger(self):
+        """
+        L{capture_logging} captures messages from logging that
+        doesn't specify a L{Logger}.
+        """
+        class MyTest(TestCase):
+            @capture_logging(None)
+            def runTest(self, logger):
+                Message.new(some_key=1234).write()
+                self.logger = logger
+
+        test = MyTest()
+        test.debug()
+        self.assertEqual(test.logger.messages[0][u"some_key"], 1234)
+
+
+    def test_global_cleanup(self):
+        """
+        After the function wrapped with L{capture_logging} finishes,
+        logging that doesn't specify a logger is logged normally.
+        """
+        class MyTest(TestCase):
+            @capture_logging(None)
+            def runTest(self, logger):
+                pass
+        test = MyTest()
+        test.debug()
+        messages = []
+        add_destination(messages.append)
+        self.addCleanup(remove_destination, messages.append)
+        Message.new(some_key=1234).write()
+        self.assertEqual(messages[0][u"some_key"], 1234)
 
 
 MESSAGE1 = MessageType("message1", [Field.forTypes("x", [int], "A number")],
