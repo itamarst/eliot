@@ -15,6 +15,7 @@ except ImportError:
 from .._message import Message, _defaultAction
 from .._output import MemoryLogger
 from .._action import Action, startAction, TaskLevel
+from .. import add_destination, remove_destination
 
 
 class MessageTests(TestCase):
@@ -71,6 +72,16 @@ class MessageTests(TestCase):
         self.assertEqual(len(logger.messages), 1)
         self.assertEqual(logger.messages[0]["key"], 4)
 
+
+    def test_writeDefaultLogger(self):
+        """
+        L{Message.write} writes the default logger if none is given.
+        """
+        messages = []
+        add_destination(messages.append)
+        self.addCleanup(remove_destination, messages.append)
+        Message.new(some_key=1234).write()
+        self.assertEqual(messages[0][u"some_key"], 1234)
 
     def test_writeCreatesNewDictionary(self):
         """
