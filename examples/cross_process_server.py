@@ -23,7 +23,7 @@ def divide(x, y):
 
 @app.route("/")
 def main():
-    with Action.continue_task(request.headers["x-eliot-task-id"]):
+    with Action.continue_task(task_id=request.headers["x-eliot-task-id"]):
         x = int(request.args["x"])
         y = int(request.args["y"])
         return str(divide(x, y))

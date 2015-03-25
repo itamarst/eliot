@@ -16,7 +16,7 @@ from .._action import startAction
 from .._message import Message
 from .._validation import ActionType, MessageType, ValidationError, Field
 from .._traceback import writeTraceback
-from .. import add_destination, remove_destination
+from .. import add_destination, remove_destination, _output
 
 
 class IsSuperSetTests(TestCase):
@@ -401,7 +401,7 @@ class ValidateLoggingTestsMixin(object):
                 result.append((this, logger.__class__))
 
         theTest = MyTest("test_foo")
-        theTest.debug()
+        theTest.run()
         self.assertEqual(result, [(theTest, MemoryLogger)])
 
 
@@ -417,8 +417,8 @@ class ValidateLoggingTestsMixin(object):
                 result.append(logger)
 
         theTest = MyTest("test_foo")
-        theTest.debug()
-        theTest.debug()
+        theTest.run()
+        theTest.run()
         self.assertIsNot(result[0], result[1])
 
 
@@ -578,7 +578,7 @@ class ValidateLoggingTestsMixin(object):
                 except ZeroDivisionError:
                     writeTraceback(logger)
         test = MyTest()
-        test.debug()
+        test.run()
         self.assertTrue(test.flushed)
 
 
@@ -596,6 +596,19 @@ class CaptureLoggingTests(ValidateLoggingTestsMixin, TestCase):
     validate = staticmethod(capture_logging)
 
 
+    def setUp(self):
+        # Since we're not always calling the test method via the TestCase
+        # infrastructure, sometimes cleanup methods are not called. This
+        # means the original default logger is not restored. So we do so
+        # manually. If the issue is a bug in capture_logging itself the
+        # tests below will catch that.
+        original_logger = _output._DEFAULT_LOGGER
+
+        def cleanup():
+            _output._DEFAULT_LOGGER = original_logger
+        self.addCleanup(cleanup)
+
+
     def test_default_logger(self):
         """
         L{capture_logging} captures messages from logging that
@@ -608,7 +621,7 @@ class CaptureLoggingTests(ValidateLoggingTestsMixin, TestCase):
                 self.logger = logger
 
         test = MyTest()
-        test.debug()
+        test.run()
         self.assertEqual(test.logger.messages[0][u"some_key"], 1234)
 
 
@@ -622,12 +635,31 @@ class CaptureLoggingTests(ValidateLoggingTestsMixin, TestCase):
             def runTest(self, logger):
                 pass
         test = MyTest()
-        test.debug()
+        test.run()
         messages = []
         add_destination(messages.append)
         self.addCleanup(remove_destination, messages.append)
         Message.new(some_key=1234).write()
         self.assertEqual(messages[0][u"some_key"], 1234)
+
+
+    def test_global_cleanup_exception(self):
+        """
+        If the function wrapped with L{capture_logging} throws an exception,
+        logging that doesn't specify a logger is logged normally.
+        """
+        class MyTest(TestCase):
+            @capture_logging(None)
+            def runTest(self, logger):
+                raise RuntimeError()
+        test = MyTest()
+        test.run()
+        messages = []
+        add_destination(messages.append)
+        self.addCleanup(remove_destination, messages.append)
+        Message.new(some_key=1234).write()
+        self.assertEqual(messages[0][u"some_key"], 1234)
+
 
 
 MESSAGE1 = MessageType("message1", [Field.forTypes("x", [int], "A number")],

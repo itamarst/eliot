@@ -293,9 +293,8 @@ def capture_logging(assertion, *assertionArgs, **assertionKwargs):
             logger = kwargs["logger"]
             current_logger = _output._DEFAULT_LOGGER
             _output._DEFAULT_LOGGER = logger
-            print "Add"
+
             def cleanup():
-                print "Clean"
                 _output._DEFAULT_LOGGER = current_logger
             self.addCleanup(cleanup)
             return function(self, logger)

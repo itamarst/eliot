@@ -189,15 +189,15 @@ class Action(object):
 
 
     @classmethod
-    def continueTask(cls, logger, task_id):
+    def continueTask(cls, logger=None, task_id=u""):
         """
         Start a new action which is part of a serialized task.
 
         @param logger: The L{eliot.ILogger} to which to write
-            messages.
+            messages, or C{None} if the default one should be used.
 
         @param task_id: A serialized task identifier, the output of
-            L{Action.serialize_task_id}.
+            L{Action.serialize_task_id}. Required.
 
         @return: The new L{Action} instance.
         """

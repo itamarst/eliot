@@ -767,6 +767,25 @@ class SerializationTests(TestCase):
                               "action_status": "started"})
 
 
+    def test_continueTaskNoLogger(self):
+        """
+        L{Action.continueTask} can be called without a logger.
+        """
+        originalAction = Action(None, "uniq456", TaskLevel(level=[3, 4]),
+                                "mytype")
+        taskId = originalAction.serializeTaskId()
+
+        messages = []
+        add_destination(messages.append)
+        self.addCleanup(remove_destination, messages.append)
+        Action.continueTask(task_id=taskId)
+        assertContainsFields(self, messages[0],
+                             {"task_uuid": "uniq456",
+                              "task_level": [3, 4, 1, 1],
+                              "action_type": "eliot:remote_task",
+                              "action_status": "started"})
+
+
 
 class TaskLevelTests(TestCase):
     """
