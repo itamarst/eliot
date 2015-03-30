@@ -606,6 +606,34 @@ class ValidateLoggingTests(TestCase):
         )
 
 
+    def test_unflushedTracebacksDontFailForSkip(self):
+        """
+        If the decorated test raises L{SkipTest} then the unflushed traceback
+        checking normally implied by L{validateLogging} is also skipped.
+        """
+        class MyTest(TestCase):
+
+            @validateLogging(lambda self, logger: None)
+            def runTest(self, logger):
+                try:
+                    1 / 0
+                except:
+                    writeTraceback(logger)
+                raise SkipTest("Do not run this test.")
+
+        test = MyTest()
+        result = TestResult()
+        test.run(result)
+
+        # Verify that there was only a skip, no additional errors or failures
+        # reported.
+        self.assertEqual(
+            (1, [], []),
+            (len(result.skipped), result.errors, result.failures)
+        )
+
+
+
 MESSAGE1 = MessageType("message1", [Field.forTypes("x", [int], "A number")],
                        "A message for testing.")
 MESSAGE2 = MessageType("message2", [], "A message for testing.")
