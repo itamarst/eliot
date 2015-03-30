@@ -585,6 +585,8 @@ class ValidateLoggingTests(TestCase):
         also skipped.
         """
         class MyTest(TestCase):
+            recorded = False
+
             def record(self, logger):
                 self.recorded = True
 
@@ -593,8 +595,15 @@ class ValidateLoggingTests(TestCase):
                 raise SkipTest("Do not run this test.")
 
         test = MyTest()
-        test.run(TestResult())
-        self.assertFalse(test.recorded)
+        result = TestResult()
+        test.run(result)
+
+        # Verify that the validation function did not run and that the test was
+        # nevertheless marked as a skip with the correct reason.
+        self.assertEqual(
+            (test.recorded, result.skipped),
+            (False, [(test, "Do not run this test.")])
+        )
 
 
 MESSAGE1 = MessageType("message1", [Field.forTypes("x", [int], "A number")],
