@@ -601,8 +601,8 @@ class ValidateLoggingTests(TestCase):
         # Verify that the validation function did not run and that the test was
         # nevertheless marked as a skip with the correct reason.
         self.assertEqual(
-            (test.recorded, result.skipped),
-            (False, [(test, "Do not run this test.")])
+            (test.recorded, result.skipped, result.errors, result.failures),
+            (False, [(test, "Do not run this test.")], [], [])
         )
 
 
