@@ -263,7 +263,7 @@ def validateLogging(assertion, *assertionArgs, **assertionKwargs):
             kwargs["logger"] = logger = MemoryLogger()
             self.addCleanup(logger.validate)
             def checkForUnflushed():
-                if logger.tracebackMessages:
+                if not skipped and logger.tracebackMessages:
                     raise UnflushedTracebacks(logger.tracebackMessages)
             self.addCleanup(checkForUnflushed)
             # TestCase runs cleanups in reverse order, and we want this to
