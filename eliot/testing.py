@@ -4,6 +4,7 @@ Utilities to aid unit testing L{eliot} and code that uses it.
 
 from __future__ import unicode_literals
 
+from unittest import SkipTest
 from collections import namedtuple
 from functools import wraps
 
@@ -257,18 +258,25 @@ def validateLogging(assertion, *assertionArgs, **assertionKwargs):
     def decorator(function):
         @wraps(function)
         def wrapper(self, *args, **kwargs):
+            skipped = False
+
             kwargs["logger"] = logger = MemoryLogger()
             self.addCleanup(logger.validate)
             def checkForUnflushed():
-                if logger.tracebackMessages:
+                if not skipped and logger.tracebackMessages:
                     raise UnflushedTracebacks(logger.tracebackMessages)
             self.addCleanup(checkForUnflushed)
             # TestCase runs cleanups in reverse order, and we want this to
             # run *before* tracebacks are checked:
             if assertion is not None:
-                self.addCleanup(lambda: assertion(
+                self.addCleanup(lambda: skipped or assertion(
                     self, logger, *assertionArgs, **assertionKwargs))
-            return function(self, *args, **kwargs)
+            try:
+                return function(self, *args, **kwargs)
+            except SkipTest:
+                skipped = True
+                raise
+
         return wrapper
     return decorator
 

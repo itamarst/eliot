@@ -4,7 +4,7 @@ Tests for L{eliot.testing}.
 
 from __future__ import unicode_literals
 
-from unittest import TestCase
+from unittest import SkipTest, TestResult, TestCase
 
 from ..testing import (
     issuperset, assertContainsFields, LoggedAction, LoggedMessage,
@@ -577,6 +577,60 @@ class ValidateLoggingTests(TestCase):
         test = MyTest()
         test.debug()
         self.assertTrue(test.flushed)
+
+
+    def test_validationNotRunForSkip(self):
+        """
+        If the decorated test raises L{SkipTest} then the logging validation is
+        also skipped.
+        """
+        class MyTest(TestCase):
+            recorded = False
+
+            def record(self, logger):
+                self.recorded = True
+
+            @validateLogging(record)
+            def runTest(self, logger):
+                raise SkipTest("Do not run this test.")
+
+        test = MyTest()
+        result = TestResult()
+        test.run(result)
+
+        # Verify that the validation function did not run and that the test was
+        # nevertheless marked as a skip with the correct reason.
+        self.assertEqual(
+            (test.recorded, result.skipped, result.errors, result.failures),
+            (False, [(test, "Do not run this test.")], [], [])
+        )
+
+
+    def test_unflushedTracebacksDontFailForSkip(self):
+        """
+        If the decorated test raises L{SkipTest} then the unflushed traceback
+        checking normally implied by L{validateLogging} is also skipped.
+        """
+        class MyTest(TestCase):
+
+            @validateLogging(lambda self, logger: None)
+            def runTest(self, logger):
+                try:
+                    1 / 0
+                except:
+                    writeTraceback(logger)
+                raise SkipTest("Do not run this test.")
+
+        test = MyTest()
+        result = TestResult()
+        test.run(result)
+
+        # Verify that there was only a skip, no additional errors or failures
+        # reported.
+        self.assertEqual(
+            (1, [], []),
+            (len(result.skipped), result.errors, result.failures)
+        )
 
 
 
