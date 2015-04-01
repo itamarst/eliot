@@ -236,6 +236,13 @@ class MemoryLoggerTests(TestCase):
 
 
 
+class MyException(Exception):
+    """
+    Custom exception.
+    """
+
+
+
 class BadDestination(list):
     """
     A destination that throws an exception the first time it is called.
@@ -245,7 +252,7 @@ class BadDestination(list):
     def __call__(self, msg):
         if not self.called:
             self.called = True
-            raise RuntimeError("ono")
+            raise MyException("ono")
         self.append(msg)
 
 
@@ -521,7 +528,7 @@ class LoggerTests(TestCase):
             {"message_type": "eliot:destination_failure",
              "message": logger._safeUnicodeDictionary(message),
              "reason": "ono",
-             "exception": "exceptions.RuntimeError"})
+             "exception": "eliot.tests.test_output.MyException"})
 
 
     def test_destinationMultipleExceptionsCaught(self):
@@ -536,6 +543,12 @@ class LoggerTests(TestCase):
         messages = []
         logger._destinations.add(messages.append)
 
+        try:
+            1/0
+        except ZeroDivisionError as e:
+            zero_divide = str(e)
+        zero_type = ZeroDivisionError.__module__ + ".ZeroDivisionError"
+
         message = {"hello": 123}
         logger.write({"hello": 123})
         self.assertEqual(
@@ -544,11 +557,11 @@ class LoggerTests(TestCase):
              {"message_type": "eliot:destination_failure",
               "message": logger._safeUnicodeDictionary(message),
               "reason": "ono",
-              "exception": "exceptions.RuntimeError"},
+              "exception": "eliot.tests.test_output.MyException"},
              {"message_type": "eliot:destination_failure",
               "message": logger._safeUnicodeDictionary(message),
-              "reason": "integer division or modulo by zero",
-              "exception": "exceptions.ZeroDivisionError"}])
+              "reason": zero_divide,
+              "exception": zero_type}])
 
 
     def test_destinationExceptionCaughtTwice(self):

@@ -8,7 +8,7 @@ import sys
 import json as pyjson
 
 from characteristic import attributes
-from six import text_type as unicode, PY3, reraise
+from six import text_type as unicode, PY3
 if PY3:
     from . import _py3json as fast_json
     slow_json = fast_json
