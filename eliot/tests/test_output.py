@@ -16,7 +16,7 @@ from zope.interface.verify import verifyClass
 
 from .._output import (
     MemoryLogger, ILogger, Destinations, Logger, fast_json as json, to_file,
-    FileDestination,
+    FileDestination, _DestinationsSendError
     )
 from .._validation import ValidationError, Field, _MessageSerializer
 from .._traceback import writeTraceback
@@ -284,7 +284,8 @@ class DestinationsTests(TestCase):
         destinations.add(dest3.append)
 
         message = {u"hello": 123}
-        self.assertRaises(RuntimeError, destinations.send, {u"hello": 123})
+        self.assertRaises(_DestinationsSendError,
+                          destinations.send, {u"hello": 123})
         self.assertEqual((dest, dest3), ([message], [message]))
 
 
@@ -297,7 +298,8 @@ class DestinationsTests(TestCase):
         dest = BadDestination()
         destinations.add(dest)
 
-        self.assertRaises(RuntimeError, destinations.send, {u"hello": 123})
+        self.assertRaises(_DestinationsSendError,
+                          destinations.send, {u"hello": 123})
         destinations.send({u"hello": 200})
         self.assertEqual(dest, [{u"hello": 200}])
 
@@ -514,13 +516,39 @@ class LoggerTests(TestCase):
 
         message = {"hello": 123}
         logger.write({"hello": 123})
+        assertContainsFields(
+            self, dest[0],
+            {"message_type": "eliot:destination_failure",
+             "message": logger._safeUnicodeDictionary(message),
+             "reason": "ono",
+             "exception": "exceptions.RuntimeError"})
+
+
+    def test_destinationMultipleExceptionsCaught(self):
+        """
+        If multiple destinations throw an exception, an appropriate error is
+        logged for each.
+        """
+        logger = Logger()
+        logger._destinations = Destinations()
+        logger._destinations.add(BadDestination())
+        logger._destinations.add(lambda msg: 1/0)
+        messages = []
+        logger._destinations.add(messages.append)
+
+        message = {"hello": 123}
+        logger.write({"hello": 123})
         self.assertEqual(
-            dest,
-            [{"message_type": "eliot:destination_failure",
+            messages,
+            [message,
+             {"message_type": "eliot:destination_failure",
               "message": logger._safeUnicodeDictionary(message),
-              # also traceback? etc. and maybe we should also add
-              # timestamp?
-              "exception": "types.RuntimeError"}])
+              "reason": "ono",
+              "exception": "exceptions.RuntimeError"},
+             {"message_type": "eliot:destination_failure",
+              "message": logger._safeUnicodeDictionary(message),
+              "reason": "integer division or modulo by zero",
+              "exception": "exceptions.ZeroDivisionError"}])
 
 
     def test_destinationExceptionCaughtTwice(self):

@@ -32,7 +32,19 @@ from zope.interface import Interface, implementer
 
 from ._traceback import writeTraceback, TRACEBACK_MESSAGE
 from ._message import Message
-from ._util import saferepr
+from ._util import saferepr, safeunicode
+
+
+
+class _DestinationsSendError(Exception):
+    """
+    An error occured sending to one or more destinations.
+
+    @ivar errors: A list of tuples output from C{sys.exc_info()}.
+    """
+    def __init__(self, errors):
+        self.errors = errors
+        Exception.__init__(self)
 
 
 
@@ -75,7 +87,7 @@ class Destinations(object):
             except:
                 errors.append(sys.exc_info())
         if errors:
-            reraise(*errors[0])
+            raise _DestinationsSendError(errors)
 
 
     def add(self, destination):
@@ -169,20 +181,24 @@ class Logger(object):
 
         try:
             self._destinations.send(dictionary)
-        except:
-            try:
-                # Can't use same code path as serialization errors because
-                # if destination continues to error out we will get
-                # infinite recursion. So instead we have to manually
-                # construct a message.
-                self._destinations.send(
-                    {"message_type": "eliot:destination_failure",
-                     "message": self._safeUnicodeDictionary(dictionary)})
-            except:
-                # Nothing we can do here, raising exception to caller will
-                # break business logic, better to have that continue to
-                # work even if logging isn't.
-                pass
+        except _DestinationsSendError as e:
+            for (exc_type, exception, exc_traceback) in e.errors:
+                try:
+                    # Can't use same code path as serialization errors because
+                    # if destination continues to error out we will get
+                    # infinite recursion. So instead we have to manually
+                    # construct a message.
+                    self._destinations.send({
+                        "message_type": "eliot:destination_failure",
+                        "reason": safeunicode(exception),
+                        "exception":
+                        exc_type.__module__ + "." + exc_type.__name__,
+                        "message": self._safeUnicodeDictionary(dictionary)})
+                except:
+                    # Nothing we can do here, raising exception to caller will
+                    # break business logic, better to have that continue to
+                    # work even if logging isn't.
+                    pass
 
 
 class UnflushedTracebacks(Exception):
