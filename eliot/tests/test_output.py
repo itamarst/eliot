@@ -270,10 +270,10 @@ class DestinationsTests(TestCase):
         self.assertEqual(dest2, [message])
 
 
-    def test_destinationExceptionCaught(self):
+    def test_destinationExceptionMultipleDestinations(self):
         """
-        If a given destination throws an exception, it is dropped into the
-        ether.
+        If one destination throws an exception, other destinations still
+        get the message.
         """
         destinations = Destinations()
         dest = []
@@ -283,10 +283,9 @@ class DestinationsTests(TestCase):
         destinations.add(dest2)
         destinations.add(dest3.append)
 
-        destinations.send({u"hello": 123})
-        self.assertEqual(dest, [{u"hello": 123}])
-        self.assertEqual(dest2, [])
-        self.assertEqual(dest3, [{u"hello": 123}])
+        message = {u"hello": 123}
+        self.assertRaises(RuntimeError, destinations.send, {u"hello": 123})
+        self.assertEqual((dest, dest3), ([message], [message]))
 
 
     def test_destinationExceptionContinue(self):
@@ -298,7 +297,7 @@ class DestinationsTests(TestCase):
         dest = BadDestination()
         destinations.add(dest)
 
-        destinations.send({u"hello": 123})
+        self.assertRaises(RuntimeError, destinations.send, {u"hello": 123})
         destinations.send({u"hello": 200})
         self.assertEqual(dest, [{u"hello": 200}])
 
@@ -502,6 +501,46 @@ class LoggerTests(TestCase):
                          dict((repr(key), repr(value)) for
                               (key, value) in message.items()))
 
+
+    def test_destinationExceptionCaught(self):
+        """
+        If a destination throws an exception, an appropriate error is
+        logged.
+        """
+        logger = Logger()
+        logger._destinations = Destinations()
+        dest = BadDestination()
+        logger._destinations.add(dest)
+
+        message = {"hello": 123}
+        logger.write({"hello": 123})
+        self.assertEqual(
+            dest,
+            [{"message_type": "eliot:destination_failure",
+              "message": logger._safeUnicodeDictionary(message),
+              # also traceback? etc. and maybe we should also add
+              # timestamp?
+              "exception": "types.RuntimeError"}])
+
+
+    def test_destinationExceptionCaughtTwice(self):
+        """
+        If a destination throws an exception, and the logged error about
+        it also causes an exception, then just drop that exception on the
+        floor, since there's nothing we can do with it.
+        """
+        logger = Logger()
+        logger._destinations = Destinations()
+
+        def always_raise(message):
+            raise ZeroDivisionError()
+        logger._destinations.add(always_raise)
+
+        # No exception raised; since everything is dropped no other
+        # assertions to be made.
+        logger.write({"hello": 123})
+
+# XXX we should be logging multiple exceptions from multiple destinations.
 
 
 class JSONTests(TestCase):

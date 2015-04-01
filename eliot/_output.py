@@ -4,10 +4,11 @@ Implementation of hooks and APIs for outputting log messages.
 
 from __future__ import unicode_literals, absolute_import
 
+import sys
 import json as pyjson
 
 from characteristic import attributes
-from six import text_type as unicode, PY3
+from six import text_type as unicode, PY3, reraise
 if PY3:
     from . import _py3json as fast_json
     slow_json = fast_json
@@ -67,14 +68,14 @@ class Destinations(object):
         @type message: L{dict}
         """
         message.update(self._globalFields)
+        errors = []
         for dest in self._destinations:
             try:
                 dest(message)
             except:
-                # Remember how we said destinations should never raise an
-                # exception? That's because we drop them on the floor. You do
-                # not want to be here. This is a bad place.
-                pass
+                errors.append(sys.exc_info())
+        if errors:
+            reraise(*errors[0])
 
 
     def add(self, destination):
@@ -159,13 +160,29 @@ class Logger(object):
         try:
             if serializer is not None:
                 serializer.serialize(dictionary)
-            self._destinations.send(dictionary)
         except:
             writeTraceback(self)
             msg = Message({"message_type": "eliot:serialization_failure",
                            "message": self._safeUnicodeDictionary(dictionary)})
             msg.write(self)
+            return
 
+        try:
+            self._destinations.send(dictionary)
+        except:
+            try:
+                # Can't use same code path as serialization errors because
+                # if destination continues to error out we will get
+                # infinite recursion. So instead we have to manually
+                # construct a message.
+                self._destinations.send(
+                    {"message_type": "eliot:destination_failure",
+                     "message": self._safeUnicodeDictionary(dictionary)})
+            except:
+                # Nothing we can do here, raising exception to caller will
+                # break business logic, better to have that continue to
+                # work even if logging isn't.
+                pass
 
 
 class UnflushedTracebacks(Exception):
