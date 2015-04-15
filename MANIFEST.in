@@ -1,8 +1,8 @@
 include LICENSE
 include README.rst
-include requirements-dev.txt
+include versioneer.py
+include eliot/_version.py
 recursive-include docs *
 prune docs/_build
 recursive-include benchmarks *
-include versioneer.py
-include eliot/_version.py
+recursive-include examples *
