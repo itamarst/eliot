@@ -22,14 +22,12 @@ Consider the following code sample:
 
 .. code-block:: python
 
-     from eliot import start_action, Logger, Message
+     from eliot import start_action, Message
 
-     logger = Logger()
-
-     with start_action(logger, u"parent"):
-         Message.new(x="1").write(logger)
-         with start_action(logger, u"child"):
-             Message.new(x="2").write(logger)
+     with start_action(action_type=u"parent"):
+         Message.new(x="1").write()
+         with start_action(action_type=u"child"):
+             Message.new(x="2").write()
 
 If you sort the resulting messages by their ``task_level`` you will get the tree of messages:
 

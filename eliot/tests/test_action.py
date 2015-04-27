@@ -14,7 +14,7 @@ from .._action import (
 from .._output import MemoryLogger
 from .._validation import ActionType, Field, _ActionSerializers
 from ..testing import assertContainsFields
-from .. import _action
+from .. import _action, add_destination, remove_destination
 
 
 class ExecutionContextTests(TestCase):
@@ -657,6 +657,37 @@ class StartActionAndTaskTests(TestCase):
                                   "key": "value"})
 
 
+    def test_startTaskNoLogger(self):
+        """
+        When no logger is given L{startTask} logs to the default ``Logger``.
+        """
+        messages = []
+        add_destination(messages.append)
+        self.addCleanup(remove_destination, messages.append)
+        action = startTask(action_type="sys:do", key="value")
+        assertContainsFields(self, messages[0],
+                             {"task_uuid": action._identification["task_uuid"],
+                              "task_level": [1],
+                              "action_type": "sys:do",
+                              "action_status": "started",
+                              "key": "value"})
+
+
+    def test_startActionNoLogger(self):
+        """
+        When no logger is given L{startAction} logs to the default ``Logger``.
+        """
+        messages = []
+        add_destination(messages.append)
+        self.addCleanup(remove_destination, messages.append)
+        action = startAction(action_type="sys:do", key="value")
+        assertContainsFields(self, messages[0],
+                             {"task_uuid": action._identification["task_uuid"],
+                              "task_level": [1],
+                              "action_type": "sys:do",
+                              "action_status": "started",
+                              "key": "value"})
+
 
 class PEP8Tests(TestCase):
     """
@@ -681,7 +712,6 @@ class PEP8Tests(TestCase):
         L{Action.continue_task} is the same as L{Action.continueTask}.
         """
         self.assertEqual(Action.continue_task, Action.continueTask)
-
 
 
 class SerializationTests(TestCase):
@@ -735,6 +765,30 @@ class SerializationTests(TestCase):
                               "action_type": "eliot:remote_task",
                               "action_status": "started"})
 
+
+    def test_continueTaskNoLogger(self):
+        """
+        L{Action.continueTask} can be called without a logger.
+        """
+        originalAction = Action(None, "uniq456", TaskLevel(level=[3, 4]),
+                                "mytype")
+        taskId = originalAction.serializeTaskId()
+
+        messages = []
+        add_destination(messages.append)
+        self.addCleanup(remove_destination, messages.append)
+        Action.continueTask(task_id=taskId)
+        assertContainsFields(self, messages[0],
+                             {"task_uuid": "uniq456",
+                              "task_level": [3, 4, 1, 1],
+                              "action_type": "eliot:remote_task",
+                              "action_status": "started"})
+
+    def test_continueTaskRequiredTaskId(self):
+        """
+        L{Action.continue_task} requires a C{task_id} to be passed in.
+        """
+        self.assertRaises(RuntimeError, Action.continueTask)
 
 
 class TaskLevelTests(TestCase):

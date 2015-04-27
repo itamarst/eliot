@@ -1,7 +1,7 @@
 Configuring Logging Output
 ==========================
 
-Destinations are how messages get written out by the ``Logger`` class.
+You can register "destinations" to handle logging output.
 A destination is a callable that takes a message dictionary.
 For example, if we want each message to be encoded in JSON and written on a new line on stdout:
 

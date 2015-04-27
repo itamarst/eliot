@@ -79,7 +79,7 @@ class Message(object):
         return self._time()
 
 
-    def write(self, logger, action=None):
+    def write(self, logger=None, action=None):
         """
         Write the message to the given logger.
 
@@ -88,12 +88,14 @@ class Message(object):
 
         Byte field names will be converted to Unicode.
 
-        @type logger: L{eliot.ILogger}
+        @type logger: L{eliot.ILogger} or C{None} indicating the default one.
 
         @param action: The L{Action} which is the context for this message. If
             C{None}, the L{Action} will be deduced from the current call
             stack.
         """
+        if logger is None:
+            logger = _output._DEFAULT_LOGGER
         if action is None:
             action = currentAction()
         if action is None:
@@ -109,6 +111,7 @@ class Message(object):
 
 # Import at end to deal with circular imports:
 from ._action import currentAction, Action, TaskLevel
+from . import _output
 
 # The default Action to use as a context for messages, if no other Action is the
 # context. This ensures all messages have a unique identity, as specified by

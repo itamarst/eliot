@@ -8,21 +8,14 @@ Now that you've got some code emitting log messages (or even better, before you'
 Given good test coverage all code branches should already be covered by tests unrelated to logging.
 Logging can be considered just another aspect of testing those code branches.
 Rather than recreating all those tests as separate functions Eliot provides a decorator the allows adding logging assertions to existing tests.
-``unittest.TestCase`` test methods decorated with ``eliot.testing.validate_logging`` will be called with a ``logger`` keyword argument, a ``eliot.MemoryLogger`` instance, which should replace any ``eliot.Logger`` in objects being tested.
-The ``validate_logging`` decorator takes an argument: another function that takes the ``TestCase`` instance as its first argument (``self``), and the ``logger`` as its second argument.
-This function can make assertions about logging after the main test function has run.
-You can also pass additional arguments and keyword arguments to ``@validate_logging``, in which case the assertion function will get called with them as well.
 
 Let's unit test some code that relies on the ``LOG_USER_REGISTRATION`` object we created earlier.
 
-
 .. code-block:: python
 
-      from eliot import Logger
       from myapp.logtypes import LOG_USER_REGISTRATION
 
       class UserRegistration(object):
-          logger = Logger()
 
           def __init__(self):
               self.db = {}
@@ -30,7 +23,7 @@ Let's unit test some code that relies on the ``LOG_USER_REGISTRATION`` object we
           def register(self, username, password, age):
               self.db[username] = (password, age)
               LOG_USER_REGISTRATION(
-                   username=username, password=password, age=age).write(self.logger)
+                   username=username, password=password, age=age).write()
 
 
 Here's how we'd test it:
@@ -39,7 +32,7 @@ Here's how we'd test it:
 
     from unittest import TestCase
     from eliot import MemoryLogger
-    from eliot.testing import assertContainsFields, validate_logging
+    from eliot.testing import assertContainsFields, capture_logging
 
     from myapp.registration import UserRegistration
     from myapp.logtypes import LOG_USER_REGISTRATION
@@ -57,45 +50,43 @@ Here's how we'd test it:
                                   u"password": u"password",
                                   u"age": 12}))
 
-        @validate_logging(assertRegistrationLogging)
+        @capture_logging(assertRegistrationLogging)
         def test_registration(self, logger):
             """
             Registration adds entries to the in-memory database.
             """
             registry = UserRegistration()
-            registry.logger = logger
             registry.register(u"john", u"password", 12)
             self.assertEqual(registry.db[u"john"], (u"passsword", 12))
 
 
-Besides calling an the given validation function the ``@validate_logging`` decorator will also validate the logged messages after the test is done.
+Besides calling the given validation function the ``@capture_logging`` decorator will also validate the logged messages after the test is done.
 E.g. it will make sure they are JSON encodable.
 Messages were created using ``ActionType`` and ``MessageType`` will be validated using the applicable ``Field`` definitions.
 You can also call ``MemoryLogger.validate`` yourself to validate written messages.
-If you don't want any additional logging assertions you can decorate your test function using ``@validate_logging(None)``.
+If you don't want any additional logging assertions you can decorate your test function using ``@capture_logging(None)``.
 
 
 Testing Tracebacks
 ------------------
 
-Tests decorated with ``@validate_logging`` will fail if there are any tracebacks logged to the given ``MemoryLogger`` (using ``write_traceback`` or ``writeFailure``) on the theory that these are unexpected errors indicating a bug.
-If you expected a particular exception to be logged you can call ``MemoryLogger.flush_tracebacks``, after which it will no longer cause a test failure.
+Tests decorated with ``@capture_logging`` will fail if there are any tracebacks logged (using ``write_traceback`` or ``writeFailure``) on the theory that these are unexpected errors indicating a bug.
+If you expected a particular traceback to be logged you can call ``MemoryLogger.flush_tracebacks``, after which it will no longer cause a test failure.
 The result will be a list of traceback message dictionaries for the particular exception.
 
 .. code-block:: python
 
     from unittest import TestCase
-    from eliot.testing import validate_logging
+    from eliot.testing import capture_logging
 
     class MyTests(TestCase):
         def assertMythingBadPathLogging(self, logger):
             messages = logger.flush_tracebacks(OSError)
             self.assertEqual(len(messages), 1)
 
-        @validate_logging(assertMythingBadPathLogging)
+        @capture_logging(assertMythingBadPathLogging)
         def test_mythingBadPath(self, logger):
              mything = MyThing()
-             mything.logger = logger
              # Trigger an error that will cause a OSError traceback to be logged:
              self.assertFalse(mything.load("/nonexistent/path"))
 
@@ -109,19 +100,18 @@ The simplest method is using the ``assertHasMessage`` utility function which ass
 
 .. code-block:: python
 
-    from eliot.testing import assertHasMessage, validate_logging
+    from eliot.testing import assertHasMessage, capture_logging
 
     class LoggingTests(TestCase):
-        @validate_logging(assertHasMessage, LOG_USER_REGISTRATION,
+        @capture_logging(assertHasMessage, LOG_USER_REGISTRATION,
                          {u"username": u"john",
                           u"password": u"password",
                           u"age": 12})
-        def test_registration(self, logger):
+        def test_registration(self):
             """
             Registration adds entries to the in-memory database.
             """
             registry = UserRegistration()
-            registry.logger = logger
             registry.register(u"john", u"password", 12)
             self.assertEqual(registry.db[u"john"], (u"passsword", 12))
 
@@ -135,7 +125,7 @@ For example, we could rewrite the registration logging test above like so:
 
 .. code-block:: python
 
-    from eliot.testing import LoggedMessage, validate_logging
+    from eliot.testing import LoggedMessage, capture_logging
 
     class LoggingTests(TestCase):
         def assertRegistrationLogging(self, logger):
@@ -148,13 +138,12 @@ For example, we could rewrite the registration logging test above like so:
                                   u"password": u"password",
                                   u"age": 12}))
 
-        @validate_logging(assertRegistrationLogging)
+        @capture_logging(assertRegistrationLogging)
         def test_registration(self, logger):
             """
             Registration adds entries to the in-memory database.
             """
             registry = UserRegistration()
-            registry.logger = logger
             registry.register(u"john", u"password", 12)
             self.assertEqual(registry.db[u"john"], (u"passsword", 12))
 
@@ -173,12 +162,10 @@ For example, let's say we have some code like this:
     LOG_CHECK = MessageType(...)
 
     class Search:
-        logger = Logger()
-
         def search(self, servers, database, key):
-            with LOG_SEARCH(self.logger, database=database, key=key):
+            with LOG_SEARCH(database=database, key=key):
             for server in servers:
-                LOG_CHECK(server=server).write(self.logger)
+                LOG_CHECK(server=server).write()
                 if server.check(database, key):
                     return True
             return False
@@ -188,14 +175,13 @@ The test would look like this:
 
 .. code-block:: python
 
-    from eliot.testing import LoggedAction, LoggedMessage, validate_logging
+    from eliot.testing import LoggedAction, LoggedMessage, capture_logging
     import searcher
 
     class LoggingTests(TestCase):
-        @validate_logging(None)
+        @capture_logging(None)
         def test_logging(self, logger):
             searcher = Search()
-            searcher.logger = logger
             servers = [buildServer(), buildServer()]
 
             searcher.search(servers, "users", "theuser")
@@ -214,14 +200,13 @@ Or we can simplify further by using ``assertHasMessage`` and ``assertHasAction``
 
 .. code-block:: python
 
-    from eliot.testing import LoggedAction, LoggedMessage, validate_logging
+    from eliot.testing import LoggedAction, LoggedMessage, capture_logging
     import searcher
 
     class LoggingTests(TestCase):
-        @validate_logging(None)
+        @capture_logging(None)
         def test_logging(self, logger):
             searcher = Search()
-            searcher.logger = logger
             servers = [buildServer(), buildServer()]
 
             searcher.search(servers, "users", "theuser")
@@ -234,3 +219,94 @@ Or we can simplify further by using ``assertHasMessage`` and ``assertHasAction``
             self.assertEqual(action.children, messages)
             # Each message had the respective server set.
             self.assertEqual(servers, [msg.message["server"] for msg in messages])
+
+
+Restricting Testing to Specific Messages
+----------------------------------------
+
+If you want to only look at certain messages when testing you can log to a specific ``eliot.Logger`` object.
+The messages will still be logged normally but you will be able to limit tests to only looking at those messages.
+
+You can log messages to a specific ``Logger``:
+
+.. code-block:: python
+
+    from eliot import Message, Logger
+
+    class YourClass(object):
+        logger = Logger()
+
+        def run(self):
+            # Create a message with two fields, "key" and "value":
+            msg = Message.new(key=123, value=u"hello")
+            # Write the message:
+            msg.write(self.logger)
+
+As well as actions:
+
+.. code-block:: python
+
+     from eliot import start_action
+
+     logger = Logger()
+
+     with start_action(logger, action_type=u"store_data"):
+         x = get_data()
+         store_data(x)
+
+Or actions created from ``ActionType``:
+
+.. code-block:: python
+
+    from eliot import Logger
+
+      from myapp.logtypes import LOG_USER_REGISTRATION
+
+      class UserRegistration(object):
+
+          logger = Logger()
+
+          def __init__(self):
+              self.db = {}
+
+          def register(self, username, password, age):
+              self.db[username] = (password, age)
+              msg = LOG_USER_REGISTRATION(
+                   username=username, password=password, age=age)
+              # Notice use of specific logger:
+              msg.write(self.logger)
+
+The tests would then need to do two things:
+
+1. Decorate your test with ``validate_logging`` instead of ``capture_logging``.
+2. Override the logger used by the logging code to use the one passed in to the test.
+
+For example:
+
+.. code-block:: python
+
+    from eliot.testing import LoggedMessage, validate_logging
+
+    class LoggingTests(TestCase):
+        def assertRegistrationLogging(self, logger):
+            """
+            Logging assertions for test_registration.
+            """
+            logged = LoggedMessage.of_type(logger.messages, LOG_USER_REGISTRATION)[0]
+            assertContainsFields(self, logged.message,
+                                 {u"username": u"john",
+                                  u"password": u"password",
+                                  u"age": 12}))
+
+        # validate_logging only captures log messages logged to the MemoryLogger
+        # instance it passes to the test:
+        @validate_logging(assertRegistrationLogging)
+        def test_registration(self, logger):
+            """
+            Registration adds entries to the in-memory database.
+            """
+            registry = UserRegistration()
+            # Override logger with one used by test:
+            registry.logger = logger
+            registry.register(u"john", u"password", 12)
+            self.assertEqual(registry.db[u"john"], (u"password", 12))

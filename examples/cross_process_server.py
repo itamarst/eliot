@@ -6,17 +6,16 @@ from __future__ import unicode_literals
 import sys
 from flask import Flask, request
 
-from eliot import Logger, to_file, Action, start_action, add_global_fields
+from eliot import to_file, Action, start_action, add_global_fields
 add_global_fields(process="server")
 to_file(sys.stdout)
-logger = Logger()
 
 
 app = Flask("server")
 
 
 def divide(x, y):
-    with start_action(logger, "divide", x=x, y=y) as action:
+    with start_action(action_type="divide", x=x, y=y) as action:
         result = x / y
         action.add_success_fields(result=result)
         return result
@@ -24,7 +23,7 @@ def divide(x, y):
 
 @app.route("/")
 def main():
-    with Action.continue_task(logger, request.headers["x-eliot-task-id"]):
+    with Action.continue_task(task_id=request.headers["x-eliot-task-id"]):
         x = int(request.args["x"])
         y = int(request.args["y"])
         return str(divide(x, y))

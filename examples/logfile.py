@@ -6,11 +6,7 @@ from __future__ import unicode_literals, print_function
 from twisted.internet.task import react
 
 from eliot.logwriter import ThreadedFileWriter
-from eliot import Message, Logger
-
-
-_logger = Logger()
-
+from eliot import Message
 
 
 def main(reactor):
@@ -23,7 +19,7 @@ def main(reactor):
     logWriter.startService()
 
     # Log a message:
-    Message.new(value="hello", another=1).write(_logger)
+    Message.new(value="hello", another=1).write()
 
     # Manually stop the service.
     done = logWriter.stopService()

@@ -383,7 +383,7 @@ class ActionType(object):
                                                _MessageSerializer(failureFields))
 
 
-    def __call__(self, logger, **fields):
+    def __call__(self, logger=None, **fields):
         """
         Start a new L{eliot.Action} of this type with the given start fields.
 
@@ -395,19 +395,19 @@ class ActionType(object):
                                       [Field.forTypes("result", [int], "")],
                                       [],
                                       "Do something with an entry.")
-             with LOG_DOSOMETHING(logger, entry=x) as action:
+             with LOG_DOSOMETHING(entry=x) as action:
                   do(x)
                   result = something(x * 2)
                   action.addSuccessFields(result=result)
 
         Or perhaps:
 
-             action = LOG_DOSOMETHING(logger, entry=x)
+             action = LOG_DOSOMETHING(entry=x)
              action.run(doSomething)
              action.finish()
 
         @param logger: A L{eliot.ILogger} provider to which the action's
-            messages will be written.
+            messages will be written, or C{None} to use the default one.
 
         @param fields: Extra fields to add to the message.
 

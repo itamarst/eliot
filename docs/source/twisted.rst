@@ -37,14 +37,13 @@ Logging Failures
 
 .. code-block:: python
 
-    from eliot import Logger, writeFailure
+    from eliot import writeFailure
 
     class YourClass(object):
-        logger = Logger()
 
         def run(self):
             d = dosomething()
-            d.addErrback(writeFailure, self.logger)
+            d.addErrback(writeFailure)
 
 
 Actions and Deferreds
@@ -55,13 +54,10 @@ To understand why, consider the following example:
 
 .. code-block:: python
 
-     from eliot import startAction, Logger
-
-     logger = Logger()
-
+     from eliot import startAction
 
      def go():
-         action = startAction(logger, u"yourapp:subsystem:frob")
+         action = startAction(action_type=u"yourapp:subsystem:frob")
          with action:
              d = Deferred()
              d.addCallback(gotResult, x=1)
@@ -81,14 +77,12 @@ Finally, you can unwrap the ``DeferredContext`` and access the wrapped ``Deferre
 
 .. code-block:: python
 
-     from eliot import startAction, Logger
+     from eliot import startAction
      from eliot.twisted import DeferredContext
-
-     logger = Logger()
 
 
      def go():
-         action = startAction(logger, u"yourapp:subsystem:frob")
+         action = startAction(action_type=u"yourapp:subsystem:frob")
          with action.context():
              d = DeferredContext(Deferred())
              # gotResult(result, x=1) will be called in the context of the action:
