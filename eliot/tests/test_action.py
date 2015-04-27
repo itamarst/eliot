@@ -714,7 +714,6 @@ class PEP8Tests(TestCase):
         self.assertEqual(Action.continue_task, Action.continueTask)
 
 
-
 class SerializationTests(TestCase):
     """
     Tests for L{Action} serialization and deserialization.
@@ -785,6 +784,11 @@ class SerializationTests(TestCase):
                               "action_type": "eliot:remote_task",
                               "action_status": "started"})
 
+    def test_continueTaskRequiredTaskId(self):
+        """
+        L{Action.continue_task} requires a C{task_id} to be passed in.
+        """
+        self.assertRaises(RuntimeError, Action.continueTask)
 
 
 class TaskLevelTests(TestCase):

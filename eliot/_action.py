@@ -121,6 +121,8 @@ class TaskLevel(object):
     next_child = nextChild
 
 
+_TASK_ID_NOT_SUPPLIED = object()
+
 
 class Action(object):
     """
@@ -189,7 +191,7 @@ class Action(object):
 
 
     @classmethod
-    def continueTask(cls, logger=None, task_id=u""):
+    def continueTask(cls, logger=None, task_id=_TASK_ID_NOT_SUPPLIED):
         """
         Start a new action which is part of a serialized task.
 
@@ -201,6 +203,8 @@ class Action(object):
 
         @return: The new L{Action} instance.
         """
+        if task_id is _TASK_ID_NOT_SUPPLIED:
+            raise RuntimeError("You must supply a task_id keyword argument.")
         uuid, task_level = task_id.decode("ascii").split("@")
         action = cls(logger, uuid, TaskLevel.fromString(task_level),
                      "eliot:remote_task")
