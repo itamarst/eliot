@@ -221,7 +221,7 @@ Or we can simplify further by using ``assertHasMessage`` and ``assertHasAction``
             self.assertEqual(servers, [msg.message["server"] for msg in messages])
 
 
-Restriction Testing to Specific Messages
+Restricting Testing to Specific Messages
 ----------------------------------------
 
 If you want to only look at certain messages when testing you can log to a specific ``eliot.Logger`` object rather than the global one.
