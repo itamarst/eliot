@@ -659,7 +659,7 @@ class StartActionAndTaskTests(TestCase):
 
     def test_startTaskNoLogger(self):
         """
-        L{startTask} when no logger is given logs to the default ``Logger``.
+        When no logger is given L{startTask} logs to the default ``Logger``.
         """
         messages = []
         add_destination(messages.append)
@@ -675,7 +675,7 @@ class StartActionAndTaskTests(TestCase):
 
     def test_startActionNoLogger(self):
         """
-        L{startAction} when no logger is given logs to the default ``Logger``.
+        When no logger is given L{startAction} logs to the default ``Logger``.
         """
         messages = []
         add_destination(messages.append)

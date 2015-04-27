@@ -75,7 +75,7 @@ class MessageTests(TestCase):
 
     def test_writeDefaultLogger(self):
         """
-        L{Message.write} writes the default logger if none is given.
+        L{Message.write} writes to the default logger if none is given.
         """
         messages = []
         add_destination(messages.append)
