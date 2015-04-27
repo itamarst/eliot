@@ -224,7 +224,8 @@ Or we can simplify further by using ``assertHasMessage`` and ``assertHasAction``
 Restricting Testing to Specific Messages
 ----------------------------------------
 
-If you want to only look at certain messages when testing you can log to a specific ``eliot.Logger`` object rather than the global one.
+If you want to only look at certain messages when testing you can log to a specific ``eliot.Logger`` object.
+The messages will still be logged normally but you will be able to limit tests to only looking at those messages.
 
 You can log messages to a specific ``Logger``:
 
