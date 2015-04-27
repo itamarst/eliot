@@ -60,7 +60,7 @@ Here's how we'd test it:
             self.assertEqual(registry.db[u"john"], (u"passsword", 12))
 
 
-Besides calling an the given validation function the ``@capture_logging`` decorator will also validate the logged messages after the test is done.
+Besides calling the given validation function the ``@capture_logging`` decorator will also validate the logged messages after the test is done.
 E.g. it will make sure they are JSON encodable.
 Messages were created using ``ActionType`` and ``MessageType`` will be validated using the applicable ``Field`` definitions.
 You can also call ``MemoryLogger.validate`` yourself to validate written messages.
@@ -70,8 +70,8 @@ If you don't want any additional logging assertions you can decorate your test f
 Testing Tracebacks
 ------------------
 
-Tests decorated with ``@capture_logging`` will fail if there are any tracebacks logged to the given ``MemoryLogger`` (using ``write_traceback`` or ``writeFailure``) on the theory that these are unexpected errors indicating a bug.
-If you expected a particular exception to be logged you can call ``MemoryLogger.flush_tracebacks``, after which it will no longer cause a test failure.
+Tests decorated with ``@capture_logging`` will fail if there are any tracebacks logged (using ``write_traceback`` or ``writeFailure``) on the theory that these are unexpected errors indicating a bug.
+If you expected a particular traceback to be logged you can call ``MemoryLogger.flush_tracebacks``, after which it will no longer cause a test failure.
 The result will be a list of traceback message dictionaries for the particular exception.
 
 .. code-block:: python
