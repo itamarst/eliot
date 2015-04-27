@@ -74,7 +74,7 @@ For simplicity's sake this example focuses on problems 1 and 3; problem 2 is cov
           self.seen = set()
 
       def look(self, thing):
-          Message.new(type="person:look",
+          Message.new(message_type="person:look",
                       person=unicode(self),
                       at=unicode(thing)).write()
           self.seen.add(thing)
@@ -86,7 +86,7 @@ For simplicity's sake this example focuses on problems 1 and 3; problem 2 is cov
           self.contained = []
 
       def travel(self, person):
-          Message.new(type="place:travel",
+          Message.new(message_type="place:travel",
                       person=unicode(person),
                       place=self.name).write()
           for thing in self.contained:
@@ -101,7 +101,7 @@ For simplicity's sake this example focuses on problems 1 and 3; problem 2 is cov
 
 
   def honeymoon(family):
-      Message.new(type="honeymoon",
+      Message.new(message_type="honeymoon",
                   family=[unicode(person) for person in family]).write()
       rome = Place.load("Rome, Italy")
       for person in family:

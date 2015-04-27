@@ -70,7 +70,7 @@ Keep in mind that code within the context block that is run after the action is 
 
      from eliot import start_action
 
-     action = start_action(action_type=u"yourapp:subsystem:frob"):
+     action = start_action(action_type=u"yourapp:subsystem:frob")
      try:
          with action.context():
              x = _beep()
