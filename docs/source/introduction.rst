@@ -67,19 +67,16 @@ For simplicity's sake this example focuses on problems 1 and 3; problem 2 is cov
 .. code-block:: python
 
   from __future__ import unicode_literals
-  from eliot import Logger, Message
-
-  logger = Logger()
+  from eliot import Message
 
   class Person(object):
       def __init__(self):
           self.seen = set()
 
       def look(self, thing):
-          msg = Message.new(type="person:look",
-                            person=unicode(self),
-                            at=unicode(thing))
-          msg.write(logger)
+          Message.new(message_type="person:look",
+                      person=unicode(self),
+                      at=unicode(thing)).write()
           self.seen.add(thing)
 
 
@@ -89,10 +86,9 @@ For simplicity's sake this example focuses on problems 1 and 3; problem 2 is cov
           self.contained = []
 
       def travel(self, person):
-          msg = Message.new(type="place:travel",
-                            person=unicode(person),
-                            place=self.name)
-          msg.write(logger)
+          Message.new(message_type="place:travel",
+                      person=unicode(person),
+                      place=self.name).write()
           for thing in self.contained:
               if isinstance(thing, Place):
                   thing.travel(person)
@@ -105,9 +101,8 @@ For simplicity's sake this example focuses on problems 1 and 3; problem 2 is cov
 
 
   def honeymoon(family):
-      msg = Message.new(type="honeymoon",
-                        family=[unicode(person) for person in family])
-      msg.write(logger)
+      Message.new(message_type="honeymoon",
+                  family=[unicode(person) for person in family]).write()
       rome = Place.load("Rome, Italy")
       for person in family:
           rome.travel(person)
@@ -139,19 +134,16 @@ In our example we have one task (the honeymoon), an action (travel). We will lea
 .. code-block:: python
 
   from __future__ import unicode_literals
-  from eliot import Logger, Message, start_action, start_task
-
-  logger = Logger()
+  from eliot import Message, start_action, start_task
 
   class Person(object):
       def __init__(self):
           self.seen = set()
 
       def look(self, thing):
-          msg = Message.new(message_type="person:look",
-                            person=unicode(self),
-                            at=unicode(thing))
-          msg.write(logger)
+          Message.new(message_type="person:look",
+                      person=unicode(self),
+                      at=unicode(thing)).write()
           self.seen.add(thing)
 
 
@@ -159,7 +151,7 @@ In our example we have one task (the honeymoon), an action (travel). We will lea
       # __init__ and load unchanged from above.
 
       def travel(self, person):
-          with start_action(logger, "place:travel",
+          with start_action("place:travel",
                            person=unicode(person),
                            place=self.name):
               for thing in self.contained:
@@ -170,7 +162,7 @@ In our example we have one task (the honeymoon), an action (travel). We will lea
 
 
   def honeymoon(family):
-      with start_task(logger, "honeymoon",
+      with start_task("honeymoon",
                      family=[unicode(person) for person in family]):
           rome = Place.load("Rome, Italy")
           for person in family:

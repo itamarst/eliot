@@ -121,6 +121,8 @@ class TaskLevel(object):
     next_child = nextChild
 
 
+_TASK_ID_NOT_SUPPLIED = object()
+
 
 class Action(object):
     """
@@ -189,18 +191,20 @@ class Action(object):
 
 
     @classmethod
-    def continueTask(cls, logger, task_id):
+    def continueTask(cls, logger=None, task_id=_TASK_ID_NOT_SUPPLIED):
         """
         Start a new action which is part of a serialized task.
 
         @param logger: The L{eliot.ILogger} to which to write
-            messages.
+            messages, or C{None} if the default one should be used.
 
         @param task_id: A serialized task identifier, the output of
-            L{Action.serialize_task_id}.
+            L{Action.serialize_task_id}. Required.
 
         @return: The new L{Action} instance.
         """
+        if task_id is _TASK_ID_NOT_SUPPLIED:
+            raise RuntimeError("You must supply a task_id keyword argument.")
         uuid, task_level = task_id.decode("ascii").split("@")
         action = cls(logger, uuid, TaskLevel.fromString(task_level),
                      "eliot:remote_task")
@@ -363,7 +367,7 @@ class Action(object):
 
 
 
-def startAction(logger, action_type, _serializers=None, **fields):
+def startAction(logger=None, action_type="", _serializers=None, **fields):
     """
     Create a child L{Action}, figuring out the parent L{Action} from execution
     context, and log the start message.
@@ -387,7 +391,8 @@ def startAction(logger, action_type, _serializers=None, **fields):
               action.addSuccessFields(result=result)
          action.finish()
 
-    @param logger: The L{eliot.ILogger} to which to write messages.
+    @param logger: The L{eliot.ILogger} to which to write messages, or
+        C{None} to use the default one.
 
     @param action_type: The type of this action,
         e.g. C{"yourapp:subsystem:dosomething"}.
@@ -410,11 +415,12 @@ def startAction(logger, action_type, _serializers=None, **fields):
 
 
 
-def startTask(logger, action_type, _serializers=None, **fields):
+def startTask(logger=None, action_type=u"", _serializers=None, **fields):
     """
     Like L{action}, but creates a new top-level L{Action} with no parent.
 
-    @param logger: The L{eliot.ILogger} to which to write messages.
+    @param logger: The L{eliot.ILogger} to which to write messages, or
+        C{None} to use the default one.
 
     @param action_type: The type of this action,
         e.g. C{"yourapp:subsystem:dosomething"}.

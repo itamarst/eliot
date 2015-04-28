@@ -14,7 +14,7 @@ Here's an example demonstrating how we create a message type, bind some values a
 
 .. code-block:: python
 
-    from eliot import Field, MessageType, Logger
+    from eliot import Field, MessageType
 
     class Coordinate(object):
         def __init__(self, x, y):
@@ -39,8 +39,6 @@ Here's an example demonstrating how we create a message type, bind some values a
         u"A pizza delivery has been scheduled.")
 
 
-    logger = Logger()
-
     def deliver_pizzas(deliveries):
         person = get_free_delivery_person()
         # Create a base message with some, but not all, of the fields filled in:
@@ -49,7 +47,7 @@ Here's an example demonstrating how we create a message type, bind some values a
             delivery_database.insert(person, location, count)
             # Bind additional message fields and then log the resulting message:
             message = base_message.bind(count=count, location=location)
-            message.write(logger)
+            message.write()
 
 Fields
 ------
@@ -131,8 +129,7 @@ You can then use it the way you would normally use ``Message``, e.g. ``bind()`` 
 
 .. code-block:: python
 
-    msg = LOG_USER_REGISTRATION(username=user, age=193)
-    msg.write(logger)
+    LOG_USER_REGISTRATION(username=user, age=193).write()
 
 A ``Message`` created from a ``MessageType`` will automatically use the ``MessageType`` ``Field`` instances to serialize its fields.
 
@@ -150,7 +147,7 @@ Unlike a ``MessageType`` you need two sets of fields: one for action start, one 
 
 .. code-block:: python
 
-    from eliot import ActionType, fields, Logger
+    from eliot import ActionType, fields
 
     LOG_USER_SIGNIN = ActionType(u"yourapp:authentication:signin",
                                  # Start message fields:
@@ -165,10 +162,8 @@ For ``start_task`` you can call ``LOG_USER_SIGNIN.as_task``.
 
 .. code-block:: python
 
-    logger = Logger()
-
     def signin(user, password):
-         with LOG_USER_SIGNIN(logger, username=user) as action:
+         with LOG_USER_SIGNIN(username=user) as action:
              status = user.authenticate(password)
              action.add_success_fields(status=status)
          return status

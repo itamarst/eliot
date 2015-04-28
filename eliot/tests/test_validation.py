@@ -15,6 +15,7 @@ from .._validation import (
 from .._action import startAction, startTask
 from .._output import MemoryLogger
 from ..serializers import identity
+from .. import add_destination, remove_destination
 
 
 class TypedFieldTests(TestCase):
@@ -871,6 +872,18 @@ class EndToEndValidationTests(TestCase):
         with self.ACTION(logger, key=123) as action:
             action.addSuccessFields(result="foo")
         self.assertEqual(logger.messages[0]["key"], 123)
+
+
+    def test_omitLoggerFromActionType(self):
+        """
+        If no logger is given to the L{ActionType} the default logger is used.
+        """
+        messages = []
+        add_destination(messages.append)
+        self.addCleanup(remove_destination, messages.append)
+        with self.ACTION(key=123) as action:
+            action.add_success_fields(result="foo")
+        self.assertEqual(messages[0]["key"], 123)
 
 
     def test_incorrectStartFromActionType(self):

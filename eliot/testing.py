@@ -9,6 +9,7 @@ from collections import namedtuple
 from functools import wraps
 
 from ._output import MemoryLogger
+from . import _output
 
 
 def issuperset(a, b):
@@ -285,6 +286,28 @@ def validateLogging(assertion, *assertionArgs, **assertionKwargs):
 # PEP 8 variant:
 validate_logging = validateLogging
 
+
+
+def capture_logging(assertion, *assertionArgs, **assertionKwargs):
+    """
+    Capture and validate all logging that doesn't specify a L{Logger}.
+
+    See L{validate_logging} for details on the rest of its behavior.
+    """
+    def decorator(function):
+        @validate_logging(assertion, *assertionArgs, **assertionKwargs)
+        @wraps(function)
+        def wrapper(self, *args, **kwargs):
+            logger = kwargs["logger"]
+            current_logger = _output._DEFAULT_LOGGER
+            _output._DEFAULT_LOGGER = logger
+
+            def cleanup():
+                _output._DEFAULT_LOGGER = current_logger
+            self.addCleanup(cleanup)
+            return function(self, logger)
+        return wrapper
+    return decorator
 
 
 def assertHasMessage(testCase, logger, messageType, fields=None):

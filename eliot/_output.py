@@ -383,3 +383,8 @@ def to_file(output_file):
     @param output_file: A file-like object.
     """
     Logger._destinations.add(FileDestination(file=output_file))
+
+
+
+# The default Logger, used when none is specified:
+_DEFAULT_LOGGER = Logger()

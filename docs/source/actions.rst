@@ -37,13 +37,11 @@ Here's a basic example of logging an action:
 
 .. code-block:: python
 
-     from eliot import start_action, Logger
+     from eliot import start_action
 
-     logger = Logger()
-
-     with start_action(logger, u"yourapp:subsystem:frob"):
-         x = _beep()
-         frobinate(x)
+     with start_action(action_type=u"store_data"):
+         x = get_data()
+         store_data(x)
 
 This will log an action start message and if the block finishes successfully an action success message.
 If an exception is thrown by the block then an action failure message will be logged along with the exception type and reason as additional fields.
@@ -70,11 +68,9 @@ Keep in mind that code within the context block that is run after the action is 
 
 .. code-block:: python
 
-     from eliot import start_action, Logger
+     from eliot import start_action
 
-     logger = Logger()
-
-     action = start_action(logger, u"yourapp:subsystem:frob"):
+     action = start_action(action_type=u"yourapp:subsystem:frob")
      try:
          with action.context():
              x = _beep()
@@ -90,11 +86,9 @@ You can also explicitly run a function within the action context:
 
 .. code-block:: python
 
-     from eliot import start_action, Logger
+     from eliot import start_action
 
-     logger = Logger()
-
-     action = start_action(logger, u"yourapp:subsystem:frob")
+     action = start_action(action_type=u"yourapp:subsystem:frob")
      # Call do_something(x=1) in context of action, return its result:
      result = action.run(do_something, x=1)
 
@@ -106,11 +100,9 @@ You can add fields to both the start message and the success message of an actio
 
 .. code-block:: python
 
-     from eliot import start_action, Logger
+     from eliot import start_action
 
-     logger = Logger()
-
-     with start_action(logger, u"yourapp:subsystem:frob",
+     with start_action(action_type=u"yourapp:subsystem:frob",
                       # Fields added to start message only:
                       key=123, foo=u"bar") as action:
          x = _beep(123)
