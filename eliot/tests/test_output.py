@@ -581,7 +581,6 @@ class LoggerTests(TestCase):
         # assertions to be made.
         logger.write({"hello": 123})
 
-# XXX we should be logging multiple exceptions from multiple destinations.
 
 
 class JSONTests(TestCase):
