@@ -4,6 +4,7 @@ Implementation of hooks and APIs for outputting log messages.
 
 from __future__ import unicode_literals, absolute_import
 
+import sys
 import json as pyjson
 
 from characteristic import attributes
@@ -31,7 +32,19 @@ from zope.interface import Interface, implementer
 
 from ._traceback import writeTraceback, TRACEBACK_MESSAGE
 from ._message import Message
-from ._util import saferepr
+from ._util import saferepr, safeunicode
+
+
+
+class _DestinationsSendError(Exception):
+    """
+    An error occured sending to one or more destinations.
+
+    @ivar errors: A list of tuples output from C{sys.exc_info()}.
+    """
+    def __init__(self, errors):
+        self.errors = errors
+        Exception.__init__(self)
 
 
 
@@ -67,14 +80,14 @@ class Destinations(object):
         @type message: L{dict}
         """
         message.update(self._globalFields)
+        errors = []
         for dest in self._destinations:
             try:
                 dest(message)
             except:
-                # Remember how we said destinations should never raise an
-                # exception? That's because we drop them on the floor. You do
-                # not want to be here. This is a bad place.
-                pass
+                errors.append(sys.exc_info())
+        if errors:
+            raise _DestinationsSendError(errors)
 
 
     def add(self, destination):
@@ -159,13 +172,33 @@ class Logger(object):
         try:
             if serializer is not None:
                 serializer.serialize(dictionary)
-            self._destinations.send(dictionary)
         except:
             writeTraceback(self)
             msg = Message({"message_type": "eliot:serialization_failure",
                            "message": self._safeUnicodeDictionary(dictionary)})
             msg.write(self)
+            return
 
+        try:
+            self._destinations.send(dictionary)
+        except _DestinationsSendError as e:
+            for (exc_type, exception, exc_traceback) in e.errors:
+                try:
+                    # Can't use same code path as serialization errors because
+                    # if destination continues to error out we will get
+                    # infinite recursion. So instead we have to manually
+                    # construct a message.
+                    self._destinations.send({
+                        "message_type": "eliot:destination_failure",
+                        "reason": safeunicode(exception),
+                        "exception":
+                        exc_type.__module__ + "." + exc_type.__name__,
+                        "message": self._safeUnicodeDictionary(dictionary)})
+                except:
+                    # Nothing we can do here, raising exception to caller will
+                    # break business logic, better to have that continue to
+                    # work even if logging isn't.
+                    pass
 
 
 class UnflushedTracebacks(Exception):

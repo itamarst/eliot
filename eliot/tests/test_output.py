@@ -16,7 +16,7 @@ from zope.interface.verify import verifyClass
 
 from .._output import (
     MemoryLogger, ILogger, Destinations, Logger, fast_json as json, to_file,
-    FileDestination,
+    FileDestination, _DestinationsSendError
     )
 from .._validation import ValidationError, Field, _MessageSerializer
 from .._traceback import writeTraceback
@@ -236,6 +236,13 @@ class MemoryLoggerTests(TestCase):
 
 
 
+class MyException(Exception):
+    """
+    Custom exception.
+    """
+
+
+
 class BadDestination(list):
     """
     A destination that throws an exception the first time it is called.
@@ -245,7 +252,7 @@ class BadDestination(list):
     def __call__(self, msg):
         if not self.called:
             self.called = True
-            raise RuntimeError("ono")
+            raise MyException("ono")
         self.append(msg)
 
 
@@ -270,10 +277,10 @@ class DestinationsTests(TestCase):
         self.assertEqual(dest2, [message])
 
 
-    def test_destinationExceptionCaught(self):
+    def test_destinationExceptionMultipleDestinations(self):
         """
-        If a given destination throws an exception, it is dropped into the
-        ether.
+        If one destination throws an exception, other destinations still
+        get the message.
         """
         destinations = Destinations()
         dest = []
@@ -283,10 +290,10 @@ class DestinationsTests(TestCase):
         destinations.add(dest2)
         destinations.add(dest3.append)
 
-        destinations.send({u"hello": 123})
-        self.assertEqual(dest, [{u"hello": 123}])
-        self.assertEqual(dest2, [])
-        self.assertEqual(dest3, [{u"hello": 123}])
+        message = {u"hello": 123}
+        self.assertRaises(_DestinationsSendError,
+                          destinations.send, {u"hello": 123})
+        self.assertEqual((dest, dest3), ([message], [message]))
 
 
     def test_destinationExceptionContinue(self):
@@ -298,7 +305,8 @@ class DestinationsTests(TestCase):
         dest = BadDestination()
         destinations.add(dest)
 
-        destinations.send({u"hello": 123})
+        self.assertRaises(_DestinationsSendError,
+                          destinations.send, {u"hello": 123})
         destinations.send({u"hello": 200})
         self.assertEqual(dest, [{u"hello": 200}])
 
@@ -501,6 +509,77 @@ class LoggerTests(TestCase):
         self.assertEqual(eval(written[1]["message"]),
                          dict((repr(key), repr(value)) for
                               (key, value) in message.items()))
+
+
+    def test_destinationExceptionCaught(self):
+        """
+        If a destination throws an exception, an appropriate error is
+        logged.
+        """
+        logger = Logger()
+        logger._destinations = Destinations()
+        dest = BadDestination()
+        logger._destinations.add(dest)
+
+        message = {"hello": 123}
+        logger.write({"hello": 123})
+        assertContainsFields(
+            self, dest[0],
+            {"message_type": "eliot:destination_failure",
+             "message": logger._safeUnicodeDictionary(message),
+             "reason": "ono",
+             "exception": "eliot.tests.test_output.MyException"})
+
+
+    def test_destinationMultipleExceptionsCaught(self):
+        """
+        If multiple destinations throw an exception, an appropriate error is
+        logged for each.
+        """
+        logger = Logger()
+        logger._destinations = Destinations()
+        logger._destinations.add(BadDestination())
+        logger._destinations.add(lambda msg: 1/0)
+        messages = []
+        logger._destinations.add(messages.append)
+
+        try:
+            1/0
+        except ZeroDivisionError as e:
+            zero_divide = str(e)
+        zero_type = ZeroDivisionError.__module__ + ".ZeroDivisionError"
+
+        message = {"hello": 123}
+        logger.write({"hello": 123})
+        self.assertEqual(
+            messages,
+            [message,
+             {"message_type": "eliot:destination_failure",
+              "message": logger._safeUnicodeDictionary(message),
+              "reason": "ono",
+              "exception": "eliot.tests.test_output.MyException"},
+             {"message_type": "eliot:destination_failure",
+              "message": logger._safeUnicodeDictionary(message),
+              "reason": zero_divide,
+              "exception": zero_type}])
+
+
+    def test_destinationExceptionCaughtTwice(self):
+        """
+        If a destination throws an exception, and the logged error about
+        it also causes an exception, then just drop that exception on the
+        floor, since there's nothing we can do with it.
+        """
+        logger = Logger()
+        logger._destinations = Destinations()
+
+        def always_raise(message):
+            raise ZeroDivisionError()
+        logger._destinations.add(always_raise)
+
+        # No exception raised; since everything is dropped no other
+        # assertions to be made.
+        logger.write({"hello": 123})
 
 
 

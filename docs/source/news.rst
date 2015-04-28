@@ -11,6 +11,9 @@ What's New
 * ``write_traceback`` and ``writeFailure`` no longer require a ``system`` argument, as the combination of traceback and action context should suffice to discover the origin of the problem.
   This is a minor change to output format as the field is also omitted from the resulting ``eliot:traceback`` messages.
 * The ``validate_logging`` testing utility now skips validation when the decorated test method raises ``SkipTest``.
+* Exceptions in destinations are now handled better: instead of being dropped silently an attempt is made to log a message about the problem.
+  If that also fails then the exception is dropped.
+
 
 0.6.0
 ^^^^^
