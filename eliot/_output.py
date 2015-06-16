@@ -5,6 +5,7 @@ Implementation of hooks and APIs for outputting log messages.
 from __future__ import unicode_literals, absolute_import
 
 import sys
+import time
 import json as pyjson
 
 from characteristic import attributes
@@ -143,6 +144,7 @@ class Logger(object):
     can then replace a specific L{Logger} with a L{MemoryLogger}.
     """
     _destinations = Destinations()
+    _time = time.time
 
     def _safeUnicodeDictionary(self, dictionary):
         """
@@ -191,6 +193,7 @@ class Logger(object):
                     self._destinations.send({
                         "message_type": "eliot:destination_failure",
                         "reason": safeunicode(exception),
+                        "timestamp": self._time(),
                         "exception":
                         exc_type.__module__ + "." + exc_type.__name__,
                         "message": self._safeUnicodeDictionary(dictionary)})

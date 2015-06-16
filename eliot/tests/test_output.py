@@ -505,7 +505,8 @@ class LoggerTests(TestCase):
         # Calling _safeUnicodeDictionary multiple times leads to
         # inconsistent results due to hash ordering, so compare contents:
         assertContainsFields(self, written[1],
-                             {"message_type": "eliot:serialization_failure"})
+                             {"message_type": "eliot:serialization_failure",
+                              })
         self.assertEqual(eval(written[1]["message"]),
                          dict((repr(key), repr(value)) for
                               (key, value) in message.items()))
@@ -517,6 +518,7 @@ class LoggerTests(TestCase):
         logged.
         """
         logger = Logger()
+        logger._time = lambda: 1234.5
         logger._destinations = Destinations()
         dest = BadDestination()
         logger._destinations.add(dest)
@@ -527,6 +529,7 @@ class LoggerTests(TestCase):
             self, dest[0],
             {"message_type": "eliot:destination_failure",
              "message": logger._safeUnicodeDictionary(message),
+             "timestamp": 1234.5,
              "reason": "ono",
              "exception": "eliot.tests.test_output.MyException"})
 
@@ -537,6 +540,7 @@ class LoggerTests(TestCase):
         logged for each.
         """
         logger = Logger()
+        logger._time = lambda: 1234.5
         logger._destinations = Destinations()
         logger._destinations.add(BadDestination())
         logger._destinations.add(lambda msg: 1/0)
@@ -557,10 +561,12 @@ class LoggerTests(TestCase):
              {"message_type": "eliot:destination_failure",
               "message": logger._safeUnicodeDictionary(message),
               "reason": "ono",
+              "timestamp": 1234.5,
               "exception": "eliot.tests.test_output.MyException"},
              {"message_type": "eliot:destination_failure",
               "message": logger._safeUnicodeDictionary(message),
               "reason": zero_divide,
+              "timestamp": 1234.5,
               "exception": zero_type}])
 
 
