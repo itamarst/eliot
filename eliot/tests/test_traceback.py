@@ -15,7 +15,10 @@ except ImportError:
     Failure = None
 
 from .._traceback import writeTraceback, writeFailure, _writeTracebackMessage
-from ..testing import assertContainsFields, validateLogging, MemoryLogger
+from ..testing import (
+    assertContainsFields, validateLogging, capture_logging,
+    MemoryLogger,
+)
 
 
 class TracebackLoggingTests(TestCase):
@@ -49,6 +52,27 @@ class TracebackLoggingTests(TestCase):
         logger.flushTracebacks(RuntimeError)
 
 
+    @capture_logging(None)
+    def test_writeTracebackDefaultLogger(self, logger):
+        """
+        L{writeTraceback} writes to the default log, if none is
+        specified.
+        """
+        e = None
+        def raiser():
+            raise RuntimeError("because")
+        try:
+            raiser()
+        except Exception as exception:
+            writeTraceback()
+
+        message = logger.messages[0]
+        assertContainsFields(self, message,
+                             {"message_type": "eliot:traceback"})
+        logger.flushTracebacks(RuntimeError)
+
+
+
     @validateLogging(None)
     def test_writeFailure(self, logger):
         """
@@ -69,6 +93,26 @@ class TracebackLoggingTests(TestCase):
                               "exception": RuntimeError,
                               "reason": failure.value,
                               "traceback": expectedTraceback})
+        logger.flushTracebacks(RuntimeError)
+
+
+    @capture_logging(None)
+    def test_writeFailure(self, logger):
+        """
+        L{writeFailure} writes to the default log, if none is
+        specified.
+        """
+        if Failure is None:
+            raise SkipTest("Twisted unavailable")
+
+        try:
+            raise RuntimeError("because")
+        except:
+            failure = Failure()
+            writeFailure(failure)
+        message = logger.messages[0]
+        assertContainsFields(self, message,
+                             {"message_type": "eliot:traceback"})
         logger.flushTracebacks(RuntimeError)
 
 
