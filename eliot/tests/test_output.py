@@ -18,6 +18,7 @@ from .._output import (
     MemoryLogger, ILogger, Destinations, Logger, fast_json as json, to_file,
     FileDestination, _DestinationsSendError
     )
+from .._message import _defaultAction
 from .._validation import ValidationError, Field, _MessageSerializer
 from .._traceback import writeTraceback
 from ..testing import assertContainsFields
@@ -528,6 +529,7 @@ class LoggerTests(TestCase):
         assertContainsFields(
             self, dest[0],
             {"message_type": "eliot:destination_failure",
+             "task_uuid": _defaultAction._identification["task_uuid"],
              "message": logger._safeUnicodeDictionary(message),
              "timestamp": 1234.5,
              "reason": "ono",
@@ -553,6 +555,13 @@ class LoggerTests(TestCase):
             zero_divide = str(e)
         zero_type = ZeroDivisionError.__module__ + ".ZeroDivisionError"
 
+        # There is no way to get next level without mutating
+        # some state. We create a task_level, and we know the next
+        # two messages will be children of _defaultAction, so
+        # their levels will be consectuive.
+        task_level = _defaultAction._task_level.next_child()
+
+
         message = {"hello": 123}
         logger.write({"hello": 123})
         self.assertEqual(
@@ -560,11 +569,15 @@ class LoggerTests(TestCase):
             [message,
              {"message_type": "eliot:destination_failure",
               "message": logger._safeUnicodeDictionary(message),
+              "task_uuid": _defaultAction._identification["task_uuid"],
+              "task_level": [task_level.level[0] + 1],
               "reason": "ono",
               "timestamp": 1234.5,
               "exception": "eliot.tests.test_output.MyException"},
              {"message_type": "eliot:destination_failure",
               "message": logger._safeUnicodeDictionary(message),
+              "task_uuid": _defaultAction._identification["task_uuid"],
+              "task_level": [task_level.level[0] + 2],
               "reason": zero_divide,
               "timestamp": 1234.5,
               "exception": zero_type}])
