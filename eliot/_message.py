@@ -102,9 +102,8 @@ class Message(object):
             action = _defaultAction
         contents = self._contents.copy()
         contents["timestamp"] = self._timestamp()
-        if action is not None:
-            contents["task_uuid"] = action._identification["task_uuid"]
-            contents["task_level"] = action._nextTaskLevel().level
+        contents["task_uuid"] = action._identification["task_uuid"]
+        contents["task_level"] = action._nextTaskLevel().level
         logger.write(contents, self._serializer)
 
 
