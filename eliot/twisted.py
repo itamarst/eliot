@@ -130,11 +130,15 @@ class DeferredContext(object):
         return self.addCallbacks(callback, callback, args, kw, args, kw)
 
 
-    def addActionFinish(self):
+    def addActionFinish(self, result_field=None):
         """
         Indicates all callbacks that should run within the action's context have
         been added, and that the action should therefore finish once those
         callbacks have fired.
+
+        @param result_field: The name of the field to log the succesful result
+            to, or L{None}.
+        @type result_field: L{unicode} or L{NoneType}
 
         @return: The wrapped L{Deferred}.
 
@@ -148,6 +152,8 @@ class DeferredContext(object):
             if isinstance(result, Failure):
                 exception = result.value
             else:
+                if result_field is not None:
+                    self._action.add_success_fields(**{result_field: result})
                 exception = None
             self._action.finish(exception)
             return result
