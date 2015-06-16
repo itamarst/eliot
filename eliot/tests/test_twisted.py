@@ -150,6 +150,23 @@ class DeferredContextTests(TestCase):
         self.assertEqual(context, [action1])
 
 
+    def test_addCallbacksCallbackContextExplict(self):
+        """
+        L{DeferedContext.addCallbacks} adds a callback that runs in context of
+        action that the L{DeferredContext} was created with.
+        """
+        logger = MemoryLogger()
+        action1 = startAction(logger, "test")
+        action2 = startAction(logger, "test")
+        context = []
+        d = succeed(None)
+        with action2.context():
+            d = DeferredContext(d, context=action1)
+            d.addCallbacks(lambda x: context.append(currentAction()),
+                           lambda x: x)
+        self.assertEqual(context, [action1])
+
+
     def test_addCallbacksErrbackContext(self):
         """
         L{DeferedContext.addCallbacks} adds an errback that runs in context of
