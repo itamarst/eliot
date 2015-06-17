@@ -38,6 +38,16 @@ class Message(object):
         return _class(fields, _serializer)
 
 
+    @classmethod
+    def log(_class, **fields):
+        """
+        Write a new L{Message} to the default L{Logger}.
+
+        The keyword arguments will become contents of the L{Message}.
+        """
+        _class.new(**fields).write()
+
+
     def __init__(self, contents, serializer=None):
         """
         You can also use L{Message.new} to create L{Message} objects.

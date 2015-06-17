@@ -103,6 +103,18 @@ class MessageTests(TestCase):
         self.assertEqual(logger[1]["key"], 4)
 
 
+    def test_logCallsDefaultLoggerWrite(self):
+        """
+        L{Message.log} calls the given logger's C{write} method with a
+        dictionary that is superset of the L{Message} contents.
+        """
+        messages = []
+        add_destination(messages.append)
+        self.addCleanup(remove_destination, messages.append)
+        Message.log(some_key=1234)
+        self.assertEqual(messages[0][u"some_key"], 1234)
+
+
     def test_defaultTime(self):
         """
         L{Message._time} returns L{time.time} by default.
