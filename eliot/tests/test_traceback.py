@@ -58,12 +58,11 @@ class TracebackLoggingTests(TestCase):
         L{writeTraceback} writes to the default log, if none is
         specified.
         """
-        e = None
         def raiser():
             raise RuntimeError("because")
         try:
             raiser()
-        except Exception as exception:
+        except Exception:
             writeTraceback()
 
         message = logger.messages[0]
@@ -97,7 +96,7 @@ class TracebackLoggingTests(TestCase):
 
 
     @capture_logging(None)
-    def test_writeFailure(self, logger):
+    def test_writeFailureDefaultLogger(self, logger):
         """
         L{writeFailure} writes to the default log, if none is
         specified.
