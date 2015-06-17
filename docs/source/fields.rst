@@ -25,9 +25,9 @@ Consider the following code sample:
      from eliot import start_action, Message
 
      with start_action(action_type=u"parent"):
-         Message.new(x="1").write()
+         Message.log(x="1")
          with start_action(action_type=u"child"):
-             Message.new(x="2").write()
+             Message.log(x="2")
 
 If you sort the resulting messages by their ``task_level`` you will get the tree of messages:
 
