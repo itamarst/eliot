@@ -1,6 +1,11 @@
 What's New
 ==========
 
+0.8.0
+^^^^^
+
+* ``Message.log`` will log a new message, combining the existing ``Message.new`` and ``Message.write``.
+
 0.7.0
 ^^^^^
 
