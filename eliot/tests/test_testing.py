@@ -617,7 +617,7 @@ class CaptureLoggingTests(ValidateLoggingTestsMixin, TestCase):
         class MyTest(TestCase):
             @capture_logging(None)
             def runTest(self, logger):
-                Message.new(some_key=1234).write()
+                Message.log(some_key=1234)
                 self.logger = logger
 
         test = MyTest()
@@ -639,7 +639,7 @@ class CaptureLoggingTests(ValidateLoggingTestsMixin, TestCase):
         messages = []
         add_destination(messages.append)
         self.addCleanup(remove_destination, messages.append)
-        Message.new(some_key=1234).write()
+        Message.log(some_key=1234)
         self.assertEqual(messages[0][u"some_key"], 1234)
 
 
@@ -657,7 +657,7 @@ class CaptureLoggingTests(ValidateLoggingTestsMixin, TestCase):
         messages = []
         add_destination(messages.append)
         self.addCleanup(remove_destination, messages.append)
-        Message.new(some_key=1234).write()
+        Message.log(some_key=1234)
         self.assertEqual(messages[0][u"some_key"], 1234)
 
 

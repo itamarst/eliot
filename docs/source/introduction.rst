@@ -74,9 +74,9 @@ For simplicity's sake this example focuses on problems 1 and 3; problem 2 is cov
           self.seen = set()
 
       def look(self, thing):
-          Message.new(message_type="person:look",
+          Message.log(message_type="person:look",
                       person=unicode(self),
-                      at=unicode(thing)).write()
+                      at=unicode(thing))
           self.seen.add(thing)
 
 
@@ -86,9 +86,9 @@ For simplicity's sake this example focuses on problems 1 and 3; problem 2 is cov
           self.contained = []
 
       def travel(self, person):
-          Message.new(message_type="place:travel",
+          Message.log(message_type="place:travel",
                       person=unicode(person),
-                      place=self.name).write()
+                      place=self.name)
           for thing in self.contained:
               if isinstance(thing, Place):
                   thing.travel(person)
@@ -101,8 +101,8 @@ For simplicity's sake this example focuses on problems 1 and 3; problem 2 is cov
 
 
   def honeymoon(family):
-      Message.new(message_type="honeymoon",
-                  family=[unicode(person) for person in family]).write()
+      Message.log(message_type="honeymoon",
+                  family=[unicode(person) for person in family])
       rome = Place.load("Rome, Italy")
       for person in family:
           rome.travel(person)
@@ -141,9 +141,9 @@ In our example we have one task (the honeymoon), an action (travel). We will lea
           self.seen = set()
 
       def look(self, thing):
-          Message.new(message_type="person:look",
+          Message.log(message_type="person:look",
                       person=unicode(self),
-                      at=unicode(thing)).write()
+                      at=unicode(thing))
           self.seen.add(thing)
 
 

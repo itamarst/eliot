@@ -18,6 +18,17 @@ You can log a message like this:
 
     class YourClass(object):
         def run(self):
+            # Log a message with two fields, "key" and "value":
+            Message.log(key=123, value=u"hello")
+
+You can also create message and then log it later like this:
+
+.. code-block:: python
+
+    from eliot import Message
+
+    class YourClass(object):
+        def run(self):
             # Create a message with two fields, "key" and "value":
             msg = Message.new(key=123, value=u"hello")
             # Write the message:
