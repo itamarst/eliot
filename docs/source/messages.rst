@@ -21,7 +21,7 @@ You can log a message like this:
             # Log a message with two fields, "key" and "value":
             Message.log(key=123, value=u"hello")
 
-You can also create message and then log it latter like this:
+You can also create message and then log it later like this:
 
 .. code-block:: python
 
