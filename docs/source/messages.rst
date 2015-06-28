@@ -30,7 +30,7 @@ You can also create message and then log it latter like this:
     class YourClass(object):
         def run(self):
             # Create a message with two fields, "key" and "value":
-            msg = Message.log(key=123, value=u"hello")
+            msg = Message.new(key=123, value=u"hello")
             # Write the message:
             msg.write()
 
