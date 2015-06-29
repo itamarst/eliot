@@ -7,7 +7,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 import traceback
 import sys
 from functools import wraps
-from pprint import pformat
+import json
 
 try:
     from twisted.internet.defer import Deferred, succeed, fail
@@ -551,7 +551,7 @@ class RedirectLogsForTrialTests(TestCase):
         logger = Logger()
         Message.new(x=123, y=456).write(logger)
         self.assertEqual(writtenToTwisted,
-                         ["ELIOT: %s" % (pformat(written[0]),)])
+                         ["ELIOT: %s" % (json.dumps(written[0]),)])
 
 
     def test_tracebackMessages(self):
@@ -577,7 +577,7 @@ class RedirectLogsForTrialTests(TestCase):
             [l for l in lines if not l.startswith("    ")])
 
         self.assertEqual(writtenToTwisted,
-                         ["ELIOT: %s" % (pformat(written[0]),),
+                         ["ELIOT: %s" % (json.dumps(written[0]),),
                           "ELIOT Extracted Traceback:\n%s" % (expectedTraceback,)
                       ])
 
