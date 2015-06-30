@@ -5,6 +5,7 @@ What's New
 ^^^^^
 
 * ``Message.log`` will log a new message, combining the existing ``Message.new`` and ``Message.write``.
+* The logs written with ``redirectLogsForTrial`` are now written in JSON format, rather than with ``pformat``.
 
 0.7.0
 ^^^^^
