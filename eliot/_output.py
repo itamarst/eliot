@@ -5,6 +5,7 @@ Implementation of hooks and APIs for outputting log messages.
 from __future__ import unicode_literals, absolute_import
 
 import sys
+import time
 import json as pyjson
 
 from characteristic import attributes
@@ -143,6 +144,7 @@ class Logger(object):
     can then replace a specific L{Logger} with a L{MemoryLogger}.
     """
     _destinations = Destinations()
+    _time = time.time
 
     def _safeUnicodeDictionary(self, dictionary):
         """
@@ -184,13 +186,18 @@ class Logger(object):
         except _DestinationsSendError as e:
             for (exc_type, exception, exc_traceback) in e.errors:
                 try:
+                    from ._message import _defaultAction
                     # Can't use same code path as serialization errors because
                     # if destination continues to error out we will get
                     # infinite recursion. So instead we have to manually
                     # construct a message.
+
                     self._destinations.send({
                         "message_type": "eliot:destination_failure",
+                        "task_uuid": _defaultAction._identification['task_uuid'],
+                        "task_level": _defaultAction._nextTaskLevel().level,
                         "reason": safeunicode(exception),
+                        "timestamp": self._time(),
                         "exception":
                         exc_type.__module__ + "." + exc_type.__name__,
                         "message": self._safeUnicodeDictionary(dictionary)})
