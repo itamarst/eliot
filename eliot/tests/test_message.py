@@ -211,7 +211,7 @@ class MessageTests(TestCase):
         expected = LoggedMessage(
             timestamp=written['timestamp'],
             task_uuid=written['task_uuid'],
-            task_level=written['task_level'],
+            task_level=TaskLevel(level=written['task_level']),
             contents={'key': 2},
         )
         self.assertEqual(result, expected)
@@ -276,7 +276,7 @@ class FrozenMessageTests(TestCase):
         message = LoggedMessage(
             timestamp=1,
             task_uuid='unique',
-            task_level=[1],
+            task_level=TaskLevel(level=[1]),
             contents=contents,
         )
         expected = {
@@ -299,7 +299,7 @@ class FrozenMessageTests(TestCase):
         expected = LoggedMessage(
             timestamp=1,
             task_uuid='unique',
-            task_level=[1],
+            task_level=TaskLevel(level=[1]),
             contents={'foo': 'bar'},
         )
         self.assertEqual(parsed, expected)

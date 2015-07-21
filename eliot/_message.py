@@ -103,7 +103,7 @@ class Message(object):
         return LoggedMessage(
             timestamp=self._timestamp(),
             task_uuid=action._identification["task_uuid"],
-            task_level=action._nextTaskLevel().level,
+            task_level=action._nextTaskLevel(),
             contents=self._contents.copy(),
         )
 
@@ -138,7 +138,7 @@ class LoggedMessage(namedtuple('LoggedMessage', (
 
     @ivar timestamp: The Unix timestamp of when the message was logged.
     @ivar task_uuid: The UUID of the task in which the message was logged.
-    @ivar task_level: Where this message appears within the task.
+    @ivar task_level: The L{TaskLevel} of this message appears within the task.
     @ivar contents: A C{dict}, the message contents without Eliot metadata.
     """
 
@@ -153,7 +153,7 @@ class LoggedMessage(namedtuple('LoggedMessage', (
         contents = loggedDictionary.copy()
         timestamp = contents.pop('timestamp')
         task_uuid = contents.pop('task_uuid')
-        task_level = contents.pop('task_level')
+        task_level = TaskLevel(level=contents.pop('task_level'))
         return cls(timestamp=timestamp,
                    task_uuid=task_uuid,
                    task_level=task_level,
@@ -165,7 +165,7 @@ class LoggedMessage(namedtuple('LoggedMessage', (
         result.update({
             'timestamp': self.timestamp,
             'task_uuid': self.task_uuid,
-            'task_level': self.task_level,
+            'task_level': self.task_level.level,
         })
         return result
 
