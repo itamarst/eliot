@@ -94,7 +94,7 @@ class Message(object):
         """
         Freeze this message for logging, registring it with C{action}.
 
-        :rtype: L{LoggedMessage}
+        @rtype: L{LoggedMessage}
         """
         if action is None:
             action = currentAction()
@@ -123,8 +123,10 @@ class Message(object):
             C{None}, the L{Action} will be deduced from the current call
             stack.
         """
+        if logger is None:
+            logger = _output._DEFAULT_LOGGER
         logged = self._freeze(action=action)
-        logged.write(self._serializer, logger=logger)
+        logger.write(logged.asDict(), self._serializer)
         return logged
 
 
@@ -132,7 +134,12 @@ class Message(object):
 class LoggedMessage(namedtuple('LoggedMessage', (
         'timestamp', 'task_uuid', 'task_level', 'contents'))):
     """
-    A L{Message} that has been logged to disk.
+    A L{Message} that has been logged.
+
+    @ivar timestamp: The Unix timestamp of when the message was logged.
+    @ivar task_uuid: The UUID of the task in which the message was logged.
+    @ivar task_level: Where this message appears within the task.
+    @ivar contents: A C{dict}, the message contents without Eliot metadata.
     """
 
     @classmethod
@@ -140,8 +147,8 @@ class LoggedMessage(namedtuple('LoggedMessage', (
         """
         Reconstruct a L{LoggedMessage} from a logged dictionary.
 
-        :param loggedDictionary: A dict representing a parsed log entry.
-        :return: A L{LoggedMessage} for that dictionary.
+        @param loggedDictionary: A dict representing a parsed log entry.
+        @return: A L{LoggedMessage} for that dictionary.
         """
         contents = loggedDictionary.copy()
         timestamp = contents.pop('timestamp')
@@ -161,12 +168,6 @@ class LoggedMessage(namedtuple('LoggedMessage', (
             'task_level': self.task_level,
         })
         return result
-
-
-    def write(self, serializer, logger=None):
-        if logger is None:
-            logger = _output._DEFAULT_LOGGER
-        logger.write(self.asDict(), serializer)
 
 
 
