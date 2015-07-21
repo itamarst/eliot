@@ -12,7 +12,7 @@ try:
 except ImportError:
     Failure = None
 
-from .._message import Message, _defaultAction
+from .._message import LoggedMessage, Message, _defaultAction
 from .._output import MemoryLogger
 from .._action import Action, startAction, TaskLevel
 from .. import add_destination, remove_destination
@@ -197,6 +197,26 @@ class MessageTests(TestCase):
                           "key": 2})
 
 
+    def test_writeReturnsLoggedMessage(self):
+        """
+        L{Message.write} returns an object representing the message that it
+        logged.
+        """
+        logger = MemoryLogger()
+        action = Action(logger, "unique", TaskLevel(level=[]),
+                        "sys:thename")
+        msg = Message.new(key=2)
+        result = msg.write(logger, action)
+        written = logger.messages[0]
+        expected = LoggedMessage(
+            timestamp=written['timestamp'],
+            task_uuid=written['task_uuid'],
+            task_level=written['task_level'],
+            contents={'key': 2},
+        )
+        self.assertEqual(result, expected)
+
+
     def test_actionCounter(self):
         """
         Each message written within the context of an L{Action} gets its
@@ -246,3 +266,23 @@ class MessageTests(TestCase):
         serializer = object()
         msg = Message.new(serializer, x=1)
         self.assertIs(msg._serializer, serializer)
+
+
+
+class FrozenMessageTests(TestCase):
+
+    def test_asDict(self):
+        contents = {'foo': 'bar'}
+        message = LoggedMessage(
+            timestamp=1,
+            task_uuid='unique',
+            task_level=[1],
+            contents=contents,
+        )
+        expected = {
+            'timestamp': 1,
+            'task_uuid': 'unique',
+            'task_level': [1],
+            'foo':  'bar',
+        }
+        self.assertEqual(message.asDict(), expected)

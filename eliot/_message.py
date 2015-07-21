@@ -4,6 +4,7 @@ Log messages and related utilities.
 
 from __future__ import unicode_literals
 
+from collections import namedtuple
 import time
 from uuid import uuid4
 
@@ -110,11 +111,28 @@ class Message(object):
             action = currentAction()
         if action is None:
             action = _defaultAction
-        contents = self._contents.copy()
-        contents["timestamp"] = self._timestamp()
-        contents["task_uuid"] = action._identification["task_uuid"]
-        contents["task_level"] = action._nextTaskLevel().level
-        logger.write(contents, self._serializer)
+        logged = LoggedMessage(
+            timestamp=self._timestamp(),
+            task_uuid=action._identification["task_uuid"],
+            task_level=action._nextTaskLevel().level,
+            contents=self._contents.copy(),
+        )
+        logger.write(logged.asDict(), self._serializer)
+        return logged
+
+
+
+class LoggedMessage(namedtuple('LoggedMessage', (
+        'timestamp', 'task_uuid', 'task_level', 'contents'))):
+
+    def asDict(self):
+        result = self.contents.copy()
+        result.update({
+            'timestamp': self.timestamp,
+            'task_uuid': self.task_uuid,
+            'task_level': self.task_level,
+        })
+        return result
 
 
 
