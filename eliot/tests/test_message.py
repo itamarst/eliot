@@ -283,6 +283,23 @@ class FrozenMessageTests(TestCase):
             'timestamp': 1,
             'task_uuid': 'unique',
             'task_level': [1],
-            'foo':  'bar',
+            'foo': 'bar',
         }
         self.assertEqual(message.asDict(), expected)
+
+
+    def test_fromDict(self):
+        log_entry = {
+            'timestamp': 1,
+            'task_uuid': 'unique',
+            'task_level': [1],
+            'foo': 'bar',
+        }
+        parsed = LoggedMessage.fromDict(log_entry)
+        expected = LoggedMessage(
+            timestamp=1,
+            task_uuid='unique',
+            task_level=[1],
+            contents={'foo': 'bar'},
+        )
+        self.assertEqual(parsed, expected)

@@ -131,6 +131,27 @@ class Message(object):
 
 class LoggedMessage(namedtuple('LoggedMessage', (
         'timestamp', 'task_uuid', 'task_level', 'contents'))):
+    """
+    A L{Message} that has been logged to disk.
+    """
+
+    @classmethod
+    def fromDict(cls, loggedDictionary):
+        """
+        Reconstruct a L{LoggedMessage} from a logged dictionary.
+
+        :param loggedDictionary: A dict representing a parsed log entry.
+        :return: A L{LoggedMessage} for that dictionary.
+        """
+        contents = loggedDictionary.copy()
+        timestamp = contents.pop('timestamp')
+        task_uuid = contents.pop('task_uuid')
+        task_level = contents.pop('task_level')
+        return cls(timestamp=timestamp,
+                   task_uuid=task_uuid,
+                   task_level=task_level,
+                   contents=contents)
+
 
     def asDict(self):
         result = self.contents.copy()
@@ -140,6 +161,7 @@ class LoggedMessage(namedtuple('LoggedMessage', (
             'task_level': self.task_level,
         })
         return result
+
 
     def write(self, serializer, logger=None):
         if logger is None:
