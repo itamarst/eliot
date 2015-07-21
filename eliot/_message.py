@@ -90,6 +90,24 @@ class Message(object):
         return self._time()
 
 
+    def _freeze(self, action=None):
+        """
+        Freeze this message for logging, registring it with C{action}.
+
+        :rtype: L{LoggedMessage}
+        """
+        if action is None:
+            action = currentAction()
+        if action is None:
+            action = _defaultAction
+        return LoggedMessage(
+            timestamp=self._timestamp(),
+            task_uuid=action._identification["task_uuid"],
+            task_level=action._nextTaskLevel().level,
+            contents=self._contents.copy(),
+        )
+
+
     def write(self, logger=None, action=None):
         """
         Write the message to the given logger.
@@ -105,19 +123,8 @@ class Message(object):
             C{None}, the L{Action} will be deduced from the current call
             stack.
         """
-        if logger is None:
-            logger = _output._DEFAULT_LOGGER
-        if action is None:
-            action = currentAction()
-        if action is None:
-            action = _defaultAction
-        logged = LoggedMessage(
-            timestamp=self._timestamp(),
-            task_uuid=action._identification["task_uuid"],
-            task_level=action._nextTaskLevel().level,
-            contents=self._contents.copy(),
-        )
-        logger.write(logged.asDict(), self._serializer)
+        logged = self._freeze(action=action)
+        logged.write(self._serializer, logger=logger)
         return logged
 
 
@@ -133,6 +140,11 @@ class LoggedMessage(namedtuple('LoggedMessage', (
             'task_level': self.task_level,
         })
         return result
+
+    def write(self, serializer, logger=None):
+        if logger is None:
+            logger = _output._DEFAULT_LOGGER
+        logger.write(self.asDict(), serializer)
 
 
 
