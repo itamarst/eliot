@@ -94,13 +94,13 @@ class Message(object):
         """
         Freeze this message for logging, registring it with C{action}.
 
-        @rtype: L{LoggedMessage}
+        @rtype: L{WrittenMessage}
         """
         if action is None:
             action = currentAction()
         if action is None:
             action = _defaultAction
-        return LoggedMessage(
+        return WrittenMessage(
             timestamp=self._timestamp(),
             task_uuid=action._identification["task_uuid"],
             task_level=action._nextTaskLevel(),
@@ -131,7 +131,7 @@ class Message(object):
 
 
 
-class LoggedMessage(namedtuple('LoggedMessage', (
+class WrittenMessage(namedtuple('WrittenMessage', (
         'timestamp', 'task_uuid', 'task_level', 'contents'))):
     """
     A L{Message} that has been logged.
@@ -145,10 +145,10 @@ class LoggedMessage(namedtuple('LoggedMessage', (
     @classmethod
     def fromDict(cls, loggedDictionary):
         """
-        Reconstruct a L{LoggedMessage} from a logged dictionary.
+        Reconstruct a L{WrittenMessage} from a logged dictionary.
 
         @param loggedDictionary: A dict representing a parsed log entry.
-        @return: A L{LoggedMessage} for that dictionary.
+        @return: A L{WrittenMessage} for that dictionary.
         """
         contents = loggedDictionary.copy()
         timestamp = contents.pop('timestamp')

@@ -12,7 +12,7 @@ try:
 except ImportError:
     Failure = None
 
-from .._message import LoggedMessage, Message, _defaultAction
+from .._message import WrittenMessage, Message, _defaultAction
 from .._output import MemoryLogger
 from .._action import Action, startAction, TaskLevel
 from .. import add_destination, remove_destination
@@ -197,7 +197,7 @@ class MessageTests(TestCase):
                           "key": 2})
 
 
-    def test_writeReturnsLoggedMessage(self):
+    def test_writeReturnsWrittenMessage(self):
         """
         L{Message.write} returns an object representing the message that it
         logged.
@@ -208,7 +208,7 @@ class MessageTests(TestCase):
         msg = Message.new(key=2)
         result = msg.write(logger, action)
         written = logger.messages[0]
-        expected = LoggedMessage(
+        expected = WrittenMessage(
             timestamp=written['timestamp'],
             task_uuid=written['task_uuid'],
             task_level=TaskLevel(level=written['task_level']),
@@ -269,11 +269,11 @@ class MessageTests(TestCase):
 
 
 
-class FrozenMessageTests(TestCase):
+class WrittenMessageTests(TestCase):
 
     def test_asDict(self):
         contents = {'foo': 'bar'}
-        message = LoggedMessage(
+        message = WrittenMessage(
             timestamp=1,
             task_uuid='unique',
             task_level=TaskLevel(level=[1]),
@@ -295,8 +295,8 @@ class FrozenMessageTests(TestCase):
             'task_level': [1],
             'foo': 'bar',
         }
-        parsed = LoggedMessage.fromDict(log_entry)
-        expected = LoggedMessage(
+        parsed = WrittenMessage.fromDict(log_entry)
+        expected = WrittenMessage(
             timestamp=1,
             task_uuid='unique',
             task_level=TaskLevel(level=[1]),
