@@ -164,6 +164,11 @@ class WrittenMessage(PClass):
 
 
     def as_dict(self):
+        """
+        Return the dictionary that was used to write this message.
+
+        @return: A C{dict}, as might be logged by Eliot.
+        """
         return dict(self.contents.update({
             'timestamp': self.timestamp,
             'task_uuid': self.task_uuid,
