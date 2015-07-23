@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import time
 from uuid import uuid4
 
-from pyrsistent import PClass, field
+from pyrsistent import PClass, field, pmap
 
 
 class Message(object):
@@ -105,7 +105,7 @@ class Message(object):
             timestamp=self._timestamp(),
             task_uuid=action._identification["task_uuid"],
             task_level=action._nextTaskLevel(),
-            contents=self._contents.copy(),
+            contents=pmap(self._contents),
         )
 
 
@@ -162,17 +162,16 @@ class WrittenMessage(PClass):
         return cls(timestamp=timestamp,
                    task_uuid=task_uuid,
                    task_level=task_level,
-                   contents=contents)
+                   contents=pmap(contents))
 
 
     def asDict(self):
-        result = self.contents.copy()
-        result.update({
+        return dict(self.contents.update({
             'timestamp': self.timestamp,
             'task_uuid': self.task_uuid,
             'task_level': self.task_level.level,
-        })
-        return result
+        }))
+
 
 
 

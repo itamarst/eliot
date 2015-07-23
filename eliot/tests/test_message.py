@@ -7,6 +7,8 @@ from __future__ import unicode_literals
 from unittest import TestCase
 import time
 
+from pyrsistent import pmap
+
 try:
     from twisted.python.failure import Failure
 except ImportError:
@@ -279,7 +281,7 @@ class WrittenMessageTests(TestCase):
         L{WrittenMessage.asDict} returns the dictionary that will be serialized
         to the log.
         """
-        contents = {'foo': 'bar'}
+        contents = pmap({'foo': 'bar'})
         message = WrittenMessage(
             timestamp=1,
             task_uuid='unique',
