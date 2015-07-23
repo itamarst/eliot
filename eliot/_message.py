@@ -63,7 +63,7 @@ class Message(object):
             L{eliot.Logger} may choose to serialize the message. If you're
             using L{eliot.MessageType} this will be populated for you.
         """
-        self._contents = contents
+        self._contents = pmap(contents)
         self._serializer = serializer
 
 
@@ -72,16 +72,14 @@ class Message(object):
         Return a new L{Message} with this message's contents plus the
         additional given bindings.
         """
-        contents = self.contents()
-        contents.update(fields)
-        return Message(contents, self._serializer)
+        return Message(dict(self._contents.update(fields)), self._serializer)
 
 
     def contents(self):
         """
         Return a copy of L{Message} contents.
         """
-        return self._contents.copy()
+        return dict(self._contents)
 
 
     def _timestamp(self):
@@ -105,7 +103,7 @@ class Message(object):
             timestamp=self._timestamp(),
             task_uuid=action._identification["task_uuid"],
             task_level=action._nextTaskLevel(),
-            contents=pmap(self._contents),
+            contents=self._contents,
         )
 
 
@@ -139,7 +137,7 @@ class WrittenMessage(PClass):
     @ivar timestamp: The Unix timestamp of when the message was logged.
     @ivar task_uuid: The UUID of the task in which the message was logged.
     @ivar task_level: The L{TaskLevel} of this message appears within the task.
-    @ivar contents: A C{dict}, the message contents without Eliot metadata.
+    @ivar contents: A C{pmap}, the message contents without Eliot metadata.
     """
 
     timestamp = field()
