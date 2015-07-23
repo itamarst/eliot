@@ -4,9 +4,10 @@ Log messages and related utilities.
 
 from __future__ import unicode_literals
 
-from collections import namedtuple
 import time
 from uuid import uuid4
+
+from pyrsistent import PClass, field
 
 
 class Message(object):
@@ -131,8 +132,7 @@ class Message(object):
 
 
 
-class WrittenMessage(namedtuple('WrittenMessage', (
-        'timestamp', 'task_uuid', 'task_level', 'contents'))):
+class WrittenMessage(PClass):
     """
     A L{Message} that has been logged.
 
@@ -141,6 +141,11 @@ class WrittenMessage(namedtuple('WrittenMessage', (
     @ivar task_level: The L{TaskLevel} of this message appears within the task.
     @ivar contents: A C{dict}, the message contents without Eliot metadata.
     """
+
+    timestamp = field()
+    task_uuid = field()
+    task_level = field()
+    contents = field()
 
     @classmethod
     def fromDict(cls, loggedDictionary):
