@@ -125,7 +125,7 @@ class Message(object):
         if logger is None:
             logger = _output._DEFAULT_LOGGER
         logged = self._freeze(action=action)
-        logger.write(logged.asDict(), self._serializer)
+        logger.write(logged.as_dict(), self._serializer)
         return logged
 
 
@@ -146,14 +146,14 @@ class WrittenMessage(PClass):
     contents = field()
 
     @classmethod
-    def fromDict(cls, loggedDictionary):
+    def from_dict(cls, logged_dictionary):
         """
         Reconstruct a L{WrittenMessage} from a logged dictionary.
 
-        @param loggedDictionary: A dict representing a parsed log entry.
+        @param logged_dictionary: A dict representing a parsed log entry.
         @return: A L{WrittenMessage} for that dictionary.
         """
-        contents = loggedDictionary.copy()
+        contents = logged_dictionary.copy()
         timestamp = contents.pop('timestamp')
         task_uuid = contents.pop('task_uuid')
         task_level = TaskLevel(level=contents.pop('task_level'))
@@ -163,7 +163,7 @@ class WrittenMessage(PClass):
                    contents=pmap(contents))
 
 
-    def asDict(self):
+    def as_dict(self):
         return dict(self.contents.update({
             'timestamp': self.timestamp,
             'task_uuid': self.task_uuid,

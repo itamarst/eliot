@@ -276,9 +276,9 @@ class WrittenMessageTests(TestCase):
     Tests for L{WrittenMessage}.
     """
 
-    def test_asDict(self):
+    def test_as_dict(self):
         """
-        L{WrittenMessage.asDict} returns the dictionary that will be serialized
+        L{WrittenMessage.as_dict} returns the dictionary that will be serialized
         to the log.
         """
         contents = pmap({'foo': 'bar'})
@@ -294,12 +294,12 @@ class WrittenMessageTests(TestCase):
             'task_level': [1],
             'foo': 'bar',
         }
-        self.assertEqual(message.asDict(), expected)
+        self.assertEqual(message.as_dict(), expected)
 
 
-    def test_fromDict(self):
+    def test_from_dict(self):
         """
-        L{WrittenMessage.fromDict} converts a dictionary that has been
+        L{WrittenMessage.from_dict} converts a dictionary that has been
         deserialized from a log into a L{WrittenMessage} object.
         """
         log_entry = {
@@ -308,7 +308,7 @@ class WrittenMessageTests(TestCase):
             'task_level': [1],
             'foo': 'bar',
         }
-        parsed = WrittenMessage.fromDict(log_entry)
+        parsed = WrittenMessage.from_dict(log_entry)
         expected = WrittenMessage(
             timestamp=1,
             task_uuid='unique',
