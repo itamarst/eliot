@@ -270,8 +270,15 @@ class MessageTests(TestCase):
 
 
 class WrittenMessageTests(TestCase):
+    """
+    Tests for L{WrittenMessage}.
+    """
 
     def test_asDict(self):
+        """
+        L{WrittenMessage.asDict} returns the dictionary that will be serialized
+        to the log.
+        """
         contents = {'foo': 'bar'}
         message = WrittenMessage(
             timestamp=1,
@@ -289,6 +296,10 @@ class WrittenMessageTests(TestCase):
 
 
     def test_fromDict(self):
+        """
+        L{WrittenMessage.fromDict} converts a dictionary that has been
+        deserialized from a log into a L{WrittenMessage} object.
+        """
         log_entry = {
             'timestamp': 1,
             'task_uuid': 'unique',
