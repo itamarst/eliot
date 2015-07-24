@@ -72,7 +72,7 @@ class Message(object):
         Return a new L{Message} with this message's contents plus the
         additional given bindings.
         """
-        return Message(dict(self._contents.update(fields)), self._serializer)
+        return Message(self._contents.update(fields), self._serializer)
 
 
     def contents(self):
