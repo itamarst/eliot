@@ -644,6 +644,29 @@ class ToFileTests(TestCase):
             [message1, message2])
 
 
+    def test_filedestination_flushes(self):
+        """
+        L{FileDestination} flushes after every write, to ensure logs get
+        written out even if the local buffer hasn't filed up.
+        """
+        class CustomException(Exception):
+            pass
+
+        def flush():
+            raise CustomException
+
+        message1 = {"x": 123}
+        bytes_f = BytesIO()
+        bytes_f.flush = flush
+        destination = FileDestination(file=bytes_f)
+        with self.assertRaises(CustomException):
+            destination(message1)
+
+        self.assertEqual(
+            [json.loads(line) for line in bytes_f.getvalue().splitlines()],
+            [message1])
+
+
     @skipIf(PY2, "Python 2 files always accept bytes")
     def test_filedestination_writes_json_unicode(self):
         """
