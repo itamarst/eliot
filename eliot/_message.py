@@ -93,6 +93,10 @@ class Message(object):
         """
         Freeze this message for logging, registering it with C{action}.
 
+        @param action: The L{Action} which is the context for this message. If
+            C{None}, the L{Action} will be deduced from the current call
+            stack.
+
         @return: A L{PMap} with added C{timestamp}, C{task_uuid}, and
             C{task_level} entries.
         """
