@@ -8,18 +8,6 @@ to_file(stdout)
 class Person(object):
     def __init__(self, name):
         self.name = name
-        self.seen = set()
-
-    def look(self, thing):
-        Message.log(message_type="person:look",
-                    person=unicode(self),
-                    at=unicode(thing))
-        self.seen.add(thing)
-
-
-class Thing(object):
-    def __init__(self, name):
-        self.name = name
 
 
 class Place(object):
@@ -27,25 +15,22 @@ class Place(object):
         self.name = name
         self.contained = contained
 
-    def travel(self, person):
-        Message.log(message_type="place:travel",
+    def visited(self, person):
+        Message.log(message_type="place:visited",
                     person=person.name,
                     place=self.name)
         for thing in self.contained:
-            if isinstance(thing, Place):
-                thing.travel(person)
-            else:
-                person.look(thing)
+            thing.visited(person)
 
 
 def honeymoon(family):
     Message.log(message_type="honeymoon",
                 family=[person.name for person in family])
     rome = Place("Rome, Italy", [Place("Vatican Museum",
-                                       [Thing("Statue #1"),
-                                        Thing("Statue #2")])])
+                                       [Place("Statue #1"),
+                                        Place("Statue #2")])])
     for person in family:
-        rome.travel(person)
+        rome.visited(person)
 
 
 if __name__ == '__main__':
