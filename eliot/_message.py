@@ -91,21 +91,20 @@ class Message(object):
 
     def _freeze(self, action=None):
         """
-        Freeze this message for logging, registring it with C{action}.
+        Freeze this message for logging, registering it with C{action}.
 
-        @rtype: L{WrittenMessage}
+        @return: A L{PMap} with added C{timestamp}, C{task_uuid}, and
+            C{task_level} entries.
         """
         if action is None:
             action = currentAction()
         if action is None:
             action = _defaultAction
-        return WrittenMessage(
-            timestamp=self._timestamp(),
-            task_uuid=action._identification["task_uuid"],
-            task_level=action._nextTaskLevel(),
-            contents=self._contents,
-        )
-
+        return self._contents.update({
+            'timestamp': self._timestamp(),
+            'task_uuid': action._identification['task_uuid'],
+            'task_level': action._nextTaskLevel().level
+        })
 
     def write(self, logger=None, action=None):
         """
@@ -124,9 +123,9 @@ class Message(object):
         """
         if logger is None:
             logger = _output._DEFAULT_LOGGER
-        logged = self._freeze(action=action)
-        logger.write(logged.as_dict(), self._serializer)
-        return logged
+        logged_dict = self._freeze(action=action)
+        logger.write(dict(logged_dict), self._serializer)
+        return WrittenMessage.from_dict(logged_dict)
 
 
 
@@ -134,33 +133,53 @@ class WrittenMessage(PClass):
     """
     A L{Message} that has been logged.
 
-    @ivar timestamp: The Unix timestamp of when the message was logged.
-    @ivar task_uuid: The UUID of the task in which the message was logged.
-    @ivar task_level: The L{TaskLevel} of this message appears within the task.
-    @ivar contents: A C{pmap}, the message contents without Eliot metadata.
+    @ivar _logged_dict: The originally logged dictionary.
     """
 
-    timestamp = field()
-    task_uuid = field()
-    task_level = field()
-    contents = field()
+    _logged_dict = field()
+
+    @property
+    def timestamp(self):
+        """
+        The Unix timestamp of when the message was logged.
+        """
+        return self._logged_dict['timestamp']
+
+
+    @property
+    def task_uuid(self):
+        """
+        The UUID of the task in which the message was logged.
+        """
+        return self._logged_dict['task_uuid']
+
+
+    @property
+    def task_level(self):
+        """
+        The L{TaskLevel} of this message appears within the task.
+        """
+        return TaskLevel(level=self._logged_dict['task_level'])
+
+
+    @property
+    def contents(self):
+        """
+        A C{PMap}, the message contents without Eliot metadata.
+        """
+        return self._logged_dict.discard(
+            'timestamp').discard('task_uuid').discard('task_level')
+
 
     @classmethod
     def from_dict(cls, logged_dictionary):
         """
         Reconstruct a L{WrittenMessage} from a logged dictionary.
 
-        @param logged_dictionary: A dict representing a parsed log entry.
+        @param logged_dictionary: A C{PMap} representing a parsed log entry.
         @return: A L{WrittenMessage} for that dictionary.
         """
-        contents = logged_dictionary.copy()
-        timestamp = contents.pop('timestamp')
-        task_uuid = contents.pop('task_uuid')
-        task_level = TaskLevel(level=contents.pop('task_level'))
-        return cls(timestamp=timestamp,
-                   task_uuid=task_uuid,
-                   task_level=task_level,
-                   contents=pmap(contents))
+        return cls(_logged_dict=logged_dictionary)
 
 
     def as_dict(self):
@@ -169,11 +188,7 @@ class WrittenMessage(PClass):
 
         @return: A C{dict}, as might be logged by Eliot.
         """
-        return dict(self.contents.update({
-            'timestamp': self.timestamp,
-            'task_uuid': self.task_uuid,
-            'task_level': self.task_level.level,
-        }))
+        return self._logged_dict
 
 
 

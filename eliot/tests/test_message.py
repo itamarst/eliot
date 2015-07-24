@@ -210,12 +210,7 @@ class MessageTests(TestCase):
         msg = Message.new(key=2)
         result = msg.write(logger, action)
         written = logger.messages[0]
-        expected = WrittenMessage(
-            timestamp=written['timestamp'],
-            task_uuid=written['task_uuid'],
-            task_level=TaskLevel(level=written['task_level']),
-            contents={'key': 2},
-        )
+        expected = WrittenMessage.from_dict(written)
         self.assertEqual(result, expected)
 
 
@@ -281,20 +276,13 @@ class WrittenMessageTests(TestCase):
         L{WrittenMessage.as_dict} returns the dictionary that will be serialized
         to the log.
         """
-        contents = pmap({'foo': 'bar'})
-        message = WrittenMessage(
-            timestamp=1,
-            task_uuid='unique',
-            task_level=TaskLevel(level=[1]),
-            contents=contents,
-        )
-        expected = {
+        log_entry = pmap({
             'timestamp': 1,
             'task_uuid': 'unique',
             'task_level': [1],
             'foo': 'bar',
-        }
-        self.assertEqual(message.as_dict(), expected)
+        })
+        self.assertEqual(WrittenMessage.from_dict(log_entry).as_dict(), log_entry)
 
 
     def test_from_dict(self):
@@ -302,17 +290,14 @@ class WrittenMessageTests(TestCase):
         L{WrittenMessage.from_dict} converts a dictionary that has been
         deserialized from a log into a L{WrittenMessage} object.
         """
-        log_entry = {
+        log_entry = pmap({
             'timestamp': 1,
             'task_uuid': 'unique',
             'task_level': [1],
             'foo': 'bar',
-        }
+        })
         parsed = WrittenMessage.from_dict(log_entry)
-        expected = WrittenMessage(
-            timestamp=1,
-            task_uuid='unique',
-            task_level=TaskLevel(level=[1]),
-            contents={'foo': 'bar'},
-        )
-        self.assertEqual(parsed, expected)
+        self.assertEqual(parsed.timestamp, 1)
+        self.assertEqual(parsed.task_uuid, 'unique')
+        self.assertEqual(parsed.task_level, TaskLevel(level=[1]))
+        self.assertEqual(parsed.contents, pmap({'foo': 'bar'}))
