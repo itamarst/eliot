@@ -199,21 +199,6 @@ class MessageTests(TestCase):
                           "key": 2})
 
 
-    def test_writeReturnsWrittenMessage(self):
-        """
-        L{Message.write} returns an object representing the message that it
-        logged.
-        """
-        logger = MemoryLogger()
-        action = Action(logger, "unique", TaskLevel(level=[]),
-                        "sys:thename")
-        msg = Message.new(key=2)
-        result = msg.write(logger, action)
-        written = logger.messages[0]
-        expected = WrittenMessage.from_dict(written)
-        self.assertEqual(result, expected)
-
-
     def test_actionCounter(self):
         """
         Each message written within the context of an L{Action} gets its

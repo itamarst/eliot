@@ -125,7 +125,6 @@ class Message(object):
             logger = _output._DEFAULT_LOGGER
         logged_dict = self._freeze(action=action)
         logger.write(dict(logged_dict), self._serializer)
-        return WrittenMessage.from_dict(logged_dict)
 
 
 
