@@ -4,8 +4,15 @@ What's New
 0.8.0
 ^^^^^
 
+Features:
+
 * ``Message.log`` will log a new message, combining the existing ``Message.new`` and ``Message.write``.
 * The logs written with ``redirectLogsForTrial`` are now written in JSON format, rather than with ``pformat``.
+
+Bug fixes:
+
+* ``FileDestination`` will now call ``flush()`` on the given file object after writing the log message.
+  Previously log messages would not end up being written out until the file buffer filled up.
 
 0.7.0
 ^^^^^
