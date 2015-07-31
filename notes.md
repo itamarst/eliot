@@ -37,7 +37,7 @@
 * `task_uuid` :: uuid4
 * `task_level` :: `TaskLevel`
 * `messages` :: list of messages / actions
-* `status` :: "started" | "succeeded" | "finished"
+* `status` :: "started" | "succeeded" | "failed"
 
 ### Task
 
