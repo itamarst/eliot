@@ -112,13 +112,45 @@ class TaskLevel(object):
         return "/" + "/".join(map(unicode, self.level))
 
 
+    def next(self):
+        """
+        Return the next L{TaskLevel}.
+
+        @return: L{TaskLevel} which follows this one.
+        """
+        return TaskLevel(level=self.level.set(-1, self.level[-1] + 1))
+
+
+    def child(self, level=1):
+        """
+        Return a child of this L{TaskLevel}.
+
+        @param int level: Which child to return. Defaults to 1, the first
+            child.
+        @return: L{TaskLevel} which is a child of this one.
+        """
+        return TaskLevel(level=self.level.append(level))
+
+
+    def parent(self):
+        """
+        Return the parent of this L{TaskLevel}, or C{None} if it doesn't have
+        one.
+
+        @return: L{TaskLevel} which is the parent of this one.
+        """
+        if not self.level:
+            return None
+        return TaskLevel(level=self.level[:-1])
+
+
     def nextChild(self):
         """
         Return the next child L{TaskLevel}.
 
         @return: L{TaskLevel} which is child of this one.
         """
-        return TaskLevel(level=self.level.append(next(self._numberOfMessages) + 1))
+        return self.child(next(self._numberOfMessages) + 1)
 
 
     # PEP 8 compatibility:
@@ -177,6 +209,7 @@ class Action(object):
                  DeprecationWarning, stacklevel=2)
             task_level = TaskLevel.fromString(task_level)
         self._task_level = task_level
+        self._last_child = None
         self._identification = {"task_uuid": task_uuid,
                                 "action_type": action_type,
                                 }
@@ -231,7 +264,11 @@ class Action(object):
 
         @return: The message's C{task_level}.
         """
-        return self._task_level.nextChild()
+        if not self._last_child:
+            self._last_child = self._task_level.child()
+        else:
+            self._last_child = self._last_child.next()
+        return self._last_child
 
 
     def _start(self, fields):

@@ -8,6 +8,9 @@ from unittest import TestCase
 from threading import Thread
 from warnings import catch_warnings, simplefilter
 
+from hypothesis import given
+from hypothesis.strategies import integers, lists
+
 from .._action import (
     Action, _ExecutionContext, currentAction, startTask, startAction,
     TaskLevel)
@@ -724,9 +727,9 @@ class SerializationTests(TestCase):
         incremented task level.
         """
         action = Action(None, "uniq123", TaskLevel(level=[1, 2]), "mytype")
-        self.assertEqual([action._task_level.nextChild(),
+        self.assertEqual([action._nextTaskLevel(),
                           action.serializeTaskId(),
-                          action._task_level.nextChild()],
+                          action._nextTaskLevel()],
                          [TaskLevel(level=[1, 2, 1]),
                           b"uniq123@/1/2/2",
                           TaskLevel(level=[1, 2, 3])])
@@ -791,6 +794,9 @@ class SerializationTests(TestCase):
         self.assertRaises(RuntimeError, Action.continueTask)
 
 
+TASK_LEVELS = integers(min_value=1)
+
+
 class TaskLevelTests(TestCase):
     """
     Tests for L{TaskLevel}.
@@ -811,6 +817,34 @@ class TaskLevelTests(TestCase):
                          [TaskLevel(level=[1]), TaskLevel(level=[2]),
                           TaskLevel(level=[3, 1]), TaskLevel(level=[3, 2]),
                           TaskLevel(level=[4])])
+
+
+    @given(lists(TASK_LEVELS), TASK_LEVELS)
+    def test_parent_of_child(self, base_task_level, child_level):
+        """
+        L{TaskLevel.child} returns a child task, defaulting to the first child.
+        """
+        base_task = TaskLevel(level=base_task_level)
+        child_task = base_task.child(child_level)
+        self.assertEqual(base_task, child_task.parent())
+
+
+    @given(lists(TASK_LEVELS, min_size=1))
+    def test_next(self, task_level):
+        """
+        L{TaskLevel.next} returns the next sibling of a task.
+        """
+        task = TaskLevel(level=task_level)
+        sibling = task.next()
+        self.assertEqual(
+            sibling, TaskLevel(level=task_level[:-1] + [task_level[-1] + 1]))
+
+
+    def test_parent_of_root(self):
+        """
+        L{TaskLevel.parent} of the root task level is C{None}.
+        """
+        self.assertIs(TaskLevel(level=[]).parent(), None)
 
 
     def test_toString(self):

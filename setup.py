@@ -49,6 +49,8 @@ setup(
         "dev": [
             # Allows us to measure code coverage:
             "coverage",
+            # Bug-seeking missile:
+            "hypothesis",
         ]
     },
     keywords="logging",
