@@ -13,8 +13,6 @@ from itertools import count
 from contextlib import contextmanager
 from warnings import warn
 
-from characteristic import attributes
-
 from six import text_type as unicode
 
 from ._message import Message
@@ -68,7 +66,6 @@ currentAction = _context.current
 
 
 
-@attributes(["level"])
 class TaskLevel(object):
     """
     The location of a message within the tree of actions of a task.
@@ -81,9 +78,16 @@ class TaskLevel(object):
     @ivar _numberOfMessages: The number of messages created in the context of
         an action.
     """
-    def __init__(self):
+
+    def __init__(self, level):
+        self.level = level
         self._numberOfMessages = iter(count())
 
+    def __eq__(self, other):
+        return self.level == other.level
+
+    def __ne__(self, other):
+        return not (self == other)
 
     @classmethod
     def fromString(cls, string):
