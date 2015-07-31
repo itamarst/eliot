@@ -13,6 +13,8 @@ from itertools import count
 from contextlib import contextmanager
 from warnings import warn
 
+from pyrsistent import pvector
+
 from six import text_type as unicode
 
 from ._message import Message
@@ -70,7 +72,7 @@ class TaskLevel(object):
     """
     The location of a message within the tree of actions of a task.
 
-    @ivar level: A list of integers. Each item indicates a child
+    @ivar level: A pvector of integers. Each item indicates a child
         relationship, and the value indicates message count. E.g. C{[2,
         3]} indicates this is the third message within an action which is
         the second item in the task.
@@ -80,7 +82,7 @@ class TaskLevel(object):
     """
 
     def __init__(self, level):
-        self.level = level
+        self.level = pvector(level)
         self._numberOfMessages = iter(count())
 
     def __eq__(self, other):
@@ -98,7 +100,7 @@ class TaskLevel(object):
 
         @return: L{TaskLevel} parsed from the string.
         """
-        return cls(level=[int(i) for i in string.split("/") if i])
+        return cls(level=pvector([int(i) for i in string.split("/") if i]))
 
 
     def toString(self):
@@ -116,7 +118,7 @@ class TaskLevel(object):
 
         @return: L{TaskLevel} which is child of this one.
         """
-        return TaskLevel(level=self.level + [next(self._numberOfMessages) + 1])
+        return TaskLevel(level=self.level.append(next(self._numberOfMessages) + 1))
 
 
     # PEP 8 compatibility:
