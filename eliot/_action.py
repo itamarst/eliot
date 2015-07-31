@@ -13,7 +13,7 @@ from itertools import count
 from contextlib import contextmanager
 from warnings import warn
 
-from pyrsistent import pvector
+from pyrsistent import PClass, pvector, pvector_field
 
 from six import text_type as unicode
 
@@ -68,7 +68,7 @@ currentAction = _context.current
 
 
 
-class TaskLevel(object):
+class TaskLevel(PClass):
     """
     The location of a message within the tree of actions of a task.
 
@@ -78,17 +78,7 @@ class TaskLevel(object):
         the second item in the task.
     """
 
-    def __init__(self, level):
-        self.level = pvector(level)
-
-    def __eq__(self, other):
-        return self.level == other.level
-
-    def __ne__(self, other):
-        return not (self == other)
-
-    def __repr__(self):
-        return 'TaskLevel<level=%r>' % (self.level,)
+    level = pvector_field(int)
 
     @classmethod
     def fromString(cls, string):
