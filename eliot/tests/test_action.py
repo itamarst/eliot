@@ -801,23 +801,6 @@ class TaskLevelTests(TestCase):
     """
     Tests for L{TaskLevel}.
     """
-    def test_nextChild(self):
-        """
-        L{TaskLevel.nextChild} increments a counter and adds it to the current
-        level.
-        """
-        root = TaskLevel(level=[])
-        child1 = root.nextChild()
-        child2 = root.nextChild()
-        child3 = root.nextChild()
-        child3_1 = child3.nextChild()
-        child3_2 = child3.nextChild()
-        child4 = root.nextChild()
-        self.assertEqual([child1, child2, child3_1, child3_2, child4],
-                         [TaskLevel(level=[1]), TaskLevel(level=[2]),
-                          TaskLevel(level=[3, 1]), TaskLevel(level=[3, 2]),
-                          TaskLevel(level=[4])])
-
 
     @given(lists(TASK_LEVELS), TASK_LEVELS)
     def test_parent_of_child(self, base_task_level, child_level):
@@ -852,8 +835,7 @@ class TaskLevelTests(TestCase):
         L{TaskLevel.toString} serializes the object to a Unicode string.
         """
         root = TaskLevel(level=[])
-        root.nextChild()
-        child2_1 = root.nextChild().nextChild()
+        child2_1 = root.child().next().child()
         self.assertEqual([root.toString(), child2_1.toString()],
                          ["/", "/2/1"])
 
@@ -879,10 +861,3 @@ class TaskLevelTests(TestCase):
         L{TaskLevel.to_string} is the same as as L{TaskLevel.toString}.
         """
         self.assertEqual(TaskLevel.to_string, TaskLevel.toString)
-
-
-    def test_next_child(self):
-        """
-        L{TaskLevel.next_child} is the same as as L{TaskLevel.nextChild}.
-        """
-        self.assertEqual(TaskLevel.next_child, TaskLevel.nextChild)

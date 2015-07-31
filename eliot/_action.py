@@ -76,20 +76,19 @@ class TaskLevel(object):
         relationship, and the value indicates message count. E.g. C{[2,
         3]} indicates this is the third message within an action which is
         the second item in the task.
-
-    @ivar _numberOfMessages: The number of messages created in the context of
-        an action.
     """
 
     def __init__(self, level):
         self.level = pvector(level)
-        self._numberOfMessages = iter(count())
 
     def __eq__(self, other):
         return self.level == other.level
 
     def __ne__(self, other):
         return not (self == other)
+
+    def __repr__(self):
+        return 'TaskLevel<level=%r>' % (self.level,)
 
     @classmethod
     def fromString(cls, string):
@@ -144,19 +143,9 @@ class TaskLevel(object):
         return TaskLevel(level=self.level[:-1])
 
 
-    def nextChild(self):
-        """
-        Return the next child L{TaskLevel}.
-
-        @return: L{TaskLevel} which is child of this one.
-        """
-        return self.child(next(self._numberOfMessages) + 1)
-
-
     # PEP 8 compatibility:
     from_string = fromString
     to_string = toString
-    next_child = nextChild
 
 
 _TASK_ID_NOT_SUPPLIED = object()
