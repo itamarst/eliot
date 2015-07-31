@@ -813,9 +813,9 @@ class TaskLevelTests(TestCase):
 
 
     @given(lists(TASK_LEVELS, min_size=1))
-    def test_next(self, task_level):
+    def test_next_sibling(self, task_level):
         """
-        L{TaskLevel.next} returns the next sibling of a task.
+        L{TaskLevel.next_sibling} returns the next sibling of a task.
         """
         task = TaskLevel(level=task_level)
         sibling = task.next_sibling()
