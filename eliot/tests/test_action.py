@@ -818,7 +818,7 @@ class TaskLevelTests(TestCase):
         L{TaskLevel.next} returns the next sibling of a task.
         """
         task = TaskLevel(level=task_level)
-        sibling = task.next()
+        sibling = task.next_sibling()
         self.assertEqual(
             sibling, TaskLevel(level=task_level[:-1] + [task_level[-1] + 1]))
 
@@ -835,7 +835,7 @@ class TaskLevelTests(TestCase):
         L{TaskLevel.toString} serializes the object to a Unicode string.
         """
         root = TaskLevel(level=[])
-        child2_1 = root.child().next().child()
+        child2_1 = root.child().next_sibling().child()
         self.assertEqual([root.toString(), child2_1.toString()],
                          ["/", "/2/1"])
 

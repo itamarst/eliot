@@ -101,9 +101,10 @@ class TaskLevel(PClass):
         return "/" + "/".join(map(unicode, self.level))
 
 
-    def next(self):
+    def next_sibling(self):
         """
-        Return the next L{TaskLevel}.
+        Return the next L{TaskLevel}, that is a task at the same level as this
+        one, but one after.
 
         @return: L{TaskLevel} which follows this one.
         """
@@ -246,7 +247,7 @@ class Action(object):
         if not self._last_child:
             self._last_child = self._task_level.child()
         else:
-            self._last_child = self._last_child.next()
+            self._last_child = self._last_child.next_sibling()
         return self._last_child
 
 
