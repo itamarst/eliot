@@ -80,6 +80,21 @@ class TaskLevel(PClass):
 
     level = pvector_field(int)
 
+    # PClass really ought to provide this ordering facility for us:
+    # tobgu/pyrsistent#45.
+
+    def __lt__(self, other):
+        return self.level < other.level
+
+    def __le__(self, other):
+        return self.level <= other.level
+
+    def __gt__(self, other):
+        return self.level > other.level
+
+    def __ge__(self, other):
+        return self.level >= other.level
+
     @classmethod
     def fromString(cls, string):
         """

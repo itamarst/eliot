@@ -802,6 +802,32 @@ class TaskLevelTests(TestCase):
     Tests for L{TaskLevel}.
     """
 
+    def assert_fully_less_than(self, x, y):
+        """
+        Assert that x < y according to all the comparison operators.
+        """
+        self.assertTrue(all([
+            # lt
+            x < y,
+            not y < x,
+            # le
+            x <= y,
+            not y <= x,
+            # gt
+            y > x,
+            not x > y,
+            # ge
+            y >= x,
+            not x >= y,
+            # eq
+            not x == y,
+            not y == x,
+            # ne
+            x != y,
+            y != x,
+        ]))
+
+
     @given(lists(TASK_LEVELS), TASK_LEVELS)
     def test_parent_of_child(self, base_task_level, child_level):
         """
@@ -810,6 +836,24 @@ class TaskLevelTests(TestCase):
         base_task = TaskLevel(level=base_task_level)
         child_task = base_task.child(child_level)
         self.assertEqual(base_task, child_task.parent())
+
+
+    @given(lists(TASK_LEVELS, min_size=1), TASK_LEVELS)
+    def test_child_greater_than_parent(self, task_level, child_level):
+        """
+        L{TaskLevel.child} returns a child that is greater than its parent.
+        """
+        task = TaskLevel(level=task_level)
+        self.assert_fully_less_than(task, task.child(child_level))
+
+
+    @given(lists(TASK_LEVELS, min_size=1))
+    def test_next_sibling_greater(self, task_level):
+        """
+        L{TaskLevel.next_sibling} returns a greater task level.
+        """
+        task = TaskLevel(level=task_level)
+        self.assert_fully_less_than(task, task.next_sibling())
 
 
     @given(lists(TASK_LEVELS, min_size=1))
