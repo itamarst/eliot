@@ -15,13 +15,13 @@ class Place(object):
             thing.visited(person)
 
 
-def honeymoon(family):
+def honeymoon(family, destination):
     Message.log(message_type="honeymoon", family=family)
-    rome = Place("Rome, Italy",
-                 [Place("Vatican Museum",
-                        [Place("Statue #1"), Place("Statue #2")])])
     for person in family:
-        rome.visited(person)
+        destination.visited(person)
 
 
-honeymoon(["Mrs. Casaubon", "Mr. Casaubon"])
+honeymoon(["Mrs. Casaubon", "Mr. Casaubon"],
+          Place("Rome, Italy",
+                [Place("Vatican Museum",
+                       [Place("Statue #1"), Place("Statue #2")])]))
