@@ -14,22 +14,6 @@ An action's parent is deduced from the Python call stack and context managers li
 Log messages will also note the action they are part of if they can deduce it from the call stack.
 The result of all this is that you can trace the operation of your code as it logs various actions, and see a narrative of what happened and what caused it to happen.
 
-Tasks: Top-level Actions
-------------------------
-
-A top-level action with no parent is called a task, the root cause of all its child actions.
-E.g. a web server receiving a new HTTP request would create a task for that new request.
-Log messages emitted from Eliot are therefore logically structured as a forest: trees of actions with tasks at the root.
-
-While the logical structure of log messages is a forest, the actual output is effectively a list of dictionaries (e.g. a series of JSON messages written to a file).
-To bridge the gap between the two structures each output message contains enough information to recreate the logical relationship between it and other messages:
-
-1. The task, identified using a UUID.
-2. The specific action within that task's action tree.
-3. A per-action counter that is incremented for each new output message directly within that action.
-
-See the :doc:`Fields <fields>` documentation for more details about the way these fields define a tree structure.
-
 Logging Actions
 ---------------
 
@@ -52,8 +36,52 @@ Again, this should be a logical name.
 
 Note that all code called within this block is within the context of this action.
 While running the block of code within the ``with`` statement new actions created with ``start_action`` will get the top-level ``start_action`` as their parent.
-If there is no parent the action will be considered a task.
+
+
+Tasks: Top-level Actions
+------------------------
+
+A top-level action with no parent is called a task, the root cause of all its child actions.
+E.g. a web server receiving a new HTTP request would create a task for that new request.
+Log messages emitted from Eliot are therefore logically structured as a forest: trees of actions with tasks at the root.
 If you want to ignore the context and create a top-level task you can use the ``eliot.start_task`` API.
+
+
+.. _task fields:
+
+From Actions to Messages
+------------------------
+
+While the logical structure of log messages is a forest of actions, the actual output is effectively a list of dictionaries (e.g. a series of JSON messages written to a file).
+To bridge the gap between the two structures each output message contains special fields expressing the logical relationship between it and other messages:
+
+* ``task_uuid``: The unique identifier of the task (top-level action) the message is part of.
+* ``task_level``: The specific location of this message within the task's tree of actions.
+  For example, ``[3, 2, 4]`` indicates the message is the 4th child of the 2nd child of the 3rd child of the task.
+
+Consider the following code sample:
+
+.. code-block:: python
+
+     from eliot import start_action, start_task, Message
+
+     with start_task(action_type="parent"):
+         Message.log(message_type="info", x=1)
+         with start_action(action_type="child"):
+             Message.log(message_type="info", x=2)
+         raise RuntimeError("ono")
+
+All these messages will share the same UUID in their ``task_uuid`` field, since they are all part of the same high-level task.
+If you sort the resulting messages by their ``task_level`` you will get the tree of messages:
+
+.. code::
+
+    task_level=[1] action_type="parent" action_status="started"
+    task_level=[2] message_type="info" x=1
+        task_level=[3, 1] action_type="child" action_status="started"
+        task_level=[3, 2] message_type="info" x=2
+        task_level=[3, 3] action_type="child" action_status="succeeded"
+    task_level=[4] action_type="parent" action_status="failed" exception="exceptions.RuntimeError" reason="ono"
 
 
 Non-Finishing Contexts
