@@ -67,7 +67,7 @@ _traceback_no_io = _get_traceback_no_io()
 
 
 
-def writeTraceback(logger, system=None):
+def writeTraceback(logger=None, system=None):
     """
     Write the latest traceback to the log.
 
@@ -88,7 +88,7 @@ def writeTraceback(logger, system=None):
 
 
 
-def writeFailure(failure, logger, system=None):
+def writeFailure(failure, logger=None, system=None):
     """
     Write a L{twisted.python.failure.Failure} to the log.
 

@@ -5,7 +5,9 @@ What's New
 ^^^^^
 
 * ``Message.log`` will log a new message, combining the existing ``Message.new`` and ``Message.write``.
+* ``write_traceback`` and ``writeFailure`` no longer require a ``Logger``; they now default to using the global one.
 * The logs written with ``redirectLogsForTrial`` are now written in JSON format, rather than with ``pformat``.
+
 
 0.7.0
 ^^^^^
