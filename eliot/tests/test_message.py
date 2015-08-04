@@ -7,12 +7,14 @@ from __future__ import unicode_literals
 from unittest import TestCase
 import time
 
+from pyrsistent import pmap
+
 try:
     from twisted.python.failure import Failure
 except ImportError:
     Failure = None
 
-from .._message import Message, _defaultAction
+from .._message import WrittenMessage, Message, _defaultAction
 from .._output import MemoryLogger
 from .._action import Action, startAction, TaskLevel
 from .. import add_destination, remove_destination
@@ -246,3 +248,41 @@ class MessageTests(TestCase):
         serializer = object()
         msg = Message.new(serializer, x=1)
         self.assertIs(msg._serializer, serializer)
+
+
+
+class WrittenMessageTests(TestCase):
+    """
+    Tests for L{WrittenMessage}.
+    """
+
+    def test_as_dict(self):
+        """
+        L{WrittenMessage.as_dict} returns the dictionary that will be serialized
+        to the log.
+        """
+        log_entry = pmap({
+            'timestamp': 1,
+            'task_uuid': 'unique',
+            'task_level': [1],
+            'foo': 'bar',
+        })
+        self.assertEqual(WrittenMessage.from_dict(log_entry).as_dict(), log_entry)
+
+
+    def test_from_dict(self):
+        """
+        L{WrittenMessage.from_dict} converts a dictionary that has been
+        deserialized from a log into a L{WrittenMessage} object.
+        """
+        log_entry = pmap({
+            'timestamp': 1,
+            'task_uuid': 'unique',
+            'task_level': [1],
+            'foo': 'bar',
+        })
+        parsed = WrittenMessage.from_dict(log_entry)
+        self.assertEqual(parsed.timestamp, 1)
+        self.assertEqual(parsed.task_uuid, 'unique')
+        self.assertEqual(parsed.task_level, TaskLevel(level=[1]))
+        self.assertEqual(parsed.contents, pmap({'foo': 'bar'}))

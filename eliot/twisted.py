@@ -4,9 +4,10 @@ APIs for using Eliot from Twisted.
 
 from __future__ import absolute_import, unicode_literals
 
+import json
 import os
 import sys
-from pprint import pformat
+
 
 from twisted.python import log
 from twisted.python.failure import Failure
@@ -202,7 +203,7 @@ class _RedirectLogsForTrial(object):
         @param message: A rendered Eliot message.
         @type message: L{dict}
         """
-        self._log.msg("ELIOT: " + pformat(message))
+        self._log.msg("ELIOT: " + json.dumps(message))
         if message.get("message_type") == "eliot:traceback":
             self._log.msg("ELIOT Extracted Traceback:\n" + message["traceback"])
 

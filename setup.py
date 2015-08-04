@@ -42,6 +42,8 @@ setup(
         "zope.interface",
         # Struct-like objects:
         "characteristic",
+        # Persistent objects for Python:
+        "pyrsistent",
     ],
     extras_require={
         "dev": [
