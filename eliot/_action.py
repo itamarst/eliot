@@ -13,7 +13,7 @@ from itertools import count
 from contextlib import contextmanager
 from warnings import warn
 
-from pyrsistent import PClass, pvector, pvector_field
+from pyrsistent import PClass, pvector_field
 
 from six import text_type as unicode
 
