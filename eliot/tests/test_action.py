@@ -794,7 +794,7 @@ class SerializationTests(TestCase):
         self.assertRaises(RuntimeError, Action.continueTask)
 
 
-TASK_LEVELS = integers(min_value=1)
+TASK_LEVEL_LISTS = integers(min_value=1)
 
 
 class TaskLevelTests(TestCase):
@@ -828,7 +828,7 @@ class TaskLevelTests(TestCase):
         ]))
 
 
-    @given(lists(TASK_LEVELS))
+    @given(lists(TASK_LEVEL_LISTS))
     def test_parent_of_child(self, base_task_level):
         """
         L{TaskLevel.child} returns the first child of the task.
@@ -838,7 +838,7 @@ class TaskLevelTests(TestCase):
         self.assertEqual(base_task, child_task.parent())
 
 
-    @given(lists(TASK_LEVELS, min_size=1))
+    @given(lists(TASK_LEVEL_LISTS, min_size=1))
     def test_child_greater_than_parent(self, task_level):
         """
         L{TaskLevel.child} returns a child that is greater than its parent.
@@ -847,7 +847,7 @@ class TaskLevelTests(TestCase):
         self.assert_fully_less_than(task, task.child())
 
 
-    @given(lists(TASK_LEVELS, min_size=1))
+    @given(lists(TASK_LEVEL_LISTS, min_size=1))
     def test_next_sibling_greater(self, task_level):
         """
         L{TaskLevel.next_sibling} returns a greater task level.
@@ -856,7 +856,7 @@ class TaskLevelTests(TestCase):
         self.assert_fully_less_than(task, task.next_sibling())
 
 
-    @given(lists(TASK_LEVELS, min_size=1))
+    @given(lists(TASK_LEVEL_LISTS, min_size=1))
     def test_next_sibling(self, task_level):
         """
         L{TaskLevel.next_sibling} returns the next sibling of a task.
