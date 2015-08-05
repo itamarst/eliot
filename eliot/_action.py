@@ -104,7 +104,7 @@ class TaskLevel(PClass):
 
         @return: L{TaskLevel} parsed from the string.
         """
-        return cls(level=pvector([int(i) for i in string.split("/") if i]))
+        return cls(level=[int(i) for i in string.split("/") if i])
 
 
     def toString(self):
