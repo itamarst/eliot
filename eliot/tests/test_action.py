@@ -828,23 +828,23 @@ class TaskLevelTests(TestCase):
         ]))
 
 
-    @given(lists(TASK_LEVELS), TASK_LEVELS)
-    def test_parent_of_child(self, base_task_level, child_level):
+    @given(lists(TASK_LEVELS))
+    def test_parent_of_child(self, base_task_level):
         """
-        L{TaskLevel.child} returns a child task, defaulting to the first child.
+        L{TaskLevel.child} returns the first child of the task.
         """
         base_task = TaskLevel(level=base_task_level)
-        child_task = base_task.child(child_level)
+        child_task = base_task.child()
         self.assertEqual(base_task, child_task.parent())
 
 
-    @given(lists(TASK_LEVELS, min_size=1), TASK_LEVELS)
-    def test_child_greater_than_parent(self, task_level, child_level):
+    @given(lists(TASK_LEVELS, min_size=1))
+    def test_child_greater_than_parent(self, task_level):
         """
         L{TaskLevel.child} returns a child that is greater than its parent.
         """
         task = TaskLevel(level=task_level)
-        self.assert_fully_less_than(task, task.child(child_level))
+        self.assert_fully_less_than(task, task.child())
 
 
     @given(lists(TASK_LEVELS, min_size=1))

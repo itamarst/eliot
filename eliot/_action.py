@@ -126,15 +126,13 @@ class TaskLevel(PClass):
         return TaskLevel(level=self.level.set(-1, self.level[-1] + 1))
 
 
-    def child(self, level=1):
+    def child(self):
         """
         Return a child of this L{TaskLevel}.
 
-        @param int level: Which child to return. Defaults to 1, the first
-            child.
-        @return: L{TaskLevel} which is a child of this one.
+        @return: L{TaskLevel} which is the first child of this one.
         """
-        return TaskLevel(level=self.level.append(level))
+        return TaskLevel(level=self.level.append(1))
 
 
     def parent(self):
