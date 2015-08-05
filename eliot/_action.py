@@ -13,7 +13,7 @@ from itertools import count
 from contextlib import contextmanager
 from warnings import warn
 
-from characteristic import attributes
+from pyrsistent import PClass, pvector_field
 
 from six import text_type as unicode
 
@@ -68,22 +68,32 @@ currentAction = _context.current
 
 
 
-@attributes(["level"])
-class TaskLevel(object):
+class TaskLevel(PClass):
     """
     The location of a message within the tree of actions of a task.
 
-    @ivar level: A list of integers. Each item indicates a child
+    @ivar level: A pvector of integers. Each item indicates a child
         relationship, and the value indicates message count. E.g. C{[2,
         3]} indicates this is the third message within an action which is
         the second item in the task.
-
-    @ivar _numberOfMessages: The number of messages created in the context of
-        an action.
     """
-    def __init__(self):
-        self._numberOfMessages = iter(count())
 
+    level = pvector_field(int)
+
+    # PClass really ought to provide this ordering facility for us:
+    # tobgu/pyrsistent#45.
+
+    def __lt__(self, other):
+        return self.level < other.level
+
+    def __le__(self, other):
+        return self.level <= other.level
+
+    def __gt__(self, other):
+        return self.level > other.level
+
+    def __ge__(self, other):
+        return self.level >= other.level
 
     @classmethod
     def fromString(cls, string):
@@ -106,19 +116,40 @@ class TaskLevel(object):
         return "/" + "/".join(map(unicode, self.level))
 
 
-    def nextChild(self):
+    def next_sibling(self):
         """
-        Return the next child L{TaskLevel}.
+        Return the next L{TaskLevel}, that is a task at the same level as this
+        one, but one after.
 
-        @return: L{TaskLevel} which is child of this one.
+        @return: L{TaskLevel} which follows this one.
         """
-        return TaskLevel(level=self.level + [next(self._numberOfMessages) + 1])
+        return TaskLevel(level=self.level.set(-1, self.level[-1] + 1))
+
+
+    def child(self):
+        """
+        Return a child of this L{TaskLevel}.
+
+        @return: L{TaskLevel} which is the first child of this one.
+        """
+        return TaskLevel(level=self.level.append(1))
+
+
+    def parent(self):
+        """
+        Return the parent of this L{TaskLevel}, or C{None} if it doesn't have
+        one.
+
+        @return: L{TaskLevel} which is the parent of this one.
+        """
+        if not self.level:
+            return None
+        return TaskLevel(level=self.level[:-1])
 
 
     # PEP 8 compatibility:
     from_string = fromString
     to_string = toString
-    next_child = nextChild
 
 
 _TASK_ID_NOT_SUPPLIED = object()
@@ -171,6 +202,7 @@ class Action(object):
                  DeprecationWarning, stacklevel=2)
             task_level = TaskLevel.fromString(task_level)
         self._task_level = task_level
+        self._last_child = None
         self._identification = {"task_uuid": task_uuid,
                                 "action_type": action_type,
                                 }
@@ -225,7 +257,11 @@ class Action(object):
 
         @return: The message's C{task_level}.
         """
-        return self._task_level.nextChild()
+        if not self._last_child:
+            self._last_child = self._task_level.child()
+        else:
+            self._last_child = self._last_child.next_sibling()
+        return self._last_child
 
 
     def _start(self, fields):
