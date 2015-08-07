@@ -64,66 +64,21 @@ The Solution: Eliot
 Eliot is designed to solve all of these problems.
 For simplicity's sake this example focuses on problems 1 and 3; problem 2 is covered by the :ref:`type system <type system>` and problem 4 by :ref:`cross-process actions <cross process tasks>`.
 
-.. code-block:: python
-
-  from __future__ import unicode_literals
-  from eliot import Message
-
-  class Person(object):
-      def __init__(self):
-          self.seen = set()
-
-      def look(self, thing):
-          Message.log(message_type="person:look",
-                      person=unicode(self),
-                      at=unicode(thing))
-          self.seen.add(thing)
-
-
-  class Place(object):
-      def __init__(self, name):
-          self.name = name
-          self.contained = []
-
-      def travel(self, person):
-          Message.log(message_type="place:travel",
-                      person=unicode(person),
-                      place=self.name)
-          for thing in self.contained:
-              if isinstance(thing, Place):
-                  thing.travel(person)
-              else:
-                  person.look(thing)
-
-      @classmethod
-      def load(klass, name):
-          # Load a Place from the database and return it...
-
-
-  def honeymoon(family):
-      Message.log(message_type="honeymoon",
-                  family=[unicode(person) for person in family])
-      rome = Place.load("Rome, Italy")
-      for person in family:
-          rome.travel(person)
+.. literalinclude:: ../../examples/rometrip_messages.py
 
 If we run the honeymoon function we get log messages that trace what happened (for clarity I’ve omitted some fields, e.g. timestamp):
 
 .. code-block:: json
 
-  {"type": "honeymoon", "family": ["Mrs. Casaubon", "Mr. Casaubon"]}
-  {"type": "place:travel", "person": "Mrs. Casaubon",
-   "place": "Rome, Italy"}
-  {"type": "place:travel", "person": "Mrs. Casaubon",
-   "place": "Vatican Museum, Rome, Italy"}
-  {"type": "person:look", "person": "Mrs. Casaubon", "thing": "Statue #1"}
-  {"type": "person:look", "person": "Mrs. Casaubon", "thing": "Statue #2"}
-  {"type": "place:travel", "person": "Mr. Casaubon",
-   "place": "Rome, Italy"}
-  {"type": "place:travel", "person": "Mr. Casaubon",
-   "place": "Vatican Museum, Rome, Italy"}
-  {"type": "person:look", "person": "Mr. Casaubon", "thing": "Statue #1"}
-  {"type": "person:look", "person": "Mr. Casaubon", "thing": "Statue #2"}
+  {"message_type": "honeymoon", "family": ["Mrs. Casaubon", "Mr. Casaubon"]}
+  {"message_type": "place:visited", "person": "Mrs. Casaubon", "place": "Rome, Italy"}
+  {"message_type": "place:visited", "person": "Mrs. Casaubon", "place": "Vatican Museum"}
+  {"message_type": "place:visited", "person": "Mrs. Casaubon", "place": "Statue #1"}
+  {"message_type": "place:visited", "person": "Mrs. Casaubon", "place": "Statue #2"}
+  {"message_type": "place:visited", "person": "Mr. Casaubon", "place": "Rome, Italy"}
+  {"message_type": "place:visited", "person": "Mr. Casaubon", "place": "Vatican Museum"}
+  {"message_type": "place:visited", "person": "Mr. Casaubon", "place": "Statue #1"}
+  {"message_type": "place:visited", "person": "Mr. Casaubon", "place": "Statue #2"}
 
 We can see different messages are related insofar as they refer to the same person, or the same thing… but we can’t trace the relationship in terms of actions. Was looking at a statue the result of the honeymoon? There’s no way we can tell from the log messages. We could manually log start and finish messages but that won’t suffice when we have many interleaved actions involving the same objects. Which of twenty parallel HTTP request tried to insert a row into the database? Chronological messages simply cannot tell us that.
 
@@ -131,91 +86,53 @@ The solution is to introduce two new concepts: actions and tasks. An “action�
 
 In our example we have one task (the honeymoon), an action (travel). We will leave looking as a normal log message because it always succeeds, and no other log message will ever need to run its context. Here’s how our code looks now:
 
-.. code-block:: python
 
-  from __future__ import unicode_literals
-  from eliot import Message, start_action, start_task
-
-  class Person(object):
-      def __init__(self):
-          self.seen = set()
-
-      def look(self, thing):
-          Message.log(message_type="person:look",
-                      person=unicode(self),
-                      at=unicode(thing))
-          self.seen.add(thing)
-
-
-  class Place(object):
-      # __init__ and load unchanged from above.
-
-      def travel(self, person):
-          with start_action("place:travel",
-                           person=unicode(person),
-                           place=self.name):
-              for thing in self.contained:
-                  if isinstance(thing, Place):
-                      thing.travel(person)
-                  else:
-                      person.look(thing)
-
-
-  def honeymoon(family):
-      with start_task("honeymoon",
-                     family=[unicode(person) for person in family]):
-          rome = Place.load("Rome, Italy")
-          for person in family:
-              rome.travel(person)
+.. literalinclude:: ../../examples/rometrip_actions.py
 
 Actions provide a Python context manager. When the action or task starts a start message is logged.
 If the block finishes successfully a success message is logged for the action; if an exception is thrown a failure message is logged for the action with the exception type and contents.
 Not shown here but supported by the API is the ability to add fields to the success messages for an action. A similar API supports Twisted’s Deferreds.
 
-Here’s how the log messages generated by the new code look; I’ve added some indentation to highlight the containment hierarchy which can be easily computed from the message contents:
+Here’s how the log messages generated by the new code look, as summarized by the `eliot-tree <https://warehouse.python.org/project/eliot-tree/>`_ tool:
 
-.. code-block:: json
+.. code::
 
-  {"task_uuid": "45352", "task_level": [1], "action_status": "started",
-   "action_type": "honeymoon", "family": ["Mrs. Casaubon", "Mr. Casaubon"]}
-
-      {"task_uuid": "45352", "task_level": [2, 1], "action_status": "started",
-       "action_type": "place:travel", "person": "Mrs. Casaubon", "place": "Rome, Italy"}
-
-          {"task_uuid": "45352", "task_level": [2, 2, 1], "action_status": "started",
-           "action_type": "place:travel", "person": "Mrs. Casaubon", "place": "Vatican Museum, Rome, Italy"}
-
-          {"task_uuid": "45352", "task_level": [2, 2, 2],
-           "message_type": "person:look", "person": "Mrs. Casaubon", "thing": "Statue #1"}
-
-          {"task_uuid": "45352", "task_level": [2, 2, 3],
-           "message_type": "person:look", "person": "Mrs. Casaubon", "thing": "Statue #2"}
-
-          {"task_uuid": "45352", "task_level": [2, 2, 4], "action_status": "succeeded",
-           "action_type": "place:travel"}
-
-      {"task_uuid": "45352", "task_level": [2, 3], "action_status": "succeeded",
-       "action_type": "place:travel"}
-
-      {"task_uuid": "45352", "task_level": [3, 1], "action_status": "started",
-       "action_type": "place:travel", "person": "Mr. Casaubon", "place": "Rome, Italy"}
-
-          {"task_uuid": "45352", "task_level": [3, 2, 1], "action_status": "started",
-           "action_type": "place:travel", "person": "Mr. Casaubon", "place": "Vatican Museum, Rome, Italy"}
-
-          {"task_uuid": "45352", "task_level": [3, 2, 2],
-           "message_type": "person:look", "person": "Mr. Casaubon", "thing": "Statue #1"}
-
-          {"task_uuid": "45352", "task_level": [3, 2, 3],
-           "message_type": "person:look", "person": "Mr. Casaubon", "thing": "Statue #2"}
-
-          {"task_uuid": "45352", "task_level": [3, 2, 4], "action_status": "succeeded",
-           "action_type": "place:travel"}
-
-      {"task_uuid": "45352", "task_level": [3, 3], "action_status": "succeeded",
-       "action_type": "place:travel"}
-
-  {"task_uuid": "45352", "task_level": [4], "action_status": "succeeded",
-   "action_type": "honeymoon"}
+   $ python examples/rometrip_actions.py | eliot-tree
+   ca820da7-21dd-43f0-9046-cc8bb2cbd699
+       +-- honeymoon@1/started
+           |-- family: [u'Mrs. Casaubon', u'Mr. Casaubon']
+       +-- place:visited@2,1/started
+           |-- person: Mrs. Casaubon
+           |-- place: Rome, Italy
+           +-- place:visited@2,2,1/started
+               |-- person: Mrs. Casaubon
+               |-- place: Vatican Museum
+               +-- place:visited@2,2,2,1/started
+                   |-- person: Mrs. Casaubon
+                   |-- place: Statue #1
+                   +-- place:visited@2,2,2,2/succeeded
+               +-- place:visited@2,2,3,1/started
+                   |-- person: Mrs. Casaubon
+                   |-- place: Statue #2
+                   +-- place:visited@2,2,3,2/succeeded
+               +-- place:visited@2,2,4/succeeded
+           +-- place:visited@2,3/succeeded
+       +-- place:visited@3,1/started
+           |-- person: Mr. Casaubon
+           |-- place: Rome, Italy
+           +-- place:visited@3,2,1/started
+               |-- person: Mr. Casaubon
+               |-- place: Vatican Museum
+               +-- place:visited@3,2,2,1/started
+                   |-- person: Mr. Casaubon
+                   |-- place: Statue #1
+                   +-- place:visited@3,2,2,2/succeeded
+               +-- place:visited@3,2,3,1/started
+                   |-- person: Mr. Casaubon
+                   |-- place: Statue #2
+                   +-- place:visited@3,2,3,2/succeeded
+               +-- place:visited@3,2,4/succeeded
+           +-- place:visited@3,3/succeeded
+       +-- honeymoon@4/succeeded
 
 No longer isolated fragments of meaning, our log messages are now a story. Log events have context, you can tell where they came from and what they led to without guesswork. Was looking at a statue the result of the honeymoon? It most definitely was.
