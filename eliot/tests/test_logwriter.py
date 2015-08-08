@@ -68,6 +68,9 @@ class BlockingFile(object):
     def write(self, data):
         with self.lock:
             self.file.write(data)
+
+
+    def flush(self):
         self.data = self.file.getvalue()
 
 

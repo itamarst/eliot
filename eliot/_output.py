@@ -373,7 +373,7 @@ class FileDestination(object):
         @param message: A message dictionary.
         """
         self.file.write(self._dumps(message) + self._linebreak)
-
+        self.file.flush()
 
 
 def to_file(output_file):
