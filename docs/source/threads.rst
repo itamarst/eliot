@@ -32,37 +32,44 @@ For example, let's run the following:
 
 .. code-block:: shell
 
-   $ python examples/cross_process_server.py &
-   $ python examples/cross_process_client.py 5 0
+   $ python examples/cross_process_server.py > server.log
+   $ python examples/cross_process_client.py 5 0 > client.log
 
-Here's what the combined logs from the client and server might look like when sorted by ``task_level`` and formatted to be more readable::
+Here are the resulting combined logs, as visualized by `eliot-tree`_.
+The reason the client received a 500 error code is completely obvious in these logs::
 
-    process='client' task_uuid='40be6df2' task_level=[1] action_type='main'
-        action_status='started'
+  $ cat client.log server.log | eliot-tree
+  1e0be9be-ae56-49ef-9bce-60e850a7db09
+  +-- main@1/started
+      |-- process: client
+      +-- http_request@2,1/started
+          |-- process: client
+          |-- x: 3
+          `-- y: 0
+          +-- eliot:remote_task@2,2,1/started
+              |-- process: server
+              +-- divide@2,2,2,1/started
+                  |-- process: server
+                  |-- x: 3
+                  `-- y: 0
+                  +-- divide@2,2,2,2/failed
+                      |-- exception: exceptions.ZeroDivisionError
+                      |-- process: server
+                      |-- reason: integer division or modulo by zero
+              +-- eliot:remote_task@2,2,3/failed
+                  |-- exception: exceptions.ZeroDivisionError
+                  |-- process: server
+                  |-- reason: integer division or modulo by zero
+          +-- http_request@2,3/failed
+              |-- exception: requests.exceptions.HTTPError
+              |-- process: client
+              |-- reason: 500 Server Error: INTERNAL SERVER ERROR
+      +-- main@3/failed
+          |-- exception: requests.exceptions.HTTPError
+          |-- process: client
+          |-- reason: 500 Server Error: INTERNAL SERVER ERROR
 
-    process='client' task_uuid='40be6df2' task_level=[2, 1] action_type='http_request'
-        action_status='started' x=5 y=0
-
-    process='server' task_uuid='40be6df2' task_level=[2, 2, 1] action_type='eliot:remote_task'
-        action_status='started'
-
-    process='server' task_uuid='40be6df2' task_level=[2, 2, 2, 1] action_type='divide'
-        action_status='started' x=5 y=0
-
-    process='server' task_uuid='40be6df2' task_level=[2, 2, 2, 2] action_type='divide'
-        action_status='failed' exception='exceptions.ZeroDivisionError' reason='integer division or modulo by zero'
-
-    process='server' task_uuid='40be6df2' task_level=[2, 2, 3] action_type='eliot:remote_task'
-        action_status='failed' exception='exceptions.ZeroDivisionError' reason='integer division or modulo by zero'
-
-    process='client' task_uuid='40be6df2' task_level=[2, 3] action_type='http_request'
-       action_status='failed' exception='requests.exception.HTTPError' reason='500 Server Error: INTERNAL SERVER ERROR'
-
-    process='client' task_uuid='40be6df2' task_level=[3] action_type='main'
-       action_status='failed' exception='requests.exception.HTTPError' reason='500 Server Error: INTERNAL SERVER ERROR'
-
-The reason the client received a 500 error code is completely obvious in these logs.
-
+.. _eliot-tree: https://warehouse.python.org/project/eliot-tree/
 
 Cross-Thread Tasks
 ------------------
