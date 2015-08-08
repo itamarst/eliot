@@ -9,6 +9,7 @@ from unittest import TestCase, skipIf
 # Make sure to use StringIO that only accepts unicode:
 from io import BytesIO, StringIO
 import json as pyjson
+from tempfile import mktemp
 
 from six import PY3, PY2
 
@@ -647,23 +648,21 @@ class ToFileTests(TestCase):
     def test_filedestination_flushes(self):
         """
         L{FileDestination} flushes after every write, to ensure logs get
-        written out even if the local buffer hasn't filed up.
+        written out even if the local buffer hasn't filled up.
         """
-        class CustomException(Exception):
-            pass
-
-        def flush():
-            raise CustomException
-
+        path = mktemp()
+        # File with large buffer:
+        f = open(path, "wb", 1024 * 1024 * 10)
+        # and a small message that won't fill the buffer:
         message1 = {"x": 123}
-        bytes_f = BytesIO()
-        bytes_f.flush = flush
-        destination = FileDestination(file=bytes_f)
-        with self.assertRaises(CustomException):
-            destination(message1)
 
+        destination = FileDestination(file=f)
+        destination(message1)
+
+        # Message got written even though buffer wasn't filled:
         self.assertEqual(
-            [json.loads(line) for line in bytes_f.getvalue().splitlines()],
+            [json.loads(line) for line in
+             open(path, "rb").read().splitlines()],
             [message1])
 
 
