@@ -563,7 +563,7 @@ class LoggerTests(TestCase):
         self.assertEqual(
             (task_levels[1][-1] == task_levels[0][-1] + 1,
              task_uuids[0] == task_uuids[1],
-             abs(timestamps[0] + timestamps[1] - 2 * time()) < 0.01,
+             abs(timestamps[0] + timestamps[1] - 2 * time()) < 1,
              messages),
             (True, True, True,
              [message,
