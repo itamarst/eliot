@@ -8,17 +8,16 @@ class Place(object):
         self.name = name
         self.contained = contained
 
-    def visited(self, person):
-        with start_action(action_type="place:visited",
-                          person=person, place=self.name):
+    def visited(self, people):
+        # No need to repetitively log people, since caller will:
+        with start_action(action_type="visited", place=self.name):
             for thing in self.contained:
-                thing.visited(person)
+                thing.visited(people)
 
 
 def honeymoon(family, destination):
-    with start_task(action_type="honeymoon", family=family):
-        for person in family:
-            destination.visited(person)
+    with start_task(action_type="honeymoon", people=family):
+        destination.visited(family)
 
 
 honeymoon(["Mrs. Casaubon", "Mr. Casaubon"],
