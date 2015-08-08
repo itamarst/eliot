@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import time
 from uuid import uuid4
 
-from pyrsistent import PClass, field, pmap
+from pyrsistent import PClass, field, pmap, thaw
 
 
 class Message(object):
@@ -107,7 +107,7 @@ class Message(object):
         return self._contents.update({
             'timestamp': self._timestamp(),
             'task_uuid': action._identification['task_uuid'],
-            'task_level': action._nextTaskLevel().level
+            'task_level': thaw(action._nextTaskLevel().level),
         })
 
     def write(self, logger=None, action=None):

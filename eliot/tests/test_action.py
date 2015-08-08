@@ -8,6 +8,9 @@ from unittest import TestCase
 from threading import Thread
 from warnings import catch_warnings, simplefilter
 
+from hypothesis import given
+from hypothesis.strategies import integers, lists
+
 from .._action import (
     Action, _ExecutionContext, currentAction, startTask, startAction,
     TaskLevel)
@@ -724,9 +727,9 @@ class SerializationTests(TestCase):
         incremented task level.
         """
         action = Action(None, "uniq123", TaskLevel(level=[1, 2]), "mytype")
-        self.assertEqual([action._task_level.nextChild(),
+        self.assertEqual([action._nextTaskLevel(),
                           action.serializeTaskId(),
-                          action._task_level.nextChild()],
+                          action._nextTaskLevel()],
                          [TaskLevel(level=[1, 2, 1]),
                           b"uniq123@/1/2/2",
                           TaskLevel(level=[1, 2, 3])])
@@ -791,26 +794,84 @@ class SerializationTests(TestCase):
         self.assertRaises(RuntimeError, Action.continueTask)
 
 
+TASK_LEVELS = integers(min_value=1)
+
+
 class TaskLevelTests(TestCase):
     """
     Tests for L{TaskLevel}.
     """
-    def test_nextChild(self):
+
+    def assert_fully_less_than(self, x, y):
         """
-        L{TaskLevel.nextChild} increments a counter and adds it to the current
-        level.
+        Assert that x < y according to all the comparison operators.
         """
-        root = TaskLevel(level=[])
-        child1 = root.nextChild()
-        child2 = root.nextChild()
-        child3 = root.nextChild()
-        child3_1 = child3.nextChild()
-        child3_2 = child3.nextChild()
-        child4 = root.nextChild()
-        self.assertEqual([child1, child2, child3_1, child3_2, child4],
-                         [TaskLevel(level=[1]), TaskLevel(level=[2]),
-                          TaskLevel(level=[3, 1]), TaskLevel(level=[3, 2]),
-                          TaskLevel(level=[4])])
+        self.assertTrue(all([
+            # lt
+            x < y,
+            not y < x,
+            # le
+            x <= y,
+            not y <= x,
+            # gt
+            y > x,
+            not x > y,
+            # ge
+            y >= x,
+            not x >= y,
+            # eq
+            not x == y,
+            not y == x,
+            # ne
+            x != y,
+            y != x,
+        ]))
+
+
+    @given(lists(TASK_LEVELS))
+    def test_parent_of_child(self, base_task_level):
+        """
+        L{TaskLevel.child} returns the first child of the task.
+        """
+        base_task = TaskLevel(level=base_task_level)
+        child_task = base_task.child()
+        self.assertEqual(base_task, child_task.parent())
+
+
+    @given(lists(TASK_LEVELS, min_size=1))
+    def test_child_greater_than_parent(self, task_level):
+        """
+        L{TaskLevel.child} returns a child that is greater than its parent.
+        """
+        task = TaskLevel(level=task_level)
+        self.assert_fully_less_than(task, task.child())
+
+
+    @given(lists(TASK_LEVELS, min_size=1))
+    def test_next_sibling_greater(self, task_level):
+        """
+        L{TaskLevel.next_sibling} returns a greater task level.
+        """
+        task = TaskLevel(level=task_level)
+        self.assert_fully_less_than(task, task.next_sibling())
+
+
+    @given(lists(TASK_LEVELS, min_size=1))
+    def test_next_sibling(self, task_level):
+        """
+        L{TaskLevel.next_sibling} returns the next sibling of a task.
+        """
+        task = TaskLevel(level=task_level)
+        sibling = task.next_sibling()
+        self.assertEqual(
+            sibling, TaskLevel(level=task_level[:-1] + [task_level[-1] + 1]))
+
+
+    def test_parent_of_root(self):
+        """
+        L{TaskLevel.parent} of the root task level is C{None}.
+        """
+        self.assertIs(TaskLevel(level=[]).parent(), None)
 
 
     def test_toString(self):
@@ -818,8 +879,7 @@ class TaskLevelTests(TestCase):
         L{TaskLevel.toString} serializes the object to a Unicode string.
         """
         root = TaskLevel(level=[])
-        root.nextChild()
-        child2_1 = root.nextChild().nextChild()
+        child2_1 = root.child().next_sibling().child()
         self.assertEqual([root.toString(), child2_1.toString()],
                          ["/", "/2/1"])
 
@@ -845,10 +905,3 @@ class TaskLevelTests(TestCase):
         L{TaskLevel.to_string} is the same as as L{TaskLevel.toString}.
         """
         self.assertEqual(TaskLevel.to_string, TaskLevel.toString)
-
-
-    def test_next_child(self):
-        """
-        L{TaskLevel.next_child} is the same as as L{TaskLevel.nextChild}.
-        """
-        self.assertEqual(TaskLevel.next_child, TaskLevel.nextChild)
