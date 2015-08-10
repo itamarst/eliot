@@ -17,8 +17,21 @@ from pyrsistent import PClass, pvector_field
 
 from six import text_type as unicode
 
-from ._message import Message
+from ._message import (
+    Message,
+    EXCEPTION_FIELD,
+    REASON_FIELD,
+    TASK_UUID_FIELD,
+)
 from ._util import safeunicode
+
+
+ACTION_STATUS_FIELD = 'action_status'
+ACTION_TYPE_FIELD = 'action_type'
+
+STARTED_STATUS = 'started'
+SUCCEEDED_STATUS = 'succeeded'
+FAILED_STATUS = 'failed'
 
 
 class _ExecutionContext(threading.local):
@@ -203,8 +216,8 @@ class Action(object):
             task_level = TaskLevel.fromString(task_level)
         self._task_level = task_level
         self._last_child = None
-        self._identification = {"task_uuid": task_uuid,
-                                "action_type": action_type,
+        self._identification = {TASK_UUID_FIELD: task_uuid,
+                                ACTION_TYPE_FIELD: action_type,
                                 }
         self._serializers = serializers
         self._finished = False
@@ -218,7 +231,7 @@ class Action(object):
 
         @return: L{bytes} encoding the current location within the task.
         """
-        return "{}@{}".format(self._identification["task_uuid"],
+        return "{}@{}".format(self._identification[TASK_UUID_FIELD],
                               self._nextTaskLevel().toString()).encode("ascii")
 
 
@@ -274,7 +287,7 @@ class Action(object):
         In general you shouldn't call this yourself, instead using a C{with}
         block or L{Action.finish}.
         """
-        fields["action_status"] = "started"
+        fields[ACTION_STATUS_FIELD] = STARTED_STATUS
         fields.update(self._identification)
         if self._serializers is None:
             serializer = None
@@ -304,15 +317,15 @@ class Action(object):
         serializer = None
         if exception is None:
             fields = self._successFields
-            fields["action_status"] = "succeeded"
+            fields[ACTION_STATUS_FIELD] = SUCCEEDED_STATUS
             if self._serializers is not None:
                 serializer = self._serializers.success
         else:
             fields = {}
-            fields["exception"] = "%s.%s" % (exception.__class__.__module__,
+            fields[EXCEPTION_FIELD] = "%s.%s" % (exception.__class__.__module__,
                                              exception.__class__.__name__)
-            fields["reason"] = safeunicode(exception)
-            fields["action_status"] = "failed"
+            fields[REASON_FIELD] = safeunicode(exception)
+            fields[ACTION_STATUS_FIELD] = FAILED_STATUS
             if self._serializers is not None:
                 serializer = self._serializers.failure
 
@@ -340,7 +353,7 @@ class Action(object):
         """
         newLevel = self._nextTaskLevel()
         return self.__class__(logger,
-                              self._identification["task_uuid"],
+                              self._identification[TASK_UUID_FIELD],
                               newLevel,
                               action_type,
                               serializers)

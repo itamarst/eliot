@@ -11,15 +11,17 @@ from warnings import warn
 
 from six import exec_
 
+from ._message import EXCEPTION_FIELD, REASON_FIELD
 from ._util import safeunicode
 from ._validation import MessageType, Field
 
 
 TRACEBACK_MESSAGE = MessageType(
     "eliot:traceback",
-    [Field("reason", safeunicode, "The exception's value."),
+    [Field(REASON_FIELD, safeunicode, "The exception's value."),
      Field("traceback", safeunicode, "The traceback."),
-     Field("exception", lambda typ: "%s.%s" % (typ.__module__, typ.__name__),
+     Field(EXCEPTION_FIELD,
+           lambda typ: "%s.%s" % (typ.__module__, typ.__name__),
            "The exception type's FQPN.")],
     "An unexpected exception indicating a bug.")
 

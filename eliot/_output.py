@@ -31,7 +31,12 @@ else:
 from zope.interface import Interface, implementer
 
 from ._traceback import writeTraceback, TRACEBACK_MESSAGE
-from ._message import Message
+from ._message import (
+    Message,
+    EXCEPTION_FIELD,
+    MESSAGE_TYPE_FIELD,
+    REASON_FIELD,
+)
 from ._util import saferepr, safeunicode
 
 
@@ -174,7 +179,7 @@ class Logger(object):
                 serializer.serialize(dictionary)
         except:
             writeTraceback(self)
-            msg = Message({"message_type": "eliot:serialization_failure",
+            msg = Message({MESSAGE_TYPE_FIELD: "eliot:serialization_failure",
                            "message": self._safeUnicodeDictionary(dictionary)})
             msg.write(self)
             return
@@ -189,9 +194,9 @@ class Logger(object):
                     # infinite recursion. So instead we have to manually
                     # construct a message.
                     msg = Message({
-                        "message_type": "eliot:destination_failure",
-                        "reason": safeunicode(exception),
-                        "exception":
+                        MESSAGE_TYPE_FIELD: "eliot:destination_failure",
+                        REASON_FIELD: safeunicode(exception),
+                        EXCEPTION_FIELD:
                         exc_type.__module__ + "." + exc_type.__name__,
                         "message": self._safeUnicodeDictionary(dictionary)})
                     self._destinations.send(dict(msg._freeze()))
@@ -252,7 +257,7 @@ class MemoryLogger(object):
         result = []
         remaining = []
         for message in self.tracebackMessages:
-            if isinstance(message["reason"], exceptionType):
+            if isinstance(message[REASON_FIELD], exceptionType):
                 result.append(message)
             else:
                 remaining.append(message)
