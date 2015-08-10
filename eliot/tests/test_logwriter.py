@@ -9,6 +9,7 @@ import threading
 # Make sure to use StringIO that only accepts unicode:
 from io import BytesIO, StringIO
 from unittest import skipIf
+import json as pyjson
 
 from six import PY2
 
@@ -67,6 +68,9 @@ class BlockingFile(object):
     def write(self, data):
         with self.lock:
             self.file.write(data)
+
+
+    def flush(self):
         self.data = self.file.getvalue()
 
 
@@ -191,11 +195,12 @@ class ThreadedFileWriterTests(TestCase):
         writer.startService()
         self.addCleanup(writer.stopService)
 
-        writer({"hello\u1234": 123})
+        original = {"hello\u1234": 123}
+        writer(original)
         start = time.time()
         while not f.getvalue() and time.time() - start < 5:
             time.sleep(0.0001)
-        self.assertEqual(f.getvalue(), '{"hello\u1234": 123}\n')
+        self.assertEqual(f.getvalue(), pyjson.dumps(original) + "\n")
 
 
     def test_stopServiceFinishesWriting(self):
@@ -204,10 +209,9 @@ class ThreadedFileWriterTests(TestCase):
         all queued writes are written out.
         """
         f = BlockingFile()
-        f.block()
         writer = ThreadedFileWriter(f, reactor)
+        f.block()
         writer.startService()
-
         for i in range(100):
             writer({u"write": 123})
         threads = threading.enumerate()
@@ -228,8 +232,8 @@ class ThreadedFileWriterTests(TestCase):
         after the thread has shut down.
         """
         f = BlockingFile()
-        f.block()
         writer = ThreadedFileWriter(f, reactor)
+        f.block()
         writer.startService()
 
         writer({"hello": 123})

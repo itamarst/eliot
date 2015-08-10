@@ -5,6 +5,7 @@ Tests for L{eliot._message}.
 from __future__ import unicode_literals
 
 from unittest import TestCase
+from uuid import UUID
 import time
 
 from pyrsistent import pmap
@@ -14,7 +15,7 @@ try:
 except ImportError:
     Failure = None
 
-from .._message import WrittenMessage, Message, _defaultAction
+from .._message import WrittenMessage, Message
 from .._output import MemoryLogger
 from .._action import Action, startAction, TaskLevel
 from .. import add_destination, remove_destination
@@ -176,27 +177,23 @@ class MessageTests(TestCase):
                           "key": 2})
 
 
-    def test_defaultAction(self):
+    def test_missingAction(self):
         """
         If no L{Action} is specified, and the current execution context has no
-        L{Action}, the process-specific global L{Action} is used.
+        L{Action}, a new task_uuid is generated.
 
         This ensures all messages have a unique identity, as specified by
         task_uuid/task_level.
         """
         logger = MemoryLogger()
-        msg = Message.new(key=2)
-        msg.write(logger)
-        written = logger.messages[0]
-        del written["timestamp"]
-        nextLevel = _defaultAction._nextTaskLevel().level
-        prefix, suffix = nextLevel[:-1], nextLevel[-1]
-        expectedTaskLevel = prefix + [suffix - 1]
-        self.assertEqual(written,
-                         {"task_uuid":
-                          _defaultAction._identification["task_uuid"],
-                          "task_level": expectedTaskLevel,
-                          "key": 2})
+        Message.new(key=2).write(logger)
+        Message.new(key=3).write(logger)
+
+        message1, message2 = logger.messages
+        self.assertEqual(
+            (UUID(message1["task_uuid"]) != UUID(message2["task_uuid"]),
+             message1["task_level"], message2["task_level"]),
+            (True, [1], [1]))
 
 
     def test_actionCounter(self):

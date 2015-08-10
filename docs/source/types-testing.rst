@@ -107,7 +107,7 @@ The simplest method is using the ``assertHasMessage`` utility function which ass
                          {u"username": u"john",
                           u"password": u"password",
                           u"age": 12})
-        def test_registration(self):
+        def test_registration(self, logger):
             """
             Registration adds entries to the in-memory database.
             """

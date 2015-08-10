@@ -188,12 +188,13 @@ class Logger(object):
                     # if destination continues to error out we will get
                     # infinite recursion. So instead we have to manually
                     # construct a message.
-                    self._destinations.send({
+                    msg = Message({
                         "message_type": "eliot:destination_failure",
                         "reason": safeunicode(exception),
                         "exception":
                         exc_type.__module__ + "." + exc_type.__name__,
                         "message": self._safeUnicodeDictionary(dictionary)})
+                    self._destinations.send(dict(msg._freeze()))
                 except:
                     # Nothing we can do here, raising exception to caller will
                     # break business logic, better to have that continue to
@@ -373,7 +374,7 @@ class FileDestination(object):
         @param message: A message dictionary.
         """
         self.file.write(self._dumps(message) + self._linebreak)
-
+        self.file.flush()
 
 
 def to_file(output_file):

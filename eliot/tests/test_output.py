@@ -9,6 +9,8 @@ from unittest import TestCase, skipIf
 # Make sure to use StringIO that only accepts unicode:
 from io import BytesIO, StringIO
 import json as pyjson
+from tempfile import mktemp
+from time import time
 
 from six import PY3, PY2
 
@@ -551,17 +553,28 @@ class LoggerTests(TestCase):
 
         message = {"hello": 123}
         logger.write({"hello": 123})
+
+        def remove(key):
+            return [message.pop(key) for message in messages[1:]]
+        task_levels = remove(u"task_level")
+        task_uuids = remove(u"task_uuid")
+        timestamps = remove(u"timestamp")
+
         self.assertEqual(
-            messages,
-            [message,
-             {"message_type": "eliot:destination_failure",
-              "message": logger._safeUnicodeDictionary(message),
-              "reason": "ono",
-              "exception": "eliot.tests.test_output.MyException"},
-             {"message_type": "eliot:destination_failure",
-              "message": logger._safeUnicodeDictionary(message),
-              "reason": zero_divide,
-              "exception": zero_type}])
+            (task_levels[1][-1] == task_levels[0][-1] + 1,
+             task_uuids[0] == task_uuids[1],
+             abs(timestamps[0] + timestamps[1] - 2 * time()) < 1,
+             messages),
+            (True, True, True,
+             [message,
+              {"message_type": "eliot:destination_failure",
+               "message": logger._safeUnicodeDictionary(message),
+               "reason": "ono",
+               "exception": "eliot.tests.test_output.MyException"},
+              {"message_type": "eliot:destination_failure",
+               "message": logger._safeUnicodeDictionary(message),
+               "reason": zero_divide,
+               "exception": zero_type}]))
 
 
     def test_destinationExceptionCaughtTwice(self):
@@ -642,6 +655,27 @@ class ToFileTests(TestCase):
         self.assertEqual(
             [json.loads(line) for line in bytes_f.getvalue().splitlines()],
             [message1, message2])
+
+
+    def test_filedestination_flushes(self):
+        """
+        L{FileDestination} flushes after every write, to ensure logs get
+        written out even if the local buffer hasn't filled up.
+        """
+        path = mktemp()
+        # File with large buffer:
+        f = open(path, "wb", 1024 * 1024 * 10)
+        # and a small message that won't fill the buffer:
+        message1 = {"x": 123}
+
+        destination = FileDestination(file=f)
+        destination(message1)
+
+        # Message got written even though buffer wasn't filled:
+        self.assertEqual(
+            [json.loads(line) for line in
+             open(path, "rb").read().splitlines()],
+            [message1])
 
 
     @skipIf(PY2, "Python 2 files always accept bytes")

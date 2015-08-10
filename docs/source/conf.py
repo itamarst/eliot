@@ -56,11 +56,11 @@ copyright = u'2014-2015, ClusterHQ'
 # The short X.Y version.
 import eliot
 version = eliot.__version__
-# Versioneer adds -dirty suffix to version if checkout is dirty, and
+# Versioneer adds .dirty suffix to version if checkout is dirty, and
 # therefore ReadTheDocs somehow ends up with this in its version, so strip
 # it out.
-if version.endswith("-dirty"):
-    version = version[:-len("-dirty")]
+if version.endswith(".dirty"):
+    version = version[:-len(".dirty")]
 # The full version, including alpha/beta/rc tags.
 release = version
 
