@@ -11,6 +11,7 @@ from io import BytesIO, StringIO
 import json as pyjson
 from tempfile import mktemp
 from time import time
+from uuid import UUID
 
 from six import PY3, PY2
 
@@ -558,14 +559,16 @@ class LoggerTests(TestCase):
             return [message.pop(key) for message in messages[1:]]
 
         # Make sure we have task_level & task_uuid in exception messages.
-        remove(u"task_level")
-        remove(u"task_uuid")
+        task_levels = remove(u"task_level")
+        task_uuids = remove(u"task_uuid")
         timestamps = remove(u"timestamp")
 
         self.assertEqual(
             (abs(timestamps[0] + timestamps[1] - 2 * time()) < 1,
+             task_levels == [[1], [1]],
+             len([UUID(uuid) for uuid in task_uuids]) == 2,
              messages),
-            (True,
+            (True, True, True,
              [message,
               {"message_type": "eliot:destination_failure",
                "message": logger._safeUnicodeDictionary(message),
