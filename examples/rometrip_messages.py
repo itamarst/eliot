@@ -8,17 +8,16 @@ class Place(object):
         self.name = name
         self.contained = contained
 
-    def visited(self, person):
-        Message.log(message_type="place:visited",
-                    person=person, place=self.name)
+    def visited(self, people):
+        Message.log(message_type="visited",
+                    people=people, place=self.name)
         for thing in self.contained:
-            thing.visited(person)
+            thing.visited(people)
 
 
 def honeymoon(family, destination):
-    Message.log(message_type="honeymoon", family=family)
-    for person in family:
-        destination.visited(person)
+    Message.log(message_type="honeymoon", people=family)
+    destination.visited(family)
 
 
 honeymoon(["Mrs. Casaubon", "Mr. Casaubon"],
