@@ -7,6 +7,8 @@ from __future__ import unicode_literals
 import time
 from uuid import uuid4
 
+from six import text_type as unicode
+
 from pyrsistent import PClass, field, pmap, thaw
 
 
@@ -103,11 +105,16 @@ class Message(object):
         if action is None:
             action = currentAction()
         if action is None:
-            action = _defaultAction
+            task_uuid = unicode(uuid4())
+            task_level = [1]
+        else:
+            task_uuid = action._identification['task_uuid']
+            task_level = thaw(action._nextTaskLevel().level)
+        timestamp = self._timestamp()
         return self._contents.update({
-            'timestamp': self._timestamp(),
-            'task_uuid': action._identification['task_uuid'],
-            'task_level': thaw(action._nextTaskLevel().level),
+            'timestamp': timestamp,
+            'task_uuid': task_uuid,
+            'task_level': task_level,
         })
 
     def write(self, logger=None, action=None):
@@ -195,13 +202,7 @@ class WrittenMessage(PClass):
 
 
 
-
 # Import at end to deal with circular imports:
-from ._action import currentAction, Action, TaskLevel
+from ._action import currentAction, TaskLevel
 from . import _output
 
-# The default Action to use as a context for messages, if no other Action is the
-# context. This ensures all messages have a unique identity, as specified by
-# task_uuid/task_level.
-_defaultAction = Action(None, u"%s" % (uuid4(),), TaskLevel(level=[]),
-                        "eliot:default")
