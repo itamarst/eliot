@@ -14,6 +14,7 @@ Bug fixes:
 
 * ``FileDestination`` will now call ``flush()`` on the given file object after writing the log message.
   Previously log messages would not end up being written out until the file buffer filled up.
+* Each ``Message`` logged outside the context of an action now gets a unique ``task_id``.
 
 
 0.7.0
