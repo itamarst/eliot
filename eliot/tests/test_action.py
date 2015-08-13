@@ -21,7 +21,7 @@ from hypothesis.strategies import (
     text,
 )
 
-from pyrsistent import pmap
+from pyrsistent import pmap, pvector
 
 from .._action import (
     Action, _ExecutionContext, currentAction, startTask, startAction,
@@ -955,3 +955,6 @@ class WrittenActionTests(TestCase):
         self.assertEqual(action.status, STARTED_STATUS)
         self.assertEqual(action.task_uuid, message.task_uuid)
         self.assertEqual(action.task_level, message.task_level)
+        self.assertEqual(action.start_time, message.timestamp)
+        self.assertEqual(action.children, pvector([]))
+        self.assertIs(action.end_time, None)
