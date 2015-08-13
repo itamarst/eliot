@@ -1070,3 +1070,16 @@ class WrittenActionTests(testtools.TestCase):
                 reason=reason,
                 exception=exception,
             ))
+
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS)
+    def test_end_has_no_status(self, start_message, end_message_dict):
+        assume(ACTION_STATUS_FIELD not in end_message_dict)
+        end_message = WrittenMessage.from_dict(
+            end_message_dict.update({
+                ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
+                TASK_UUID_FIELD: start_message.task_uuid,
+            }))
+        # XXX: KeyError sucks.
+        self.assertRaises(
+            KeyError,
+            WrittenAction.from_messages, start_message, end_message=end_message)

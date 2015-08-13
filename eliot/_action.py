@@ -439,7 +439,6 @@ class WrittenAction(PClass):
 
     @classmethod
     def from_messages(cls, start_message, children=v(), end_message=None):
-        # XXX: What if end_message doesn't have action_status
         # XXX: What if end_message has an incompatible task_level
         if start_message.contents.get(ACTION_STATUS_FIELD, None) != STARTED_STATUS:
             raise ValueError('{} is not a valid start message'.format(start_message))
