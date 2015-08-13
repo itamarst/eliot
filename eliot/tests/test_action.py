@@ -23,6 +23,9 @@ from hypothesis.strategies import (
 
 from pyrsistent import pmap, pvector
 
+import testtools
+from testtools.matchers import MatchesStructure
+
 from .._action import (
     Action, _ExecutionContext, currentAction, startTask, startAction,
     ACTION_STATUS_FIELD, FAILED_STATUS, STARTED_STATUS, SUCCEEDED_STATUS,
@@ -942,7 +945,7 @@ def union(dict1, dict2):
 MESSAGE_DICTS = builds(union, MESSAGE_DATA_DICTS, MESSAGE_CORE_DICTS)
 
 
-class WrittenActionTests(TestCase):
+class WrittenActionTests(testtools.TestCase):
     """
     Tests for L{WrittenAction}.
     """
@@ -954,14 +957,17 @@ class WrittenActionTests(TestCase):
         }
         message = WrittenMessage.from_dict(message_dict.update(action_dict))
         action = WrittenAction.from_messages(message)
-        self.assertEqual(action.status, STARTED_STATUS)
-        self.assertEqual(action.task_uuid, message.task_uuid)
-        self.assertEqual(action.task_level, message.task_level)
-        self.assertEqual(action.start_time, message.timestamp)
-        self.assertEqual(action.children, pvector([]))
-        self.assertIs(action.end_time, None)
-        self.assertIs(action.reason, None)
-        self.assertIs(action.exception, None)
+        self.assertThat(
+            action, MatchesStructure.byEquality(
+                status=STARTED_STATUS,
+                task_uuid=message.task_uuid,
+                task_level=message.task_level,
+                start_time=message.timestamp,
+                children=pvector([]),
+                end_time=None,
+                reason=None,
+                exception=None,
+            ))
 
     @given(MESSAGE_DICTS, MESSAGE_DICTS)
     def test_different_task_uuid(self, start_message_dict, end_message_dict):
@@ -986,14 +992,17 @@ class WrittenActionTests(TestCase):
             ))
         action = WrittenAction.from_messages(
             start_message, end_message=end_message)
-        self.assertEqual(action.status, SUCCEEDED_STATUS)
-        self.assertEqual(action.task_uuid, start_message.task_uuid)
-        self.assertEqual(action.task_level, start_message.task_level)
-        self.assertEqual(action.start_time, start_message.timestamp)
-        self.assertEqual(action.children, pvector([]))
-        self.assertEqual(action.end_time, end_message.timestamp)
-        self.assertIs(action.reason, None)
-        self.assertIs(action.exception, None)
+        self.assertThat(
+            action, MatchesStructure.byEquality(
+                status=SUCCEEDED_STATUS,
+                task_uuid=start_message.task_uuid,
+                task_level=start_message.task_level,
+                start_time=start_message.timestamp,
+                children=pvector([]),
+                end_time=end_message.timestamp,
+                reason=None,
+                exception=None,
+            ))
 
     @given(MESSAGE_DICTS, MESSAGE_DICTS, text(), text())
     def test_failed_end(self, start_message_dict, end_message_dict, exception, reason):
@@ -1009,11 +1018,14 @@ class WrittenActionTests(TestCase):
             ))
         action = WrittenAction.from_messages(
             start_message, end_message=end_message)
-        self.assertEqual(action.status, FAILED_STATUS)
-        self.assertEqual(action.task_uuid, start_message.task_uuid)
-        self.assertEqual(action.task_level, start_message.task_level)
-        self.assertEqual(action.start_time, start_message.timestamp)
-        self.assertEqual(action.children, pvector([]))
-        self.assertEqual(action.end_time, end_message.timestamp)
-        self.assertEqual(action.reason, reason)
-        self.assertEqual(action.exception, exception)
+        self.assertThat(
+            action, MatchesStructure.byEquality(
+                status=FAILED_STATUS,
+                task_uuid=start_message.task_uuid,
+                task_level=start_message.task_level,
+                start_time=start_message.timestamp,
+                children=pvector([]),
+                end_time=end_message.timestamp,
+                reason=reason,
+                exception=exception,
+            ))
