@@ -968,6 +968,7 @@ class WrittenActionTests(testtools.TestCase):
         self.assertThat(
             action, MatchesStructure.byEquality(
                 status=STARTED_STATUS,
+                action_type=message.contents[ACTION_TYPE_FIELD],
                 task_uuid=message.task_uuid,
                 task_level=message.task_level,
                 start_time=message.timestamp,
@@ -1007,11 +1008,25 @@ class WrittenActionTests(testtools.TestCase):
         # XXX: ValueError sucks.
         self.assertRaises(ValueError, WrittenAction.from_messages, message)
 
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, text())
+    def test_action_type_mismatch(self, start_message, end_message_dict,
+                                  end_type):
+        assume(end_type != start_message.contents[ACTION_TYPE_FIELD])
+        end_message = WrittenMessage.from_dict(end_message_dict.update({
+            ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
+            ACTION_TYPE_FIELD: end_type,
+            TASK_UUID_FIELD: start_message.task_uuid,
+        }))
+        self.assertRaises(
+            ValueError,
+            WrittenAction.from_messages, start_message, end_message=end_message)
+
     @given(START_ACTION_MESSAGES, MESSAGE_DICTS)
     def test_successful_end(self, start_message, end_message_dict):
         end_message = WrittenMessage.from_dict(
             end_message_dict.update(
                 {ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
+                 ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
                  TASK_UUID_FIELD: start_message.task_uuid,
                 }
             ))
@@ -1019,6 +1034,7 @@ class WrittenActionTests(testtools.TestCase):
             start_message, end_message=end_message)
         self.assertThat(
             action, MatchesStructure.byEquality(
+                action_type=start_message.contents[ACTION_TYPE_FIELD],
                 status=SUCCEEDED_STATUS,
                 task_uuid=start_message.task_uuid,
                 task_level=start_message.task_level,
@@ -1034,6 +1050,7 @@ class WrittenActionTests(testtools.TestCase):
         end_message = WrittenMessage.from_dict(
             end_message_dict.update(
                 {ACTION_STATUS_FIELD: FAILED_STATUS,
+                 ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
                  TASK_UUID_FIELD: start_message.task_uuid,
                  EXCEPTION_FIELD: exception,
                  REASON_FIELD: reason,
@@ -1043,6 +1060,7 @@ class WrittenActionTests(testtools.TestCase):
             start_message, end_message=end_message)
         self.assertThat(
             action, MatchesStructure.byEquality(
+                action_type=start_message.contents[ACTION_TYPE_FIELD],
                 status=FAILED_STATUS,
                 task_uuid=start_message.task_uuid,
                 task_level=start_message.task_level,

@@ -427,6 +427,7 @@ class WrittenAction(PClass):
     An Action that has been logged.
     """
 
+    action_type = field(mandatory=True)  # XXX: Type restrict to whatever action_type is
     status = field(mandatory=True)  # XXX: Make it so it's one of a small set
     task_uuid = field(mandatory=True)  # XXX: Type constrain to uuid
     task_level = field(type=TaskLevel, mandatory=True)
@@ -440,12 +441,11 @@ class WrittenAction(PClass):
     def from_messages(cls, start_message, children=v(), end_message=None):
         # XXX: What if end_message doesn't have action_status
         # XXX: What if end_message has an incompatible task_level
-        # XXX: Bubble up action_type
-        # XXX: What if start_message has a different action_type to end_message?
         if start_message.contents.get(ACTION_STATUS_FIELD, None) != STARTED_STATUS:
             raise ValueError('{} is not a valid start message'.format(start_message))
         if start_message.task_level.level[-1] != 1:
             raise ValueError('{} is not a valid start message'.format(start_message))
+        action_type = start_message.contents.get(ACTION_TYPE_FIELD, None)
         end_time = None
         status = STARTED_STATUS
         exception = None
@@ -453,12 +453,15 @@ class WrittenAction(PClass):
         if end_message:
             if start_message.task_uuid != end_message.task_uuid:
                 raise WrongTask(start_message.task_uuid, end_message.task_uuid)
+            if end_message.contents.get(ACTION_TYPE_FIELD, None) != action_type:
+                raise ValueError('{} wrong for {}'.format(end_message, start_message))
             end_time = end_message.timestamp
             status = end_message.contents[ACTION_STATUS_FIELD]
             if status == FAILED_STATUS:
                 exception = end_message.contents[EXCEPTION_FIELD]
                 reason = end_message.contents[REASON_FIELD]
         return cls(
+            action_type=action_type,
             status=status,
             task_uuid=start_message.task_uuid,
             task_level=start_message.task_level,
