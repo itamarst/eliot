@@ -438,12 +438,14 @@ class WrittenAction(PClass):
 
     @classmethod
     def from_messages(cls, start_message, children=v(), end_message=None):
-        # XXX: What if start_message doesn't have action_status
-        # XXX: What if start_message has a task_level that doesn't end with 1
         # XXX: What if end_message doesn't have action_status
         # XXX: What if end_message has an incompatible task_level
         # XXX: Bubble up action_type
         # XXX: What if start_message has a different action_type to end_message?
+        if start_message.contents.get(ACTION_STATUS_FIELD, None) != STARTED_STATUS:
+            raise ValueError('{} is not a valid start message'.format(start_message))
+        if start_message.task_level.level[-1] != 1:
+            raise ValueError('{} is not a valid start message'.format(start_message))
         end_time = None
         status = STARTED_STATUS
         exception = None

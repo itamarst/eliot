@@ -19,6 +19,7 @@ from hypothesis.strategies import (
     integers,
     lists,
     just,
+    one_of,
     text,
 )
 
@@ -32,7 +33,8 @@ from .._action import (
     ACTION_STATUS_FIELD, ACTION_TYPE_FIELD, FAILED_STATUS, STARTED_STATUS,
     SUCCEEDED_STATUS, TaskLevel, WrittenAction, WrongTask)
 from .._message import (
-    EXCEPTION_FIELD, REASON_FIELD, TASK_UUID_FIELD, WrittenMessage)
+    EXCEPTION_FIELD, REASON_FIELD, TASK_LEVEL_FIELD, TASK_UUID_FIELD,
+    WrittenMessage)
 from .._output import MemoryLogger
 from .._validation import ActionType, Field, _ActionSerializers
 from ..testing import assertContainsFields
@@ -932,7 +934,7 @@ TIMESTAMPS = floats(min_value=0)
 UUIDS = basic(generate=lambda r, _: UUID(int=r.getrandbits(128)))
 
 MESSAGE_CORE_DICTS = fixed_dictionaries(
-    dict(task_level=TASK_LEVEL_LISTS,
+    dict(task_level=TASK_LEVEL_LISTS.map(pvector),
          task_uuid=UUIDS,
          timestamp=TIMESTAMPS)).map(pmap)
 
@@ -949,8 +951,10 @@ _start_action_fields = fixed_dictionaries(
     { ACTION_STATUS_FIELD: just(STARTED_STATUS),
       ACTION_TYPE_FIELD: text(),
     })
-START_ACTION_MESSAGES = builds(union, MESSAGE_DICTS, _start_action_fields).map(
-    WrittenMessage.from_dict)
+START_ACTION_MESSAGE_DICTS = builds(
+    union, MESSAGE_DICTS, _start_action_fields).map(
+        lambda x: x.update({TASK_LEVEL_FIELD: x[TASK_LEVEL_FIELD].set(-1, 1)}))
+START_ACTION_MESSAGES = START_ACTION_MESSAGE_DICTS.map(WrittenMessage.from_dict)
 
 
 class WrittenActionTests(testtools.TestCase):
@@ -981,6 +985,27 @@ class WrittenActionTests(testtools.TestCase):
         self.assertRaises(
             WrongTask,
             WrittenAction.from_messages, start_message, end_message=end_message)
+
+    @given(MESSAGE_DICTS)
+    def test_invalid_start_message_missing_status(self, message_dict):
+        assume(ACTION_STATUS_FIELD not in message_dict)
+        message = WrittenMessage.from_dict(message_dict)
+        # XXX: ValueError sucks.
+        self.assertRaises(ValueError, WrittenAction.from_messages, message)
+
+    @given(START_ACTION_MESSAGE_DICTS, integers(min_value=2))
+    def test_invalid_task_level_in_start_message(self, start_message_dict, i):
+        new_level = start_message_dict[TASK_LEVEL_FIELD].append(i)
+        message_dict = start_message_dict.set(TASK_LEVEL_FIELD, new_level)
+        message = WrittenMessage.from_dict(message_dict)
+        self.assertRaises(ValueError, WrittenAction.from_messages, message)
+
+    @given(START_ACTION_MESSAGE_DICTS, status=one_of(just(FAILED_STATUS), just(SUCCEEDED_STATUS), text()))
+    def test_invalid_start_message_wrong_status(self, message_dict, status):
+        message = WrittenMessage.from_dict(
+            message_dict.update({ACTION_STATUS_FIELD: status}))
+        # XXX: ValueError sucks.
+        self.assertRaises(ValueError, WrittenAction.from_messages, message)
 
     @given(START_ACTION_MESSAGES, MESSAGE_DICTS)
     def test_successful_end(self, start_message, end_message_dict):
