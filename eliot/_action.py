@@ -430,19 +430,32 @@ class WrittenAction(PClass):
     status = field(mandatory=True)  # XXX: Make it so it's one of a small set
     task_uuid = field(mandatory=True)  # XXX: Type constrain to uuid
     task_level = field(type=TaskLevel, mandatory=True)
-    start_time = field()  # XXX: Type constrain to datetime
-    end_time = field()  # XXX: Type constrain to datetime
-    children = field()  # XXX: pvector of WrittenAction / WrittenMessage
+    start_time = field(mandatory=True)  # XXX: Type constrain to datetime
+    end_time = field(mandatory=True)  # XXX: Type constrain to datetime or None
+    children = field(mandatory=True)  # XXX: pvector of WrittenAction / WrittenMessage
+    exception = field(mandatory=True)  # XXX: What type is this?
+    reason = field(mandatory=True)  # XXX: Type constraint to text or None
 
     @classmethod
     def from_messages(cls, start_message, children=v(), end_message=None):
+        # XXX: What if start_message doesn't have action_status
+        # XXX: What if start_message has a task_level that doesn't end with 1
+        # XXX: What if end_message doesn't have action_status
+        # XXX: What if end_message has an incompatible task_level
+        # XXX: Bubble up action_type
+        # XXX: What if start_message has a different action_type to end_message?
         end_time = None
         status = STARTED_STATUS
+        exception = None
+        reason = None
         if end_message:
             if start_message.task_uuid != end_message.task_uuid:
                 raise WrongTask(start_message.task_uuid, end_message.task_uuid)
             end_time = end_message.timestamp
             status = end_message.contents[ACTION_STATUS_FIELD]
+            if status == FAILED_STATUS:
+                exception = end_message.contents[EXCEPTION_FIELD]
+                reason = end_message.contents[REASON_FIELD]
         return cls(
             status=status,
             task_uuid=start_message.task_uuid,
@@ -450,6 +463,8 @@ class WrittenAction(PClass):
             start_time=start_message.timestamp,
             end_time=end_time,
             children=children,
+            exception=exception,
+            reason=reason,
         )
 
 
