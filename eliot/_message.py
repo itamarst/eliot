@@ -12,6 +12,15 @@ from six import text_type as unicode
 from pyrsistent import PClass, field, pmap, thaw
 
 
+MESSAGE_TYPE_FIELD = 'message_type'
+TASK_UUID_FIELD = 'task_uuid'
+TASK_LEVEL_FIELD = 'task_level'
+TIMESTAMP_FIELD = 'timestamp'
+
+EXCEPTION_FIELD = 'exception'
+REASON_FIELD = 'reason'
+
+
 class Message(object):
     """
     A log message.
@@ -108,13 +117,13 @@ class Message(object):
             task_uuid = unicode(uuid4())
             task_level = [1]
         else:
-            task_uuid = action._identification['task_uuid']
+            task_uuid = action._identification[TASK_UUID_FIELD]
             task_level = thaw(action._nextTaskLevel().level)
         timestamp = self._timestamp()
         return self._contents.update({
-            'timestamp': timestamp,
-            'task_uuid': task_uuid,
-            'task_level': task_level,
+            TIMESTAMP_FIELD: timestamp,
+            TASK_UUID_FIELD: task_uuid,
+            TASK_LEVEL_FIELD: task_level,
         })
 
     def write(self, logger=None, action=None):
@@ -153,7 +162,7 @@ class WrittenMessage(PClass):
         """
         The Unix timestamp of when the message was logged.
         """
-        return self._logged_dict['timestamp']
+        return self._logged_dict[TIMESTAMP_FIELD]
 
 
     @property
@@ -161,7 +170,7 @@ class WrittenMessage(PClass):
         """
         The UUID of the task in which the message was logged.
         """
-        return self._logged_dict['task_uuid']
+        return self._logged_dict[TASK_UUID_FIELD]
 
 
     @property
@@ -169,7 +178,7 @@ class WrittenMessage(PClass):
         """
         The L{TaskLevel} of this message appears within the task.
         """
-        return TaskLevel(level=self._logged_dict['task_level'])
+        return TaskLevel(level=self._logged_dict[TASK_LEVEL_FIELD])
 
 
     @property
@@ -178,7 +187,7 @@ class WrittenMessage(PClass):
         A C{PMap}, the message contents without Eliot metadata.
         """
         return self._logged_dict.discard(
-            'timestamp').discard('task_uuid').discard('task_level')
+            TIMESTAMP_FIELD).discard(TASK_UUID_FIELD).discard(TASK_LEVEL_FIELD)
 
 
     @classmethod

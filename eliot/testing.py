@@ -8,8 +8,19 @@ from unittest import SkipTest
 from collections import namedtuple
 from functools import wraps
 
+from ._action import (
+    ACTION_STATUS_FIELD,
+    ACTION_TYPE_FIELD,
+    STARTED_STATUS,
+    FAILED_STATUS,
+    SUCCEEDED_STATUS,
+)
+from ._message import MESSAGE_TYPE_FIELD, TASK_LEVEL_FIELD, TASK_UUID_FIELD
 from ._output import MemoryLogger
 from . import _output
+
+
+COMPLETED_STATUSES = (FAILED_STATUS, SUCCEEDED_STATUS)
 
 
 def issuperset(a, b):
@@ -99,17 +110,17 @@ class LoggedAction(namedtuple(
         levelPrefix = level[:-1]
 
         for message in messages:
-            if message["task_uuid"] != uuid:
+            if message[TASK_UUID_FIELD] != uuid:
                 # Different task altogether:
                 continue
 
-            messageLevel = message["task_level"]
+            messageLevel = message[TASK_LEVEL_FIELD]
 
             if messageLevel[:-1] == levelPrefix:
-                status = message.get("action_status")
-                if status == "started":
+                status = message.get(ACTION_STATUS_FIELD)
+                if status == STARTED_STATUS:
                     startMessage = message
-                elif status in ("succeeded", "failed"):
+                elif status in COMPLETED_STATUSES:
                     endMessage = message
                 else:
                     # Presumably a message in this action:
@@ -120,7 +131,7 @@ class LoggedAction(namedtuple(
                 # If start message level is [1], [1, 2, 1] implies first
                 # message of a direct child.
                 child = klass.fromMessages(
-                    uuid, message["task_level"], messages)
+                    uuid, message[TASK_LEVEL_FIELD], messages)
                 children.append(child)
         if startMessage is None or endMessage is None:
             raise ValueError(uuid, level)
@@ -145,10 +156,10 @@ class LoggedAction(namedtuple(
         """
         result = []
         for message in messages:
-            if (message.get("action_type") == actionType.action_type and
-                message["action_status"] == "started"):
-                result.append(klass.fromMessages(message["task_uuid"],
-                                                 message["task_level"],
+            if (message.get(ACTION_TYPE_FIELD) == actionType.action_type and
+                message[ACTION_STATUS_FIELD] == STARTED_STATUS):
+                result.append(klass.fromMessages(message[TASK_UUID_FIELD],
+                                                 message[TASK_LEVEL_FIELD],
                                                  messages))
         return result
 
@@ -178,7 +189,7 @@ class LoggedAction(namedtuple(
 
         @return: C{bool} indicating whether the action succeeded.
         """
-        return self.endMessage["action_status"] == "succeeded"
+        return self.endMessage[ACTION_STATUS_FIELD] == SUCCEEDED_STATUS
 
 
 
@@ -202,7 +213,7 @@ class LoggedMessage(namedtuple("LoggedMessage", "message")):
         """
         result = []
         for message in messages:
-            if message.get("message_type") == messageType.message_type:
+            if message.get(MESSAGE_TYPE_FIELD) == messageType.message_type:
                 result.append(klass(message))
         return result
 
