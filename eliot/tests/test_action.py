@@ -18,6 +18,7 @@ from hypothesis.strategies import (
     floats,
     integers,
     lists,
+    just,
     text,
 )
 
@@ -28,8 +29,8 @@ from testtools.matchers import MatchesStructure
 
 from .._action import (
     Action, _ExecutionContext, currentAction, startTask, startAction,
-    ACTION_STATUS_FIELD, FAILED_STATUS, STARTED_STATUS, SUCCEEDED_STATUS,
-    TaskLevel, WrittenAction, WrongTask)
+    ACTION_STATUS_FIELD, ACTION_TYPE_FIELD, FAILED_STATUS, STARTED_STATUS,
+    SUCCEEDED_STATUS, TaskLevel, WrittenAction, WrongTask)
 from .._message import (
     EXCEPTION_FIELD, REASON_FIELD, TASK_UUID_FIELD, WrittenMessage)
 from .._output import MemoryLogger
@@ -933,16 +934,23 @@ UUIDS = basic(generate=lambda r, _: UUID(int=r.getrandbits(128)))
 MESSAGE_CORE_DICTS = fixed_dictionaries(
     dict(task_level=TASK_LEVEL_LISTS,
          task_uuid=UUIDS,
-         timestamp=TIMESTAMPS))
+         timestamp=TIMESTAMPS)).map(pmap)
 
-MESSAGE_DATA_DICTS = dictionaries(keys=text(), values=text())
+MESSAGE_DATA_DICTS = dictionaries(keys=text(), values=text()).map(pmap)
 
 
 def union(dict1, dict2):
-    return pmap(dict1).update(dict2)
+    return dict1.update(dict2)
 
 
 MESSAGE_DICTS = builds(union, MESSAGE_DATA_DICTS, MESSAGE_CORE_DICTS)
+
+_start_action_fields = fixed_dictionaries(
+    { ACTION_STATUS_FIELD: just(STARTED_STATUS),
+      ACTION_TYPE_FIELD: text(),
+    })
+START_ACTION_MESSAGES = builds(union, MESSAGE_DICTS, _start_action_fields).map(
+    WrittenMessage.from_dict)
 
 
 class WrittenActionTests(testtools.TestCase):
@@ -950,12 +958,8 @@ class WrittenActionTests(testtools.TestCase):
     Tests for L{WrittenAction}.
     """
 
-    @given(MESSAGE_DICTS)
-    def test_from_single_message(self, message_dict):
-        action_dict = {
-            u'action_status': STARTED_STATUS,
-        }
-        message = WrittenMessage.from_dict(message_dict.update(action_dict))
+    @given(START_ACTION_MESSAGES)
+    def test_from_single_message(self, message):
         action = WrittenAction.from_messages(message)
         self.assertThat(
             action, MatchesStructure.byEquality(
@@ -969,25 +973,21 @@ class WrittenActionTests(testtools.TestCase):
                 exception=None,
             ))
 
-    @given(MESSAGE_DICTS, MESSAGE_DICTS)
-    def test_different_task_uuid(self, start_message_dict, end_message_dict):
-        assume(start_message_dict['task_uuid'] != end_message_dict['task_uuid'])
-        start_message = WrittenMessage.from_dict(
-            start_message_dict.update({ACTION_STATUS_FIELD: STARTED_STATUS}))
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS)
+    def test_different_task_uuid(self, start_message, end_message_dict):
+        assume(start_message.task_uuid != end_message_dict['task_uuid'])
         end_message = WrittenMessage.from_dict(
             end_message_dict.update({ACTION_STATUS_FIELD: SUCCEEDED_STATUS}))
         self.assertRaises(
             WrongTask,
             WrittenAction.from_messages, start_message, end_message=end_message)
 
-    @given(MESSAGE_DICTS, MESSAGE_DICTS)
-    def test_successful_end(self, start_message_dict, end_message_dict):
-        start_message = WrittenMessage.from_dict(
-            start_message_dict.update({ACTION_STATUS_FIELD: STARTED_STATUS}))
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS)
+    def test_successful_end(self, start_message, end_message_dict):
         end_message = WrittenMessage.from_dict(
             end_message_dict.update(
                 {ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
-                 TASK_UUID_FIELD: start_message_dict[TASK_UUID_FIELD],
+                 TASK_UUID_FIELD: start_message.task_uuid,
                 }
             ))
         action = WrittenAction.from_messages(
@@ -1004,14 +1004,12 @@ class WrittenActionTests(testtools.TestCase):
                 exception=None,
             ))
 
-    @given(MESSAGE_DICTS, MESSAGE_DICTS, text(), text())
-    def test_failed_end(self, start_message_dict, end_message_dict, exception, reason):
-        start_message = WrittenMessage.from_dict(
-            start_message_dict.update({ACTION_STATUS_FIELD: STARTED_STATUS}))
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, text(), text())
+    def test_failed_end(self, start_message, end_message_dict, exception, reason):
         end_message = WrittenMessage.from_dict(
             end_message_dict.update(
                 {ACTION_STATUS_FIELD: FAILED_STATUS,
-                 TASK_UUID_FIELD: start_message_dict[TASK_UUID_FIELD],
+                 TASK_UUID_FIELD: start_message.task_uuid,
                  EXCEPTION_FIELD: exception,
                  REASON_FIELD: reason,
                 }
