@@ -4,16 +4,29 @@ Tests for L{eliot._action}.
 
 from __future__ import unicode_literals
 
+from uuid import UUID
 from unittest import TestCase
 from threading import Thread
 from warnings import catch_warnings, simplefilter
 
 from hypothesis import given
-from hypothesis.strategies import integers, lists
+from hypothesis.strategies import (
+    basic,
+    builds,
+    dictionaries,
+    fixed_dictionaries,
+    floats,
+    integers,
+    lists,
+    text,
+)
+
+from pyrsistent import pmap
 
 from .._action import (
     Action, _ExecutionContext, currentAction, startTask, startAction,
-    TaskLevel)
+    STARTED_STATUS, TaskLevel, WrittenAction)
+from .._message import WrittenMessage
 from .._output import MemoryLogger
 from .._validation import ActionType, Field, _ActionSerializers
 from ..testing import assertContainsFields
@@ -794,7 +807,8 @@ class SerializationTests(TestCase):
         self.assertRaises(RuntimeError, Action.continueTask)
 
 
-TASK_LEVEL_LISTS = integers(min_value=1)
+TASK_LEVEL_INDEXES = integers(min_value=1)
+TASK_LEVEL_LISTS = lists(TASK_LEVEL_INDEXES, min_size=1)
 
 
 class TaskLevelTests(TestCase):
@@ -828,7 +842,7 @@ class TaskLevelTests(TestCase):
         ]))
 
 
-    @given(lists(TASK_LEVEL_LISTS))
+    @given(lists(TASK_LEVEL_INDEXES))
     def test_parent_of_child(self, base_task_level):
         """
         L{TaskLevel.child} returns the first child of the task.
@@ -838,7 +852,7 @@ class TaskLevelTests(TestCase):
         self.assertEqual(base_task, child_task.parent())
 
 
-    @given(lists(TASK_LEVEL_LISTS, min_size=1))
+    @given(TASK_LEVEL_LISTS)
     def test_child_greater_than_parent(self, task_level):
         """
         L{TaskLevel.child} returns a child that is greater than its parent.
@@ -847,7 +861,7 @@ class TaskLevelTests(TestCase):
         self.assert_fully_less_than(task, task.child())
 
 
-    @given(lists(TASK_LEVEL_LISTS, min_size=1))
+    @given(TASK_LEVEL_LISTS)
     def test_next_sibling_greater(self, task_level):
         """
         L{TaskLevel.next_sibling} returns a greater task level.
@@ -856,7 +870,7 @@ class TaskLevelTests(TestCase):
         self.assert_fully_less_than(task, task.next_sibling())
 
 
-    @given(lists(TASK_LEVEL_LISTS, min_size=1))
+    @given(TASK_LEVEL_LISTS)
     def test_next_sibling(self, task_level):
         """
         L{TaskLevel.next_sibling} returns the next sibling of a task.
@@ -905,3 +919,39 @@ class TaskLevelTests(TestCase):
         L{TaskLevel.to_string} is the same as as L{TaskLevel.toString}.
         """
         self.assertEqual(TaskLevel.to_string, TaskLevel.toString)
+
+
+TIMESTAMPS = floats(min_value=0)
+
+UUIDS = basic(generate=lambda r, _: UUID(int=r.getrandbits(128)))
+
+MESSAGE_CORE_DICTS = fixed_dictionaries(
+    dict(task_level=TASK_LEVEL_LISTS,
+         task_uuid=UUIDS,
+         timestamp=TIMESTAMPS))
+
+MESSAGE_DATA_DICTS = dictionaries(keys=text(), values=text())
+
+
+def union(dict1, dict2):
+    return pmap(dict1).update(dict2)
+
+
+MESSAGE_DICTS = builds(union, MESSAGE_DATA_DICTS, MESSAGE_CORE_DICTS)
+
+
+class WrittenActionTests(TestCase):
+    """
+    Tests for L{WrittenAction}.
+    """
+
+    @given(MESSAGE_DICTS)
+    def test_from_single_message(self, message_dict):
+        action_dict = {
+            u'action_status': STARTED_STATUS,
+        }
+        message = WrittenMessage.from_dict(message_dict.update(action_dict))
+        action = WrittenAction.from_messages(message)
+        self.assertEqual(action.status, STARTED_STATUS)
+        self.assertEqual(action.task_uuid, message.task_uuid)
+        self.assertEqual(action.task_level, message.task_level)

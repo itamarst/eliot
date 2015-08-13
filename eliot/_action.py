@@ -13,7 +13,7 @@ from itertools import count
 from contextlib import contextmanager
 from warnings import warn
 
-from pyrsistent import PClass, pvector_field
+from pyrsistent import field, PClass, pvector_field
 
 from six import text_type as unicode
 
@@ -414,6 +414,21 @@ class Action(object):
         _context.pop()
         self.finish(exception)
 
+
+class WrittenAction(PClass):
+    """
+    An Action that has been logged.
+    """
+
+    status = field(mandatory=True)  # XXX: Make it so it's one of a small set
+    task_uuid = field(mandatory=True)  # XXX: Type constrain to uuid
+    task_level = field(type=TaskLevel, mandatory=True)
+
+    @classmethod
+    def from_messages(cls, start_message, children=None, end_message=None):
+        return cls(
+            status=STARTED_STATUS, task_uuid=start_message.task_uuid,
+            task_level=start_message.task_level)
 
 
 def startAction(logger=None, action_type="", _serializers=None, **fields):
