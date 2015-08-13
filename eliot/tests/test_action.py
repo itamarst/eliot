@@ -9,7 +9,7 @@ from unittest import TestCase
 from threading import Thread
 from warnings import catch_warnings, simplefilter
 
-from hypothesis import given
+from hypothesis import assume, given
 from hypothesis.strategies import (
     basic,
     builds,
@@ -25,8 +25,9 @@ from pyrsistent import pmap, pvector
 
 from .._action import (
     Action, _ExecutionContext, currentAction, startTask, startAction,
-    STARTED_STATUS, TaskLevel, WrittenAction)
-from .._message import WrittenMessage
+    ACTION_STATUS_FIELD, STARTED_STATUS, SUCCEEDED_STATUS, TaskLevel,
+    WrittenAction, WrongTask)
+from .._message import TASK_UUID_FIELD, WrittenMessage
 from .._output import MemoryLogger
 from .._validation import ActionType, Field, _ActionSerializers
 from ..testing import assertContainsFields
@@ -958,3 +959,33 @@ class WrittenActionTests(TestCase):
         self.assertEqual(action.start_time, message.timestamp)
         self.assertEqual(action.children, pvector([]))
         self.assertIs(action.end_time, None)
+
+    @given(MESSAGE_DICTS, MESSAGE_DICTS)
+    def test_different_task_uuid(self, start_message_dict, end_message_dict):
+        assume(start_message_dict['task_uuid'] != end_message_dict['task_uuid'])
+        start_message = WrittenMessage.from_dict(
+            start_message_dict.update({ACTION_STATUS_FIELD: STARTED_STATUS}))
+        end_message = WrittenMessage.from_dict(
+            end_message_dict.update({ACTION_STATUS_FIELD: SUCCEEDED_STATUS}))
+        self.assertRaises(
+            WrongTask,
+            WrittenAction.from_messages, start_message, end_message=end_message)
+
+    @given(MESSAGE_DICTS, MESSAGE_DICTS)
+    def test_successful_end(self, start_message_dict, end_message_dict):
+        start_message = WrittenMessage.from_dict(
+            start_message_dict.update({ACTION_STATUS_FIELD: STARTED_STATUS}))
+        end_message = WrittenMessage.from_dict(
+            end_message_dict.update(
+                {ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
+                 TASK_UUID_FIELD: start_message_dict[TASK_UUID_FIELD],
+                }
+            ))
+        action = WrittenAction.from_messages(
+            start_message, end_message=end_message)
+        self.assertEqual(action.status, SUCCEEDED_STATUS)
+        self.assertEqual(action.task_uuid, start_message.task_uuid)
+        self.assertEqual(action.task_level, start_message.task_level)
+        self.assertEqual(action.start_time, start_message.timestamp)
+        self.assertEqual(action.children, pvector([]))
+        self.assertEqual(action.end_time, end_message.timestamp)

@@ -415,6 +415,13 @@ class Action(object):
         self.finish(exception)
 
 
+class WrongTask(Exception):
+
+    def __init__(self, task_uuid1, task_uuid2):
+        Exception.__init__(
+            self, 'Task mismatch: {} != {}'.format(task_uuid1, task_uuid2))
+
+
 class WrittenAction(PClass):
     """
     An Action that has been logged.
@@ -428,14 +435,21 @@ class WrittenAction(PClass):
     children = field()  # XXX: pvector of WrittenAction / WrittenMessage
 
     @classmethod
-    def from_messages(cls, start_message, children=None, end_message=None):
+    def from_messages(cls, start_message, children=v(), end_message=None):
+        end_time = None
+        status = STARTED_STATUS
+        if end_message:
+            if start_message.task_uuid != end_message.task_uuid:
+                raise WrongTask(start_message.task_uuid, end_message.task_uuid)
+            end_time = end_message.timestamp
+            status = end_message.contents[ACTION_STATUS_FIELD]
         return cls(
-            status=STARTED_STATUS,
+            status=status,
             task_uuid=start_message.task_uuid,
             task_level=start_message.task_level,
             start_time=start_message.timestamp,
-            end_time=None,
-            children=v(),
+            end_time=end_time,
+            children=children,
         )
 
 
