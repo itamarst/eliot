@@ -12,8 +12,23 @@ from collections import namedtuple
 import six
 unicode = six.text_type
 
-from ._message import Message
-from ._action import startAction, startTask
+from ._message import (
+    Message,
+    REASON_FIELD,
+    MESSAGE_TYPE_FIELD,
+    TASK_LEVEL_FIELD,
+    TASK_UUID_FIELD,
+    TIMESTAMP_FIELD,
+)
+from ._action import (
+    startAction,
+    startTask,
+    ACTION_STATUS_FIELD,
+    ACTION_TYPE_FIELD,
+    STARTED_STATUS,
+    SUCCEEDED_STATUS,
+    FAILED_STATUS,
+)
 
 
 class ValidationError(Exception):
@@ -25,6 +40,10 @@ class ValidationError(Exception):
 # Types that can be encoded to JSON:
 _JSON_TYPES = {type(None), int, float, unicode, list, dict, bytes, bool}
 _JSON_TYPES |= set(six.integer_types)
+
+
+RESERVED_FIELDS = (TASK_LEVEL_FIELD, TASK_UUID_FIELD, TIMESTAMP_FIELD)
+
 
 class Field(object):
     """
@@ -172,7 +191,7 @@ def fields(*fields, **keys):
 
 
 
-REASON = Field.forTypes("reason", [unicode], "The reason for an event.")
+REASON = Field.forTypes(REASON_FIELD, [unicode], "The reason for an event.")
 TRACEBACK = Field.forTypes("traceback", [unicode],
                            "The traceback for an exception.")
 EXCEPTION = Field.forTypes("exception", [unicode],
@@ -196,16 +215,16 @@ class _MessageSerializer(object):
             keys.append(field.key)
         if len(set(keys)) != len(keys):
             raise ValueError(keys, "Duplicate field name")
-        if "action_type" in keys:
-            if "message_type" in keys:
+        if ACTION_TYPE_FIELD in keys:
+            if MESSAGE_TYPE_FIELD in keys:
                 raise ValueError(keys, "Messages must have either "
                                  "'action_type' or 'message_type', not both")
-        elif "message_type" not in keys:
+        elif MESSAGE_TYPE_FIELD not in keys:
             raise ValueError(keys, "Messages must have either 'action_type' ",
                              "or 'message_type'")
         if any(key.startswith("_") for key in keys):
             raise ValueError(keys, "Field names must not start with '_'")
-        for reserved in ("task_uuid", "task_level", "timestamp"):
+        for reserved in RESERVED_FIELDS:
             if reserved in keys:
                 raise ValueError(keys, "The field name %r is reserved for use "
                                  "by the logging framework" % (reserved,))
@@ -241,8 +260,7 @@ class _MessageSerializer(object):
             if key not in message:
                 raise ValidationError(message, "Field %r is missing" % (key,))
             field.validate(message[key])
-        fieldSet = set(self.fields) | set(
-            ["task_level", "task_uuid", "timestamp"])
+        fieldSet = set(self.fields) | set(RESERVED_FIELDS)
         for key in message:
             if key not in fieldSet:
                 raise ValidationError(message, "Unexpected field %r" % (key,))
@@ -291,7 +309,7 @@ class MessageType(object):
         self.message_type = message_type
         self.description = description
         self._serializer = _MessageSerializer(
-            fields + [Field.forValue("message_type", message_type,
+            fields + [Field.forValue(MESSAGE_TYPE_FIELD, message_type,
                                      "The message type.")])
 
 
@@ -303,7 +321,7 @@ class MessageType(object):
 
         @rtype: L{eliot.Message}
         """
-        fields["message_type"] = self.message_type
+        fields[MESSAGE_TYPE_FIELD] = self.message_type
         return Message(fields, self._serializer)
 
 
@@ -366,16 +384,17 @@ class ActionType(object):
         self.action_type = action_type
         self.description = description
 
-        actionTypeField = Field.forValue("action_type", action_type,
+        actionTypeField = Field.forValue(ACTION_TYPE_FIELD, action_type,
                                          "The action type")
         def makeActionStatusField(value):
-            return Field.forValue("action_status", value, "The action status")
+            return Field.forValue(ACTION_STATUS_FIELD, value,
+                                  "The action status")
         startFields = startFields + [
-            actionTypeField, makeActionStatusField("started")]
+            actionTypeField, makeActionStatusField(STARTED_STATUS)]
         successFields = successFields + [
-            actionTypeField, makeActionStatusField("succeeded")]
+            actionTypeField, makeActionStatusField(SUCCEEDED_STATUS)]
         failureFields = [
-            actionTypeField, makeActionStatusField("failed"), REASON,
+            actionTypeField, makeActionStatusField(FAILED_STATUS), REASON,
             EXCEPTION]
 
         self._serializers = _ActionSerializers(_MessageSerializer(startFields),
