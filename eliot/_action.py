@@ -601,9 +601,7 @@ class WrittenAction(PClass):
             action_type=action_type,
             status=status,
             task_uuid=start_message.task_uuid,
-            # XXX: Should the task level of the action be the task_level of
-            # the start message?
-            task_level=start_message.task_level,
+            task_level=start_message.task_level.parent(),
             start_time=start_message.timestamp,
             end_time=None,
             _children=m(),
@@ -637,7 +635,7 @@ class WrittenAction(PClass):
         """
         if message.task_uuid != self.task_uuid:
             raise WrongTask(self, message)
-        if not message.task_level.is_sibling_of(self.task_level):
+        if not message.task_level.parent() == self.task_level:
             raise WrongTaskLevel(self, message)
 
     def _add_child(self, message):
