@@ -13,7 +13,7 @@ from itertools import count
 from contextlib import contextmanager
 from warnings import warn
 
-from pyrsistent import field, PClass, pvector_field, v
+from pyrsistent import field, PClass, pvector_field, m, v
 
 from six import text_type as unicode
 
@@ -447,7 +447,7 @@ class WrittenAction(PClass):
     task_level = field(type=TaskLevel, mandatory=True)
     start_time = field(mandatory=True)  # XXX: Type constrain to datetime
     end_time = field(mandatory=True)  # XXX: Type constrain to datetime or None
-    children = field(mandatory=True)  # XXX: pvector of WrittenAction / WrittenMessage
+    _children = field(mandatory=True)  # XXX: pmap of task_level to WrittenAction / WrittenMessage
     exception = field(mandatory=True)  # XXX: What type is this?
     reason = field(mandatory=True)  # XXX: Type constraint to text or None
 
@@ -478,7 +478,7 @@ class WrittenAction(PClass):
             task_level=start_message.task_level,
             start_time=start_message.timestamp,
             end_time=None,
-            children=v(),
+            _children=m(),
             exception=None,
             reason=None,
         )
@@ -488,6 +488,10 @@ class WrittenAction(PClass):
             return action._end(end_message)
         return action
 
+    @property
+    def children(self):
+        return self._children.values()
+
     def _validate_message(self, message):
         if message.task_uuid != self.task_uuid:
             raise WrongTask(self.task_uuid, message.task_uuid)
@@ -495,12 +499,12 @@ class WrittenAction(PClass):
             raise ValueError('{} wrong for {}'.format(message, self))
 
     def _add_child(self, message):
-        # A thing is a valid child message if:
-        # - we do not already have a different child at that task_level
-        #
-        # If it's an end message, then we delegate to _end
+        # XXX: What if it's an end message?
         self._validate_message(message)
-        return self.set(children=self.children.append(message))
+        level = message.task_level
+        if self._children.get(level, message) != message:
+            raise ValueError('Tried to add duplicate message: {}'.format(message))
+        return self.set(_children=self._children.set(level, message))
 
     def _end(self, end_message):
         # XXX: Handle already-ended
