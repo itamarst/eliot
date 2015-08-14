@@ -423,10 +423,83 @@ class Action(object):
 
 
 class WrongTask(Exception):
+    """
+    Tried to add a message to an action, but the message was from another
+    task.
+    """
 
-    def __init__(self, task_uuid1, task_uuid2):
+    def __init__(self, action, message):
         Exception.__init__(
-            self, 'Task mismatch: {} != {}'.format(task_uuid1, task_uuid2))
+            self, 'Tried to add {} to {}. Expected task_uuid = {}, got {}'.format(
+                message, action, action.task_uuid, message.task_uuid))
+
+
+class WrongTaskLevel(Exception):
+    """
+    Tried to add a message to an action, but the task level of the message
+    indicated that it was not a direct child.
+    """
+
+    def __init__(self, action, message):
+        Exception.__init__(
+            self, 'Tried to add {} to {}, but {} is not a sibling of {}'.format(
+                message, action, message.task_level, action.task_level))
+
+
+class WrongActionType(Exception):
+    """
+    Tried to end a message with a different action_type to the beginning.
+    """
+
+    def __init__(self, action, message):
+        error_msg = 'Tried to end {} with {}. Expected action_type = {}, got {}'
+        Exception.__init__(
+            self, error_msg.format(
+                action, message, action.action_type,
+                message.contents.get(ACTION_TYPE_FIELD, '<undefined>')))
+
+
+class InvalidStatus(Exception):
+    """
+    Tried to end a message with an invalid status.
+    """
+
+    def __init__(self, action, message):
+        error_msg = 'Tried to end {} with {}. Expected status {} or {}, got {}'
+        Exception.__init__(
+            self, error_msg.format(
+                action, message, SUCCEEDED_STATUS, FAILED_STATUS,
+                message.contents.get(ACTION_STATUS_FIELD, '<undefined>')))
+
+
+class DuplicateChild(Exception):
+    """
+    Tried to add a child to an action that already had a child at that task
+    level.
+    """
+
+    def __init__(self, action, message):
+        Exception.__init__(
+            self, 'Tried to add {} to {}, but already had child at {}'.format(
+                message, action, message.task_level))
+
+
+class InvalidStartMessage(Exception):
+    """
+    Tried to start an action with an invalid message.
+    """
+
+    def __init__(self, message, reason):
+        Exception.__init__(
+            self, 'Invalid start message {}: {}'.format(message, reason))
+
+    @classmethod
+    def wrong_status(cls, message):
+        return cls(message, 'must have status "STARTED"')
+
+    @classmethod
+    def wrong_task_level(cls, message):
+        return cls(message, 'first message must have task level ending in 1')
 
 
 class WrittenAction(PClass):
@@ -464,9 +537,9 @@ class WrittenAction(PClass):
     def from_messages(cls, start_message, children=v(), end_message=None):
         # XXX: Docstring, you lazy sod.
         if start_message.contents.get(ACTION_STATUS_FIELD, None) != STARTED_STATUS:
-            raise ValueError('{} is not a valid start message'.format(start_message))
+            raise InvalidStartMessage.wrong_status(start_message)
         if start_message.task_level.level[-1] != 1:
-            raise ValueError('{} is not a valid start message'.format(start_message))
+            raise InvalidStartMessage.wrong_task_level(start_message)
         action_type = start_message.contents.get(ACTION_TYPE_FIELD, None)
         status = STARTED_STATUS
         action = cls(
@@ -494,31 +567,33 @@ class WrittenAction(PClass):
 
     def _validate_message(self, message):
         if message.task_uuid != self.task_uuid:
-            raise WrongTask(self.task_uuid, message.task_uuid)
+            raise WrongTask(self, message)
         if not message.task_level.is_sibling_of(self.task_level):
-            raise ValueError('{} wrong for {}'.format(message, self))
+            raise WrongTaskLevel(self, message)
 
     def _add_child(self, message):
         # XXX: What if it's an end message?
         self._validate_message(message)
         level = message.task_level
         if self._children.get(level, message) != message:
-            raise ValueError('Tried to add duplicate message: {}'.format(message))
+            raise DuplicateChild(self, message)
         return self.set(_children=self._children.set(level, message))
 
     def _end(self, end_message):
         # XXX: Handle already-ended
         self._validate_message(end_message)
         if end_message.contents.get(ACTION_TYPE_FIELD, None) != self.action_type:
-            raise ValueError('{} wrong for {}'.format(end_message, self))
+            raise WrongActionType(self, end_message)
         end_time = end_message.timestamp
-        status = end_message.contents[ACTION_STATUS_FIELD]
+        status = end_message.contents.get(ACTION_STATUS_FIELD, None)
         if status == FAILED_STATUS:
             exception = end_message.contents[EXCEPTION_FIELD]
             reason = end_message.contents[REASON_FIELD]
-        else:
+        elif status == SUCCEEDED_STATUS:
             exception = None
             reason = None
+        else:
+            raise InvalidStatus(self, end_message)
         return self.set(
             end_time=end_time, status=status, exception=exception, reason=reason)
 

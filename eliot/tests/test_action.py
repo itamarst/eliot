@@ -21,7 +21,6 @@ from hypothesis.strategies import (
     just,
     one_of,
     text,
-    tuples,
 )
 
 from pyrsistent import pmap, pvector, v
@@ -32,7 +31,8 @@ from testtools.matchers import MatchesStructure
 from .._action import (
     Action, _ExecutionContext, currentAction, startTask, startAction,
     ACTION_STATUS_FIELD, ACTION_TYPE_FIELD, FAILED_STATUS, STARTED_STATUS,
-    SUCCEEDED_STATUS, TaskLevel, WrittenAction, WrongTask)
+    SUCCEEDED_STATUS, DuplicateChild, InvalidStartMessage, InvalidStatus,
+    TaskLevel, WrittenAction, WrongActionType, WrongTask, WrongTaskLevel)
 from .._message import (
     EXCEPTION_FIELD, REASON_FIELD, TASK_LEVEL_FIELD, TASK_UUID_FIELD,
     WrittenMessage)
@@ -999,22 +999,23 @@ class WrittenActionTests(testtools.TestCase):
     def test_invalid_start_message_missing_status(self, message_dict):
         assume(ACTION_STATUS_FIELD not in message_dict)
         message = WrittenMessage.from_dict(message_dict)
-        # XXX: ValueError sucks.
-        self.assertRaises(ValueError, WrittenAction.from_messages, message)
+        self.assertRaises(
+            InvalidStartMessage, WrittenAction.from_messages, message)
 
     @given(START_ACTION_MESSAGE_DICTS, integers(min_value=2))
     def test_invalid_task_level_in_start_message(self, start_message_dict, i):
         new_level = start_message_dict[TASK_LEVEL_FIELD].append(i)
         message_dict = start_message_dict.set(TASK_LEVEL_FIELD, new_level)
         message = WrittenMessage.from_dict(message_dict)
-        self.assertRaises(ValueError, WrittenAction.from_messages, message)
+        self.assertRaises(
+            InvalidStartMessage, WrittenAction.from_messages, message)
 
     @given(START_ACTION_MESSAGE_DICTS, status=one_of(just(FAILED_STATUS), just(SUCCEEDED_STATUS), text()))
     def test_invalid_start_message_wrong_status(self, message_dict, status):
         message = WrittenMessage.from_dict(
             message_dict.update({ACTION_STATUS_FIELD: status}))
-        # XXX: ValueError sucks.
-        self.assertRaises(ValueError, WrittenAction.from_messages, message)
+        self.assertRaises(
+            InvalidStartMessage, WrittenAction.from_messages, message)
 
     @given(START_ACTION_MESSAGES, MESSAGE_DICTS, text(), integers(min_value=1))
     def test_action_type_mismatch(self, start_message, end_message_dict,
@@ -1027,7 +1028,7 @@ class WrittenActionTests(testtools.TestCase):
             TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
         }))
         self.assertRaises(
-            ValueError,
+            WrongActionType,
             WrittenAction.from_messages, start_message, end_message=end_message)
 
     @given(START_ACTION_MESSAGES, MESSAGE_DICTS, integers(min_value=2))
@@ -1093,9 +1094,8 @@ class WrittenActionTests(testtools.TestCase):
                 TASK_UUID_FIELD: start_message.task_uuid,
                 TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
             }))
-        # XXX: KeyError sucks.
         self.assertRaises(
-            KeyError,
+            InvalidStatus,
             WrittenAction.from_messages, start_message, end_message=end_message)
 
     @given(START_ACTION_MESSAGES, lists(MESSAGE_DICTS))
@@ -1128,7 +1128,7 @@ class WrittenActionTests(testtools.TestCase):
         message = WrittenMessage.from_dict(
             child_message.update({TASK_UUID_FIELD: start_message.task_uuid}))
         self.assertRaises(
-            ValueError,
+            WrongTaskLevel,
             WrittenAction.from_messages, start_message, v(message))
 
     @given(START_ACTION_MESSAGES, MESSAGE_DICTS, MESSAGE_DICTS, integers(min_value=2))
@@ -1143,5 +1143,5 @@ class WrittenActionTests(testtools.TestCase):
             for child_message in [child1, child2]]
         assume(messages[0] != messages[1])
         self.assertRaises(
-            ValueError,
+            DuplicateChild,
             WrittenAction.from_messages, start_message, messages)
