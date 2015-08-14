@@ -505,6 +505,31 @@ class InvalidStartMessage(Exception):
 class WrittenAction(PClass):
     """
     An Action that has been logged.
+
+    @ivar action_type: The type of the action,
+        e.g. C{"yourapp:subsystem:dosomething"}
+
+    @ivar status: One of C{STARTED_STATUS}, C{SUCCEEDED_STATUS}, or
+        C{FAILED_STATUS}.
+
+    @ivar task_uuid: The UUID of the task to which this action belongs.
+
+    @ivar TaskLevel task_level: The level of the task in which the action occurs.
+
+    @ivar start_time: The Unix timestamp of when the action started.
+
+    @ivar end_time: The Unix timestamp of when the action ended, or C{None} if
+        there has been no end message.
+
+    @ivar exception: If the action failed, the exception that was raised to
+        cause it to fail. If the action succeeded, or hasn't finished yet, then
+        C{None}.
+
+    @ivar reason: The reason the action failed. If the action succeeded, or
+        hasn't finished yet, then C{None}.
+
+    @ivar _children: A L{pvector} of L{WrittenAction} and L{WrittenMessage}
+        that make up this action.
     """
 
     # Broad philosophy:
@@ -531,11 +556,41 @@ class WrittenAction(PClass):
     # - exception and reason set iff status == FAILED_STATUS
 
     # XXX: I'm fairly convinced that this would be simpler and clearer if we
-    # had a class or classes for the "special" action messages.
+    # had a class or classes for the "special" action messages. Also if we had
+    # a way of expressing 'either a WrittenMessage or a WrittenAction' more
+    # succinctly.
 
     @classmethod
     def from_messages(cls, start_message, children=v(), end_message=None):
-        # XXX: Docstring, you lazy sod.
+        """
+        Create a C{WrittenAction} from C{WrittenMessage}s and other
+        C{WrittenAction}s.
+
+        @param WrittenMessage start_message: A message that has
+            C{ACTION_STATUS_FIELD}, C{ACTION_TYPE_FIELD}, and a C{task_level}
+            that ends in C{1}.
+        @param children: An iterable of C{WrittenMessage} and C{WrittenAction}
+        @param WrittenMessage end_message: A message that has the same
+            C{action_type} as this action.
+
+        @raise WrongTask: If C{end_message} has a C{task_uuid} that differs
+            from C{start_message.task_uuid}.
+        @raise WrongTaskLevel: If any child message or C{end_message} has a
+            C{task_level} that means it is not a direct child.
+        @raise WrongActionType: If C{end_message} has an C{ACTION_TYPE_FIELD}
+            that differs from the C{ACTION_TYPE_FIELD} of C{start_message}.
+        @raise InvalidStatus: If C{end_message} doesn't have an
+            C{action_status}, or has one that is not C{SUCCEEDED_STATUS} or
+            C{FAILED_STATUS}.
+        @raise InvalidStartMessage: If C{start_message} does not have a
+            C{ACTION_STATUS_FIELD} of C{STARTED_STATUS}, or if it has a
+            C{task_level} indicating that it is not the first message of an
+            action.
+
+        @return: A new, completed C{WrittenAction}.
+
+        @return: A new C{WrittenAction}.
+        """
         if start_message.contents.get(ACTION_STATUS_FIELD, None) != STARTED_STATUS:
             raise InvalidStartMessage.wrong_status(start_message)
         if start_message.task_level.level[-1] != 1:
@@ -563,16 +618,43 @@ class WrittenAction(PClass):
 
     @property
     def children(self):
+        """
+        The list of child messages and actions, excluding the start and end
+        messages.
+        """
         return self._children.values()
 
     def _validate_message(self, message):
+        """
+        Is C{message} a valid direct child of this action?
+
+        @param message: Either a C{WrittenAction} or a C{WrittenMessage}.
+
+        @raise WrongTask: If C{message} has a C{task_uuid} that differs from the
+            action's C{task_uuid}.
+        @raise WrongTaskLevel: If C{message} has a C{task_level} that means
+            it's not a direct child.
+        """
         if message.task_uuid != self.task_uuid:
             raise WrongTask(self, message)
         if not message.task_level.is_sibling_of(self.task_level):
             raise WrongTaskLevel(self, message)
 
     def _add_child(self, message):
-        # XXX: What if it's an end message?
+        """
+        Return a new action with C{message} added as a child.
+
+        Assumes C{message} is not an end message.
+
+        @param message: Either a C{WrittenAction} or a C{WrittenMessage}.
+
+        @raise WrongTask: If C{message} has a C{task_uuid} that differs from the
+            action's C{task_uuid}.
+        @raise WrongTaskLevel: If C{message} has a C{task_level} that means
+            it's not a direct child.
+
+        @return: A new C{WrittenAction}.
+        """
         self._validate_message(message)
         level = message.task_level
         if self._children.get(level, message) != message:
@@ -580,9 +662,29 @@ class WrittenAction(PClass):
         return self.set(_children=self._children.set(level, message))
 
     def _end(self, end_message):
-        # XXX: Handle already-ended
+        """
+        End this action with C{end_message}.
+
+        Assumes that the action has not already been ended.
+
+        @param WrittenMessage end_message: A message that has the same
+            C{action_type} as this action.
+
+        @raise WrongTask: If C{end_message} has a C{task_uuid} that differs
+            from the action's C{task_uuid}.
+        @raise WrongTaskLevel: If C{end_message} has a C{task_level} that means
+            it's not a direct child.
+        @raise WrongActionType: If C{end_message} has an C{action_type} that
+            differs from the current action.
+        @raise InvalidStatus: If C{end_message} doesn't have an
+            C{action_status}, or has one that is not C{SUCCEEDED_STATUS} or
+            C{FAILED_STATUS}.
+
+        @return: A new, completed C{WrittenAction}.
+        """
         self._validate_message(end_message)
-        if end_message.contents.get(ACTION_TYPE_FIELD, None) != self.action_type:
+        action_type = end_message.contents.get(ACTION_TYPE_FIELD, None)
+        if action_type != self.action_type:
             raise WrongActionType(self, end_message)
         end_time = end_message.timestamp
         status = end_message.contents.get(ACTION_STATUS_FIELD, None)
@@ -595,8 +697,8 @@ class WrittenAction(PClass):
         else:
             raise InvalidStatus(self, end_message)
         return self.set(
-            end_time=end_time, status=status, exception=exception, reason=reason)
-
+            end_time=end_time, status=status, exception=exception,
+            reason=reason)
 
 
 def startAction(logger=None, action_type="", _serializers=None, **fields):
