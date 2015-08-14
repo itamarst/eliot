@@ -478,20 +478,33 @@ class WrittenAction(PClass):
             task_level=start_message.task_level,
             start_time=start_message.timestamp,
             end_time=None,
-            children=children,
+            children=v(),
             exception=None,
             reason=None,
         )
+        for child in children:
+            action = action._add_child(child)
         if end_message:
             return action._end(end_message)
         return action
 
+    def _validate_message(self, message):
+        if message.task_uuid != self.task_uuid:
+            raise WrongTask(self.task_uuid, message.task_uuid)
+        if not message.task_level.is_sibling_of(self.task_level):
+            raise ValueError('{} wrong for {}'.format(message, self))
+
+    def _add_child(self, message):
+        # A thing is a valid child message if:
+        # - we do not already have a different child at that task_level
+        #
+        # If it's an end message, then we delegate to _end
+        self._validate_message(message)
+        return self.set(children=self.children.append(message))
+
     def _end(self, end_message):
         # XXX: Handle already-ended
-        if not end_message.task_level.is_sibling_of(self.task_level):
-            raise ValueError('{} wrong for {}'.format(end_message, self))
-        if self.task_uuid != end_message.task_uuid:
-            raise WrongTask(self.task_uuid, end_message.task_uuid)
+        self._validate_message(end_message)
         if end_message.contents.get(ACTION_TYPE_FIELD, None) != self.action_type:
             raise ValueError('{} wrong for {}'.format(end_message, self))
         end_time = end_message.timestamp

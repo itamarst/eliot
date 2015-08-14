@@ -21,9 +21,10 @@ from hypothesis.strategies import (
     just,
     one_of,
     text,
+    tuples,
 )
 
-from pyrsistent import pmap, pvector
+from pyrsistent import pmap, pvector, v
 
 import testtools
 from testtools.matchers import MatchesStructure
@@ -1096,3 +1097,37 @@ class WrittenActionTests(testtools.TestCase):
         self.assertRaises(
             KeyError,
             WrittenAction.from_messages, start_message, end_message=end_message)
+
+    @given(START_ACTION_MESSAGES, lists(tuples(MESSAGE_DICTS, integers(min_value=2))))
+    def test_children(self, start_message, child_messages):
+        parent_level = start_message.task_level.parent().level
+        messages = [
+            WrittenMessage.from_dict(
+                child_message.update({
+                    TASK_UUID_FIELD: start_message.task_uuid,
+                    TASK_LEVEL_FIELD: parent_level.append(n),
+                }))
+            for (child_message, n) in child_messages]
+        action = WrittenAction.from_messages(start_message, messages)
+        self.assertEqual(pvector(messages), action.children)
+
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS)
+    def test_wrong_task_uuid(self, start_message, child_message):
+        assume(child_message[TASK_UUID_FIELD] != start_message.task_uuid)
+        message = WrittenMessage.from_dict(child_message)
+        self.assertRaises(
+            WrongTask,
+            WrittenAction.from_messages, start_message, v(message))
+
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS)
+    def test_wrong_task_level(self, start_message, child_message):
+        assume(not start_message.task_level.is_sibling_of(TaskLevel(level=child_message[TASK_LEVEL_FIELD])))
+        message = WrittenMessage.from_dict(
+            child_message.update({TASK_UUID_FIELD: start_message.task_uuid}))
+        self.assertRaises(
+            ValueError,
+            WrittenAction.from_messages, start_message, v(message))
+
+
+
+    # XXX: Test for children validity handling.
