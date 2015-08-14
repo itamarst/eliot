@@ -957,6 +957,10 @@ START_ACTION_MESSAGE_DICTS = builds(
 START_ACTION_MESSAGES = START_ACTION_MESSAGE_DICTS.map(WrittenMessage.from_dict)
 
 
+def sibling_task_level(message, n):
+    return message.task_level.parent().level.append(n)
+
+
 class WrittenActionTests(testtools.TestCase):
     """
     Tests for L{WrittenAction}.
@@ -978,11 +982,14 @@ class WrittenActionTests(testtools.TestCase):
                 exception=None,
             ))
 
-    @given(START_ACTION_MESSAGES, MESSAGE_DICTS)
-    def test_different_task_uuid(self, start_message, end_message_dict):
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, integers(min_value=2))
+    def test_different_task_uuid(self, start_message, end_message_dict, n):
         assume(start_message.task_uuid != end_message_dict['task_uuid'])
         end_message = WrittenMessage.from_dict(
-            end_message_dict.update({ACTION_STATUS_FIELD: SUCCEEDED_STATUS}))
+            end_message_dict.update({
+                ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
+                TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
+            }))
         self.assertRaises(
             WrongTask,
             WrittenAction.from_messages, start_message, end_message=end_message)
@@ -1008,26 +1015,28 @@ class WrittenActionTests(testtools.TestCase):
         # XXX: ValueError sucks.
         self.assertRaises(ValueError, WrittenAction.from_messages, message)
 
-    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, text())
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, text(), integers(min_value=1))
     def test_action_type_mismatch(self, start_message, end_message_dict,
-                                  end_type):
+                                  end_type, n):
         assume(end_type != start_message.contents[ACTION_TYPE_FIELD])
         end_message = WrittenMessage.from_dict(end_message_dict.update({
             ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
             ACTION_TYPE_FIELD: end_type,
             TASK_UUID_FIELD: start_message.task_uuid,
+            TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
         }))
         self.assertRaises(
             ValueError,
             WrittenAction.from_messages, start_message, end_message=end_message)
 
-    @given(START_ACTION_MESSAGES, MESSAGE_DICTS)
-    def test_successful_end(self, start_message, end_message_dict):
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, integers(min_value=2))
+    def test_successful_end(self, start_message, end_message_dict, n):
         end_message = WrittenMessage.from_dict(
             end_message_dict.update(
                 {ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
                  ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
                  TASK_UUID_FIELD: start_message.task_uuid,
+                 TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
                 }
             ))
         action = WrittenAction.from_messages(
@@ -1045,13 +1054,16 @@ class WrittenActionTests(testtools.TestCase):
                 exception=None,
             ))
 
-    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, text(), text())
-    def test_failed_end(self, start_message, end_message_dict, exception, reason):
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, text(), text(),
+           integers(min_value=2))
+    def test_failed_end(self, start_message, end_message_dict, exception,
+                        reason, n):
         end_message = WrittenMessage.from_dict(
             end_message_dict.update(
                 {ACTION_STATUS_FIELD: FAILED_STATUS,
                  ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
                  TASK_UUID_FIELD: start_message.task_uuid,
+                 TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
                  EXCEPTION_FIELD: exception,
                  REASON_FIELD: reason,
                 }
@@ -1071,13 +1083,14 @@ class WrittenActionTests(testtools.TestCase):
                 exception=exception,
             ))
 
-    @given(START_ACTION_MESSAGES, MESSAGE_DICTS)
-    def test_end_has_no_status(self, start_message, end_message_dict):
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, integers(min_value=2))
+    def test_end_has_no_status(self, start_message, end_message_dict, n):
         assume(ACTION_STATUS_FIELD not in end_message_dict)
         end_message = WrittenMessage.from_dict(
             end_message_dict.update({
                 ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
                 TASK_UUID_FIELD: start_message.task_uuid,
+                TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
             }))
         # XXX: KeyError sucks.
         self.assertRaises(

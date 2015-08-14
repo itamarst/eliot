@@ -160,6 +160,13 @@ class TaskLevel(PClass):
         return TaskLevel(level=self.level[:-1])
 
 
+    def is_sibling_of(self, task_level):
+        """
+        Is this task a sibling of C{task_level}?
+        """
+        return self.parent() == task_level.parent()
+
+
     # PEP 8 compatibility:
     from_string = fromString
     to_string = toString
@@ -437,9 +444,21 @@ class WrittenAction(PClass):
     exception = field(mandatory=True)  # XXX: What type is this?
     reason = field(mandatory=True)  # XXX: Type constraint to text or None
 
+    # XXX: Possible invariants:
+    # - start_time <= end_time
+    # - task_level = set(child.task_level.parent() for child in children)
+    # - task_uuid = set(child.task_uuid for child in children)
+    # - exception and reason set iff status == FAILED_STATUS
+
+    # XXX: I'm fairly convinced that this would be simpler and clearer if we
+    # had a class or classes for the "special" action messages.
+
     @classmethod
     def from_messages(cls, start_message, children=v(), end_message=None):
-        # XXX: What if end_message has an incompatible task_level
+        # XXX: Docstring, you lazy sod.
+
+        # XXX: I think this would be clearer and more useful if we had an
+        # `end` instance method and implemented this "constructor" in terms of that.
         if start_message.contents.get(ACTION_STATUS_FIELD, None) != STARTED_STATUS:
             raise ValueError('{} is not a valid start message'.format(start_message))
         if start_message.task_level.level[-1] != 1:
@@ -450,6 +469,8 @@ class WrittenAction(PClass):
         exception = None
         reason = None
         if end_message:
+            if not end_message.task_level.is_sibling_of(start_message.task_level):
+                raise ValueError('{} wrong for {}'.format(end_message, start_message))
             if start_message.task_uuid != end_message.task_uuid:
                 raise WrongTask(start_message.task_uuid, end_message.task_uuid)
             if end_message.contents.get(ACTION_TYPE_FIELD, None) != action_type:
