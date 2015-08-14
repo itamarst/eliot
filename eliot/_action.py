@@ -434,6 +434,13 @@ class WrittenAction(PClass):
     An Action that has been logged.
     """
 
+    # Broad philosophy:
+    # - Have a way of constructing known-valid instances (at the very least,
+    #   this is useful for tests)
+    # - Have a thing that takes messages out of order and hangs on to them
+    #   until it can construct known-valid instances
+    # - Be able to recover the original messages
+
     action_type = field(mandatory=True)  # XXX: Type restrict to whatever action_type is
     status = field(mandatory=True)  # XXX: Make it so it's one of a small set
     task_uuid = field(mandatory=True)  # XXX: Type constrain to uuid
@@ -456,41 +463,48 @@ class WrittenAction(PClass):
     @classmethod
     def from_messages(cls, start_message, children=v(), end_message=None):
         # XXX: Docstring, you lazy sod.
-
-        # XXX: I think this would be clearer and more useful if we had an
-        # `end` instance method and implemented this "constructor" in terms of that.
         if start_message.contents.get(ACTION_STATUS_FIELD, None) != STARTED_STATUS:
             raise ValueError('{} is not a valid start message'.format(start_message))
         if start_message.task_level.level[-1] != 1:
             raise ValueError('{} is not a valid start message'.format(start_message))
         action_type = start_message.contents.get(ACTION_TYPE_FIELD, None)
-        end_time = None
         status = STARTED_STATUS
-        exception = None
-        reason = None
-        if end_message:
-            if not end_message.task_level.is_sibling_of(start_message.task_level):
-                raise ValueError('{} wrong for {}'.format(end_message, start_message))
-            if start_message.task_uuid != end_message.task_uuid:
-                raise WrongTask(start_message.task_uuid, end_message.task_uuid)
-            if end_message.contents.get(ACTION_TYPE_FIELD, None) != action_type:
-                raise ValueError('{} wrong for {}'.format(end_message, start_message))
-            end_time = end_message.timestamp
-            status = end_message.contents[ACTION_STATUS_FIELD]
-            if status == FAILED_STATUS:
-                exception = end_message.contents[EXCEPTION_FIELD]
-                reason = end_message.contents[REASON_FIELD]
-        return cls(
+        action = cls(
             action_type=action_type,
             status=status,
             task_uuid=start_message.task_uuid,
+            # XXX: Should the task level of the action be the task_level of
+            # the start message?
             task_level=start_message.task_level,
             start_time=start_message.timestamp,
-            end_time=end_time,
+            end_time=None,
             children=children,
-            exception=exception,
-            reason=reason,
+            exception=None,
+            reason=None,
         )
+        if end_message:
+            return action._end(end_message)
+        return action
+
+    def _end(self, end_message):
+        # XXX: Handle already-ended
+        if not end_message.task_level.is_sibling_of(self.task_level):
+            raise ValueError('{} wrong for {}'.format(end_message, self))
+        if self.task_uuid != end_message.task_uuid:
+            raise WrongTask(self.task_uuid, end_message.task_uuid)
+        if end_message.contents.get(ACTION_TYPE_FIELD, None) != self.action_type:
+            raise ValueError('{} wrong for {}'.format(end_message, self))
+        end_time = end_message.timestamp
+        status = end_message.contents[ACTION_STATUS_FIELD]
+        if status == FAILED_STATUS:
+            exception = end_message.contents[EXCEPTION_FIELD]
+            reason = end_message.contents[REASON_FIELD]
+        else:
+            exception = None
+            reason = None
+        return self.set(
+            end_time=end_time, status=status, exception=exception, reason=reason)
+
 
 
 def startAction(logger=None, action_type="", _serializers=None, **fields):
