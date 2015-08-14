@@ -8,12 +8,12 @@ top-level actions.
 from __future__ import unicode_literals, absolute_import
 
 import threading
-from uuid import uuid4
+from uuid import UUID, uuid4
 from itertools import count
 from contextlib import contextmanager
 from warnings import warn
 
-from pyrsistent import field, PClass, pvector_field, m, v
+from pyrsistent import field, PClass, optional, pmap_field, pvector_field, m, v
 
 from six import text_type as unicode
 
@@ -32,6 +32,8 @@ ACTION_TYPE_FIELD = 'action_type'
 STARTED_STATUS = 'started'
 SUCCEEDED_STATUS = 'succeeded'
 FAILED_STATUS = 'failed'
+
+VALID_STATUSES = (STARTED_STATUS, SUCCEEDED_STATUS, FAILED_STATUS)
 
 
 class _ExecutionContext(threading.local):
@@ -521,9 +523,9 @@ class WrittenAction(PClass):
     @ivar end_time: The Unix timestamp of when the action ended, or C{None} if
         there has been no end message.
 
-    @ivar exception: If the action failed, the exception that was raised to
-        cause it to fail. If the action succeeded, or hasn't finished yet, then
-        C{None}.
+    @ivar exception: If the action failed, the name of the exception that was
+        raised to cause it to fail. If the action succeeded, or hasn't finished
+        yet, then C{None}.
 
     @ivar reason: The reason the action failed. If the action succeeded, or
         hasn't finished yet, then C{None}.
@@ -539,15 +541,19 @@ class WrittenAction(PClass):
     #   until it can construct known-valid instances
     # - Be able to recover the original messages
 
-    action_type = field(mandatory=True)  # XXX: Type restrict to whatever action_type is
-    status = field(mandatory=True)  # XXX: Make it so it's one of a small set
-    task_uuid = field(mandatory=True)  # XXX: Type constrain to uuid
+    action_type = field(type=unicode, mandatory=True)
+    status = field(type=unicode, mandatory=True,
+                   invariant=lambda x: (x in VALID_STATUSES, 'Invalid status'))
+    task_uuid = field(type=UUID, mandatory=True)
     task_level = field(type=TaskLevel, mandatory=True)
-    start_time = field(mandatory=True)  # XXX: Type constrain to datetime
-    end_time = field(mandatory=True)  # XXX: Type constrain to datetime or None
-    _children = field(mandatory=True)  # XXX: pmap of task_level to WrittenAction / WrittenMessage
-    exception = field(mandatory=True)  # XXX: What type is this?
-    reason = field(mandatory=True)  # XXX: Type constraint to text or None
+    start_time = field(type=float, mandatory=True)
+    end_time = field(type=optional(float), mandatory=True)
+    # XXX: Actually a map to either WrittenMessage or WrittenAction, but
+    # pyrsistent doesn't support recursive data types:
+    # https://github.com/tobgu/pyrsistent/issues/48
+    _children = pmap_field(TaskLevel, object)
+    exception = field(type=optional(unicode), mandatory=True)
+    reason = field(type=optional(unicode), mandatory=True)
 
     # XXX: Possible invariants:
     # - start_time <= end_time
