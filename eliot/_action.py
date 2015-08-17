@@ -13,7 +13,9 @@ from itertools import count
 from contextlib import contextmanager
 from warnings import warn
 
-from pyrsistent import field, PClass, optional, pmap_field, pvector_field, m, v
+from pyrsistent import (
+    field, PClass, optional, pmap_field, pvector_field, pmap, pvector,
+)
 
 from six import text_type as unicode
 
@@ -568,7 +570,7 @@ class WrittenAction(PClass):
     # succinctly.
 
     @classmethod
-    def from_messages(cls, start_message, children=v(), end_message=None):
+    def from_messages(cls, start_message, children=pvector(), end_message=None):
         """
         Create a C{WrittenAction} from C{WrittenMessage}s and other
         C{WrittenAction}s.
@@ -611,7 +613,7 @@ class WrittenAction(PClass):
             task_level=start_message.task_level.parent(),
             start_time=start_message.timestamp,
             end_time=None,
-            _children=m(),
+            _children=pmap(),
             exception=None,
             reason=None,
         )
