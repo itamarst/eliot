@@ -655,7 +655,7 @@ class WrittenAction(PClass):
         level = message.task_level
         if self._children.get(level, message) != message:
             raise DuplicateChild(self, message)
-        return self.set(_children=self._children.set(level, message))
+        return self.transform(('_children', level), message)
 
     def _end(self, end_message):
         """
