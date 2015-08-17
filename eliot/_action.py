@@ -452,7 +452,7 @@ class WrongTaskLevel(Exception):
 
 class WrongActionType(Exception):
     """
-    Tried to end a message with a different action_type to the beginning.
+    Tried to end a message with a different action_type than the beginning.
     """
 
     def __init__(self, action, message):
