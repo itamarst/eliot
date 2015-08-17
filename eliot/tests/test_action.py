@@ -1019,6 +1019,21 @@ class WrittenActionTests(testtools.TestCase):
         self.assertRaises(
             InvalidStartMessage, WrittenAction.from_messages, message)
 
+    @given(START_ACTION_MESSAGE_DICTS, status=one_of(just(FAILED_STATUS), just(SUCCEEDED_STATUS), text()))
+    def test_invalid_start_message_wrong_status(self, message_dict, status):
+        """
+        A start message must have an C{ACTION_STATUS_FIELD} with the value
+        C{STARTED_STATUS}, otherwise it's not a start message. If we receive
+        such a message, raise an error.
+
+        This test handles the case where the status field is present, but is
+        not C{STARTED_STATUS}.
+        """
+        message = WrittenMessage.from_dict(
+            message_dict.update({ACTION_STATUS_FIELD: status}))
+        self.assertRaises(
+            InvalidStartMessage, WrittenAction.from_messages, message)
+
     @given(START_ACTION_MESSAGE_DICTS, integers(min_value=2))
     def test_invalid_task_level_in_start_message(self, start_message_dict, i):
         """
@@ -1032,21 +1047,6 @@ class WrittenActionTests(testtools.TestCase):
         new_level = start_message_dict[TASK_LEVEL_FIELD].append(i)
         message_dict = start_message_dict.set(TASK_LEVEL_FIELD, new_level)
         message = WrittenMessage.from_dict(message_dict)
-        self.assertRaises(
-            InvalidStartMessage, WrittenAction.from_messages, message)
-
-    @given(START_ACTION_MESSAGE_DICTS, status=one_of(just(FAILED_STATUS), just(SUCCEEDED_STATUS), text()))
-    def test_invalid_start_message_wrong_status(self, message_dict, status):
-        """
-        A start message must have an C{ACTION_STATUS_FIELD} with the value
-        C{STARTED_STATUS}, otherwise it's not a start message. If we receive
-        such a message, raise an error.
-
-        This test handles the case where the status field is present, but is
-        not C{STARTED_STATUS}.
-        """
-        message = WrittenMessage.from_dict(
-            message_dict.update({ACTION_STATUS_FIELD: status}))
         self.assertRaises(
             InvalidStartMessage, WrittenAction.from_messages, message)
 
