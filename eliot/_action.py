@@ -21,6 +21,7 @@ from six import text_type as unicode
 
 from ._message import (
     Message,
+    WrittenMessage,
     EXCEPTION_FIELD,
     REASON_FIELD,
     TASK_UUID_FIELD,
@@ -514,46 +515,16 @@ class WrittenAction(PClass):
     action actually is, and a means of constructing actions that are known to
     be valid.
 
-    @ivar action_type: The type of the action,
-        e.g. C{"yourapp:subsystem:dosomething"}
-
-    @ivar status: One of C{STARTED_STATUS}, C{SUCCEEDED_STATUS}, or
-        C{FAILED_STATUS}.
-
-    @ivar task_uuid: The UUID of the task to which this action belongs.
-
-    @ivar TaskLevel task_level: The level of the task in which the action
-        occurs.
-
-    @ivar start_time: The Unix timestamp of when the action started.
-
-    @ivar end_time: The Unix timestamp of when the action ended, or C{None} if
-        there has been no end message.
-
-    @ivar exception: If the action failed, the name of the exception that was
-        raised to cause it to fail. If the action succeeded, or hasn't finished
-        yet, then C{None}.
-
-    @ivar reason: The reason the action failed. If the action succeeded, or
-        hasn't finished yet, then C{None}.
-
     @ivar _children: A L{pmap} from L{TaskLevel} to the L{WrittenAction} and
         L{WrittenMessage} objects that make up this action.
     """
 
-    action_type = field(type=unicode, mandatory=True)
-    status = field(type=unicode, mandatory=True,
-                   invariant=lambda x: (x in VALID_STATUSES, 'Invalid status'))
-    task_uuid = field(type=UUID, mandatory=True)
-    task_level = field(type=TaskLevel, mandatory=True)
-    start_time = field(type=float, mandatory=True)
-    end_time = field(type=optional(float), mandatory=True)
+    start_message = field(type=WrittenMessage, mandatory=True)
+    end_message = field(type=optional(WrittenMessage), mandatory=True)
     # XXX: Actually a map to either WrittenMessage or WrittenAction, but
     # pyrsistent doesn't support recursive data types:
     # https://github.com/tobgu/pyrsistent/issues/48
     _children = pmap_field(TaskLevel, object)
-    exception = field(type=optional(unicode), mandatory=True)
-    reason = field(type=optional(unicode), mandatory=True)
 
     # XXX: I'm fairly convinced that this would be simpler and clearer if we
     # had a class or classes for the "special" action messages. Also if we had
@@ -593,24 +564,80 @@ class WrittenAction(PClass):
             raise InvalidStartMessage.wrong_status(start_message)
         if start_message.task_level.level[-1] != 1:
             raise InvalidStartMessage.wrong_task_level(start_message)
-        action_type = start_message.contents.get(ACTION_TYPE_FIELD, None)
-        status = STARTED_STATUS
         action = cls(
-            action_type=action_type,
-            status=status,
-            task_uuid=start_message.task_uuid,
-            task_level=start_message.task_level.parent(),
-            start_time=start_message.timestamp,
-            end_time=None,
+            start_message=start_message,
             _children=pmap(),
-            exception=None,
-            reason=None,
+            end_message=None,
         )
         for child in children:
             action = action._add_child(child)
         if end_message:
             return action._end(end_message)
         return action
+
+    @property
+    def action_type(self):
+        """
+        The type of this action, e.g. C{"yourapp:subsystem:dosomething"}.
+        """
+        return self.start_message.contents[ACTION_TYPE_FIELD]
+
+    @property
+    def status(self):
+        """
+        One of C{STARTED_STATUS}, C{SUCCEEDED_STATUS}, or C{FAILED_STATUS}.
+        """
+        message = self.end_message if self.end_message else self.start_message
+        return message.contents[ACTION_STATUS_FIELD]
+
+    @property
+    def task_uuid(self):
+        """
+        The UUID of the task to which this action belongs.
+        """
+        return self.start_message.task_uuid
+
+    @property
+    def task_level(self):
+        """
+        The level of the task in which the action occurs.
+        """
+        return self.start_message.task_level.parent()
+
+    @property
+    def start_time(self):
+        """
+        The Unix timestamp of when the action started.
+        """
+        return self.start_message.timestamp
+
+    @property
+    def end_time(self):
+        """
+        The Unix timestamp of when the action ended, or C{None} if there has been
+        no end message.
+        """
+        if self.end_message:
+            return self.end_message.timestamp
+
+    @property
+    def exception(self):
+        """
+        If the action failed, the name of the exception that was raised to cause
+        it to fail. If the action succeeded, or hasn't finished yet, then
+        C{None}.
+        """
+        if self.end_message:
+            return self.end_message.contents.get(EXCEPTION_FIELD, None)
+
+    @property
+    def reason(self):
+        """
+        The reason the action failed. If the action succeeded, or hasn't finished
+        yet, then C{None}.
+        """
+        if self.end_message:
+            return self.end_message.contents.get(REASON_FIELD, None)
 
     @property
     def children(self):
@@ -682,19 +709,10 @@ class WrittenAction(PClass):
         action_type = end_message.contents.get(ACTION_TYPE_FIELD, None)
         if action_type != self.action_type:
             raise WrongActionType(self, end_message)
-        end_time = end_message.timestamp
         status = end_message.contents.get(ACTION_STATUS_FIELD, None)
-        if status == FAILED_STATUS:
-            exception = end_message.contents[EXCEPTION_FIELD]
-            reason = end_message.contents[REASON_FIELD]
-        elif status == SUCCEEDED_STATUS:
-            exception = None
-            reason = None
-        else:
+        if status not in (FAILED_STATUS, SUCCEEDED_STATUS):
             raise InvalidStatus(self, end_message)
-        return self.set(
-            end_time=end_time, status=status, exception=exception,
-            reason=reason)
+        return self.set(end_message=end_message)
 
 
 def startAction(logger=None, action_type="", _serializers=None, **fields):
