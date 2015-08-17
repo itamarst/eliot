@@ -537,8 +537,8 @@ class WrittenAction(PClass):
     @ivar reason: The reason the action failed. If the action succeeded, or
         hasn't finished yet, then C{None}.
 
-    @ivar _children: A L{pvector} of L{WrittenAction} and L{WrittenMessage}
-        that make up this action.
+    @ivar _children: A L{pmap} from L{TaskLevel} to the L{WrittenAction} and
+        L{WrittenMessage} objects that make up this action.
     """
 
     action_type = field(type=unicode, mandatory=True)
