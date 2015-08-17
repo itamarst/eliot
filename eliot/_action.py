@@ -510,6 +510,10 @@ class WrittenAction(PClass):
     """
     An Action that has been logged.
 
+    This class is intended to provide a definition within Eliot of what an
+    action actually is, and a means of constructing actions that are known to
+    be valid.
+
     @ivar action_type: The type of the action,
         e.g. C{"yourapp:subsystem:dosomething"}
 
@@ -536,13 +540,6 @@ class WrittenAction(PClass):
     @ivar _children: A L{pvector} of L{WrittenAction} and L{WrittenMessage}
         that make up this action.
     """
-
-    # Broad philosophy:
-    # - Have a way of constructing known-valid instances (at the very least,
-    #   this is useful for tests)
-    # - Have a thing that takes messages out of order and hangs on to them
-    #   until it can construct known-valid instances
-    # - Be able to recover the original messages
 
     action_type = field(type=unicode, mandatory=True)
     status = field(type=unicode, mandatory=True,
