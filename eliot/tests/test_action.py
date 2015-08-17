@@ -969,6 +969,11 @@ class WrittenActionTests(testtools.TestCase):
 
     @given(START_ACTION_MESSAGES)
     def test_from_single_message(self, message):
+        """
+        A L{WrittenAction} can be constructed from a single "start" message. Such
+        an action inherits the C{action_type} of the start message, has no
+        C{end_time}, and has a C{status} of C{STARTED_STATUS}.
+        """
         action = WrittenAction.from_messages(message)
         self.assertThat(
             action, MatchesStructure.byEquality(
@@ -985,6 +990,11 @@ class WrittenActionTests(testtools.TestCase):
 
     @given(START_ACTION_MESSAGES, MESSAGE_DICTS, integers(min_value=2))
     def test_different_task_uuid(self, start_message, end_message_dict, n):
+        """
+        By definition, an action is either a top-level task or takes place within
+        such a task. If we try to assemble actions from messages with
+        differing task UUIDs, we raise an error.
+        """
         assume(start_message.task_uuid != end_message_dict['task_uuid'])
         end_message = WrittenMessage.from_dict(
             end_message_dict.update({
@@ -997,6 +1007,13 @@ class WrittenActionTests(testtools.TestCase):
 
     @given(MESSAGE_DICTS)
     def test_invalid_start_message_missing_status(self, message_dict):
+        """
+        A start message must have an C{ACTION_STATUS_FIELD} with the value
+        C{STARTED_STATUS}, otherwise it's not a start message. If we receive
+        such a message, raise an error.
+
+        This test handles the case where the status field is not present.
+        """
         assume(ACTION_STATUS_FIELD not in message_dict)
         message = WrittenMessage.from_dict(message_dict)
         self.assertRaises(
@@ -1004,6 +1021,14 @@ class WrittenActionTests(testtools.TestCase):
 
     @given(START_ACTION_MESSAGE_DICTS, integers(min_value=2))
     def test_invalid_task_level_in_start_message(self, start_message_dict, i):
+        """
+        All messages in an action have a task level. The first message in an
+        action must have a task level ending in C{1}, indicating that it's the
+        first message.
+
+        If we try to start an action with a message that has a task level that
+        does not end in C{1}, raise an error.
+        """
         new_level = start_message_dict[TASK_LEVEL_FIELD].append(i)
         message_dict = start_message_dict.set(TASK_LEVEL_FIELD, new_level)
         message = WrittenMessage.from_dict(message_dict)
@@ -1012,6 +1037,14 @@ class WrittenActionTests(testtools.TestCase):
 
     @given(START_ACTION_MESSAGE_DICTS, status=one_of(just(FAILED_STATUS), just(SUCCEEDED_STATUS), text()))
     def test_invalid_start_message_wrong_status(self, message_dict, status):
+        """
+        A start message must have an C{ACTION_STATUS_FIELD} with the value
+        C{STARTED_STATUS}, otherwise it's not a start message. If we receive
+        such a message, raise an error.
+
+        This test handles the case where the status field is present, but is
+        not C{STARTED_STATUS}.
+        """
         message = WrittenMessage.from_dict(
             message_dict.update({ACTION_STATUS_FIELD: status}))
         self.assertRaises(
@@ -1020,6 +1053,11 @@ class WrittenActionTests(testtools.TestCase):
     @given(START_ACTION_MESSAGES, MESSAGE_DICTS, text(), integers(min_value=1))
     def test_action_type_mismatch(self, start_message, end_message_dict,
                                   end_type, n):
+        """
+        The end message of an action must have the same C{ACTION_TYPE_FIELD} as
+        the start message of an action. If we try to end an action with a
+        message that has a different type, we raise an error.
+        """
         assume(end_type != start_message.contents[ACTION_TYPE_FIELD])
         end_message = WrittenMessage.from_dict(end_message_dict.update({
             ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
@@ -1033,6 +1071,14 @@ class WrittenActionTests(testtools.TestCase):
 
     @given(START_ACTION_MESSAGES, MESSAGE_DICTS, integers(min_value=2))
     def test_successful_end(self, start_message, end_message_dict, n):
+        """
+        A L{WrittenAction} can be constructed with just a start message and an end
+        message: in this case, an end message that indicates the action was
+        successful.
+
+        Such an action inherits the C{end_time} from the end message, and has
+        a C{status} of C{SUCCEEDED_STATUS}.
+        """
         end_message = WrittenMessage.from_dict(
             end_message_dict.update(
                 {ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
@@ -1060,6 +1106,15 @@ class WrittenActionTests(testtools.TestCase):
            integers(min_value=2))
     def test_failed_end(self, start_message, end_message_dict, exception,
                         reason, n):
+        """
+        A L{WrittenAction} can be constructed with just a start message and an end
+        message: in this case, an end message that indicates that the action
+        failed.
+
+        Such an action inherits the C{end_time} from the end message, has a
+        C{status} of C{FAILED_STATUS}, and an C{exception} and C{reason} that
+        match the raised exception.
+        """
         end_message = WrittenMessage.from_dict(
             end_message_dict.update(
                 {ACTION_STATUS_FIELD: FAILED_STATUS,
@@ -1087,6 +1142,11 @@ class WrittenActionTests(testtools.TestCase):
 
     @given(START_ACTION_MESSAGES, MESSAGE_DICTS, integers(min_value=2))
     def test_end_has_no_status(self, start_message, end_message_dict, n):
+        """
+        If we try to end a L{WrittenAction} with a message that lacks an
+        C{ACTION_STATUS_FIELD}, we raise an error, because it's not a valid
+        end message.
+        """
         assume(ACTION_STATUS_FIELD not in end_message_dict)
         end_message = WrittenMessage.from_dict(
             end_message_dict.update({
@@ -1100,6 +1160,11 @@ class WrittenActionTests(testtools.TestCase):
 
     @given(START_ACTION_MESSAGES, lists(MESSAGE_DICTS))
     def test_children(self, start_message, child_messages):
+        """
+        We can construct a L{WrittenAction} with child messages. These messages
+        can be either L{WrittenAction}s or L{WrittenMessage}s. They are
+        available in the C{children} field.
+        """
         parent_level = start_message.task_level.parent().level
         messages = [
             WrittenMessage.from_dict(
@@ -1116,6 +1181,10 @@ class WrittenActionTests(testtools.TestCase):
 
     @given(START_ACTION_MESSAGES, MESSAGE_DICTS)
     def test_wrong_task_uuid(self, start_message, child_message):
+        """
+        All child messages of an action must have the same C{task_uuid} as the
+        action.
+        """
         assume(child_message[TASK_UUID_FIELD] != start_message.task_uuid)
         message = WrittenMessage.from_dict(child_message)
         self.assertRaises(
@@ -1124,6 +1193,10 @@ class WrittenActionTests(testtools.TestCase):
 
     @given(START_ACTION_MESSAGES, MESSAGE_DICTS)
     def test_wrong_task_level(self, start_message, child_message):
+        """
+        All child messages of an action must have a task level that is a direct
+        child of the action's task level.
+        """
         assume(not start_message.task_level.is_sibling_of(TaskLevel(level=child_message[TASK_LEVEL_FIELD])))
         message = WrittenMessage.from_dict(
             child_message.update({TASK_UUID_FIELD: start_message.task_uuid}))
@@ -1133,6 +1206,10 @@ class WrittenActionTests(testtools.TestCase):
 
     @given(START_ACTION_MESSAGES, MESSAGE_DICTS, MESSAGE_DICTS, integers(min_value=2))
     def test_duplicate_task_level(self, start_message, child1, child2, index):
+        """
+        If we try to add a child to an action that has a task level that's the
+        same as the task level of an existing child, we raise an error.
+        """
         parent_level = start_message.task_level.parent().level
         messages = [
             WrittenMessage.from_dict(

@@ -516,7 +516,8 @@ class WrittenAction(PClass):
 
     @ivar task_uuid: The UUID of the task to which this action belongs.
 
-    @ivar TaskLevel task_level: The level of the task in which the action occurs.
+    @ivar TaskLevel task_level: The level of the task in which the action
+        occurs.
 
     @ivar start_time: The Unix timestamp of when the action started.
 
