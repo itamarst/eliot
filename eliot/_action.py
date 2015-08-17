@@ -555,12 +555,6 @@ class WrittenAction(PClass):
     exception = field(type=optional(unicode), mandatory=True)
     reason = field(type=optional(unicode), mandatory=True)
 
-    # XXX: Possible invariants:
-    # - start_time <= end_time
-    # - task_level = set(child.task_level.parent() for child in children)
-    # - task_uuid = set(child.task_uuid for child in children)
-    # - exception and reason set iff status == FAILED_STATUS
-
     # XXX: I'm fairly convinced that this would be simpler and clearer if we
     # had a class or classes for the "special" action messages. Also if we had
     # a way of expressing 'either a WrittenMessage or a WrittenAction' more
