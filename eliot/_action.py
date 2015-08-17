@@ -587,8 +587,6 @@ class WrittenAction(PClass):
             C{task_level} indicating that it is not the first message of an
             action.
 
-        @return: A new, completed C{WrittenAction}.
-
         @return: A new C{WrittenAction}.
         """
         if start_message.contents.get(ACTION_STATUS_FIELD, None) != STARTED_STATUS:
