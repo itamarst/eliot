@@ -8,7 +8,7 @@ top-level actions.
 from __future__ import unicode_literals, absolute_import
 
 import threading
-from uuid import UUID, uuid4
+from uuid import uuid4
 from itertools import count
 from contextlib import contextmanager
 from warnings import warn
