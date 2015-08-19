@@ -1177,8 +1177,7 @@ class WrittenActionTests(testtools.TestCase):
         action = WrittenAction.from_messages(start_message, messages)
         task_level = lambda m: m.task_level
         self.assertEqual(
-            sorted(set(messages), key=task_level),
-            sorted(action.children, key=task_level))
+            sorted(set(messages), key=task_level), action.children)
 
     @given(START_ACTION_MESSAGES, MESSAGE_DICTS)
     def test_wrong_task_uuid(self, start_message, child_message):

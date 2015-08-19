@@ -640,10 +640,10 @@ class WrittenAction(PClass):
     @property
     def children(self):
         """
-        The list of child messages and actions, excluding the start and end
-        messages.
+        The list of child messages and actions sorted by task level, excluding the
+        start and end messages.
         """
-        return self._children.values()
+        return sorted(self._children.values(), key=lambda m: m.task_level)
 
     def _validate_message(self, message):
         """
