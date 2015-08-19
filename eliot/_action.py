@@ -515,6 +515,9 @@ class WrittenAction(PClass):
     action actually is, and a means of constructing actions that are known to
     be valid.
 
+    @ivar WrittenMessage start_message: The message that started this action.
+    @ivar WrittenMessage end_message: The message that ends this action. Can be
+        C{None} if the action is unfinished.
     @ivar _children: A L{pmap} from L{TaskLevel} to the L{WrittenAction} and
         L{WrittenMessage} objects that make up this action.
     """
@@ -525,11 +528,6 @@ class WrittenAction(PClass):
     # pyrsistent doesn't support recursive data types:
     # https://github.com/tobgu/pyrsistent/issues/48
     _children = pmap_field(TaskLevel, object)
-
-    # XXX: I'm fairly convinced that this would be simpler and clearer if we
-    # had a class or classes for the "special" action messages. Also if we had
-    # a way of expressing 'either a WrittenMessage or a WrittenAction' more
-    # succinctly.
 
     @classmethod
     def from_messages(cls, start_message, children=pvector(), end_message=None):
