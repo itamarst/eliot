@@ -1019,7 +1019,8 @@ class WrittenActionTests(testtools.TestCase):
         self.assertRaises(
             InvalidStartMessage, WrittenAction.from_messages, message)
 
-    @given(START_ACTION_MESSAGE_DICTS, status=one_of(just(FAILED_STATUS), just(SUCCEEDED_STATUS), text()))
+    @given(message_dict=START_ACTION_MESSAGE_DICTS,
+           status=one_of(just(FAILED_STATUS), just(SUCCEEDED_STATUS), text()))
     def test_invalid_start_message_wrong_status(self, message_dict, status):
         """
         A start message must have an C{ACTION_STATUS_FIELD} with the value
