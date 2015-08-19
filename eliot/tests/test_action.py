@@ -1198,7 +1198,8 @@ class WrittenActionTests(testtools.TestCase):
         All child messages of an action must have a task level that is a direct
         child of the action's task level.
         """
-        assume(not start_message.task_level.is_sibling_of(TaskLevel(level=child_message[TASK_LEVEL_FIELD])))
+        assume(not start_message.task_level.is_sibling_of(
+            TaskLevel(level=child_message[TASK_LEVEL_FIELD])))
         message = WrittenMessage.from_dict(
             child_message.update({TASK_UUID_FIELD: start_message.task_uuid}))
         self.assertRaises(
