@@ -942,8 +942,11 @@ MESSAGE_CORE_DICTS = fixed_dictionaries(
 MESSAGE_DATA_DICTS = dictionaries(keys=text(), values=text()).map(pmap)
 
 
-def union(dict1, dict2):
-    return dict1.update(dict2)
+def union(*dicts):
+    result = pmap()
+    for d in dicts:
+        result = result.update(d)
+    return result
 
 
 MESSAGE_DICTS = builds(union, MESSAGE_DATA_DICTS, MESSAGE_CORE_DICTS)
@@ -1020,7 +1023,7 @@ class WrittenActionTests(testtools.TestCase):
             InvalidStartMessage, WrittenAction.from_messages, message)
 
     @given(message_dict=START_ACTION_MESSAGE_DICTS,
-           status=one_of(just(FAILED_STATUS), just(SUCCEEDED_STATUS), text()))
+           status=(just(FAILED_STATUS) | just(SUCCEEDED_STATUS) | text()))
     def test_invalid_start_message_wrong_status(self, message_dict, status):
         """
         A start message must have an C{ACTION_STATUS_FIELD} with the value
@@ -1165,6 +1168,8 @@ class WrittenActionTests(testtools.TestCase):
         We can construct a L{WrittenAction} with child messages. These messages
         can be either L{WrittenAction}s or L{WrittenMessage}s. They are
         available in the C{children} field.
+
+        This test looks at L{WrittenMessage} children only.
         """
         parent_level = start_message.task_level.parent().level
         messages = [
