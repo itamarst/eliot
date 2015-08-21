@@ -643,7 +643,7 @@ class WrittenAction(PClass):
         The list of child messages and actions sorted by task level, excluding the
         start and end messages.
         """
-        return sorted(self._children.values(), key=lambda m: m.task_level)
+        return pvector(sorted(self._children.values(), key=lambda m: m.task_level))
 
     def _validate_message(self, message):
         """
