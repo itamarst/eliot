@@ -1042,7 +1042,7 @@ WRITTEN_ACTIONS = recursive(
     lambda children: builds(
         _make_written_action,
         start_message=START_ACTION_MESSAGES,
-        child_messages=lists(children),
+        child_messages=lists(children, average_size=5),
         end_message_dict=builds(
             union, MESSAGE_DICTS, _end_action_fields) | none(),
     ),
