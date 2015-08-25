@@ -10,7 +10,7 @@ from unittest import TestCase
 from threading import Thread
 from warnings import catch_warnings, simplefilter
 
-from hypothesis import assume, given
+from hypothesis import assume, given, Settings
 from hypothesis.strategies import (
     basic,
     builds,
@@ -1304,7 +1304,10 @@ class WrittenActionTests(testtools.TestCase):
             InvalidStatus,
             WrittenAction.from_messages, start_message, end_message=end_message)
 
-    @given(START_ACTION_MESSAGES, lists(WRITTEN_MESSAGES | WRITTEN_ACTIONS))
+    # This test is slow, and when run under coverage on pypy on Travis won't
+    # make the default of 5 examples. 1 is enough.
+    @given(START_ACTION_MESSAGES, lists(WRITTEN_MESSAGES | WRITTEN_ACTIONS),
+           settings=Settings(min_satisfying_examples=1))
     def test_children(self, start_message, child_messages):
         """
         We can construct a L{WrittenAction} with child messages. These messages
