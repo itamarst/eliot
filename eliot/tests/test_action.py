@@ -934,6 +934,9 @@ class TaskLevelTests(TestCase):
         self.assertEqual(TaskLevel.to_string, TaskLevel.toString)
 
 
+# Text generation is slow, and most of the things are short labels.
+LABELS = text(average_size=5)
+
 TIMESTAMPS = floats(min_value=0)
 
 UUIDS = basic(generate=lambda r, _: UUID(int=r.getrandbits(128)))
@@ -943,7 +946,12 @@ MESSAGE_CORE_DICTS = fixed_dictionaries(
          task_uuid=UUIDS,
          timestamp=TIMESTAMPS)).map(pmap)
 
-MESSAGE_DATA_DICTS = dictionaries(keys=text(), values=text()).map(pmap)
+
+# Text generation is slow. We can make it faster by not generating so
+# much. These are reasonable values.
+MESSAGE_DATA_DICTS = dictionaries(
+    keys=LABELS, values=text(average_size=10),
+).map(pmap)
 
 
 def union(*dicts):
@@ -958,7 +966,7 @@ WRITTEN_MESSAGES = MESSAGE_DICTS.map(WrittenMessage.from_dict)
 
 _start_action_fields = fixed_dictionaries(
     { ACTION_STATUS_FIELD: just(STARTED_STATUS),
-      ACTION_TYPE_FIELD: text(),
+      ACTION_TYPE_FIELD: LABELS,
     })
 START_ACTION_MESSAGE_DICTS = builds(
     union, MESSAGE_DICTS, _start_action_fields).map(
@@ -978,8 +986,10 @@ _end_action_fields = one_of(
     just({ACTION_STATUS_FIELD: SUCCEEDED_STATUS}),
     fixed_dictionaries({
         ACTION_STATUS_FIELD: just(FAILED_STATUS),
-        EXCEPTION_FIELD: text(),
-        REASON_FIELD: text(),
+        # Text generation is slow. We can make it faster by not generating so
+        # much. These are reasonable values.
+        EXCEPTION_FIELD: text(average_size=20),
+        REASON_FIELD: text(average_size=20),
     }),
 )
 
