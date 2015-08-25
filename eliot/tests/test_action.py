@@ -951,6 +951,9 @@ MESSAGE_CORE_DICTS = fixed_dictionaries(
 # much. These are reasonable values.
 MESSAGE_DATA_DICTS = dictionaries(
     keys=LABELS, values=text(average_size=10),
+    # People don't normally put much more than twenty fields in their
+    # messages, surely?
+    average_size=10,
 ).map(pmap)
 
 
