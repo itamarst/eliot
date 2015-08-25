@@ -820,7 +820,9 @@ class SerializationTests(TestCase):
 
 
 TASK_LEVEL_INDEXES = integers(min_value=1)
-TASK_LEVEL_LISTS = lists(TASK_LEVEL_INDEXES, min_size=1)
+# Task levels can be arbitrarily deep, but in the wild rarely as much as 100.
+# Five seems a sensible average.
+TASK_LEVEL_LISTS = lists(TASK_LEVEL_INDEXES, min_size=1, average_size=5)
 TASK_LEVELS = TASK_LEVEL_LISTS.map(lambda level: TaskLevel(level=level))
 
 
