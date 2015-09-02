@@ -960,10 +960,18 @@ MESSAGE_DATA_DICTS = dictionaries(
 
 
 def union(*dicts):
-    result = pmap()
+    result = pmap().evolver()
     for d in dicts:
-        result = result.update(d)
-    return result
+        # Work around bug in pyrsistent where it sometimes loses updates if
+        # they contain some kv pairs that are identical to the ones in the
+        # dict being updated.
+        #
+        # https://github.com/tobgu/pyrsistent/pull/54
+        for key, value in d.items():
+            if key in result and result[key] is value:
+                continue
+            result[key] = value
+    return result.persistent()
 
 
 MESSAGE_DICTS = builds(union, MESSAGE_DATA_DICTS, MESSAGE_CORE_DICTS)
@@ -1024,7 +1032,7 @@ def _make_written_action(start_message, child_messages, end_message_dict):
 
     if end_message_dict:
         end_message = WrittenMessage.from_dict(
-            end_message_dict.update({
+            union(end_message_dict, {
                 ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
                 TASK_UUID_FIELD: task_uuid,
                 TASK_LEVEL_FIELD: sibling_task_level(
@@ -1142,7 +1150,7 @@ class WrittenActionTests(testtools.TestCase):
         """
         assume(start_message.task_uuid != end_message_dict['task_uuid'])
         end_message = WrittenMessage.from_dict(
-            end_message_dict.update({
+            union(end_message_dict, {
                 ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
                 TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
             }))
@@ -1205,7 +1213,7 @@ class WrittenActionTests(testtools.TestCase):
         message that has a different type, we raise an error.
         """
         assume(end_type != start_message.contents[ACTION_TYPE_FIELD])
-        end_message = WrittenMessage.from_dict(end_message_dict.update({
+        end_message = WrittenMessage.from_dict(union(end_message_dict, {
             ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
             ACTION_TYPE_FIELD: end_type,
             TASK_UUID_FIELD: start_message.task_uuid,
@@ -1226,7 +1234,7 @@ class WrittenActionTests(testtools.TestCase):
         a C{status} of C{SUCCEEDED_STATUS}.
         """
         end_message = WrittenMessage.from_dict(
-            end_message_dict.update(
+            union(end_message_dict,
                 {ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
                  ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
                  TASK_UUID_FIELD: start_message.task_uuid,
@@ -1262,7 +1270,7 @@ class WrittenActionTests(testtools.TestCase):
         match the raised exception.
         """
         end_message = WrittenMessage.from_dict(
-            end_message_dict.update(
+            union(end_message_dict,
                 {ACTION_STATUS_FIELD: FAILED_STATUS,
                  ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
                  TASK_UUID_FIELD: start_message.task_uuid,
@@ -1295,7 +1303,7 @@ class WrittenActionTests(testtools.TestCase):
         """
         assume(ACTION_STATUS_FIELD not in end_message_dict)
         end_message = WrittenMessage.from_dict(
-            end_message_dict.update({
+            union(end_message_dict, {
                 ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
                 TASK_UUID_FIELD: start_message.task_uuid,
                 TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
@@ -1360,7 +1368,7 @@ class WrittenActionTests(testtools.TestCase):
         parent_level = start_message.task_level.parent().level
         messages = [
             WrittenMessage.from_dict(
-                child_message.update({
+                union(child_message, {
                     TASK_UUID_FIELD: start_message.task_uuid,
                     TASK_LEVEL_FIELD: parent_level.append(index),
                 }))
