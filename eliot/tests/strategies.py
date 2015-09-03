@@ -127,7 +127,7 @@ def _make_written_action(start_message, child_messages, end_message_dict):
 
     for i, child in enumerate(child_messages, 2):
         task_level = TaskLevel(level=sibling_task_level(start_message, i))
-        children.append(_reparent_action(task_uuid, task_level, child))
+        children.append(reparent_action(task_uuid, task_level, child))
 
     if end_message_dict:
         end_message = WrittenMessage.from_dict(
@@ -189,7 +189,7 @@ def _map_messages(f, written_action):
     )
 
 
-def _reparent_action(task_uuid, task_level, written_action):
+def reparent_action(task_uuid, task_level, written_action):
     """
     Return a version of C{written_action} that has the given C{task_uuid} and
     is rooted at the given C{task_level}.

@@ -42,7 +42,7 @@ from .strategies import (
     TASK_LEVEL_LISTS,
     WRITTEN_ACTIONS,
     WRITTEN_MESSAGES,
-    _reparent_action,
+    reparent_action,
     sibling_task_level,
     union,
 )
@@ -1140,7 +1140,7 @@ class WrittenActionTests(testtools.TestCase):
         available in the C{children} field.
         """
         messages = [
-            _reparent_action(
+            reparent_action(
                 start_message.task_uuid,
                 TaskLevel(level=sibling_task_level(start_message, i)),
                 message)
