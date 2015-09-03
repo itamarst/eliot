@@ -32,30 +32,30 @@ from .._message import (
 
 
 
-TASK_LEVEL_INDEXES = integers(min_value=1)
+task_level_indexes = integers(min_value=1)
 # Task levels can be arbitrarily deep, but in the wild rarely as much as 100.
 # Five seems a sensible average.
-TASK_LEVEL_LISTS = lists(TASK_LEVEL_INDEXES, min_size=1, average_size=5)
-TASK_LEVELS = TASK_LEVEL_LISTS.map(lambda level: TaskLevel(level=level))
+task_level_lists = lists(task_level_indexes, min_size=1, average_size=5)
+task_levels = task_level_lists.map(lambda level: TaskLevel(level=level))
 
 
 # Text generation is slow, and most of the things are short labels.
-LABELS = text(average_size=5)
+labels = text(average_size=5)
 
-TIMESTAMPS = floats(min_value=0)
+timestamps = floats(min_value=0)
 
-UUIDS = basic(generate=lambda r, _: UUID(int=r.getrandbits(128)))
+uuids = basic(generate=lambda r, _: UUID(int=r.getrandbits(128)))
 
-MESSAGE_CORE_DICTS = fixed_dictionaries(
-    dict(task_level=TASK_LEVEL_LISTS.map(pvector),
-         task_uuid=UUIDS,
-         timestamp=TIMESTAMPS)).map(pmap)
+message_core_dicts = fixed_dictionaries(
+    dict(task_level=task_level_lists.map(pvector),
+         task_uuid=uuids,
+         timestamp=timestamps)).map(pmap)
 
 
 # Text generation is slow. We can make it faster by not generating so
 # much. These are reasonable values.
-MESSAGE_DATA_DICTS = dictionaries(
-    keys=LABELS, values=text(average_size=10),
+message_data_dicts = dictionaries(
+    keys=labels, values=text(average_size=10),
     # People don't normally put much more than twenty fields in their
     # messages, surely?
     average_size=10,
@@ -77,17 +77,17 @@ def union(*dicts):
     return result.persistent()
 
 
-MESSAGE_DICTS = builds(union, MESSAGE_DATA_DICTS, MESSAGE_CORE_DICTS)
-WRITTEN_MESSAGES = MESSAGE_DICTS.map(WrittenMessage.from_dict)
+message_dicts = builds(union, message_data_dicts, message_core_dicts)
+written_messages = message_dicts.map(WrittenMessage.from_dict)
 
 _start_action_fields = fixed_dictionaries(
     { ACTION_STATUS_FIELD: just(STARTED_STATUS),
-      ACTION_TYPE_FIELD: LABELS,
+      ACTION_TYPE_FIELD: labels,
     })
-START_ACTION_MESSAGE_DICTS = builds(
-    union, MESSAGE_DICTS, _start_action_fields).map(
+start_action_message_dicts = builds(
+    union, message_dicts, _start_action_fields).map(
         lambda x: x.update({TASK_LEVEL_FIELD: x[TASK_LEVEL_FIELD].set(-1, 1)}))
-START_ACTION_MESSAGES = START_ACTION_MESSAGE_DICTS.map(WrittenMessage.from_dict)
+start_action_messages = start_action_message_dicts.map(WrittenMessage.from_dict)
 
 
 def sibling_task_level(message, n):
@@ -144,14 +144,14 @@ def _make_written_action(start_message, child_messages, end_message_dict):
     return WrittenAction.from_messages(start_message, children, end_message)
 
 
-WRITTEN_ACTIONS = recursive(
-    WRITTEN_MESSAGES,
+written_actions = recursive(
+    written_messages,
     lambda children: builds(
         _make_written_action,
-        start_message=START_ACTION_MESSAGES,
+        start_message=start_action_messages,
         child_messages=lists(children, average_size=5),
         end_message_dict=builds(
-            union, MESSAGE_DICTS, _end_action_fields) | none(),
+            union, message_dicts, _end_action_fields) | none(),
     ),
 )
 

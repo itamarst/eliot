@@ -35,13 +35,13 @@ from ..testing import assertContainsFields
 from .. import _action, add_destination, remove_destination
 
 from .strategies import (
-    MESSAGE_DICTS,
-    START_ACTION_MESSAGE_DICTS,
-    START_ACTION_MESSAGES,
-    TASK_LEVEL_INDEXES,
-    TASK_LEVEL_LISTS,
-    WRITTEN_ACTIONS,
-    WRITTEN_MESSAGES,
+    message_dicts,
+    start_action_message_dicts,
+    start_action_messages,
+    task_level_indexes,
+    task_level_lists,
+    written_actions,
+    written_messages,
     reparent_action,
     sibling_task_level,
     union,
@@ -853,7 +853,7 @@ class TaskLevelTests(TestCase):
         ]))
 
 
-    @given(lists(TASK_LEVEL_INDEXES))
+    @given(lists(task_level_indexes))
     def test_parent_of_child(self, base_task_level):
         """
         L{TaskLevel.child} returns the first child of the task.
@@ -863,7 +863,7 @@ class TaskLevelTests(TestCase):
         self.assertEqual(base_task, child_task.parent())
 
 
-    @given(TASK_LEVEL_LISTS)
+    @given(task_level_lists)
     def test_child_greater_than_parent(self, task_level):
         """
         L{TaskLevel.child} returns a child that is greater than its parent.
@@ -872,7 +872,7 @@ class TaskLevelTests(TestCase):
         self.assert_fully_less_than(task, task.child())
 
 
-    @given(TASK_LEVEL_LISTS)
+    @given(task_level_lists)
     def test_next_sibling_greater(self, task_level):
         """
         L{TaskLevel.next_sibling} returns a greater task level.
@@ -881,7 +881,7 @@ class TaskLevelTests(TestCase):
         self.assert_fully_less_than(task, task.next_sibling())
 
 
-    @given(TASK_LEVEL_LISTS)
+    @given(task_level_lists)
     def test_next_sibling(self, task_level):
         """
         L{TaskLevel.next_sibling} returns the next sibling of a task.
@@ -937,7 +937,7 @@ class WrittenActionTests(testtools.TestCase):
     Tests for L{WrittenAction}.
     """
 
-    @given(START_ACTION_MESSAGES)
+    @given(start_action_messages)
     def test_from_single_message(self, message):
         """
         A L{WrittenAction} can be constructed from a single "start" message. Such
@@ -958,7 +958,7 @@ class WrittenActionTests(testtools.TestCase):
                 exception=None,
             ))
 
-    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, integers(min_value=2))
+    @given(start_action_messages, message_dicts, integers(min_value=2))
     def test_different_task_uuid(self, start_message, end_message_dict, n):
         """
         By definition, an action is either a top-level task or takes place within
@@ -975,7 +975,7 @@ class WrittenActionTests(testtools.TestCase):
             WrongTask,
             WrittenAction.from_messages, start_message, end_message=end_message)
 
-    @given(MESSAGE_DICTS)
+    @given(message_dicts)
     def test_invalid_start_message_missing_status(self, message_dict):
         """
         A start message must have an C{ACTION_STATUS_FIELD} with the value
@@ -989,7 +989,7 @@ class WrittenActionTests(testtools.TestCase):
         self.assertRaises(
             InvalidStartMessage, WrittenAction.from_messages, message)
 
-    @given(message_dict=START_ACTION_MESSAGE_DICTS,
+    @given(message_dict=start_action_message_dicts,
            status=(just(FAILED_STATUS) | just(SUCCEEDED_STATUS) | text()))
     def test_invalid_start_message_wrong_status(self, message_dict, status):
         """
@@ -1005,7 +1005,7 @@ class WrittenActionTests(testtools.TestCase):
         self.assertRaises(
             InvalidStartMessage, WrittenAction.from_messages, message)
 
-    @given(START_ACTION_MESSAGE_DICTS, integers(min_value=2))
+    @given(start_action_message_dicts, integers(min_value=2))
     def test_invalid_task_level_in_start_message(self, start_message_dict, i):
         """
         All messages in an action have a task level. The first message in an
@@ -1021,7 +1021,7 @@ class WrittenActionTests(testtools.TestCase):
         self.assertRaises(
             InvalidStartMessage, WrittenAction.from_messages, message)
 
-    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, text(), integers(min_value=1))
+    @given(start_action_messages, message_dicts, text(), integers(min_value=1))
     def test_action_type_mismatch(self, start_message, end_message_dict,
                                   end_type, n):
         """
@@ -1040,7 +1040,7 @@ class WrittenActionTests(testtools.TestCase):
             WrongActionType,
             WrittenAction.from_messages, start_message, end_message=end_message)
 
-    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, integers(min_value=2))
+    @given(start_action_messages, message_dicts, integers(min_value=2))
     def test_successful_end(self, start_message, end_message_dict, n):
         """
         A L{WrittenAction} can be constructed with just a start message and an end
@@ -1073,7 +1073,7 @@ class WrittenActionTests(testtools.TestCase):
                 exception=None,
             ))
 
-    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, text(), text(),
+    @given(start_action_messages, message_dicts, text(), text(),
            integers(min_value=2))
     def test_failed_end(self, start_message, end_message_dict, exception,
                         reason, n):
@@ -1111,7 +1111,7 @@ class WrittenActionTests(testtools.TestCase):
                 exception=exception,
             ))
 
-    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, integers(min_value=2))
+    @given(start_action_messages, message_dicts, integers(min_value=2))
     def test_end_has_no_status(self, start_message, end_message_dict, n):
         """
         If we try to end a L{WrittenAction} with a message that lacks an
@@ -1131,7 +1131,7 @@ class WrittenActionTests(testtools.TestCase):
 
     # This test is slow, and when run under coverage on pypy on Travis won't
     # make the default of 5 examples. 1 is enough.
-    @given(START_ACTION_MESSAGES, lists(WRITTEN_MESSAGES | WRITTEN_ACTIONS),
+    @given(start_action_messages, lists(written_messages | written_actions),
            settings=Settings(min_satisfying_examples=1))
     def test_children(self, start_message, child_messages):
         """
@@ -1150,7 +1150,7 @@ class WrittenActionTests(testtools.TestCase):
         self.assertEqual(
             sorted(set(messages), key=task_level), action.children)
 
-    @given(START_ACTION_MESSAGES, MESSAGE_DICTS)
+    @given(start_action_messages, message_dicts)
     def test_wrong_task_uuid(self, start_message, child_message):
         """
         All child messages of an action must have the same C{task_uuid} as the
@@ -1162,7 +1162,7 @@ class WrittenActionTests(testtools.TestCase):
             WrongTask,
             WrittenAction.from_messages, start_message, v(message))
 
-    @given(START_ACTION_MESSAGES, MESSAGE_DICTS)
+    @given(start_action_messages, message_dicts)
     def test_wrong_task_level(self, start_message, child_message):
         """
         All child messages of an action must have a task level that is a direct
@@ -1176,7 +1176,7 @@ class WrittenActionTests(testtools.TestCase):
             WrongTaskLevel,
             WrittenAction.from_messages, start_message, v(message))
 
-    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, MESSAGE_DICTS, integers(min_value=2))
+    @given(start_action_messages, message_dicts, message_dicts, integers(min_value=2))
     def test_duplicate_task_level(self, start_message, child1, child2, index):
         """
         If we try to add a child to an action that has a task level that's the
