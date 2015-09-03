@@ -94,10 +94,6 @@ def sibling_task_level(message, n):
     return message.task_level.parent().level.append(n)
 
 
-def child_task_level(task_level, i):
-    return task_level.transform(['level'], lambda level: level.append(i))
-
-
 _end_action_fields = one_of(
     just({ACTION_STATUS_FIELD: SUCCEEDED_STATUS}),
     fixed_dictionaries({
