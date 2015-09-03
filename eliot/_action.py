@@ -13,12 +13,15 @@ from itertools import count
 from contextlib import contextmanager
 from warnings import warn
 
-from pyrsistent import PClass, pvector_field
+from pyrsistent import (
+    field, PClass, optional, pmap_field, pvector_field, pmap, pvector,
+)
 
 from six import text_type as unicode
 
 from ._message import (
     Message,
+    WrittenMessage,
     EXCEPTION_FIELD,
     REASON_FIELD,
     TASK_UUID_FIELD,
@@ -32,6 +35,8 @@ ACTION_TYPE_FIELD = 'action_type'
 STARTED_STATUS = 'started'
 SUCCEEDED_STATUS = 'succeeded'
 FAILED_STATUS = 'failed'
+
+VALID_STATUSES = (STARTED_STATUS, SUCCEEDED_STATUS, FAILED_STATUS)
 
 
 class _ExecutionContext(threading.local):
@@ -158,6 +163,13 @@ class TaskLevel(PClass):
         if not self.level:
             return None
         return TaskLevel(level=self.level[:-1])
+
+
+    def is_sibling_of(self, task_level):
+        """
+        Is this task a sibling of C{task_level}?
+        """
+        return self.parent() == task_level.parent()
 
 
     # PEP 8 compatibility:
@@ -414,6 +426,291 @@ class Action(object):
         _context.pop()
         self.finish(exception)
 
+
+class WrongTask(Exception):
+    """
+    Tried to add a message to an action, but the message was from another
+    task.
+    """
+
+    def __init__(self, action, message):
+        Exception.__init__(
+            self, 'Tried to add {} to {}. Expected task_uuid = {}, got {}'.format(
+                message, action, action.task_uuid, message.task_uuid))
+
+
+class WrongTaskLevel(Exception):
+    """
+    Tried to add a message to an action, but the task level of the message
+    indicated that it was not a direct child.
+    """
+
+    def __init__(self, action, message):
+        Exception.__init__(
+            self, 'Tried to add {} to {}, but {} is not a sibling of {}'.format(
+                message, action, message.task_level, action.task_level))
+
+
+class WrongActionType(Exception):
+    """
+    Tried to end a message with a different action_type than the beginning.
+    """
+
+    def __init__(self, action, message):
+        error_msg = 'Tried to end {} with {}. Expected action_type = {}, got {}'
+        Exception.__init__(
+            self, error_msg.format(
+                action, message, action.action_type,
+                message.contents.get(ACTION_TYPE_FIELD, '<undefined>')))
+
+
+class InvalidStatus(Exception):
+    """
+    Tried to end a message with an invalid status.
+    """
+
+    def __init__(self, action, message):
+        error_msg = 'Tried to end {} with {}. Expected status {} or {}, got {}'
+        Exception.__init__(
+            self, error_msg.format(
+                action, message, SUCCEEDED_STATUS, FAILED_STATUS,
+                message.contents.get(ACTION_STATUS_FIELD, '<undefined>')))
+
+
+class DuplicateChild(Exception):
+    """
+    Tried to add a child to an action that already had a child at that task
+    level.
+    """
+
+    def __init__(self, action, message):
+        Exception.__init__(
+            self, 'Tried to add {} to {}, but already had child at {}'.format(
+                message, action, message.task_level))
+
+
+class InvalidStartMessage(Exception):
+    """
+    Tried to start an action with an invalid message.
+    """
+
+    def __init__(self, message, reason):
+        Exception.__init__(
+            self, 'Invalid start message {}: {}'.format(message, reason))
+
+    @classmethod
+    def wrong_status(cls, message):
+        return cls(message, 'must have status "STARTED"')
+
+    @classmethod
+    def wrong_task_level(cls, message):
+        return cls(message, 'first message must have task level ending in 1')
+
+
+class WrittenAction(PClass):
+    """
+    An Action that has been logged.
+
+    This class is intended to provide a definition within Eliot of what an
+    action actually is, and a means of constructing actions that are known to
+    be valid.
+
+    @ivar WrittenMessage start_message: The message that started this action.
+    @ivar WrittenMessage end_message: The message that ends this action. Can be
+        C{None} if the action is unfinished.
+    @ivar _children: A L{pmap} from L{TaskLevel} to the L{WrittenAction} and
+        L{WrittenMessage} objects that make up this action.
+    """
+
+    start_message = field(type=WrittenMessage, mandatory=True)
+    end_message = field(type=optional(WrittenMessage), mandatory=True)
+    # XXX: Actually a map to either WrittenMessage or WrittenAction, but
+    # pyrsistent doesn't support recursive data types:
+    # https://github.com/tobgu/pyrsistent/issues/48
+    _children = pmap_field(TaskLevel, object)
+
+    @classmethod
+    def from_messages(cls, start_message, children=pvector(), end_message=None):
+        """
+        Create a C{WrittenAction} from C{WrittenMessage}s and other
+        C{WrittenAction}s.
+
+        @param WrittenMessage start_message: A message that has
+            C{ACTION_STATUS_FIELD}, C{ACTION_TYPE_FIELD}, and a C{task_level}
+            that ends in C{1}.
+        @param children: An iterable of C{WrittenMessage} and C{WrittenAction}
+        @param WrittenMessage end_message: A message that has the same
+            C{action_type} as this action.
+
+        @raise WrongTask: If C{end_message} has a C{task_uuid} that differs
+            from C{start_message.task_uuid}.
+        @raise WrongTaskLevel: If any child message or C{end_message} has a
+            C{task_level} that means it is not a direct child.
+        @raise WrongActionType: If C{end_message} has an C{ACTION_TYPE_FIELD}
+            that differs from the C{ACTION_TYPE_FIELD} of C{start_message}.
+        @raise InvalidStatus: If C{end_message} doesn't have an
+            C{action_status}, or has one that is not C{SUCCEEDED_STATUS} or
+            C{FAILED_STATUS}.
+        @raise InvalidStartMessage: If C{start_message} does not have a
+            C{ACTION_STATUS_FIELD} of C{STARTED_STATUS}, or if it has a
+            C{task_level} indicating that it is not the first message of an
+            action.
+
+        @return: A new C{WrittenAction}.
+        """
+        if start_message.contents.get(ACTION_STATUS_FIELD, None) != STARTED_STATUS:
+            raise InvalidStartMessage.wrong_status(start_message)
+        if start_message.task_level.level[-1] != 1:
+            raise InvalidStartMessage.wrong_task_level(start_message)
+        action = cls(
+            start_message=start_message,
+            _children=pmap(),
+            end_message=None,
+        )
+        for child in children:
+            action = action._add_child(child)
+        if end_message:
+            return action._end(end_message)
+        return action
+
+    @property
+    def action_type(self):
+        """
+        The type of this action, e.g. C{"yourapp:subsystem:dosomething"}.
+        """
+        return self.start_message.contents[ACTION_TYPE_FIELD]
+
+    @property
+    def status(self):
+        """
+        One of C{STARTED_STATUS}, C{SUCCEEDED_STATUS}, or C{FAILED_STATUS}.
+        """
+        message = self.end_message if self.end_message else self.start_message
+        return message.contents[ACTION_STATUS_FIELD]
+
+    @property
+    def task_uuid(self):
+        """
+        The UUID of the task to which this action belongs.
+        """
+        return self.start_message.task_uuid
+
+    @property
+    def task_level(self):
+        """
+        The level of the task in which the action occurs.
+        """
+        return self.start_message.task_level.parent()
+
+    @property
+    def start_time(self):
+        """
+        The Unix timestamp of when the action started.
+        """
+        return self.start_message.timestamp
+
+    @property
+    def end_time(self):
+        """
+        The Unix timestamp of when the action ended, or C{None} if there has been
+        no end message.
+        """
+        if self.end_message:
+            return self.end_message.timestamp
+
+    @property
+    def exception(self):
+        """
+        If the action failed, the name of the exception that was raised to cause
+        it to fail. If the action succeeded, or hasn't finished yet, then
+        C{None}.
+        """
+        if self.end_message:
+            return self.end_message.contents.get(EXCEPTION_FIELD, None)
+
+    @property
+    def reason(self):
+        """
+        The reason the action failed. If the action succeeded, or hasn't finished
+        yet, then C{None}.
+        """
+        if self.end_message:
+            return self.end_message.contents.get(REASON_FIELD, None)
+
+    @property
+    def children(self):
+        """
+        The list of child messages and actions sorted by task level, excluding the
+        start and end messages.
+        """
+        return pvector(sorted(self._children.values(), key=lambda m: m.task_level))
+
+    def _validate_message(self, message):
+        """
+        Is C{message} a valid direct child of this action?
+
+        @param message: Either a C{WrittenAction} or a C{WrittenMessage}.
+
+        @raise WrongTask: If C{message} has a C{task_uuid} that differs from the
+            action's C{task_uuid}.
+        @raise WrongTaskLevel: If C{message} has a C{task_level} that means
+            it's not a direct child.
+        """
+        if message.task_uuid != self.task_uuid:
+            raise WrongTask(self, message)
+        if not message.task_level.parent() == self.task_level:
+            raise WrongTaskLevel(self, message)
+
+    def _add_child(self, message):
+        """
+        Return a new action with C{message} added as a child.
+
+        Assumes C{message} is not an end message.
+
+        @param message: Either a C{WrittenAction} or a C{WrittenMessage}.
+
+        @raise WrongTask: If C{message} has a C{task_uuid} that differs from the
+            action's C{task_uuid}.
+        @raise WrongTaskLevel: If C{message} has a C{task_level} that means
+            it's not a direct child.
+
+        @return: A new C{WrittenAction}.
+        """
+        self._validate_message(message)
+        level = message.task_level
+        if self._children.get(level, message) != message:
+            raise DuplicateChild(self, message)
+        return self.transform(('_children', level), message)
+
+    def _end(self, end_message):
+        """
+        End this action with C{end_message}.
+
+        Assumes that the action has not already been ended.
+
+        @param WrittenMessage end_message: A message that has the same
+            C{action_type} as this action.
+
+        @raise WrongTask: If C{end_message} has a C{task_uuid} that differs
+            from the action's C{task_uuid}.
+        @raise WrongTaskLevel: If C{end_message} has a C{task_level} that means
+            it's not a direct child.
+        @raise WrongActionType: If C{end_message} has an C{action_type} that
+            differs from the current action.
+        @raise InvalidStatus: If C{end_message} doesn't have an
+            C{action_status}, or has one that is not C{SUCCEEDED_STATUS} or
+            C{FAILED_STATUS}.
+
+        @return: A new, completed C{WrittenAction}.
+        """
+        self._validate_message(end_message)
+        action_type = end_message.contents.get(ACTION_TYPE_FIELD, None)
+        if action_type != self.action_type:
+            raise WrongActionType(self, end_message)
+        status = end_message.contents.get(ACTION_STATUS_FIELD, None)
+        if status not in (FAILED_STATUS, SUCCEEDED_STATUS):
+            raise InvalidStatus(self, end_message)
+        return self.set(end_message=end_message)
 
 
 def startAction(logger=None, action_type="", _serializers=None, **fields):

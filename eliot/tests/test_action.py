@@ -4,16 +4,41 @@ Tests for L{eliot._action}.
 
 from __future__ import unicode_literals
 
+from functools import partial
+from uuid import UUID
 from unittest import TestCase
 from threading import Thread
 from warnings import catch_warnings, simplefilter
 
-from hypothesis import given
-from hypothesis.strategies import integers, lists
+from hypothesis import assume, given, Settings
+from hypothesis.strategies import (
+    basic,
+    builds,
+    dictionaries,
+    fixed_dictionaries,
+    floats,
+    integers,
+    lists,
+    just,
+    none,
+    one_of,
+    recursive,
+    text,
+)
+
+from pyrsistent import pmap, pvector, v, ny
+
+import testtools
+from testtools.matchers import MatchesStructure
 
 from .._action import (
     Action, _ExecutionContext, currentAction, startTask, startAction,
-    TaskLevel)
+    ACTION_STATUS_FIELD, ACTION_TYPE_FIELD, FAILED_STATUS, STARTED_STATUS,
+    SUCCEEDED_STATUS, DuplicateChild, InvalidStartMessage, InvalidStatus,
+    TaskLevel, WrittenAction, WrongActionType, WrongTask, WrongTaskLevel)
+from .._message import (
+    EXCEPTION_FIELD, REASON_FIELD, TASK_LEVEL_FIELD, TASK_UUID_FIELD,
+    WrittenMessage)
 from .._output import MemoryLogger
 from .._validation import ActionType, Field, _ActionSerializers
 from ..testing import assertContainsFields
@@ -794,7 +819,11 @@ class SerializationTests(TestCase):
         self.assertRaises(RuntimeError, Action.continueTask)
 
 
-TASK_LEVELS = integers(min_value=1)
+TASK_LEVEL_INDEXES = integers(min_value=1)
+# Task levels can be arbitrarily deep, but in the wild rarely as much as 100.
+# Five seems a sensible average.
+TASK_LEVEL_LISTS = lists(TASK_LEVEL_INDEXES, min_size=1, average_size=5)
+TASK_LEVELS = TASK_LEVEL_LISTS.map(lambda level: TaskLevel(level=level))
 
 
 class TaskLevelTests(TestCase):
@@ -828,7 +857,7 @@ class TaskLevelTests(TestCase):
         ]))
 
 
-    @given(lists(TASK_LEVELS))
+    @given(lists(TASK_LEVEL_INDEXES))
     def test_parent_of_child(self, base_task_level):
         """
         L{TaskLevel.child} returns the first child of the task.
@@ -838,7 +867,7 @@ class TaskLevelTests(TestCase):
         self.assertEqual(base_task, child_task.parent())
 
 
-    @given(lists(TASK_LEVELS, min_size=1))
+    @given(TASK_LEVEL_LISTS)
     def test_child_greater_than_parent(self, task_level):
         """
         L{TaskLevel.child} returns a child that is greater than its parent.
@@ -847,7 +876,7 @@ class TaskLevelTests(TestCase):
         self.assert_fully_less_than(task, task.child())
 
 
-    @given(lists(TASK_LEVELS, min_size=1))
+    @given(TASK_LEVEL_LISTS)
     def test_next_sibling_greater(self, task_level):
         """
         L{TaskLevel.next_sibling} returns a greater task level.
@@ -856,7 +885,7 @@ class TaskLevelTests(TestCase):
         self.assert_fully_less_than(task, task.next_sibling())
 
 
-    @given(lists(TASK_LEVELS, min_size=1))
+    @given(TASK_LEVEL_LISTS)
     def test_next_sibling(self, task_level):
         """
         L{TaskLevel.next_sibling} returns the next sibling of a task.
@@ -905,3 +934,446 @@ class TaskLevelTests(TestCase):
         L{TaskLevel.to_string} is the same as as L{TaskLevel.toString}.
         """
         self.assertEqual(TaskLevel.to_string, TaskLevel.toString)
+
+
+# Text generation is slow, and most of the things are short labels.
+LABELS = text(average_size=5)
+
+TIMESTAMPS = floats(min_value=0)
+
+UUIDS = basic(generate=lambda r, _: UUID(int=r.getrandbits(128)))
+
+MESSAGE_CORE_DICTS = fixed_dictionaries(
+    dict(task_level=TASK_LEVEL_LISTS.map(pvector),
+         task_uuid=UUIDS,
+         timestamp=TIMESTAMPS)).map(pmap)
+
+
+# Text generation is slow. We can make it faster by not generating so
+# much. These are reasonable values.
+MESSAGE_DATA_DICTS = dictionaries(
+    keys=LABELS, values=text(average_size=10),
+    # People don't normally put much more than twenty fields in their
+    # messages, surely?
+    average_size=10,
+).map(pmap)
+
+
+def union(*dicts):
+    result = pmap().evolver()
+    for d in dicts:
+        # Work around bug in pyrsistent where it sometimes loses updates if
+        # they contain some kv pairs that are identical to the ones in the
+        # dict being updated.
+        #
+        # https://github.com/tobgu/pyrsistent/pull/54
+        for key, value in d.items():
+            if key in result and result[key] is value:
+                continue
+            result[key] = value
+    return result.persistent()
+
+
+MESSAGE_DICTS = builds(union, MESSAGE_DATA_DICTS, MESSAGE_CORE_DICTS)
+WRITTEN_MESSAGES = MESSAGE_DICTS.map(WrittenMessage.from_dict)
+
+_start_action_fields = fixed_dictionaries(
+    { ACTION_STATUS_FIELD: just(STARTED_STATUS),
+      ACTION_TYPE_FIELD: LABELS,
+    })
+START_ACTION_MESSAGE_DICTS = builds(
+    union, MESSAGE_DICTS, _start_action_fields).map(
+        lambda x: x.update({TASK_LEVEL_FIELD: x[TASK_LEVEL_FIELD].set(-1, 1)}))
+START_ACTION_MESSAGES = START_ACTION_MESSAGE_DICTS.map(WrittenMessage.from_dict)
+
+
+def sibling_task_level(message, n):
+    return message.task_level.parent().level.append(n)
+
+
+def child_task_level(task_level, i):
+    return task_level.transform(['level'], lambda level: level.append(i))
+
+
+_end_action_fields = one_of(
+    just({ACTION_STATUS_FIELD: SUCCEEDED_STATUS}),
+    fixed_dictionaries({
+        ACTION_STATUS_FIELD: just(FAILED_STATUS),
+        # Text generation is slow. We can make it faster by not generating so
+        # much. These are reasonable values.
+        EXCEPTION_FIELD: text(average_size=20),
+        REASON_FIELD: text(average_size=20),
+    }),
+)
+
+
+def _make_written_action(start_message, child_messages, end_message_dict):
+    """
+    Helper for creating arbitrary L{WrittenAction}s.
+
+    The child messages and end message (if provided) will be updated to have
+    the same C{task_uuid} as C{start_message}. Likewise, their C{task_level}s
+    will be such that they follow on from C{start_message}.
+
+    @param WrittenMessage start_message: The message to start the action with.
+    @param child_messages: A sequence of L{WrittenAction}s and
+        L{WrittenMessage}s that make up the action.
+    @param (PMap | None) end_message_dict: A dictionary that makes up an end
+        message. If None, then the action is unfinished.
+
+    @return: A L{WrittenAction}
+    """
+    task_uuid = start_message.task_uuid
+    children = []
+
+    for i, child in enumerate(child_messages, 2):
+        task_level = TaskLevel(level=sibling_task_level(start_message, i))
+        children.append(_reparent_action(task_uuid, task_level, child))
+
+    if end_message_dict:
+        end_message = WrittenMessage.from_dict(
+            union(end_message_dict, {
+                ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
+                TASK_UUID_FIELD: task_uuid,
+                TASK_LEVEL_FIELD: sibling_task_level(
+                    start_message, 2 + len(children)),
+            })
+        )
+    else:
+        end_message = None
+
+    return WrittenAction.from_messages(start_message, children, end_message)
+
+
+WRITTEN_ACTIONS = recursive(
+    WRITTEN_MESSAGES,
+    lambda children: builds(
+        _make_written_action,
+        start_message=START_ACTION_MESSAGES,
+        child_messages=lists(children, average_size=5),
+        end_message_dict=builds(
+            union, MESSAGE_DICTS, _end_action_fields) | none(),
+    ),
+)
+
+
+def _map_messages(f, written_action):
+    """
+    Map C{f} across all of the messages that make up C{written_action}.
+
+    This is a structure-preserving map operation. C{f} will be applied to all
+    messages that make up C{written_action}: the start message, end message,
+    and children. If any of the children are themselves L{WrittenAction}s, we
+    recurse down into them.
+
+    @param f: A function that takes a L{WrittenMessage} and returns a new
+        L{WrittenMessage}.
+    @param (WrittenAction | WrittenMessage) written_action: A written
+
+    @return: A L{WrittenMessage} if C{written_action} is a C{WrittenMessage},
+        a L{WrittenAction} otherwise.
+    """
+    if isinstance(written_action, WrittenMessage):
+        return f(written_action)
+
+    start_message = f(written_action.start_message)
+    children = written_action.children.transform([ny], partial(_map_messages, f))
+    if written_action.end_message:
+        end_message = f(written_action.end_message)
+    else:
+        end_message = None
+
+    return WrittenAction.from_messages(
+        start_message=start_message,
+        children=pvector(children),
+        end_message=end_message,
+    )
+
+
+def _reparent_action(task_uuid, task_level, written_action):
+    """
+    Return a version of C{written_action} that has the given C{task_uuid} and
+    is rooted at the given C{task_level}.
+
+    @param UUID task_uuid: The new task UUID.
+    @param TaskLevel task_level: The new task level.
+    @param (WrittenAction | WrittenMessage) written_action: The action or
+        message to update.
+
+    @return: A new version of C{written_action}.
+    """
+    new_prefix = task_level.level
+    old_prefix_len = len(written_action.task_level.level)
+
+    def fix_message(message):
+        return (
+            message.transform(
+                ['_logged_dict', TASK_LEVEL_FIELD],
+                lambda level: new_prefix + level[old_prefix_len:])
+            .transform(['_logged_dict', TASK_UUID_FIELD], task_uuid))
+
+    return _map_messages(fix_message, written_action)
+
+
+class WrittenActionTests(testtools.TestCase):
+    """
+    Tests for L{WrittenAction}.
+    """
+
+    @given(START_ACTION_MESSAGES)
+    def test_from_single_message(self, message):
+        """
+        A L{WrittenAction} can be constructed from a single "start" message. Such
+        an action inherits the C{action_type} of the start message, has no
+        C{end_time}, and has a C{status} of C{STARTED_STATUS}.
+        """
+        action = WrittenAction.from_messages(message)
+        self.assertThat(
+            action, MatchesStructure.byEquality(
+                status=STARTED_STATUS,
+                action_type=message.contents[ACTION_TYPE_FIELD],
+                task_uuid=message.task_uuid,
+                task_level=message.task_level.parent(),
+                start_time=message.timestamp,
+                children=pvector([]),
+                end_time=None,
+                reason=None,
+                exception=None,
+            ))
+
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, integers(min_value=2))
+    def test_different_task_uuid(self, start_message, end_message_dict, n):
+        """
+        By definition, an action is either a top-level task or takes place within
+        such a task. If we try to assemble actions from messages with
+        differing task UUIDs, we raise an error.
+        """
+        assume(start_message.task_uuid != end_message_dict['task_uuid'])
+        end_message = WrittenMessage.from_dict(
+            union(end_message_dict, {
+                ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
+                TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
+            }))
+        self.assertRaises(
+            WrongTask,
+            WrittenAction.from_messages, start_message, end_message=end_message)
+
+    @given(MESSAGE_DICTS)
+    def test_invalid_start_message_missing_status(self, message_dict):
+        """
+        A start message must have an C{ACTION_STATUS_FIELD} with the value
+        C{STARTED_STATUS}, otherwise it's not a start message. If we receive
+        such a message, raise an error.
+
+        This test handles the case where the status field is not present.
+        """
+        assume(ACTION_STATUS_FIELD not in message_dict)
+        message = WrittenMessage.from_dict(message_dict)
+        self.assertRaises(
+            InvalidStartMessage, WrittenAction.from_messages, message)
+
+    @given(message_dict=START_ACTION_MESSAGE_DICTS,
+           status=(just(FAILED_STATUS) | just(SUCCEEDED_STATUS) | text()))
+    def test_invalid_start_message_wrong_status(self, message_dict, status):
+        """
+        A start message must have an C{ACTION_STATUS_FIELD} with the value
+        C{STARTED_STATUS}, otherwise it's not a start message. If we receive
+        such a message, raise an error.
+
+        This test handles the case where the status field is present, but is
+        not C{STARTED_STATUS}.
+        """
+        message = WrittenMessage.from_dict(
+            message_dict.update({ACTION_STATUS_FIELD: status}))
+        self.assertRaises(
+            InvalidStartMessage, WrittenAction.from_messages, message)
+
+    @given(START_ACTION_MESSAGE_DICTS, integers(min_value=2))
+    def test_invalid_task_level_in_start_message(self, start_message_dict, i):
+        """
+        All messages in an action have a task level. The first message in an
+        action must have a task level ending in C{1}, indicating that it's the
+        first message.
+
+        If we try to start an action with a message that has a task level that
+        does not end in C{1}, raise an error.
+        """
+        new_level = start_message_dict[TASK_LEVEL_FIELD].append(i)
+        message_dict = start_message_dict.set(TASK_LEVEL_FIELD, new_level)
+        message = WrittenMessage.from_dict(message_dict)
+        self.assertRaises(
+            InvalidStartMessage, WrittenAction.from_messages, message)
+
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, text(), integers(min_value=1))
+    def test_action_type_mismatch(self, start_message, end_message_dict,
+                                  end_type, n):
+        """
+        The end message of an action must have the same C{ACTION_TYPE_FIELD} as
+        the start message of an action. If we try to end an action with a
+        message that has a different type, we raise an error.
+        """
+        assume(end_type != start_message.contents[ACTION_TYPE_FIELD])
+        end_message = WrittenMessage.from_dict(union(end_message_dict, {
+            ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
+            ACTION_TYPE_FIELD: end_type,
+            TASK_UUID_FIELD: start_message.task_uuid,
+            TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
+        }))
+        self.assertRaises(
+            WrongActionType,
+            WrittenAction.from_messages, start_message, end_message=end_message)
+
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, integers(min_value=2))
+    def test_successful_end(self, start_message, end_message_dict, n):
+        """
+        A L{WrittenAction} can be constructed with just a start message and an end
+        message: in this case, an end message that indicates the action was
+        successful.
+
+        Such an action inherits the C{end_time} from the end message, and has
+        a C{status} of C{SUCCEEDED_STATUS}.
+        """
+        end_message = WrittenMessage.from_dict(
+            union(end_message_dict,
+                {ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
+                 ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
+                 TASK_UUID_FIELD: start_message.task_uuid,
+                 TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
+                }
+            ))
+        action = WrittenAction.from_messages(
+            start_message, end_message=end_message)
+        self.assertThat(
+            action, MatchesStructure.byEquality(
+                action_type=start_message.contents[ACTION_TYPE_FIELD],
+                status=SUCCEEDED_STATUS,
+                task_uuid=start_message.task_uuid,
+                task_level=start_message.task_level.parent(),
+                start_time=start_message.timestamp,
+                children=pvector([]),
+                end_time=end_message.timestamp,
+                reason=None,
+                exception=None,
+            ))
+
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, text(), text(),
+           integers(min_value=2))
+    def test_failed_end(self, start_message, end_message_dict, exception,
+                        reason, n):
+        """
+        A L{WrittenAction} can be constructed with just a start message and an end
+        message: in this case, an end message that indicates that the action
+        failed.
+
+        Such an action inherits the C{end_time} from the end message, has a
+        C{status} of C{FAILED_STATUS}, and an C{exception} and C{reason} that
+        match the raised exception.
+        """
+        end_message = WrittenMessage.from_dict(
+            union(end_message_dict,
+                {ACTION_STATUS_FIELD: FAILED_STATUS,
+                 ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
+                 TASK_UUID_FIELD: start_message.task_uuid,
+                 TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
+                 EXCEPTION_FIELD: exception,
+                 REASON_FIELD: reason,
+                }
+            ))
+        action = WrittenAction.from_messages(
+            start_message, end_message=end_message)
+        self.assertThat(
+            action, MatchesStructure.byEquality(
+                action_type=start_message.contents[ACTION_TYPE_FIELD],
+                status=FAILED_STATUS,
+                task_uuid=start_message.task_uuid,
+                task_level=start_message.task_level.parent(),
+                start_time=start_message.timestamp,
+                children=pvector([]),
+                end_time=end_message.timestamp,
+                reason=reason,
+                exception=exception,
+            ))
+
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, integers(min_value=2))
+    def test_end_has_no_status(self, start_message, end_message_dict, n):
+        """
+        If we try to end a L{WrittenAction} with a message that lacks an
+        C{ACTION_STATUS_FIELD}, we raise an error, because it's not a valid
+        end message.
+        """
+        assume(ACTION_STATUS_FIELD not in end_message_dict)
+        end_message = WrittenMessage.from_dict(
+            union(end_message_dict, {
+                ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
+                TASK_UUID_FIELD: start_message.task_uuid,
+                TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
+            }))
+        self.assertRaises(
+            InvalidStatus,
+            WrittenAction.from_messages, start_message, end_message=end_message)
+
+    # This test is slow, and when run under coverage on pypy on Travis won't
+    # make the default of 5 examples. 1 is enough.
+    @given(START_ACTION_MESSAGES, lists(WRITTEN_MESSAGES | WRITTEN_ACTIONS),
+           settings=Settings(min_satisfying_examples=1))
+    def test_children(self, start_message, child_messages):
+        """
+        We can construct a L{WrittenAction} with child messages. These messages
+        can be either L{WrittenAction}s or L{WrittenMessage}s. They are
+        available in the C{children} field.
+        """
+        messages = [
+            _reparent_action(
+                start_message.task_uuid,
+                TaskLevel(level=sibling_task_level(start_message, i)),
+                message)
+            for (i, message) in enumerate(child_messages, 2)]
+        action = WrittenAction.from_messages(start_message, messages)
+        task_level = lambda m: m.task_level
+        self.assertEqual(
+            sorted(set(messages), key=task_level), action.children)
+
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS)
+    def test_wrong_task_uuid(self, start_message, child_message):
+        """
+        All child messages of an action must have the same C{task_uuid} as the
+        action.
+        """
+        assume(child_message[TASK_UUID_FIELD] != start_message.task_uuid)
+        message = WrittenMessage.from_dict(child_message)
+        self.assertRaises(
+            WrongTask,
+            WrittenAction.from_messages, start_message, v(message))
+
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS)
+    def test_wrong_task_level(self, start_message, child_message):
+        """
+        All child messages of an action must have a task level that is a direct
+        child of the action's task level.
+        """
+        assume(not start_message.task_level.is_sibling_of(
+            TaskLevel(level=child_message[TASK_LEVEL_FIELD])))
+        message = WrittenMessage.from_dict(
+            child_message.update({TASK_UUID_FIELD: start_message.task_uuid}))
+        self.assertRaises(
+            WrongTaskLevel,
+            WrittenAction.from_messages, start_message, v(message))
+
+    @given(START_ACTION_MESSAGES, MESSAGE_DICTS, MESSAGE_DICTS, integers(min_value=2))
+    def test_duplicate_task_level(self, start_message, child1, child2, index):
+        """
+        If we try to add a child to an action that has a task level that's the
+        same as the task level of an existing child, we raise an error.
+        """
+        parent_level = start_message.task_level.parent().level
+        messages = [
+            WrittenMessage.from_dict(
+                union(child_message, {
+                    TASK_UUID_FIELD: start_message.task_uuid,
+                    TASK_LEVEL_FIELD: parent_level.append(index),
+                }))
+            for child_message in [child1, child2]]
+        assume(messages[0] != messages[1])
+        self.assertRaises(
+            DuplicateChild,
+            WrittenAction.from_messages, start_message, messages)

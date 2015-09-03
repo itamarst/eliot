@@ -51,6 +51,8 @@ setup(
             "coverage",
             # Bug-seeking missile:
             "hypothesis",
+            # Tasteful testing for Python:
+            "testtools",
         ]
     },
     keywords="logging",
