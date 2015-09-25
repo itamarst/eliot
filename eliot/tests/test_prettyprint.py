@@ -130,11 +130,6 @@ class CommandLineTests(TestCase):
         result = check_output(["eliot-prettyprint", "--help"])
         self.assertEqual(result, _CLI_HELP.encode("utf-8"))
 
-    def assert_formats(self, process):
-        """
-        The given popen process reads JSON and outputs pretty-printed result.
-        """
-
     def test_output(self):
         """
         Lacking command-line arguments the process reads JSON lines from stdin
