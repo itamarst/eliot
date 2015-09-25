@@ -5,8 +5,31 @@ Tests for C{{eliot.prettyprint}}.
 from __future__ import unicode_literals
 
 from unittest import TestCase
+from subprocess import check_output, Popen, PIPE
 
-from ..prettyprint import pretty_print
+from six import PY3
+
+if PY3:
+    from .._py3json import dumps
+else:
+    from json import dumps
+
+from ..prettyprint import pretty_print, _CLI_HELP
+
+
+SIMPLE_MESSAGE = {
+    "timestamp": 1443193754,
+    "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
+    "message_type": "messagey",
+    "task_level": [1, 2],
+    "keys": [123, 456]}
+
+UNTYPED_MESSAGE = {
+    "timestamp": 1443193754,
+    "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
+    "task_level": [1],
+    "key": 1234,
+    "abc": "def"}
 
 
 class FormattingTests(TestCase):
@@ -17,13 +40,8 @@ class FormattingTests(TestCase):
         """
         A typed message is printed as expected.
         """
-        message = {"timestamp": 1443193754,
-                   "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
-                   "message_type": "messagey",
-                   "task_level": [1, 2],
-                   "keys": [123, 456]}
         self.assertEqual(
-            pretty_print(message),
+            pretty_print(SIMPLE_MESSAGE),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0@/1/2
 2015-09-25T15:09:14Z
@@ -35,14 +53,8 @@ class FormattingTests(TestCase):
         """
         A message with no type is printed as expected.
         """
-        message = {"timestamp": 1443193754,
-                   "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
-                   "task_level": [1],
-                   "key": 1234,
-                   "abc": "def"}
-        print repr(pretty_print(message))
         self.assertEqual(
-            pretty_print(message),
+            pretty_print(UNTYPED_MESSAGE),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0@/1
 2015-09-25T15:09:14Z
@@ -78,7 +90,6 @@ class FormattingTests(TestCase):
                    "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
                    "task_level": [1],
                    "key": "hello\n\n\n"}
-        print pretty_print(message)
         self.assertEqual(
             pretty_print(message),
             """\
@@ -96,7 +107,6 @@ class FormattingTests(TestCase):
                    "task_level": [1],
                    "key": "hello\nthere\nmonkeys!",
                    "more": "stuff"}
-        print pretty_print(message)
         self.assertEqual(
             pretty_print(message),
             """\
@@ -107,3 +117,39 @@ class FormattingTests(TestCase):
        monkeys!
   more: stuff
 """)
+
+
+class CommandLineTests(TestCase):
+    """
+    Tests for the command-line tool.
+    """
+    def test_help(self):
+        """
+        C{{--help}} prints out the help text and exits.
+        """
+        result = check_output(["eliot-prettyprint", "--help"])
+        self.assertEqual(result, _CLI_HELP.encode("utf-8"))
+
+    def assert_formats(self, process):
+        """
+        The given popen process reads JSON and outputs pretty-printed result.
+        """
+
+    def test_output(self):
+        """
+        Lacking command-line arguments the process reads JSON lines from stdin
+        and writes out a pretty-printed version.
+        """
+        messages = [SIMPLE_MESSAGE, UNTYPED_MESSAGE, SIMPLE_MESSAGE]
+        process = Popen([b"eliot-prettyprint"], stdin=PIPE, stdout=PIPE)
+        process.stdin.write(b"".join(
+            [dumps(message) + b"\n" for message in messages])
+        )
+        process.stdin.close()
+        stdout = process.stdout.read().decode("utf-8")
+        self.assertEqual(
+            stdout,
+            "".join(pretty_print(message) + "\n" for message in messages))
+
+
+

@@ -5,10 +5,10 @@ API and command-line support for human-readable Eliot messages.
 from __future__ import unicode_literals
 
 from datetime import datetime
-from sys import stdin, stdout
+from sys import stdin, stdout, argv
 from json import loads
 
-from six import text_type as unicode
+from six import text_type as unicode, PY2
 
 
 def pretty_print(message):
@@ -48,12 +48,26 @@ def pretty_print(message):
     )
 
 
+_CLI_HELP = """\
+Usage: cat messages | eliot-prettyprint
+
+Convert Eliot messages into more readable format.
+
+Reads JSON lines from stdin, write out pretty-printed results on stdout.
+"""
+
+
 def _main():
     """
     Command-line program that reads in JSON from stdin and writes out
     pretty-printed messages to stdout.
     """
+    if argv[1:]:
+        stdout.write(_CLI_HELP)
+        raise SystemExit()
     for line in stdin:
         message = loads(line)
-        result = pretty_print(message)
-        stdout.write(result.encode("utf-8"))
+        result = pretty_print(message) + "\n"
+        if PY2:
+            result = result.encode("utf-8")
+        stdout.write(result)
