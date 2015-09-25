@@ -23,7 +23,13 @@ def pretty_print(message):
             "message_type", "action_type", "action_status"}
 
     def add_field(previous, key, value):
-        return "  %s: %s\n" % (key, str(value).strip("\n"))
+        value = unicode(value).rstrip("\n")
+        # Reindent second line and later to match up with first line's
+        # indentation:
+        lines = value.split("\n")
+        indent = " " * (2 + len(key) + 2)  # lines are "  <key>: <value>"
+        value = "\n".join([lines[0]] + [indent + l for l in lines[1:]])
+        return "  %s: %s\n" % (key, value)
 
     remaining = ""
     for field in ["action_type", "message_type", "action_status"]:
@@ -34,7 +40,7 @@ def pretty_print(message):
             remaining += add_field(remaining, key, value)
 
     level = "/" + "/".join(map(unicode, message["task_level"]))
-    return "%s%s\n%sZ\n%s\n" % (
+    return "%s@%s\n%sZ\n%s" % (
         message["task_uuid"],
         level,
         datetime.utcfromtimestamp(message["timestamp"]).isoformat(),
