@@ -24,21 +24,21 @@ _encoder = JSONEncoder()
 
 
 
-def loads(s):
+def _loads(s):
     if isinstance(s, bytes):
         s = s.decode("utf-8")
     return pyjson.loads(s)
 
 
 
-def dumps(obj):
+def _dumps(obj):
     return _encoder.encode(obj).encode("utf-8")
 
 
 if PY2:
     # No need for the above on Python 2
-    del loads, dumps
     loads, dumps = pyjson.loads, pyjson.dumps
-
+else:
+    loads, dumps = _loads, dumps
 
 __all__ = ["loads", "dumps"]
