@@ -7,6 +7,10 @@ from __future__ import unicode_literals
 from datetime import datetime
 from sys import stdin, stdout, argv
 from ._bytesjson import loads
+from ._message import (
+    TIMESTAMP_FIELD, TASK_UUID_FIELD, TASK_LEVEL_FIELD, MESSAGE_TYPE_FIELD,
+)
+from ._action import ACTION_TYPE_FIELD, ACTION_STATUS_FIELD
 
 from six import text_type as unicode, PY2, PY3
 if PY3:
@@ -23,8 +27,8 @@ def pretty_format(message):
 
     @return: Unicode string.
     """
-    skip = {"timestamp", "task_uuid", "task_level", "action_counter",
-            "message_type", "action_type", "action_status"}
+    skip = {TIMESTAMP_FIELD, TASK_UUID_FIELD, TASK_LEVEL_FIELD,
+            MESSAGE_TYPE_FIELD, ACTION_TYPE_FIELD, ACTION_STATUS_FIELD}
 
     def add_field(previous, key, value):
         value = unicode(value).rstrip("\n")
@@ -36,21 +40,21 @@ def pretty_format(message):
         return "  %s: %s\n" % (key, value)
 
     remaining = ""
-    for field in ["action_type", "message_type", "action_status"]:
+    for field in [ACTION_TYPE_FIELD, MESSAGE_TYPE_FIELD, ACTION_STATUS_FIELD]:
         if field in message:
             remaining += add_field(remaining, field, message[field])
     for (key, value) in sorted(message.items()):
         if key not in skip:
             remaining += add_field(remaining, key, value)
 
-    level = "/" + "/".join(map(unicode, message["task_level"]))
+    level = "/" + "/".join(map(unicode, message[TASK_LEVEL_FIELD]))
     return "%s@%s\n%sZ\n%s" % (
-        message["task_uuid"],
+        message[TASK_UUID_FIELD],
         level,
         # If we were returning or storing the datetime we'd want to use an
         # explicit timezone instead of a naive datetime, but since we're
         # just using it for formatting we needn't bother.
-        datetime.utcfromtimestamp(message["timestamp"]).isoformat(
+        datetime.utcfromtimestamp(message[TIMESTAMP_FIELD]).isoformat(
             sep=str(" ")),
         remaining,
     )
