@@ -59,6 +59,11 @@ setup(
             "testtools",
         ]
     },
+    entry_points={
+        'console_scripts': [
+            'eliot-prettyprint = eliot.prettyprint:_main',
+        ]
+    },
     keywords="logging",
     license="Apache 2.0",
     packages=["eliot", "eliot.tests"],

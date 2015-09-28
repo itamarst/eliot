@@ -12,12 +12,7 @@ if __name__ == '__main__':
 import sys
 from datetime import datetime, timedelta
 
-from six import PY3
-
-if PY3:
-    from . import _py3json as json
-else:
-    import json
+from . import _bytesjson as json
 
 
 class _JSONEncoder(json.JSONEncoder):

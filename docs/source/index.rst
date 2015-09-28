@@ -1,6 +1,6 @@
 .. include:: ../../README.rst
 
-Here's an example of using Eliot, and the output rendered by `eliot-tree`_:
+Here's an example of using Eliot, and the output rendered by the third-party `eliot-tree`_ utility:
 
 .. literalinclude:: ../../examples/linkcheck.py
 
@@ -34,6 +34,7 @@ Contents:
    threads
    types
    types-testing
+   reading
    elasticsearch
    twisted
    fields
