@@ -15,11 +15,12 @@ def sd_journal_send(**kwargs):
     """
     Send a message to the journald log.
 
-    @param kwargs: Mapping between field names to values.
+    @param kwargs: Mapping between field names to values, both as bytes.
     """
     # The function uses printf formatting, so we need to quote
     # percentages.
-    fields = [b"%s=%s" % (key, value.replace(b"%", b"%%"))
-              for key, value in kwargs.items()] + [_ffi.NULL]
+    fields = [_ffi.new("char[]", b"%s=%s" % (key, value.replace(b"%", b"%%")))
+              for key, value in kwargs.items()]
+    fields.append(_ffi.NULL)
     _journald.sd_journal_send(*fields)
     # XXX check return code

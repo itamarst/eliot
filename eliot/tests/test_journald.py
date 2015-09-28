@@ -34,15 +34,12 @@ class SdJournaldSendTests(TestCase):
         @param message: Dictionary to pass as keyword arguments to
             C{sd_journal_send}.
 
-        @return: C{list} of decoded journald JSON messages from this
-            process.
+        @return: Last journald JSON message from this process as a dictionary.
         """
-        cursor = check_output([b"journalctl", b"--show-cursor"])
         sd_journal_send(**message)
-        messages = check_output([b"journalctl", b"-c", cursor,
-                                 b"_PID=%d" % (getpid(),),
-                                 b"-o", b"json"])
-        return list(loads(m) for m in messages)
+        messages = check_output(
+            [b"journalctl", b"-a", b"-o", b"json", b"_PID=%d" % (getpid(),)])
+        return loads(messages.splitlines()[-1])
 
     def assert_roundtrip(self, value):
         """
@@ -50,14 +47,14 @@ class SdJournaldSendTests(TestCase):
 
         @param value: Value to write as unicode.
         """
-        results = self.send_journald_message({"MESSAGE": value})
-        self.assertIn(value, [m["MESSAGE"] for m in results])
+        result = self.send_journald_message({"MESSAGE": value})
+        self.assertEqual(value, result["MESSAGE"])
 
     def test_message(self):
         """
         L{sd_journal_send} can write a C{MESSAGE} field.
         """
-        self.assert_roundtrip(u"hello")
+        self.assert_roundtrip(b"hello")
 
     def test_percent(self):
         """
@@ -66,26 +63,19 @@ class SdJournaldSendTests(TestCase):
         Underlying C API calls does printf formatting so this is a
         plausible failure mode.
         """
-        self.assert_roundtrip(u"hello%world")
+        self.assert_roundtrip(b"hello%world")
 
     def test_large(self):
         """
         L{sd_journal_send} can write a C{MESSAGE} field with a large message.
         """
-        self.assert_roundtrip(u"hello world" * 30000)
-
-    def test_unicode(self):
-        """
-        L{sd_journal_send} can write a C{MESSAGE} field with Unicode
-        characters not encodable in ASCII.
-        """
-        self.assert_roundtrip(u"hello \u1234")
+        self.assert_roundtrip(b"hello world" * 20000)
 
     def test_multiple_fields(self):
         """
         L{sd_journal_send} can send multiple fields.
         """
-        results = self.send_journald_message({"MESSAGE": u"hello",
-                                              "BONUS_FIELD": u"world"})
-        self.assertIn((u"hello", u"world"),
-                      [(m["MESSAGE"], m["BONUS_FIELD"]) for m in results])
+        result = self.send_journald_message({"MESSAGE": b"hello",
+                                             "BONUS_FIELD": b"world"})
+        self.assertEqual((b"hello", b"world"),
+                         (result["MESSAGE"], result["BONUS_FIELD"]))
