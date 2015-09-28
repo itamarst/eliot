@@ -1,5 +1,5 @@
 """
-Tests for C{{eliot.prettyprint}}.
+Tests for C{eliot.prettyprint}.
 """
 
 from __future__ import unicode_literals
@@ -34,7 +34,7 @@ UNTYPED_MESSAGE = {
 
 class FormattingTests(TestCase):
     """
-    Tests for L{{pretty_print}}.
+    Tests for L{pretty_print}.
     """
     def test_message(self):
         """
@@ -125,7 +125,7 @@ class CommandLineTests(TestCase):
     """
     def test_help(self):
         """
-        C{{--help}} prints out the help text and exits.
+        C{--help} prints out the help text and exits.
         """
         result = check_output(["eliot-prettyprint", "--help"])
         self.assertEqual(result, _CLI_HELP.encode("utf-8"))
