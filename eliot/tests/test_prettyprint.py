@@ -44,7 +44,7 @@ class FormattingTests(TestCase):
             pretty_print(SIMPLE_MESSAGE),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0@/1/2
-2015-09-25T15:09:14Z
+2015-09-25 15:09:14Z
   message_type: messagey
   keys: [123, 456]
 """)
@@ -57,7 +57,7 @@ class FormattingTests(TestCase):
             pretty_print(UNTYPED_MESSAGE),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0@/1
-2015-09-25T15:09:14Z
+2015-09-25 15:09:14Z
   abc: def
   key: 1234
 """)
@@ -76,7 +76,7 @@ class FormattingTests(TestCase):
             pretty_print(message),
             """\
 8bc6ded2-446c-4b6d-abbc-4f21f1c9a7d8@/2/2/2/1
-2015-09-25T15:12:38Z
+2015-09-25 15:12:38Z
   action_type: visited
   action_status: started
   place: Statue #1
@@ -94,7 +94,7 @@ class FormattingTests(TestCase):
             pretty_print(message),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0@/1
-2015-09-25T15:09:14Z
+2015-09-25 15:09:14Z
   key: hello
 """)
 
@@ -111,7 +111,7 @@ class FormattingTests(TestCase):
             pretty_print(message),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0@/1
-2015-09-25T15:09:14Z
+2015-09-25 15:09:14Z
   key: hello
        there
        monkeys!
