@@ -2,13 +2,19 @@
 Tests for L{eliot.journald}.
 """
 
+try:
+    import cffi
+except ImportError:
+    cffi = None
+else:
+    from ..journald import sd_journal_send, JournaldDestination
+
 from os import getpid, strerror
 from unittest import skipUnless, TestCase
 from subprocess import check_output, CalledProcessError, STDOUT
 from errno import EINVAL
 
 from .._bytesjson import loads
-from ..journald import sd_journal_send, JournaldDestination
 from .._output import MemoryLogger
 from .._message import TASK_UUID_FIELD
 from .. import start_action, Message, write_traceback
@@ -18,6 +24,8 @@ def _journald_available():
     """
     :return: Boolean indicating whether journald is available to use.
     """
+    if cffi is None:
+        return False
     try:
         check_output(["journalctl", "-b"], stderr=STDOUT)
     except CalledProcessError:
