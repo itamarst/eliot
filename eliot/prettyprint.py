@@ -6,12 +6,16 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 from sys import stdin, stdout, argv
-from json import loads
+from ._bytesjson import loads
 
-from six import text_type as unicode, PY2
+from six import text_type as unicode, PY2, PY3
+if PY3:
+    # Ensure binary stdin, since we expect specifically UTF-8 encoded
+    # messages, not platform-encoding messages.
+    stdin = stdin.buffer
 
 
-def pretty_print(message):
+def pretty_format(message):
     """
     Convert a message dictionary into a human-readable string.
 
@@ -71,7 +75,10 @@ def _main():
         raise SystemExit()
     for line in stdin:
         message = loads(line)
-        result = pretty_print(message) + "\n"
+        result = pretty_format(message) + "\n"
         if PY2:
             result = result.encode("utf-8")
         stdout.write(result)
+
+
+__all__ = ["pretty_format"]

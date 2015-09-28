@@ -8,7 +8,7 @@ from unittest import TestCase
 from subprocess import check_output, Popen, PIPE
 
 from .._bytesjson import dumps
-from ..prettyprint import pretty_print, _CLI_HELP
+from ..prettyprint import pretty_format, _CLI_HELP
 
 
 SIMPLE_MESSAGE = {
@@ -28,14 +28,14 @@ UNTYPED_MESSAGE = {
 
 class FormattingTests(TestCase):
     """
-    Tests for L{pretty_print}.
+    Tests for L{pretty_format}.
     """
     def test_message(self):
         """
         A typed message is printed as expected.
         """
         self.assertEqual(
-            pretty_print(SIMPLE_MESSAGE),
+            pretty_format(SIMPLE_MESSAGE),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0@/1/2
 2015-09-25 15:09:14Z
@@ -48,7 +48,7 @@ class FormattingTests(TestCase):
         A message with no type is printed as expected.
         """
         self.assertEqual(
-            pretty_print(UNTYPED_MESSAGE),
+            pretty_format(UNTYPED_MESSAGE),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0@/1
 2015-09-25 15:09:14Z
@@ -67,7 +67,7 @@ class FormattingTests(TestCase):
                    "timestamp": 1443193958.0,
                    "action_status": "started"}
         self.assertEqual(
-            pretty_print(message),
+            pretty_format(message),
             """\
 8bc6ded2-446c-4b6d-abbc-4f21f1c9a7d8@/2/2/2/1
 2015-09-25 15:12:38Z
@@ -85,7 +85,7 @@ class FormattingTests(TestCase):
                    "task_level": [1],
                    "key": "hello\n\n\n"}
         self.assertEqual(
-            pretty_print(message),
+            pretty_format(message),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0@/1
 2015-09-25 15:09:14Z
@@ -102,7 +102,7 @@ class FormattingTests(TestCase):
                    "key": "hello\nthere\nmonkeys!",
                    "more": "stuff"}
         self.assertEqual(
-            pretty_print(message),
+            pretty_format(message),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0@/1
 2015-09-25 15:09:14Z
@@ -138,7 +138,7 @@ class CommandLineTests(TestCase):
         stdout = process.stdout.read().decode("utf-8")
         self.assertEqual(
             stdout,
-            "".join(pretty_print(message) + "\n" for message in messages))
+            "".join(pretty_format(message) + "\n" for message in messages))
 
 
 
