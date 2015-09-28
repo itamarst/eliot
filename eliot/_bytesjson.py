@@ -39,6 +39,6 @@ if PY2:
     # No need for the above on Python 2
     loads, dumps = pyjson.loads, pyjson.dumps
 else:
-    loads, dumps = _loads, dumps
+    loads, dumps = _loads, _dumps
 
 __all__ = ["loads", "dumps"]
