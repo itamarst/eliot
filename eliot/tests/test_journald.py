@@ -7,7 +7,10 @@ from unittest import skipUnless, TestCase
 from subprocess import check_output, CalledProcessError, STDOUT
 
 from .._bytesjson import loads
-from ..journald import sd_journal_send
+from ..journald import sd_journal_send, JournaldDestination
+from .._output import MemoryLogger
+from .._message import TASK_UUID_FIELD
+from .. import start_action, Message, write_traceback
 
 
 def _journald_available():
@@ -21,25 +24,24 @@ def _journald_available():
     return True
 
 
+def last_journald_message():
+    """
+    @return: Last journald message from this process as a dictionary in
+         journald JSON format.
+    """
+    messages = check_output(
+        [b"journalctl", b"-a", b"-o", b"json", b"_PID=%d" % (getpid(),)])
+    return loads(messages.splitlines()[-1])
+
+
 class SdJournaldSendTests(TestCase):
     """
     Functional tests for L{sd_journal_send}.
     """
     @skipUnless(_journald_available(),
                 "journald unavailable or inactive on this machine.")
-    def send_journald_message(self, message):
-        """
-        Log a journald message, extract resulting message from journald.
-
-        @param message: Dictionary to pass as keyword arguments to
-            C{sd_journal_send}.
-
-        @return: Last journald JSON message from this process as a dictionary.
-        """
-        sd_journal_send(**message)
-        messages = check_output(
-            [b"journalctl", b"-a", b"-o", b"json", b"_PID=%d" % (getpid(),)])
-        return loads(messages.splitlines()[-1])
+    def setUp(self):
+        pass
 
     def assert_roundtrip(self, value):
         """
@@ -47,7 +49,8 @@ class SdJournaldSendTests(TestCase):
 
         @param value: Value to write as unicode.
         """
-        result = self.send_journald_message({"MESSAGE": value})
+        sd_journal_send(MESSAGE=value)
+        result = last_journald_message()
         self.assertEqual(value, result["MESSAGE"])
 
     def test_message(self):
@@ -75,7 +78,106 @@ class SdJournaldSendTests(TestCase):
         """
         L{sd_journal_send} can send multiple fields.
         """
-        result = self.send_journald_message({"MESSAGE": b"hello",
-                                             "BONUS_FIELD": b"world"})
+        sd_journal_send(MESSAGE=b"hello", BONUS_FIELD=b"world")
+        result = last_journald_message()
         self.assertEqual((b"hello", b"world"),
                          (result["MESSAGE"], result["BONUS_FIELD"]))
+
+
+class JournaldDestinationTests(TestCase):
+    """
+    Tests for L{JournaldDestination}.
+    """
+    @skipUnless(_journald_available(),
+                "journald unavailable or inactive on this machine.")
+    def setUp(self):
+        self.destination = JournaldDestination()
+        self.logger = MemoryLogger()
+
+    def test_json(self):
+        """
+        The message is stored as JSON in the MESSAGE field.
+        """
+        message = {"hello": "world", "key": 123}
+        self.destination(message)
+        self.assertEqual(loads(last_journald_message()["MESSAGE"]), message)
+
+    def assert_field_for(self, message, field_name, field_value):
+        """
+        If the given message is logged by Eliot, the given journald field has
+        the expected value.
+
+        @param message: Dictionary to log.
+        @param field_name: Journald field name to check.
+        @param field_value: Expected value for the field.
+        """
+        self.destination(message)
+        self.assertEqual(last_journald_message()[field_name], field_value)
+
+    def test_action_type(self):
+        """
+        The C{action_type} is stored in the ELIOT_TYPE field.
+        """
+        action_type = "test:type"
+        start_action(self.logger, action_type=action_type)
+        self.assert_field_for(self.logger.messages[0], "ELIOT_TYPE",
+                              action_type)
+
+    def test_message_type(self):
+        """
+        The C{message_type} is stored in the ELIOT_TYPE field.
+        """
+        message_type = "test:type:message"
+        Message.new(message_type=message_type).write(self.logger)
+        self.assert_field_for(self.logger.messages[0], "ELIOT_TYPE",
+                              message_type)
+
+    def test_no_type(self):
+        """
+        An empty string is stored in ELIOT_TYPE if no type is known.
+        """
+        self.assert_field_for({}, "ELIOT_TYPE", "")
+
+    def test_uuid(self):
+        """
+        The task UUID is stored in the ELIOT_TASK field.
+        """
+        start_action(self.logger, action_type="xxx")
+        self.assert_field_for(self.logger.messages[0], "ELIOT_TASK",
+                              self.logger.messages[0][TASK_UUID_FIELD])
+
+    def test_info_priorities(self):
+        """
+        Untyped messages, action start, successful action end, random typed
+        message all get priority 1 ("info").
+        """
+        with start_action(self.logger, action_type="xxx"):
+            Message.new(message_type="msg").write(self.logger)
+            Message.new(x=123).write(self.logger)
+        priorities = []
+        for message in self.logger.messages:
+            self.destination(message)
+            priorities.append(last_journald_message()["PRIORITY"])
+        self.assertEqual(priorities, ["1", "1", "1"])
+
+    def test_error_priority(self):
+        """
+        A failed action gets priority 3 ("error").
+        """
+        try:
+            with start_action(self.logger, action_type="xxx"):
+                raise ZeroDivisionError()
+        except ZeroDivisionError:
+            pass
+        self.assert_field_for(self.logger.serialize()[-1], "PRIORITY", "3")
+
+    def test_traceback(self):
+        """
+        A traceback gets priority 4 ("critical").
+        """
+        try:
+            raise ZeroDivisionError()
+        except ZeroDivisionError:
+            write_traceback(self.logger)
+        self.assert_field_for(self.logger.serialize()[-1], "PRIORITY", "3")
+
