@@ -7,13 +7,7 @@ from __future__ import unicode_literals
 from unittest import TestCase
 from subprocess import check_output, Popen, PIPE
 
-from six import PY3
-
-if PY3:
-    from .._py3json import dumps
-else:
-    from json import dumps
-
+from .._bytesjson import dumps
 from ..prettyprint import pretty_print, _CLI_HELP
 
 

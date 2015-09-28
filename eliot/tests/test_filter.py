@@ -3,20 +3,15 @@ Tests for L{eliot.filter}.
 """
 from __future__ import unicode_literals
 
-from six import PY3
-
 import sys
 
-if PY3:
-    from .. import _py3json as json
-else:
-    import json
 from unittest import TestCase
 from datetime import datetime
 from io import BytesIO
 import inspect
 
 from .common import FakeSys
+from .. import _bytesjson as json
 from ..filter import EliotFilter, main, USAGE
 
 
