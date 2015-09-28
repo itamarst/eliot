@@ -53,7 +53,7 @@ class JournaldDestination(object):
         @param message: Dictionary passed from a C{Logger}.
         """
         eliot_type = u""
-        priority = b"1"
+        priority = b"6"
         if ACTION_TYPE_FIELD in message:
             eliot_type = message[ACTION_TYPE_FIELD]
             if message[ACTION_STATUS_FIELD] == FAILED_STATUS:
@@ -61,7 +61,7 @@ class JournaldDestination(object):
         elif MESSAGE_TYPE_FIELD in message:
             eliot_type = message[MESSAGE_TYPE_FIELD]
             if eliot_type == u"eliot:traceback":
-                priority = b"4"
+                priority = b"2"
         sd_journal_send(MESSAGE=dumps(message),
                         ELIOT_TASK=message[TASK_UUID_FIELD].encode("utf-8"),
                         ELIOT_TYPE=eliot_type.encode("utf-8"),

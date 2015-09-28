@@ -170,7 +170,7 @@ class JournaldDestinationTests(TestCase):
     def test_info_priorities(self):
         """
         Untyped messages, action start, successful action end, random typed
-        message all get priority 1 ("info").
+        message all get priority 6 ("info").
         """
         with start_action(self.logger, action_type="xxx"):
             Message.new(message_type="msg").write(self.logger)
@@ -179,7 +179,7 @@ class JournaldDestinationTests(TestCase):
         for message in self.logger.messages:
             self.destination(message)
             priorities.append(last_journald_message()["PRIORITY"])
-        self.assertEqual(priorities, [u"1", u"1", u"1", u"1"])
+        self.assertEqual(priorities, [u"6", u"6", u"6", u"6"])
 
     def test_error_priority(self):
         """
@@ -194,11 +194,11 @@ class JournaldDestinationTests(TestCase):
 
     def test_critical_priority(self):
         """
-        A traceback gets priority 4 ("critical").
+        A traceback gets priority 2 ("critical").
         """
         try:
             raise ZeroDivisionError()
         except ZeroDivisionError:
             write_traceback(logger=self.logger)
-        self.assert_field_for(self.logger.serialize()[-1], "PRIORITY", u"4")
+        self.assert_field_for(self.logger.serialize()[-1], "PRIORITY", u"2")
 
