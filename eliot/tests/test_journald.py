@@ -3,11 +3,10 @@ Tests for L{eliot.journald}.
 """
 
 try:
-    import cffi
-except ImportError:
-    cffi = None
-else:
     from ..journald import sd_journal_send, JournaldDestination
+except ImportError:
+    sd_journal_send = None
+
 
 from os import getpid, strerror
 from unittest import skipUnless, TestCase
@@ -24,7 +23,7 @@ def _journald_available():
     """
     :return: Boolean indicating whether journald is available to use.
     """
-    if cffi is None:
+    if sd_journal_send is None:
         return False
     try:
         check_output(["journalctl", "-b"], stderr=STDOUT)

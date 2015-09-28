@@ -13,7 +13,10 @@ _ffi = FFI()
 _ffi.cdef("""
 int sd_journal_send(const char *format, ...);
 """)
-_journald = _ffi.dlopen("libsystemd-journal.so.0")
+try:
+    _journald = _ffi.dlopen("libsystemd-journal.so.0")
+except OSError as e:
+    raise ImportError("Failed to load journald: " + str(e))
 
 
 def sd_journal_send(**kwargs):
