@@ -2,9 +2,10 @@
 Tests for L{eliot.journald}.
 """
 
-from os import getpid
+from os import getpid, strerror
 from unittest import skipUnless, TestCase
 from subprocess import check_output, CalledProcessError, STDOUT
+from errno import EINVAL
 
 from .._bytesjson import loads
 from ..journald import sd_journal_send, JournaldDestination
@@ -83,6 +84,16 @@ class SdJournaldSendTests(TestCase):
         self.assertEqual((b"hello", b"world"),
                          (result["MESSAGE"], result["BONUS_FIELD"]))
 
+    def test_error(self):
+        """
+        L{sd_journal_send} raises an error when it gets a non-0 result
+        from the underlying API.
+        """
+        with self.assertRaises(IOError) as context:
+            sd_journal_send(**{"": b"123"})
+        exc = context.exception
+        self.assertEqual((exc.errno, exc.strerror), (EINVAL, strerror(EINVAL)))
+
 
 class JournaldDestinationTests(TestCase):
     """
@@ -98,7 +109,8 @@ class JournaldDestinationTests(TestCase):
         """
         The message is stored as JSON in the MESSAGE field.
         """
-        message = {"hello": "world", "key": 123}
+        Message.new(hello="world", key=123).write(self.logger)
+        message = self.logger.messages[0]
         self.destination(message)
         self.assertEqual(loads(last_journald_message()["MESSAGE"]), message)
 
@@ -136,7 +148,8 @@ class JournaldDestinationTests(TestCase):
         """
         An empty string is stored in ELIOT_TYPE if no type is known.
         """
-        self.assert_field_for({}, "ELIOT_TYPE", "")
+        Message.new().write(self.logger)
+        self.assert_field_for(self.logger.messages[0], "ELIOT_TYPE", "")
 
     def test_uuid(self):
         """
@@ -158,7 +171,7 @@ class JournaldDestinationTests(TestCase):
         for message in self.logger.messages:
             self.destination(message)
             priorities.append(last_journald_message()["PRIORITY"])
-        self.assertEqual(priorities, ["1", "1", "1"])
+        self.assertEqual(priorities, [u"1", u"1", u"1", u"1"])
 
     def test_error_priority(self):
         """
@@ -169,15 +182,15 @@ class JournaldDestinationTests(TestCase):
                 raise ZeroDivisionError()
         except ZeroDivisionError:
             pass
-        self.assert_field_for(self.logger.serialize()[-1], "PRIORITY", "3")
+        self.assert_field_for(self.logger.messages[-1], "PRIORITY", u"3")
 
-    def test_traceback(self):
+    def test_critical_priority(self):
         """
         A traceback gets priority 4 ("critical").
         """
         try:
             raise ZeroDivisionError()
         except ZeroDivisionError:
-            write_traceback(self.logger)
-        self.assert_field_for(self.logger.serialize()[-1], "PRIORITY", "3")
+            write_traceback(logger=self.logger)
+        self.assert_field_for(self.logger.serialize()[-1], "PRIORITY", u"4")
 
