@@ -9,9 +9,10 @@ import json as pyjson
 
 from characteristic import attributes
 from six import text_type as unicode, PY3
+
+from . import _bytesjson as slow_json
 if PY3:
-    from . import _py3json as fast_json
-    slow_json = fast_json
+    fast_json = slow_json
 else:
     try:
         # ujson has some issues, in particular it is far too lenient on bad
@@ -21,10 +22,8 @@ else:
         # path, since we want to validate messages encode in all JSON
         # encoders.
         import ujson as fast_json
-        import json as slow_json
     except ImportError:
         import json as fast_json
-        slow_json = fast_json
 
 
 
