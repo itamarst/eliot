@@ -43,6 +43,9 @@ def pretty_print(message):
     return "%s@%s\n%sZ\n%s" % (
         message["task_uuid"],
         level,
+        # If we were returning or storing the datetime we'd want to use an
+        # explicit timezone instead of a naive datetime, but since we're
+        # just using it for formatting we needn't bother.
         datetime.utcfromtimestamp(message["timestamp"]).isoformat(),
         remaining,
     )
