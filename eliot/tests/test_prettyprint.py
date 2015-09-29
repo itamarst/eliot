@@ -37,7 +37,7 @@ class FormattingTests(TestCase):
         self.assertEqual(
             pretty_format(SIMPLE_MESSAGE),
             """\
-8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
+8c668cde-235b-4872-af4e-caea524bd1c0 -> /1/2
 2015-09-25 15:09:14Z
   message_type: messagey
   keys: [123, 456]
