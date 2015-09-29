@@ -37,7 +37,7 @@ class FormattingTests(TestCase):
         self.assertEqual(
             pretty_format(SIMPLE_MESSAGE),
             """\
-8c668cde-235b-4872-af4e-caea524bd1c0@/1/2
+8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
 2015-09-25 15:09:14Z
   message_type: messagey
   keys: [123, 456]
@@ -50,7 +50,7 @@ class FormattingTests(TestCase):
         self.assertEqual(
             pretty_format(UNTYPED_MESSAGE),
             """\
-8c668cde-235b-4872-af4e-caea524bd1c0@/1
+8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
 2015-09-25 15:09:14Z
   abc: def
   key: 1234
@@ -69,7 +69,7 @@ class FormattingTests(TestCase):
         self.assertEqual(
             pretty_format(message),
             """\
-8bc6ded2-446c-4b6d-abbc-4f21f1c9a7d8@/2/2/2/1
+8bc6ded2-446c-4b6d-abbc-4f21f1c9a7d8 -> /2/2/2/1
 2015-09-25 15:12:38Z
   action_type: visited
   action_status: started
@@ -87,7 +87,7 @@ class FormattingTests(TestCase):
         self.assertEqual(
             pretty_format(message),
             """\
-8c668cde-235b-4872-af4e-caea524bd1c0@/1
+8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
 2015-09-25 15:09:14Z
   key: hello
 """)
@@ -104,7 +104,7 @@ class FormattingTests(TestCase):
         self.assertEqual(
             pretty_format(message),
             """\
-8c668cde-235b-4872-af4e-caea524bd1c0@/1
+8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
 2015-09-25 15:09:14Z
   key: hello
        there
@@ -139,6 +139,3 @@ class CommandLineTests(TestCase):
         self.assertEqual(
             stdout,
             "".join(pretty_format(message) + "\n" for message in messages))
-
-
-

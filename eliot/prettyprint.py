@@ -48,7 +48,7 @@ def pretty_format(message):
             remaining += add_field(remaining, key, value)
 
     level = "/" + "/".join(map(unicode, message[TASK_LEVEL_FIELD]))
-    return "%s@%s\n%sZ\n%s" % (
+    return "%s -> %s\n%sZ\n%s" % (
         message[TASK_UUID_FIELD],
         level,
         # If we were returning or storing the datetime we'd want to use an
