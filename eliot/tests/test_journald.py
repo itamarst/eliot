@@ -12,6 +12,7 @@ from os import getpid, strerror
 from unittest import skipUnless, TestCase
 from subprocess import check_output, CalledProcessError, STDOUT
 from errno import EINVAL
+from sys import argv
 
 from .._bytesjson import loads
 from .._output import MemoryLogger
@@ -201,3 +202,16 @@ class JournaldDestinationTests(TestCase):
             write_traceback(logger=self.logger)
         self.assert_field_for(self.logger.serialize()[-1], "PRIORITY", u"2")
 
+    def test_identifier(self):
+        """
+        C{SYSLOG_IDENTIFIER} defaults to C{sys.argv[0]}.
+        """
+        identifier = "testing123"
+        try:
+            original = argv[0]
+            argv[0] = identifier
+            Message.new(message_type="msg").write(self.logger)
+            self.assert_field_for(self.logger.messages[0], "SYSLOG_IDENTIFIER",
+                                  unicode(identifier))
+        finally:
+            argv[0] = original
