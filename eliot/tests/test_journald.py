@@ -27,7 +27,7 @@ def _journald_available():
     if sd_journal_send is None:
         return False
     try:
-        check_output(["journalctl", "-b"], stderr=STDOUT)
+        check_output(["journalctl", "-b", "-n1"], stderr=STDOUT)
     except CalledProcessError:
         return False
     return True
