@@ -55,6 +55,9 @@ class JournaldDestination(object):
     traceback messages will get priority 2 ("critical"). All other
     messages will get priority 1 ("info").
     """
+    def __init__(self):
+        self._identifier = basename(argv[0]).encode("utf-8")
+
     def __call__(self, message):
         """
         Write the given message to journald.
@@ -74,5 +77,5 @@ class JournaldDestination(object):
         sd_journal_send(MESSAGE=dumps(message),
                         ELIOT_TASK=message[TASK_UUID_FIELD].encode("utf-8"),
                         ELIOT_TYPE=eliot_type.encode("utf-8"),
-                        SYSLOG_IDENTIFIER=basename(argv[0]).encode("utf-8"),
+                        SYSLOG_IDENTIFIER=self._identifier,
                         PRIORITY=priority)

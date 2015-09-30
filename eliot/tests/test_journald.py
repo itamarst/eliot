@@ -221,6 +221,8 @@ class JournaldDestinationTests(TestCase):
         try:
             original = argv[0]
             argv[0] = identifier
+            # Recreate JournaldDestination with the newly set argv[0].
+            self.destination = JournaldDestination()
             Message.new(message_type="msg").write(self.logger)
             self.assert_field_for(self.logger.messages[0], "SYSLOG_IDENTIFIER",
                                   u"testing123")
