@@ -5,16 +5,17 @@ from __future__ import unicode_literals, print_function
 
 from twisted.internet.task import react
 
-from eliot.logwriter import ThreadedFileWriter
-from eliot import Message
+from eliot.logwriter import ThreadedWriter
+from eliot import Message, FileDestination
 
 
 def main(reactor):
     print("Logging to example-eliot.log...")
-    logWriter = ThreadedFileWriter(open("example-eliot.log", "ab"), reactor)
+    logWriter = ThreadedWriter(
+        FileDestination(file=open("example-eliot.log", "ab")), reactor)
 
     # Manually start the service, which will add it as a
-    # destination. Normally we'd register ThreadedFileWriter with the usual
+    # destination. Normally we'd register ThreadedWriter with the usual
     # Twisted Service/Application infrastructure.
     logWriter.startService()
 

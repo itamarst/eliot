@@ -6,21 +6,24 @@ Eliot provides a variety of APIs to support integration with the `Twisted`_ netw
 .. _Twisted: https://twistedmatrix.com
 
 
-.. _ThreadedFileWriter:
+.. _ThreadedWriter:
 
-Destinations
-------------
+Non-blocking Destinations
+-------------------------
 
-``eliot.logwriter.ThreadedFileWriter`` is a logging destination that writes to a file-like object in a thread.
-This is useful because it keeps the Twisted thread from blocking if writing to the log file is slow.
-``ThreadedFileWriter`` is a Twisted ``Service`` and starting it will call ``add_destination`` for you and stopping it will call ``remove_destination``; there is no need to call those directly.
+``eliot.logwriter.ThreadedWriter`` is a logging destination that writes to a blocking destination in a thread.
+This is useful because it keeps the Twisted thread from blocking, e.g. if you're writing to a log file and the hard drive is overloaded.
+``ThreadedWriter`` is a Twisted ``Service`` and starting it will call ``add_destination`` for you and stopping it will call ``remove_destination``; there is no need to call those directly.
 
 .. literalinclude:: ../../examples/logfile.py
 
-If you want log rotation you can pass in one of the classes from `twisted.python.logfile`_ as the destination file.
+If you want log rotation you can pass in an ``eliot.FileDestination`` wrapping one of the classes from `twisted.python.logfile`_ as the destination file.
 
 .. _twisted.python.logfile: https://twistedmatrix.com/documents/current/api/twisted.python.logfile.html
 
+
+Trial Integration
+-----------------
 If you're using Twisted's ``trial`` program to run your tests you can redirect your Eliot logs to Twisted's logs by calling ``eliot.twisted.redirectLogsForTrial()``.
 This function will automatically detect whether or not it is running under ``trial``.
 If it is then you will be able to read your Eliot logs in ``_trial_temp/test.log``, where ``trial`` writes out logs by default.

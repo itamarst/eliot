@@ -20,10 +20,10 @@ from . import addDestination, removeDestination
 from ._output import FileDestination
 
 
-class ThreadedFileWriter(Service):
+class ThreadedWriter(Service):
     """
-    An Eliot log destination that writes log messages as lines to a file, using
-    a managed thread.
+    An non-blocking Eliot log destination that wraps a blocking
+    destination, writing log messages to the latter in a managed thread.
 
     Unfortunately Python's Queue is not reentrant
     (http://bugs.python.org/issue14976) and neither is RLock
@@ -40,18 +40,13 @@ class ThreadedFileWriter(Service):
     name = u"Eliot Log Writer"
 
 
-    def __init__(self, logFile, reactor):
+    def __init__(self, destination, reactor):
         """
-        @param logFile: A C{file}-like object that is at the end of its existing
-           contents (e.g. opened with append mode) and accepts bytes.
-        @type logFile: C{file}, or any file-like object with C{write}, C{flush}
-            and C{close} methods e.g. a L{twisted.python.logfile.LogFile} if you
-            want log rotation.
+        @param destination: The underlying destination for log files.
 
         @param reactor: The main reactor.
         """
-        self._logFile = logFile
-        self._destination = FileDestination(file=logFile)
+        self._destination = destination
         self._reactor = Reactor()
         # Ick. See https://twistedmatrix.com/trac/ticket/6982 for real solution.
         self._reactor._registerAsIOThread = False
@@ -96,4 +91,31 @@ class ThreadedFileWriter(Service):
         The function run by the writer thread.
         """
         self._reactor.run(installSignalHandlers=False)
-        self._logFile.close()
+
+
+class ThreadedFileWriter(ThreadedWriter):
+    """
+    ``ThreadedWriter`` that takes a log file and writes to it using a
+    ``FileDestination``.
+
+    This exists mostly for backwards compatibility purpose. The
+    recommended API is ``ThreadedWriter``.
+    """
+    def __init__(self, logFile, reactor):
+        """
+        @param logFile: A C{file}-like object that is at the end of its
+            existing contents (e.g. opened with append mode) and accepts
+            bytes.
+        @type logFile: C{file}, or any file-like object with C{write},
+            C{flush} and C{close} methods e.g. a
+            L{twisted.python.logfile.LogFile} if you want log rotation.
+
+        @param reactor: The main reactor.
+        """
+        self._logFile = logFile
+        ThreadedWriter.__init__(self, FileDestination(file=logFile), reactor)
+
+    def stopService(self):
+        d = ThreadedWriter.stopService(self)
+        d.addCallback(lambda _: self._logFile.close())
+        return d

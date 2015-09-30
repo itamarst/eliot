@@ -18,8 +18,9 @@ For example, if we want each message to be encoded in JSON and written on a new 
 Outputting to Files
 -------------------
 
-``eliot.to_file`` adds a destination that logs to a file.
+You can create a destination that logs to a file by calling ``eliot.FileDestination(file=yourfile)``.
 Each Eliot message will be encoded in JSON and written on a new line.
+As a short hand you can call ``eliot.to_file`` which will create the destination and then add it.
 For example:
 
 .. code-block:: python
@@ -30,7 +31,7 @@ For example:
 .. note::
 
     This destination is blocking: if writing to a file takes a long time your code will not be able to proceed until writing is done.
-    If you're using Twisted you can use the non-blocking :ref:`eliot.logwriter.ThreadedFileWriter<ThreadedFileWriter>` to log to a file.
+    If you're using Twisted you can use the non-blocking :ref:`eliot.logwriter.ThreadedWriter<ThreadedWriter>` to log to a file.
 
 
 .. _add_global_fields:
