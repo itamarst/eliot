@@ -215,14 +215,14 @@ class JournaldDestinationTests(TestCase):
 
     def test_identifier(self):
         """
-        C{SYSLOG_IDENTIFIER} defaults to C{sys.argv[0]}.
+        C{SYSLOG_IDENTIFIER} defaults to C{os.path.basename(sys.argv[0])}.
         """
-        identifier = "testing123"
+        identifier = "/usr/bin/testing123"
         try:
             original = argv[0]
             argv[0] = identifier
             Message.new(message_type="msg").write(self.logger)
             self.assert_field_for(self.logger.messages[0], "SYSLOG_IDENTIFIER",
-                                  unicode(identifier))
+                                  u"testing123")
         finally:
             argv[0] = original

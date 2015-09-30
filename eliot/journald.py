@@ -5,6 +5,7 @@ journald support for Eliot.
 from cffi import FFI
 from os import strerror
 from sys import argv
+from os.path import basename
 
 from ._bytesjson import dumps
 from ._message import TASK_UUID_FIELD, MESSAGE_TYPE_FIELD
@@ -73,5 +74,5 @@ class JournaldDestination(object):
         sd_journal_send(MESSAGE=dumps(message),
                         ELIOT_TASK=message[TASK_UUID_FIELD].encode("utf-8"),
                         ELIOT_TYPE=eliot_type.encode("utf-8"),
-                        SYSLOG_IDENTIFIER=argv[0].encode("utf-8"),
+                        SYSLOG_IDENTIFIER=basename(argv[0]).encode("utf-8"),
                         PRIORITY=priority)
