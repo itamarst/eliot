@@ -46,7 +46,7 @@ We can find all messages with a specific type:
 .. code-block:: shell
 
    $ sudo journalctl --all --output cat ELIOT_TYPE=inbetween | eliot-prettyprint
-   32ab1286-c356-439d-86f8-085fec3b65d0@/1
+   32ab1286-c356-439d-86f8-085fec3b65d0 -> /1
    2015-09-23 21:26:37.972403Z
      message_type: inbetween
 
@@ -55,7 +55,7 @@ We can filter to those that indicate errors:
 .. code-block:: shell
 
    $ sudo journalctl --all --output cat --priority=err ELIOT_TYPE=divide | eliot-prettyprint
-   ce64eb77-bb7f-4e69-83f8-07d7cdaffaca@/2
+   ce64eb77-bb7f-4e69-83f8-07d7cdaffaca -> /2
    2015-09-23 21:26:37.972945Z
      action_type: divide
      action_status: failed
