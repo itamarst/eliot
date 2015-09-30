@@ -42,7 +42,7 @@ def last_journald_message():
     # It may take a little for messages to actually reach journald, so we
     # write out marker message and wait until it arrives. We can then be
     # sure the message right before it is the one we want.
-    marker = unicode(uuid4())
+    marker = unicode(uuid4()).encode("ascii")
     sd_journal_send(MESSAGE=marker)
     while True:
         messages = check_output(
