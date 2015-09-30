@@ -15,7 +15,11 @@ _ffi.cdef("""
 int sd_journal_send(const char *format, ...);
 """)
 try:
-    _journald = _ffi.dlopen("libsystemd-journal.so.0")
+    try:
+        _journald = _ffi.dlopen("libsystemd.so.0")
+    except OSError:
+        # Older versions of systemd have separate library:
+        _journald = _ffi.dlopen("libsystemd-journal.so.0")
 except OSError as e:
     raise ImportError("Failed to load journald: " + str(e))
 
