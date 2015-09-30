@@ -14,12 +14,12 @@ Eliot provides native ``journald`` support, with the following features:
 
 Installation
 ------------
-Journald requires the `cffi <https://cffi.readthedocs.org>`_ library which is not a default dependency of Eliot.
-You can install it by running:
+Journald requires additional libraries that are not installed by default by Eliot.
+You can install them by running:
 
 .. code-block:: shell
 
-   $ pip install cffi
+   $ pip install eliot[journald]
 
 Generating logs
 ---------------
