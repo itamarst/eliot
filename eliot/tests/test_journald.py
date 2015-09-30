@@ -1,23 +1,24 @@
 """
 Tests for L{eliot.journald}.
 """
-
-try:
-    from ..journald import sd_journal_send, JournaldDestination
-except ImportError:
-    sd_journal_send = None
-
-
 from os import getpid, strerror
 from unittest import skipUnless, TestCase
 from subprocess import check_output, CalledProcessError, STDOUT
 from errno import EINVAL
 from sys import argv
+from uuid import uuid4
+from time import sleep
+
+from six import text_type as unicode
 
 from .._bytesjson import loads
 from .._output import MemoryLogger
 from .._message import TASK_UUID_FIELD
 from .. import start_action, Message, write_traceback
+try:
+    from ..journald import sd_journal_send, JournaldDestination
+except ImportError:
+    sd_journal_send = None
 
 
 def _journald_available():
@@ -38,9 +39,19 @@ def last_journald_message():
     @return: Last journald message from this process as a dictionary in
          journald JSON format.
     """
-    messages = check_output(
-        [b"journalctl", b"-a", b"-o", b"json", b"_PID=%d" % (getpid(),)])
-    return loads(messages.splitlines()[-1])
+    # It may take a little for messages to actually reach journald, so we
+    # write out marker message and wait until it arrives. We can then be
+    # sure the message right before it is the one we want.
+    marker = unicode(uuid4())
+    sd_journal_send(MESSAGE=marker)
+    while True:
+        messages = check_output(
+            [b"journalctl", b"-a", b"-o", b"json", b"-n2",
+             b"_PID=%d" % (getpid(),)])
+        messages = [loads(m) for m in messages.splitlines()]
+        if len(messages) == 2 and messages[1]["MESSAGE"] == marker:
+            return messages[0]
+        sleep(0.01)
 
 
 class SdJournaldSendTests(TestCase):
