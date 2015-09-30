@@ -7,10 +7,19 @@ Journald
 Eliot provides native ``journald`` support, with the following features:
 
 * The default message field (``MESSAGE``) stores the Eliot message as JSON.
+* Failed actions get priority 3 ("err") and tracebacks get priority 2 ("crit").
 * The ``ELIOT_TASK`` field stores the task UUID.
 * The ``ELIOT_TYPE`` field stores the message or action type if available.
-* Failed actions get priority 3 ("err") and tracebacks get priority 2 ("crit").
+* The ``SYSLOG_IDENTIFIER`` stores ``sys.argv[0]``.
 
+Installation
+------------
+Journald requires the `cffi <https://cffi.readthedocs.org>`_ library which is not a default dependency of Eliot.
+You can install it by running:
+
+.. code-block:: shell
+
+   $ pip install cffi
 
 Generating logs
 ---------------
