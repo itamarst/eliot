@@ -35,6 +35,7 @@ Contents:
    types
    types-testing
    reading
+   journald
    elasticsearch
    twisted
    fields

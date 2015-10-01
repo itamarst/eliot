@@ -46,6 +46,10 @@ setup(
         "pyrsistent",
     ],
     extras_require={
+        "journald": [
+            # We use cffi to talk to the journald API:
+            "cffi >= 1.1.2",  # significant API changes in older releases
+        ],
         "dev": [
             # Allows us to measure code coverage:
             "coverage",

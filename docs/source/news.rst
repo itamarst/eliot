@@ -6,6 +6,7 @@ What's New
 
 Features:
 
+* Native :ref:`journald support<journald>`.
 * ``eliot-prettyprint`` is a command-line tool that formats JSON Eliot messages into a more human-friendly format.
 
 0.8.0
