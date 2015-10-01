@@ -31,7 +31,8 @@ For example:
 .. note::
 
     This destination is blocking: if writing to a file takes a long time your code will not be able to proceed until writing is done.
-    If you're using Twisted you can use the non-blocking :ref:`eliot.logwriter.ThreadedWriter<ThreadedWriter>` to log to a file.
+    If you're using Twisted you can wrap a ``eliot.FileDestination`` with a non-blocking :ref:`eliot.logwriter.ThreadedWriter<ThreadedWriter>`.
+    This allows you to log to a file without blocking the Twisted ``reactor``.
 
 
 .. _add_global_fields:
@@ -49,4 +50,3 @@ Use the ``eliot.add_global_fields`` API to do so, e.g.:
     from eliot import add_global_fields
 
     add_global_fields(process_id="%s:%d" % (sys.argv[0], os.getpid()))
-
