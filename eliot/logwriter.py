@@ -8,6 +8,7 @@ from __future__ import unicode_literals, absolute_import
 
 import threading
 import select
+from warnings import warn
 
 from twisted.application.service import Service
 from twisted.internet.threads import deferToThreadPool
@@ -99,8 +100,8 @@ class ThreadedFileWriter(ThreadedWriter):
     ``ThreadedWriter`` that takes a log file and writes to it using a
     ``FileDestination``.
 
-    This exists mostly for backwards compatibility purpose. The
-    recommended API is ``ThreadedWriter``.
+    This exists for backwards compatibility purpose. The recommended API is
+    ``ThreadedWriter``.
     """
     def __init__(self, logFile, reactor):
         """
@@ -113,6 +114,11 @@ class ThreadedFileWriter(ThreadedWriter):
 
         @param reactor: The main reactor.
         """
+        warn(
+            "ThreadedFileWriter is deprecated since 0.9.0. "
+            "Use ThreadedWriter instead.",
+            DeprecationWarning, stacklevel=2
+        )
         self._logFile = logFile
         ThreadedWriter.__init__(self, FileDestination(file=logFile), reactor)
 

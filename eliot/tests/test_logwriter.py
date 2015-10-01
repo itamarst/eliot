@@ -10,6 +10,7 @@ import threading
 from io import BytesIO, StringIO
 from unittest import skipIf
 import json as pyjson
+from warnings import catch_warnings, simplefilter
 
 from six import PY2
 
@@ -280,6 +281,15 @@ class ThreadedFileWriterTests(TestCase):
     """
     Tests for ``ThreadedFileWriter``.
     """
+    def test_deprecation_warning(self):
+        """
+        Instantiating ``ThreadedFileWriter`` gives a ``DeprecationWarning``.
+        """
+        with catch_warnings(record=True) as warnings:
+            ThreadedFileWriter(BytesIO(), reactor)
+            simplefilter("always")  # Catch all warnings
+            self.assertEqual(warnings[-1].category, DeprecationWarning)
+
     def test_write(self):
         """
         Messages passed to L{ThreadedFileWriter.__call__} are then written by
