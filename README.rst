@@ -25,7 +25,7 @@ Features:
 * Logged actions can span processes and threads.
 * Excellent support for unit testing your code's logging.
 * Optional Twisted support.
-* Designed for JSON output, usable by Logstash/Elasticsearch.
+* Native journald support, easily usable by Logstash/Elasticsearch.
 * Supports CPython 2.7, 3.3, 3.4 and PyPy.
 
 .. _PEP 8: http://legacy.python.org/dev/peps/pep-0008/
