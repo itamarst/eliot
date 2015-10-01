@@ -4,7 +4,9 @@ Eliot: Logging for Complex & Distributed Systems.
 # Expose the public API:
 from ._message import Message
 from ._action import startAction, startTask, Action
-from ._output import ILogger, Logger, MemoryLogger, to_file
+from ._output import (
+    ILogger, Logger, MemoryLogger, to_file, FileDestination,
+)
 from ._validation import Field, fields, MessageType, ActionType
 from ._traceback import writeTraceback, writeFailure
 addDestination = Logger._destinations.add
@@ -25,7 +27,7 @@ __all__ = ["Message", "writeTraceback", "writeFailure",
            "startAction", "startTask", "Action",
            "Field", "fields", "MessageType", "ActionType",
            "ILogger", "Logger", "MemoryLogger", "addDestination",
-           "removeDestination", "addGlobalFields",
+           "removeDestination", "addGlobalFields", "FileDestination",
 
            # PEP 8 variants:
            "write_traceback", "write_failure", "start_action", "start_task",

@@ -10,6 +10,7 @@ import threading
 from io import BytesIO, StringIO
 from unittest import skipIf
 import json as pyjson
+from warnings import catch_warnings, simplefilter
 
 from six import PY2
 
@@ -25,9 +26,9 @@ except ImportError:
 else:
     # Make sure we always import this if Twisted is available, so broken
     # logwriter.py causes a failure:
-    from ..logwriter import ThreadedFileWriter
+    from ..logwriter import ThreadedFileWriter, ThreadedWriter
 
-from .. import Logger, removeDestination
+from .. import Logger, removeDestination, FileDestination
 
 
 class BlockingFile(object):
@@ -79,9 +80,9 @@ class BlockingFile(object):
 
 
 
-class ThreadedFileWriterTests(TestCase):
+class ThreadedWriterTests(TestCase):
     """
-    Tests for L{ThreadedFileWriter}.
+    Tests for L{ThreadedWriter}.
 
     Many of these tests involve interactions across threads, so they
     arbitrarily wait for up to 5 seconds to reduce chances of slow thread
@@ -89,24 +90,24 @@ class ThreadedFileWriterTests(TestCase):
     """
     def test_interface(self):
         """
-        L{ThreadedFileWriter} provides L{IService}.
+        L{ThreadedWriter} provides L{IService}.
         """
-        verifyClass(IService, ThreadedFileWriter)
+        verifyClass(IService, ThreadedWriter)
 
 
     def test_name(self):
         """
-        L{ThreadedFileWriter} has a name.
+        L{ThreadedWriter} has a name.
         """
-        self.assertEqual(ThreadedFileWriter.name, u"Eliot Log Writer")
+        self.assertEqual(ThreadedWriter.name, u"Eliot Log Writer")
 
 
     def test_startServiceRunning(self):
         """
-        L{ThreadedFileWriter.startService} starts the service as required by the
+        L{ThreadedWriter.startService} starts the service as required by the
         L{IService} interface.
         """
-        writer = ThreadedFileWriter(BytesIO(), reactor)
+        writer = ThreadedWriter(FileDestination(file=BytesIO()), reactor)
         self.assertFalse(writer.running)
         writer.startService()
         self.addCleanup(writer.stopService)
@@ -115,10 +116,10 @@ class ThreadedFileWriterTests(TestCase):
 
     def test_stopServiceRunning(self):
         """
-        L{ThreadedFileWriter.stopService} stops the service as required by the
+        L{ThreadedWriter.stopService} stops the service as required by the
         L{IService} interface.
         """
-        writer = ThreadedFileWriter(BytesIO(), reactor)
+        writer = ThreadedWriter(FileDestination(file=BytesIO()), reactor)
         writer.startService()
         d = writer.stopService()
         d.addCallback(lambda _: self.assertFalse(writer.running))
@@ -127,8 +128,8 @@ class ThreadedFileWriterTests(TestCase):
 
     def test_startServiceStartsThread(self):
         """
-        L{ThreadedFileWriter.startService} starts up a thread running
-        L{ThreadedFileWriter._writer}.
+        L{ThreadedWriter.startService} starts up a thread running
+        L{ThreadedWriter._writer}.
         """
         previousThreads = threading.enumerate()
         result = []
@@ -138,7 +139,7 @@ class ThreadedFileWriterTests(TestCase):
             if current not in previousThreads:
                 result.append(current)
             event.set()
-        writer = ThreadedFileWriter(BytesIO(), reactor)
+        writer = ThreadedWriter(FileDestination(file=BytesIO()), reactor)
         writer._writer = _writer
         writer.startService()
         event.wait()
@@ -149,10 +150,10 @@ class ThreadedFileWriterTests(TestCase):
 
     def test_stopServiceStopsThread(self):
         """
-        L{ThreadedFileWriter.stopService} stops the writer thread.
+        L{ThreadedWriter.stopService} stops the writer thread.
         """
         previousThreads = set(threading.enumerate())
-        writer = ThreadedFileWriter(BytesIO(), reactor)
+        writer = ThreadedWriter(FileDestination(file=BytesIO()), reactor)
         writer.startService()
         start = time.time()
         while set(threading.enumerate()) == previousThreads and (
@@ -167,49 +168,13 @@ class ThreadedFileWriterTests(TestCase):
         self.assertEqual(set(threading.enumerate()), previousThreads)
 
 
-    def test_write(self):
-        """
-        Messages passed to L{ThreadedFileWriter.write} are then written by the
-        writer thread with a newline added.
-        """
-        f = BytesIO()
-        writer = ThreadedFileWriter(f, reactor)
-        writer.startService()
-        self.addCleanup(writer.stopService)
-
-        writer({"hello": 123})
-        start = time.time()
-        while not f.getvalue() and time.time() - start < 5:
-            time.sleep(0.0001)
-        self.assertEqual(f.getvalue(), b'{"hello": 123}\n')
-
-
-    @skipIf(PY2, "Python 2 files always accept bytes")
-    def test_write_unicode(self):
-        """
-        Messages passed to L{ThreadedFileWriter.write} are then written by the
-        writer thread with a newline added to files that accept unicode.
-        """
-        f = StringIO()
-        writer = ThreadedFileWriter(f, reactor)
-        writer.startService()
-        self.addCleanup(writer.stopService)
-
-        original = {"hello\u1234": 123}
-        writer(original)
-        start = time.time()
-        while not f.getvalue() and time.time() - start < 5:
-            time.sleep(0.0001)
-        self.assertEqual(f.getvalue(), pyjson.dumps(original) + "\n")
-
-
     def test_stopServiceFinishesWriting(self):
         """
-        L{ThreadedFileWriter.stopService} stops the writer thread, but only after
+        L{ThreadedWriter.stopService} stops the writer thread, but only after
         all queued writes are written out.
         """
         f = BlockingFile()
-        writer = ThreadedFileWriter(f, reactor)
+        writer = ThreadedWriter(FileDestination(file=f), reactor)
         f.block()
         writer.startService()
         for i in range(100):
@@ -228,11 +193,11 @@ class ThreadedFileWriterTests(TestCase):
 
     def test_stopServiceResult(self):
         """
-        L{ThreadedFileWriter.stopService} returns a L{Deferred} that fires only
+        L{ThreadedWriter.stopService} returns a L{Deferred} that fires only
         after the thread has shut down.
         """
         f = BlockingFile()
-        writer = ThreadedFileWriter(f, reactor)
+        writer = ThreadedWriter(FileDestination(file=f), reactor)
         f.block()
         writer.startService()
 
@@ -248,26 +213,12 @@ class ThreadedFileWriterTests(TestCase):
         return d
 
 
-    def test_stopServiceClosesFile(self):
-        """
-        L{ThreadedFileWriter.stopService} closes the file.
-        """
-        f = BytesIO()
-        writer = ThreadedFileWriter(f, reactor)
-        writer.startService()
-        d = writer.stopService()
-        def done(_):
-            self.assertTrue(f.closed)
-        d.addCallback(done)
-        return d
-
-
     def test_noChangeToIOThread(self):
         """
-        Running a L{ThreadedFileWriter} doesn't modify the Twisted registered IO
+        Running a L{ThreadedWriter} doesn't modify the Twisted registered IO
         thread.
         """
-        writer = ThreadedFileWriter(BytesIO(), reactor)
+        writer = ThreadedWriter(FileDestination(file=BytesIO()), reactor)
         writer.startService()
         d = writer.stopService()
         # Either the current thread (the one running the tests) is the the I/O
@@ -281,11 +232,11 @@ class ThreadedFileWriterTests(TestCase):
 
     def test_startServiceRegistersDestination(self):
         """
-        L{ThreadedFileWriter.startService} registers itself as an Eliot log
+        L{ThreadedWriter.startService} registers itself as an Eliot log
         destination.
         """
         f = BlockingFile()
-        writer = ThreadedFileWriter(f, reactor)
+        writer = ThreadedWriter(FileDestination(file=f), reactor)
         writer.startService()
         Logger().write({"x": "abc"})
         d = writer.stopService()
@@ -295,11 +246,95 @@ class ThreadedFileWriterTests(TestCase):
 
     def test_stopServiceUnregistersDestination(self):
         """
-        L{ThreadedFileWriter.stopService} unregisters itself as an Eliot log
+        L{ThreadedWriter.stopService} unregisters itself as an Eliot log
         destination.
         """
-        writer = ThreadedFileWriter(BytesIO(), reactor)
+        writer = ThreadedWriter(FileDestination(file=BytesIO()), reactor)
         writer.startService()
         d = writer.stopService()
         d.addCallback(lambda _: removeDestination(writer))
         return self.assertFailure(d, ValueError)
+
+
+    def test_call(self):
+        """
+        The message passed to L{ThreadedWriter.__call__} is passed to the
+        underlying destination in the writer thread.
+        """
+        result = []
+
+        def destination(message):
+            result.append((message, threading.currentThread().ident))
+
+        writer = ThreadedWriter(destination, reactor)
+        writer.startService()
+        thread_ident = writer._thread.ident
+        msg = {"key": 123}
+        writer(msg)
+        d = writer.stopService()
+        d.addCallback(
+            lambda _: self.assertEqual(result, [(msg, thread_ident)]))
+        return d
+
+
+class ThreadedFileWriterTests(TestCase):
+    """
+    Tests for ``ThreadedFileWriter``.
+    """
+    def test_deprecation_warning(self):
+        """
+        Instantiating ``ThreadedFileWriter`` gives a ``DeprecationWarning``.
+        """
+        with catch_warnings(record=True) as warnings:
+            ThreadedFileWriter(BytesIO(), reactor)
+            simplefilter("always")  # Catch all warnings
+            self.assertEqual(warnings[-1].category, DeprecationWarning)
+
+    def test_write(self):
+        """
+        Messages passed to L{ThreadedFileWriter.__call__} are then written by
+        the writer thread with a newline added.
+        """
+        f = BytesIO()
+        writer = ThreadedFileWriter(f, reactor)
+        writer.startService()
+        self.addCleanup(writer.stopService)
+
+        writer({"hello": 123})
+        start = time.time()
+        while not f.getvalue() and time.time() - start < 5:
+            time.sleep(0.0001)
+        self.assertEqual(f.getvalue(), b'{"hello": 123}\n')
+
+    @skipIf(PY2, "Python 2 files always accept bytes")
+    def test_write_unicode(self):
+        """
+        Messages passed to L{ThreadedFileWriter.__call__} are then written by
+        the writer thread with a newline added to files that accept
+        unicode.
+        """
+        f = StringIO()
+        writer = ThreadedFileWriter(f, reactor)
+        writer.startService()
+        self.addCleanup(writer.stopService)
+
+        original = {"hello\u1234": 123}
+        writer(original)
+        start = time.time()
+        while not f.getvalue() and time.time() - start < 5:
+            time.sleep(0.0001)
+        self.assertEqual(f.getvalue(), pyjson.dumps(original) + "\n")
+
+    def test_stopServiceClosesFile(self):
+        """
+        L{ThreadedWriter.stopService} closes the file.
+        """
+        f = BytesIO()
+        writer = ThreadedFileWriter(f, reactor)
+        writer.startService()
+        d = writer.stopService()
+
+        def done(_):
+            self.assertTrue(f.closed)
+        d.addCallback(done)
+        return d

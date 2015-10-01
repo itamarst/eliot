@@ -8,6 +8,7 @@ Features:
 
 * Native :ref:`journald support<journald>`.
 * ``eliot-prettyprint`` is a command-line tool that formats JSON Eliot messages into a more human-friendly format.
+* ``eliot.logwriter.ThreadedWriter`` is a Twisted non-blocking wrapper for any blocking destination.
 
 0.8.0
 ^^^^^
