@@ -42,7 +42,8 @@ class ThreadedWriter(Service):
 
     def __init__(self, destination, reactor):
         """
-        @param destination: The underlying destination for log files.
+        @param destination: The underlying destination for log files. This will
+            be called from a non-reactor thread.
 
         @param reactor: The main reactor.
         """
