@@ -62,6 +62,7 @@ setup(
     entry_points={
         'console_scripts': [
             'eliot-prettyprint = eliot.prettyprint:_main',
+            'eliot2flamegraph = eliot._flamegraph:_main',
         ]
     },
     keywords="logging",
