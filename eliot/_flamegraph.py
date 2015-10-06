@@ -1,3 +1,12 @@
+"""
+XXX the above is all wrong since it is not cumulative, and doesn't deal with fact that Eliot logs aren't quite the same as callstacks since child actions may complete after parent actions.
+
+We want instead a tree datastructure, I think, where each action refers to its children. The recorded elapsed time for an action is the actual elapsed time (end message timestamp - start message timestamp) minus the actual time elapsed by its direct children that *overlaps*. Non-overlapping bits shouldn't be subtracted.
+
+If an action overlaps only partially with its parent it should end up with two entries: one for the overlap with that stack and one for non-overlap without ancestors in its stack.
+
+Same datastructure should be able to cover kcachegrind format as well.
+"""
 from sys import stdin, stdout
 
 from pyrsistent import PRecord, pmap_field, field, discard
