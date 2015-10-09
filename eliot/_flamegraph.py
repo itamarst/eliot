@@ -1,11 +1,33 @@
 """
-XXX the above is all wrong since it is not cumulative, and doesn't deal with fact that Eliot logs aren't quite the same as callstacks since child actions may complete after parent actions.
+Eliot actions are not quite the same as a callstack since a child can
+live on after a parent.
 
-We want instead a tree datastructure, I think, where each action refers to its children. The recorded elapsed time for an action is the actual elapsed time (end message timestamp - start message timestamp) minus the actual time elapsed by its direct children that *overlaps*. Non-overlapping bits shouldn't be subtracted.
+Imagine the following tree:
 
-If an action overlaps only partially with its parent it should end up with two entries: one for the overlap with that stack and one for non-overlap without ancestors in its stack.
+|-----[root]-----|
+   |-[child]-|
+      |--[grandchild]--|
 
-Same datastructure should be able to cover kcachegrind format as well.
+A sampling of running actions would likely find:
+
+rrr           rrrr
+   ccc
+      gggggggggggggggggg
+
+The fact that grandchild overlaps with root in the end after child has
+ended means they're likely both running at same time. Thus a sampling
+strategy would have found both. Otherwise it's not clear how the root
+could ever end.
+
+We can use the following algorithm to implement this:
+Record each action's callstack (its type and ancestor actions' types) for
+the time span from start to end where it has no child actions
+running. Descendants don't count, only children.  This can easily be
+calculated by constructing a tree of actions and traversing it from the
+root.
+
+This is not a guarantee that is what is going on exactly but it's likely
+a reasonable approximation, and will be accurate for blocking code.
 """
 from sys import stdin, stdout
 
