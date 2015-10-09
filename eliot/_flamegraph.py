@@ -28,6 +28,8 @@ root.
 
 This is not a guarantee that is what is going on exactly but it's likely
 a reasonable approximation, and will be accurate for blocking code.
+
+The code below is a broken sketch of a previous attempt.
 """
 from sys import stdin, stdout
 
