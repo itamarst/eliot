@@ -25,13 +25,6 @@ class Task(PClass):
                   mandatory=True)
 
     @classmethod
-    def from_messages(cls, messages):
-        task = cls.create(messages[0])
-        for message in messages[1:]:
-            task = task.add(message)
-        return task
-
-    @classmethod
     def create(cls, first_message):
         pass
 
