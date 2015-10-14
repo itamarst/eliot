@@ -507,6 +507,7 @@ class InvalidStartMessage(Exception):
         return cls(message, 'first message must have task level ending in 1')
 
 
+#@implementer(IWrittenAction)
 class WrittenAction(PClass):
     """
     An Action that has been logged.
@@ -524,8 +525,8 @@ class WrittenAction(PClass):
 
     start_message = field(type=WrittenMessage, mandatory=True)
     end_message = field(type=optional(WrittenMessage), mandatory=True)
-    # XXX: Actually a map to either WrittenMessage or WrittenAction, but
-    # pyrsistent doesn't support recursive data types:
+    # XXX: Actually a map to either WrittenMessage, WrittenAction or
+    # MissingAction, but pyrsistent doesn't support recursive data types:
     # https://github.com/tobgu/pyrsistent/issues/48
     _children = pmap_field(TaskLevel, object)
 
