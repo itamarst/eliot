@@ -24,7 +24,7 @@ class ActionStructure(PClass):
         if isinstance(tree_or_message, list):
             return cls(
                 type=TYPES.example(),
-                children=[cls._from_tree(o) for o in tree_or_message])
+                children=[cls.from_tree(o) for o in tree_or_message])
         else:
             return tree_or_message
 
@@ -33,10 +33,11 @@ class ActionStructure(PClass):
         if isinstance(written, WrittenMessage):
             return written.as_dict()[MESSAGE_TYPE_FIELD]
         else:  # WrittenAction
+            if not written.end_message:# or written.end_message.as_dict()[MESSAGE_TYPE_FIELD]:
+                raise AssertionError("XXX ugh this is a bad check")
             return cls(
-                type=written.action_type(),
-                children=[cls.from_written(o) for o in written.children]
-                + [written.end_message])
+                type=written.action_type,
+                children=[cls.from_written(o) for o in written.children])
 
     @classmethod
     def to_eliot(cls, structure_or_message):
@@ -82,6 +83,8 @@ class TaskTests(TestCase):
             task = task.add(messages[index])
 
         # Assert parsed structure matches input structure:
+        print action_structure, order, task
         parsed_structure = ActionStructure.from_written(task.root())
         self.assertEqual(parsed_structure, action_structure,
-                         "Order: {}".format(order))
+                         "Order: {}, {} != {}".format(
+                             order, parsed_structure, action_structure))
