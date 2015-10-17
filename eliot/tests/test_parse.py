@@ -3,9 +3,8 @@ Tests for L{eliot._parse}.
 """
 
 from unittest import TestCase
-from random import shuffle
 
-from hypothesis import strategies, given, example
+from hypothesis import strategies as st, given
 
 from pyrsistent import PClass, field, pvector_field
 
@@ -51,9 +50,20 @@ class ActionStructure(PClass):
         return logger.messages
 
 
-TYPES = strategies.text(min_size=1, average_size=3, alphabet=u"CGAT")
-ACTION_STRUCTURES = strategies.recursive(
-    TYPES, strategies.lists, max_leaves=10).map(ActionStructure.from_tree)
+def _build_structure_strategy():
+    strategy = st.recursive(TYPES, st.lists, max_leaves=10)
+    strategy = strategy.map(ActionStructure.from_tree)
+
+    def structure_and_messages(structure):
+        messages = ActionStructure.to_eliot(structure, MemoryLogger())
+        return st.permutations(messages).map(
+            lambda permuted: (structure, permuted))
+    strategy = strategy.flatmap(structure_and_messages)
+    return strategy
+
+
+TYPES = st.text(min_size=1, average_size=3, alphabet=u"CGAT")
+ACTION_STRUCTURES = _build_structure_strategy()
 
 
 class TaskTests(TestCase):
@@ -68,23 +78,14 @@ class TaskTests(TestCase):
     Additional coverage is then needed that is specific to the intermediate
     states, i.e. missing messages.
     """
-    @given(action_structure=ACTION_STRUCTURES)
-    @example(action_structure=u"standalone_message")
-    def test_parse_from_random_order(self, action_structure):
-        # Create Eliot messages for given tree of actions and messages:
-        logger = MemoryLogger()
-        messages = ActionStructure.to_eliot(action_structure, logger)
+    @given(structure_and_messages=ACTION_STRUCTURES)
+    def test_parse_from_random_order(self, structure_and_messages):
+        action_structure, messages = structure_and_messages
 
-        # Parse resulting message dicts in random order:
-        order = range(len(messages))
-        shuffle(order)
-        task = Task.create(messages[order[0]])
-        for index in order[1:]:
-            task = task.add(messages[index])
+        task = Task.create(messages[0])
+        for message in messages[1:]:
+            task = task.add(message)
 
         # Assert parsed structure matches input structure:
-        #print action_structure, order, task
         parsed_structure = ActionStructure.from_written(task.root())
-        self.assertEqual(parsed_structure, action_structure,
-                         "Order: {}, {} != {}".format(
-                             order, parsed_structure, action_structure))
+        self.assertEqual(parsed_structure, action_structure)
