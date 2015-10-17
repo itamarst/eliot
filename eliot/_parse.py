@@ -92,6 +92,8 @@ class Task(PClass):
             if action is None:
                 action = MissingAction(_task_level=action_level)
             if message_dict[ACTION_STATUS_FIELD] == STARTED_STATUS:
+                # Either newly created MissingAction, or one created by
+                # previously added descendant of the action.
                 action = action.to_written_action(written_message)
             else:
                 action = action.set(end_message=written_message)
