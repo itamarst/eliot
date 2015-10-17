@@ -53,7 +53,7 @@ class ActionStructure(PClass):
 
 TYPES = strategies.text(min_size=1, average_size=3, alphabet=u"CGAT")
 ACTION_STRUCTURES = strategies.recursive(
-    TYPES, strategies.lists, max_leaves=5).map(ActionStructure.from_tree)
+    TYPES, strategies.lists, max_leaves=10).map(ActionStructure.from_tree)
 
 
 class TaskTests(TestCase):
