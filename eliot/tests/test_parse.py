@@ -92,8 +92,8 @@ class TaskTests(TestCase):
     def test_parse_from_random_order(self, structure_and_messages):
         action_structure, messages = structure_and_messages
 
-        task = Task.create(messages[0])
-        for message in messages[1:]:
+        task = Task()
+        for message in messages:
             task = task.add(message)
 
         # Assert parsed structure matches input structure:

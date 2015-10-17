@@ -54,11 +54,6 @@ class Task(PClass):
 
     _root_level = TaskLevel(level=[])
 
-    @classmethod
-    def create(cls, first_message):
-        task = Task()
-        return task.add(first_message)
-
     def root(self):
         return self._nodes[self._root_level]
 
