@@ -14,7 +14,7 @@ from .. import start_action, Message
 from ..testing import MemoryLogger
 from .._parse import Task, MissingAction
 from .._message import WrittenMessage, MESSAGE_TYPE_FIELD, TASK_LEVEL_FIELD
-from .._action import FAILED_STATUS, ACTION_STATUS_FIELD
+from .._action import FAILED_STATUS, ACTION_STATUS_FIELD, WrittenAction
 
 
 class ActionStructure(PClass):
@@ -85,13 +85,16 @@ class TaskTests(TestCase):
     @given(structure_and_messages=STRUCTURES_WITH_MESSAGES)
     def test_missing_action(self, structure_and_messages):
         """
-        If we parse messages but a start message is missing then a
-        MissingAction is created in place of the expected WrittenAction.
+        If we parse messages (in shuffled order) but a start message is
+        missing then a MissingAction is created in place of the expected
+        WrittenAction.
         """
         action_structure, messages = structure_and_messages
         assume(not isinstance(action_structure, unicode))
 
-        # Remove first start message we encounter:
+        # Remove first start message we encounter; since messages are
+        # shuffled the location removed will differ over Hypothesis test
+        # iterations:
         for i, message in enumerate(messages):
             if message[TASK_LEVEL_FIELD][-1] == 1:  # start message
                 missing_start_level = message[TASK_LEVEL_FIELD]
@@ -131,3 +134,21 @@ class TaskTests(TestCase):
         parsed_structure = ActionStructure.from_written(task.root())
         self.assertEqual(parsed_structure, action_structure)
 
+    def test_parse_contents(self):
+        """
+        L{{Task.add}} parses the contents of the messages it receives.
+        """
+        logger = MemoryLogger()
+        with start_action(logger, action_type="xxx", y=123) as ctx:
+            Message.new(message_type="zzz", z=4).write(logger)
+            ctx.add_success_fields(foo=[1, 2])
+        messages = logger.messages
+        expected = WrittenAction.from_messages(
+            WrittenMessage.from_dict(messages[0]),
+            [WrittenMessage.from_dict(messages[1])],
+            WrittenMessage.from_dict(messages[2]))
+
+        task = Task()
+        for message in messages:
+            task = task.add(message)
+        self.assertEqual(task.root(), expected)
