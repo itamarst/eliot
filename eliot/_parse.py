@@ -52,15 +52,26 @@ class Task(PClass):
     """
     _nodes = pmap_field(TaskLevel, object) # XXX _NODES
 
+    _root_level = TaskLevel(level=[])
+
     @classmethod
     def create(cls, first_message):
         task = Task()
         return task.add(first_message)
 
     def root(self):
-        return self._nodes[TaskLevel(level=[])]
+        return self._nodes[self._root_level]
 
-    def _add_new_node(self, new_node):
+    def _add_node(self, node):
+        return self.transform(["_nodes", node.task_level], node)
+
+    def _ensure_node_parents(self, new_node):
+        """
+        Ensure the node (WrittenAction/WrittenMessage/MissingAction) is
+        referenced by parent nodes.
+
+        MissingAction will be created as necessary.
+        """
         task = self
         child = new_node
         task_level = new_node.task_level
@@ -69,7 +80,7 @@ class Task(PClass):
             if parent is None:
                 parent = MissingAction(_task_level=task_level.parent())
             parent = parent.transform(["_children", task_level], child)
-            task = task.transform(["_nodes", parent.task_level], parent)
+            task = task._add_node(parent)
             child = parent
             task_level = parent.task_level
         return task
@@ -78,27 +89,21 @@ class Task(PClass):
         task = self
         is_action = message_dict.get(ACTION_TYPE_FIELD) is not None
         written_message = WrittenMessage.from_dict(message_dict)
-        action_level = written_message.task_level
         if is_action:
-            current_action = self._nodes.get(action_level.parent())
+            action_level = written_message.task_level.parent()
+            current_action = self._nodes.get(action_level)
             if current_action is None:
-                current_action = MissingAction(
-                    _task_level=action_level.parent())
+                current_action = MissingAction(_task_level=action_level)
             if message_dict[ACTION_STATUS_FIELD] == STARTED_STATUS:
-                if current_action is None:
-                    new_node = WrittenAction.from_messages(written_message)
-                else:
-                    new_node = current_action.to_written_action(
-                        written_message)
-                new_node = new_node.set(start_message=written_message)
+                new_node = current_action.to_written_action(written_message)
             else:
                 new_node = current_action.set(end_message=written_message)
-            task = task.transform(["_nodes", new_node.task_level], new_node)
+            task = task._add_node(new_node)
         else:
             new_node = written_message
             # Special case where there is no action:
             if new_node.task_level.level == [1]:
-                return task.transform(["_nodes", TaskLevel(level=[])],
-                                      new_node)
-        task = task._add_new_node(new_node)
+                return task.transform(["_nodes", self._root_level], new_node)
+
+        task = task._ensure_node_parents(new_node)
         return task
