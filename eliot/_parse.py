@@ -62,31 +62,28 @@ class Task(PClass):
     def root(self):
         return self._nodes[self._root_level]
 
-    def _add_node(self, node):
-        return self.transform(["_nodes", node.task_level], node)
+    def _insert_action(self, node):
+        task = self.transform(["_nodes", node.task_level], node)
+        return task._ensure_node_parents(node)
 
-    def _ensure_node_parents(self, new_node):
+    def _ensure_node_parents(self, child):
         """
         Ensure the node (WrittenAction/WrittenMessage/MissingAction) is
         referenced by parent nodes.
 
         MissingAction will be created as necessary.
         """
-        task = self
-        child = new_node
-        task_level = new_node.task_level
-        while task_level.parent() is not None:
-            parent = self._nodes.get(task_level.parent())
-            if parent is None:
-                parent = MissingAction(_task_level=task_level.parent())
-            parent = parent.transform(["_children", task_level], child)
-            task = task._add_node(parent)
-            child = parent
-            task_level = parent.task_level
-        return task
+        task_level = child.task_level
+        if task_level.parent() is None:
+            return self
+
+        parent = self._nodes.get(task_level.parent())
+        if parent is None:
+            parent = MissingAction(_task_level=task_level.parent())
+        parent = parent.transform(["_children", task_level], child)
+        return self._insert_action(parent)
 
     def add(self, message_dict):
-        task = self
         is_action = message_dict.get(ACTION_TYPE_FIELD) is not None
         written_message = WrittenMessage.from_dict(message_dict)
         if is_action:
@@ -98,12 +95,11 @@ class Task(PClass):
                 new_node = current_action.to_written_action(written_message)
             else:
                 new_node = current_action.set(end_message=written_message)
-            task = task._add_node(new_node)
+            return self._insert_action(new_node)
         else:
             new_node = written_message
             # Special case where there is no action:
             if new_node.task_level.level == [1]:
-                return task.transform(["_nodes", self._root_level], new_node)
-
-        task = task._ensure_node_parents(new_node)
-        return task
+                return self.transform(["_nodes", self._root_level], new_node)
+            else:
+                return self._ensure_node_parents(new_node)
