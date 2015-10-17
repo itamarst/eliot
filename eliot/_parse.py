@@ -68,9 +68,9 @@ class Task(PClass):
             if parent is None:
                 parent = MissingAction(_task_level=task_level.parent())
             parent = parent.transform(["_children", task_level], child)
-            task = task.transform(["_nodes", parent.task_level()], parent)
+            task = task.transform(["_nodes", parent.task_level], parent)
             child = parent
-            task_level = parent.task_level()
+            task_level = parent.task_level
         return task
 
     def add(self, message_dict):
@@ -79,7 +79,7 @@ class Task(PClass):
         written_message = WrittenMessage.from_dict(message_dict)
         action_level = written_message.task_level
         if is_action:
-            current_action = self._nodes.get(action_level)
+            current_action = self._nodes.get(action_level.parent())
             if current_action is None:
                 current_action = MissingAction(
                     _task_level=action_level.parent())
@@ -99,6 +99,5 @@ class Task(PClass):
             if new_node.task_level.level == [1]:
                 return task.transform(["_nodes", TaskLevel(level=[])],
                                       new_node)
-        print new_node
         task = task._add_new_node(new_node)
         return task

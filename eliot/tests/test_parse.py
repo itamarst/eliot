@@ -40,13 +40,12 @@ class ActionStructure(PClass):
                 children=[cls.from_written(o) for o in written.children])
 
     @classmethod
-    def to_eliot(cls, structure_or_message):
-        logger = MemoryLogger()
+    def to_eliot(cls, structure_or_message, logger):
         if isinstance(structure_or_message, cls):
             action = structure_or_message
             with start_action(logger, action_type=action.type):
                 for child in action.children:
-                    cls.to_eliot(child)
+                    cls.to_eliot(child, logger)
         else:
             Message.new(message_type=structure_or_message).write(logger)
         return logger.messages
@@ -73,7 +72,8 @@ class TaskTests(TestCase):
     @example(action_structure=u"standalone_message")
     def test_parse_from_random_order(self, action_structure):
         # Create Eliot messages for given tree of actions and messages:
-        messages = ActionStructure.to_eliot(action_structure)
+        logger = MemoryLogger()
+        messages = ActionStructure.to_eliot(action_structure, logger)
 
         # Parse resulting message dicts in random order:
         order = range(len(messages))
@@ -83,7 +83,7 @@ class TaskTests(TestCase):
             task = task.add(messages[index])
 
         # Assert parsed structure matches input structure:
-        print action_structure, order, task
+        #print action_structure, order, task
         parsed_structure = ActionStructure.from_written(task.root())
         self.assertEqual(parsed_structure, action_structure,
                          "Order: {}, {} != {}".format(
