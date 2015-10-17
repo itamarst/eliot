@@ -5,6 +5,8 @@ Parse a stream of serialized messages into a forest of
 # XXX maybe move Written* here.
 """
 
+from __future__ import unicode_literals
+
 from pyrsistent import PClass, field, pmap_field, optional, pvector
 
 from ._message import WrittenMessage
@@ -21,13 +23,11 @@ class MissingAction(PClass):
                         initial=None)
     _children = pmap_field(TaskLevel, object)
 
+    action_type = "*unknown*"
+
     @property
     def task_level(self):
         return self._task_level
-
-    @property
-    def action_type(self):
-        return u"*unknown*"
 
     @property
     def children(self):
