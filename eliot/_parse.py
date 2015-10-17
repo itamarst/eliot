@@ -10,6 +10,7 @@ from pyrsistent import PClass, field, pmap_field, optional, pvector
 from ._message import WrittenMessage
 from ._action import (
     TaskLevel, WrittenAction, ACTION_STATUS_FIELD, STARTED_STATUS,
+    ACTION_TYPE_FIELD,
 )
 
 
@@ -75,7 +76,7 @@ class Task(PClass):
 
     def add(self, message_dict):
         task = self
-        is_action = message_dict.get("action_type") is not None
+        is_action = message_dict.get(ACTION_TYPE_FIELD) is not None
         written_message = WrittenMessage.from_dict(message_dict)
         action_level = written_message.task_level
         if is_action:
