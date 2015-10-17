@@ -43,7 +43,7 @@ setup(
         # Struct-like objects:
         "characteristic",
         # Persistent objects for Python:
-        "pyrsistent",
+        "pyrsistent >= 0.11.7",  # no segfaults please
     ],
     extras_require={
         "journald": [
