@@ -88,18 +88,18 @@ class Task(PClass):
         written_message = WrittenMessage.from_dict(message_dict)
         if is_action:
             action_level = written_message.task_level.parent()
-            current_action = self._nodes.get(action_level)
-            if current_action is None:
-                current_action = MissingAction(_task_level=action_level)
+            action = self._nodes.get(action_level)
+            if action is None:
+                action = MissingAction(_task_level=action_level)
             if message_dict[ACTION_STATUS_FIELD] == STARTED_STATUS:
-                new_node = current_action.to_written_action(written_message)
+                action = action.to_written_action(written_message)
             else:
-                new_node = current_action.set(end_message=written_message)
-            return self._insert_action(new_node)
+                action = action.set(end_message=written_message)
+            return self._insert_action(action)
         else:
-            new_node = written_message
             # Special case where there is no action:
-            if new_node.task_level.level == [1]:
-                return self.transform(["_nodes", self._root_level], new_node)
+            if written_message.task_level.level == [1]:
+                return self.transform(
+                    ["_nodes", self._root_level], written_message)
             else:
-                return self._ensure_node_parents(new_node)
+                return self._ensure_node_parents(written_message)
