@@ -43,7 +43,7 @@ setup(
         # Struct-like objects:
         "characteristic",
         # Persistent objects for Python:
-        "pyrsistent >= 0.11.7",  # no segfaults please
+        "pyrsistent >= 0.11.8",  # version with multi-type pvector/pmap_field
     ],
     extras_require={
         "journald": [
