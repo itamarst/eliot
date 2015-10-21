@@ -2,8 +2,12 @@
 Hypothesis strategies for eliot.
 """
 
+from __future__ import unicode_literals
+
 from functools import partial
 from uuid import UUID
+
+from six import text_type as unicode
 
 from hypothesis.strategies import (
     basic,
