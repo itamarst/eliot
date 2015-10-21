@@ -45,6 +45,7 @@ from .strategies import (
     reparent_action,
     sibling_task_level,
     union,
+    written_from_pmap,
 )
 
 
@@ -966,7 +967,7 @@ class WrittenActionTests(testtools.TestCase):
         differing task UUIDs, we raise an error.
         """
         assume(start_message.task_uuid != end_message_dict['task_uuid'])
-        end_message = WrittenMessage.from_dict(
+        end_message = written_from_pmap(
             union(end_message_dict, {
                 ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
                 TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
@@ -985,7 +986,7 @@ class WrittenActionTests(testtools.TestCase):
         This test handles the case where the status field is not present.
         """
         assume(ACTION_STATUS_FIELD not in message_dict)
-        message = WrittenMessage.from_dict(message_dict)
+        message = written_from_pmap(message_dict)
         self.assertRaises(
             InvalidStartMessage, WrittenAction.from_messages, message)
 
@@ -1000,7 +1001,7 @@ class WrittenActionTests(testtools.TestCase):
         This test handles the case where the status field is present, but is
         not C{STARTED_STATUS}.
         """
-        message = WrittenMessage.from_dict(
+        message = written_from_pmap(
             message_dict.update({ACTION_STATUS_FIELD: status}))
         self.assertRaises(
             InvalidStartMessage, WrittenAction.from_messages, message)
@@ -1017,7 +1018,7 @@ class WrittenActionTests(testtools.TestCase):
         """
         new_level = start_message_dict[TASK_LEVEL_FIELD].append(i)
         message_dict = start_message_dict.set(TASK_LEVEL_FIELD, new_level)
-        message = WrittenMessage.from_dict(message_dict)
+        message = written_from_pmap(message_dict)
         self.assertRaises(
             InvalidStartMessage, WrittenAction.from_messages, message)
 
@@ -1030,7 +1031,7 @@ class WrittenActionTests(testtools.TestCase):
         message that has a different type, we raise an error.
         """
         assume(end_type != start_message.contents[ACTION_TYPE_FIELD])
-        end_message = WrittenMessage.from_dict(union(end_message_dict, {
+        end_message = written_from_pmap(union(end_message_dict, {
             ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
             ACTION_TYPE_FIELD: end_type,
             TASK_UUID_FIELD: start_message.task_uuid,
@@ -1050,7 +1051,7 @@ class WrittenActionTests(testtools.TestCase):
         Such an action inherits the C{end_time} from the end message, and has
         a C{status} of C{SUCCEEDED_STATUS}.
         """
-        end_message = WrittenMessage.from_dict(
+        end_message = written_from_pmap(
             union(end_message_dict,
                 {ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
                  ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
@@ -1086,7 +1087,7 @@ class WrittenActionTests(testtools.TestCase):
         C{status} of C{FAILED_STATUS}, and an C{exception} and C{reason} that
         match the raised exception.
         """
-        end_message = WrittenMessage.from_dict(
+        end_message = written_from_pmap(
             union(end_message_dict,
                 {ACTION_STATUS_FIELD: FAILED_STATUS,
                  ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
@@ -1119,7 +1120,7 @@ class WrittenActionTests(testtools.TestCase):
         end message.
         """
         assume(ACTION_STATUS_FIELD not in end_message_dict)
-        end_message = WrittenMessage.from_dict(
+        end_message = written_from_pmap(
             union(end_message_dict, {
                 ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
                 TASK_UUID_FIELD: start_message.task_uuid,
@@ -1148,7 +1149,7 @@ class WrittenActionTests(testtools.TestCase):
         action = WrittenAction.from_messages(start_message, messages)
         task_level = lambda m: m.task_level
         self.assertEqual(
-            sorted(set(messages), key=task_level), action.children)
+            sorted(messages, key=task_level), action.children)
 
     @given(start_action_messages, message_dicts)
     def test_wrong_task_uuid(self, start_message, child_message):
@@ -1157,7 +1158,7 @@ class WrittenActionTests(testtools.TestCase):
         action.
         """
         assume(child_message[TASK_UUID_FIELD] != start_message.task_uuid)
-        message = WrittenMessage.from_dict(child_message)
+        message = written_from_pmap(child_message)
         self.assertRaises(
             WrongTask,
             WrittenAction.from_messages, start_message, v(message))
@@ -1170,7 +1171,7 @@ class WrittenActionTests(testtools.TestCase):
         """
         assume(not start_message.task_level.is_sibling_of(
             TaskLevel(level=child_message[TASK_LEVEL_FIELD])))
-        message = WrittenMessage.from_dict(
+        message = written_from_pmap(
             child_message.update({TASK_UUID_FIELD: start_message.task_uuid}))
         self.assertRaises(
             WrongTaskLevel,
@@ -1184,7 +1185,7 @@ class WrittenActionTests(testtools.TestCase):
         """
         parent_level = start_message.task_level.parent().level
         messages = [
-            WrittenMessage.from_dict(
+            written_from_pmap(
                 union(child_message, {
                     TASK_UUID_FIELD: start_message.task_uuid,
                     TASK_LEVEL_FIELD: parent_level.append(index),
