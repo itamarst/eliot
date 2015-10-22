@@ -28,7 +28,7 @@ from .._action import (
     TaskLevel, WrittenAction, WrongActionType, WrongTask, WrongTaskLevel)
 from .._message import (
     EXCEPTION_FIELD, REASON_FIELD, TASK_LEVEL_FIELD, TASK_UUID_FIELD,
-    WrittenMessage)
+)
 from .._output import MemoryLogger
 from .._validation import ActionType, Field, _ActionSerializers
 from ..testing import assertContainsFields
