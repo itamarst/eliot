@@ -155,9 +155,7 @@ class WrittenMessage(PClass):
     @ivar _logged_dict: The originally logged dictionary.
     """
 
-    _logged_dict = pmap_field(
-        (str, unicode),
-        (str, unicode, int, float, list, dict, tuple, type(None)))
+    _logged_dict = pmap_field((str, unicode), object)
 
     @property
     def timestamp(self):
