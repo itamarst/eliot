@@ -939,7 +939,7 @@ class WrittenActionTests(testtools.TestCase):
     """
 
     @given(start_action_messages)
-    def test_from_single_message(self, message):
+    def test_from_single_start_message(self, message):
         """
         A L{WrittenAction} can be constructed from a single "start" message. Such
         an action inherits the C{action_type} of the start message, has no
@@ -960,6 +960,57 @@ class WrittenActionTests(testtools.TestCase):
             ))
 
     @given(start_action_messages, message_dicts, integers(min_value=2))
+    def test_from_single_end_message(self, start_message, end_message_dict, n):
+        """
+        A L{WrittenAction} can be constructed from a single "end"
+        message. Such an action inherits the C{action_type} and
+        C{task_level} of the end message, has no C{start_time}, and has a
+        C{status} matching that of the end message.
+        """
+        end_message = written_from_pmap(
+            union(end_message_dict, {
+                ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
+                ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
+                TASK_UUID_FIELD: start_message.task_uuid,
+                TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
+            }))
+        action = WrittenAction.from_messages(end_message=end_message)
+        self.assertThat(
+            action, MatchesStructure.byEquality(
+                status=SUCCEEDED_STATUS,
+                action_type=end_message.contents[ACTION_TYPE_FIELD],
+                task_uuid=end_message.task_uuid,
+                task_level=end_message.task_level.parent(),
+                start_time=None,
+                children=pvector([]),
+                end_time=end_message.timestamp,
+                reason=None,
+                exception=None,
+            ))
+
+    @given(message_dicts)
+    def test_from_single_child_message(self, message_dict):
+        """
+        A L{WrittenAction} can be constructed from a single child
+        message. Such an action inherits the C{task_level} of the message,
+        has no C{start_time}, C{status}, C{task_type} or C{end_time}.
+        """
+        message = written_from_pmap(message_dict)
+        action = WrittenAction.from_messages(children=[message])
+        self.assertThat(
+            action, MatchesStructure.byEquality(
+                status=None,
+                action_type=None,
+                task_uuid=message.task_uuid,
+                task_level=message.task_level.parent(),
+                start_time=None,
+                children=pvector([message]),
+                end_time=None,
+                reason=None,
+                exception=None,
+            ))
+
+    @given(start_action_messages, message_dicts, integers(min_value=2))
     def test_different_task_uuid(self, start_message, end_message_dict, n):
         """
         By definition, an action is either a top-level task or takes place within
@@ -967,11 +1018,13 @@ class WrittenActionTests(testtools.TestCase):
         differing task UUIDs, we raise an error.
         """
         assume(start_message.task_uuid != end_message_dict['task_uuid'])
+        action_type = start_message.as_dict()[ACTION_TYPE_FIELD]
         end_message = written_from_pmap(
-            union(end_message_dict, {
-                ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
-                TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
-            }))
+            union(
+                end_message_dict.set(ACTION_TYPE_FIELD, action_type), {
+                    ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
+                    TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
+                }))
         self.assertRaises(
             WrongTask,
             WrittenAction.from_messages, start_message, end_message=end_message)
