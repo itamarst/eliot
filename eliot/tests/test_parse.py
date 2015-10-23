@@ -12,13 +12,13 @@ from pyrsistent import PClass, field, pvector_field
 
 from .. import start_action, Message
 from ..testing import MemoryLogger
-from .._parse import Task, MissingAction
+from .._parse import Task
 from .._message import WrittenMessage, MESSAGE_TYPE_FIELD, TASK_LEVEL_FIELD
 from .._action import FAILED_STATUS, ACTION_STATUS_FIELD, WrittenAction
 
 
 class ActionStructure(PClass):
-    type = field(type=unicode)
+    type = field(type=(unicode, None.__class__))
     children = pvector_field(object)  # XXX ("StubAction", unicode))
     failed = field(type=bool)
 
@@ -28,7 +28,6 @@ class ActionStructure(PClass):
             return written.as_dict()[MESSAGE_TYPE_FIELD]
         else:  # WrittenAction
             if not written.end_message:
-                # XXX verify end message type matches start messaeg type?
                 raise AssertionError("Missing end message.")
             return cls(
                 type=written.action_type,
@@ -86,8 +85,8 @@ class TaskTests(TestCase):
     def test_missing_action(self, structure_and_messages):
         """
         If we parse messages (in shuffled order) but a start message is
-        missing then a MissingAction is created in place of the expected
-        WrittenAction.
+        missing then the structure is still deduced correctly from the
+        remaining messages.
         """
         action_structure, messages = structure_and_messages
         assume(not isinstance(action_structure, unicode))
@@ -95,9 +94,9 @@ class TaskTests(TestCase):
         # Remove first start message we encounter; since messages are
         # shuffled the location removed will differ over Hypothesis test
         # iterations:
+        messages = messages[:]
         for i, message in enumerate(messages):
             if message[TASK_LEVEL_FIELD][-1] == 1:  # start message
-                missing_start_level = message[TASK_LEVEL_FIELD]
                 del messages[i]
                 break
 
@@ -106,13 +105,9 @@ class TaskTests(TestCase):
             task = task.add(message)
         parsed_structure = ActionStructure.from_written(task.root())
 
-        # We expect the action with missing start message to have
-        # MissingAction:
-        path = sum([["children", index - 2] for index
-                    in missing_start_level[:-1]], [])
-        expected_structure = action_structure.transform(
-            path + ["type"], MissingAction.action_type)
-        self.assertEqual(parsed_structure, expected_structure)
+        # We expect the action with missing start message to otherwise
+        # be parsed correctly:
+        self.assertEqual(parsed_structure, action_structure)
 
     @given(structure_and_messages=STRUCTURES_WITH_MESSAGES)
     def test_parse_from_random_order(self, structure_and_messages):
