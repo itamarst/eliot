@@ -1,8 +1,6 @@
 """
 Parse a stream of serialized messages into a forest of
 ``WrittenAction`` and ``WrittenMessage`` objects.
-
-# XXX maybe move Written* here.
 """
 
 from __future__ import unicode_literals
@@ -25,18 +23,35 @@ class Task(PClass):
     _root_level = TaskLevel(level=[])
 
     def root(self):
+        """
+        @return: The root L{WrittenAction}.
+        """
         return self._nodes[self._root_level]
 
     def _insert_action(self, node):
+        """
+        Add a L{WrittenAction} to the tree.
+
+        Parent actions will be created as necessary.
+
+        @param child: A L{WrittenAction} to add to the tree.
+
+        @return: Updated L{Task}.
+        """
         task = self.transform(["_nodes", node.task_level], node)
         return task._ensure_node_parents(node)
 
     def _ensure_node_parents(self, child):
         """
-        Ensure the node (WrittenAction/WrittenMessage/MissingAction) is
-        referenced by parent nodes.
+        Ensure the node (WrittenAction/WrittenMessage) is referenced by parent
+        nodes.
 
-        MissingAction will be created as necessary.
+        Parent actions will be created as necessary.
+
+        @param child: A L{WrittenMessage} or L{WrittenAction} which is
+            being added to the tree.
+
+        @return: Updated L{Task}.
         """
         task_level = child.task_level
         if task_level.parent() is None:
@@ -50,6 +65,14 @@ class Task(PClass):
         return self._insert_action(parent)
 
     def add(self, message_dict):
+        """
+        Update the L{Task} with a dictionary containing a serialized Eliot
+        message.
+
+        @param message_dict: Dictionary whose task UUID matches this one.
+
+        @return: Updated L{Task}.
+        """
         is_action = message_dict.get(ACTION_TYPE_FIELD) is not None
         written_message = WrittenMessage.from_dict(message_dict)
         if is_action:

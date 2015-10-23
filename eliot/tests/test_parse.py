@@ -18,12 +18,22 @@ from .._action import FAILED_STATUS, ACTION_STATUS_FIELD, WrittenAction
 
 
 class ActionStructure(PClass):
+    """
+    A tree structure used to generate/compare to Eliot trees.
+
+    Individual messages are encoded as a unicode string; actions are
+    encoded as a L{ActionStructure} instance.
+    """
     type = field(type=(unicode, None.__class__))
     children = pvector_field(object)  # XXX ("StubAction", unicode))
     failed = field(type=bool)
 
     @classmethod
     def from_written(cls, written):
+        """
+        Create an L{ActionStructure} or L{unicode} from a L{WrittenAction} or
+        L{WrittenMessage}.
+        """
         if isinstance(written, WrittenMessage):
             return written.as_dict()[MESSAGE_TYPE_FIELD]
         else:  # WrittenAction
@@ -37,6 +47,10 @@ class ActionStructure(PClass):
 
     @classmethod
     def to_eliot(cls, structure_or_message, logger):
+        """
+        Given a L{ActionStructure} or L{unicode}, generate appropriate
+        structured Eliot log mesages to given L{MemoryLogger}.
+        """
         if isinstance(structure_or_message, cls):
             action = structure_or_message
             try:
@@ -57,6 +71,10 @@ TYPES = st.text(min_size=1, average_size=3, alphabet=u"CGAT")
 
 @st.composite
 def action_structures(draw):
+    """
+    A Hypothesis strategy that creates a tree of L{ActionStructure} and
+    L{unicode}.
+    """
     tree = draw(st.recursive(TYPES, st.lists, max_leaves=50))
 
     def to_structure(tree_or_message):
@@ -74,6 +92,8 @@ def _structure_and_messages(structure):
     messages = ActionStructure.to_eliot(structure, MemoryLogger())
     return st.permutations(messages).map(
         lambda permuted: (structure, permuted))
+# Hypothesis strategy that creates a tuple of ActionStructure/unicode and
+# corresponding serialized Eliot messages, randomly shuffled.
 STRUCTURES_WITH_MESSAGES = action_structures().flatmap(_structure_and_messages)
 
 
