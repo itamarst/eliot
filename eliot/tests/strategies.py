@@ -2,8 +2,12 @@
 Hypothesis strategies for eliot.
 """
 
+from __future__ import unicode_literals
+
 from functools import partial
 from uuid import UUID
+
+from six import text_type as unicode
 
 from hypothesis.strategies import (
     basic,
@@ -20,7 +24,7 @@ from hypothesis.strategies import (
     text,
 )
 
-from pyrsistent import pmap, pvector, ny
+from pyrsistent import pmap, pvector, ny, thaw
 
 
 from .._action import (
@@ -40,11 +44,11 @@ task_levels = task_level_lists.map(lambda level: TaskLevel(level=level))
 
 
 # Text generation is slow, and most of the things are short labels.
-labels = text(average_size=5)
+labels = text(average_size=5, min_size=1)
 
 timestamps = floats(min_value=0)
 
-uuids = basic(generate=lambda r, _: UUID(int=r.getrandbits(128)))
+uuids = basic(generate=lambda r, _: unicode(UUID(int=r.getrandbits(128))))
 
 message_core_dicts = fixed_dictionaries(
     dict(task_level=task_level_lists.map(pvector),
@@ -60,6 +64,13 @@ message_data_dicts = dictionaries(
     # messages, surely?
     average_size=10,
 ).map(pmap)
+
+
+def written_from_pmap(d):
+    """
+    Convert a C{pmap} to a C{WrittenMessage}.
+    """
+    return WrittenMessage.from_dict(thaw(d))
 
 
 def union(*dicts):
@@ -78,7 +89,7 @@ def union(*dicts):
 
 
 message_dicts = builds(union, message_data_dicts, message_core_dicts)
-written_messages = message_dicts.map(WrittenMessage.from_dict)
+written_messages = message_dicts.map(written_from_pmap)
 
 _start_action_fields = fixed_dictionaries(
     { ACTION_STATUS_FIELD: just(STARTED_STATUS),
@@ -87,7 +98,8 @@ _start_action_fields = fixed_dictionaries(
 start_action_message_dicts = builds(
     union, message_dicts, _start_action_fields).map(
         lambda x: x.update({TASK_LEVEL_FIELD: x[TASK_LEVEL_FIELD].set(-1, 1)}))
-start_action_messages = start_action_message_dicts.map(WrittenMessage.from_dict)
+start_action_messages = start_action_message_dicts.map(thaw).map(
+    written_from_pmap)
 
 
 def sibling_task_level(message, n):
@@ -130,7 +142,7 @@ def _make_written_action(start_message, child_messages, end_message_dict):
         children.append(reparent_action(task_uuid, task_level, child))
 
     if end_message_dict:
-        end_message = WrittenMessage.from_dict(
+        end_message = written_from_pmap(
             union(end_message_dict, {
                 ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
                 TASK_UUID_FIELD: task_uuid,
@@ -201,7 +213,7 @@ def reparent_action(task_uuid, task_level, written_action):
 
     @return: A new version of C{written_action}.
     """
-    new_prefix = task_level.level
+    new_prefix = list(task_level.level)
     old_prefix_len = len(written_action.task_level.level)
 
     def fix_message(message):
