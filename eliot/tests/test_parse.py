@@ -15,6 +15,7 @@ from ..testing import MemoryLogger
 from .._parse import Task
 from .._message import WrittenMessage, MESSAGE_TYPE_FIELD, TASK_LEVEL_FIELD
 from .._action import FAILED_STATUS, ACTION_STATUS_FIELD, WrittenAction
+from .strategies import labels
 
 
 class ActionStructure(PClass):
@@ -66,21 +67,18 @@ class ActionStructure(PClass):
         return logger.messages
 
 
-TYPES = st.text(min_size=1, average_size=3, alphabet=u"CGAT")
-
-
 @st.composite
 def action_structures(draw):
     """
     A Hypothesis strategy that creates a tree of L{ActionStructure} and
     L{unicode}.
     """
-    tree = draw(st.recursive(TYPES, st.lists, max_leaves=50))
+    tree = draw(st.recursive(labels, st.lists, max_leaves=50))
 
     def to_structure(tree_or_message):
         if isinstance(tree_or_message, list):
             return ActionStructure(
-                type=draw(TYPES),
+                type=draw(labels),
                 failed=draw(st.booleans()),
                 children=[to_structure(o) for o in tree_or_message])
         else:

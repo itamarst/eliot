@@ -44,7 +44,7 @@ task_levels = task_level_lists.map(lambda level: TaskLevel(level=level))
 
 
 # Text generation is slow, and most of the things are short labels.
-labels = text(average_size=5, min_size=1)
+labels = text(average_size=3, min_size=1, alphabet="CGAT")
 
 timestamps = floats(min_value=0)
 
