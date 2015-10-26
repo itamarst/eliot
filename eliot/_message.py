@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from six import text_type as unicode
 
-from pyrsistent import PClass, pmap, thaw, pmap_field
+from pyrsistent import PClass, thaw, pmap_field, pmap
 
 
 MESSAGE_TYPE_FIELD = 'message_type'
@@ -154,7 +154,6 @@ class WrittenMessage(PClass):
 
     @ivar _logged_dict: The originally logged dictionary.
     """
-
     _logged_dict = pmap_field((str, unicode), object)
 
     @property

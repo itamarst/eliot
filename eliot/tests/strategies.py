@@ -43,8 +43,11 @@ task_level_lists = lists(task_level_indexes, min_size=1, average_size=5)
 task_levels = task_level_lists.map(lambda level: TaskLevel(level=level))
 
 
-# Text generation is slow, and most of the things are short labels.
-labels = text(average_size=5, min_size=1)
+# Text generation is slow, and most of the things are short labels. We set
+# a restricted alphabet so they're easier to read, and in general large
+# amount of randomness in label generation doesn't enhance our testing in
+# any way, since we don't parse type names or user field values.
+labels = text(average_size=3, min_size=1, alphabet="CGAT")
 
 timestamps = floats(min_value=0)
 
@@ -59,7 +62,7 @@ message_core_dicts = fixed_dictionaries(
 # Text generation is slow. We can make it faster by not generating so
 # much. These are reasonable values.
 message_data_dicts = dictionaries(
-    keys=labels, values=text(average_size=10),
+    keys=labels, values=labels,
     # People don't normally put much more than twenty fields in their
     # messages, surely?
     average_size=10,
@@ -112,8 +115,8 @@ _end_action_fields = one_of(
         ACTION_STATUS_FIELD: just(FAILED_STATUS),
         # Text generation is slow. We can make it faster by not generating so
         # much. Thqese are reasonable values.
-        EXCEPTION_FIELD: text(average_size=20),
-        REASON_FIELD: text(average_size=20),
+        EXCEPTION_FIELD: labels,
+        REASON_FIELD: labels,
     }),
 )
 
