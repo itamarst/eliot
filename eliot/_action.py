@@ -8,13 +8,13 @@ top-level actions.
 from __future__ import unicode_literals, absolute_import
 
 import threading
-from uuid import uuid4, UUID
+from uuid import uuid4
 from itertools import count
 from contextlib import contextmanager
 from warnings import warn
 
 from pyrsistent import (
-    field, PClass, optional, pmap_field, pvector_field, pmap, pvector,
+    field, PClass, optional, pmap_field, pvector_field, pvector,
 )
 
 from six import text_type as unicode
