@@ -43,7 +43,10 @@ task_level_lists = lists(task_level_indexes, min_size=1, average_size=5)
 task_levels = task_level_lists.map(lambda level: TaskLevel(level=level))
 
 
-# Text generation is slow, and most of the things are short labels.
+# Text generation is slow, and most of the things are short labels. We set
+# a restricted alphabet so they're easier to read, and in general large
+# amount of randomness in label generation doesn't enhance our testing in
+# any way, since we don't parse type names or user field values.
 labels = text(average_size=3, min_size=1, alphabet="CGAT")
 
 timestamps = floats(min_value=0)

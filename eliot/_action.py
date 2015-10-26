@@ -515,10 +515,12 @@ class WrittenAction(PClass):
     action actually is, and a means of constructing actions that are known to
     be valid.
 
-    @ivar WrittenMessage start_message: The message that started this
-        action, or C{None} if it is not yet set on the action.
-    @ivar WrittenMessage end_message: The message that ends this action. Can be
-        C{None} if the action is unfinished.
+    @ivar WrittenMessage start_message: A start message whose task UUID and
+        level match this action, or C{None} if it is not yet set on the
+        action.
+    @ivar WrittenMessage end_message: An end message hose task UUID and
+        level match this action. Can be C{None} if the action is
+        unfinished.
     @ivar TaskLevel task_level: The action's task level, e.g. if start
         message has level C{[2, 3, 1]} it will be
         C{TaskLevel(level=[2, 3])}.
@@ -610,7 +612,8 @@ class WrittenAction(PClass):
     @property
     def start_time(self):
         """
-        The Unix timestamp of when the action started.
+        The Unix timestamp of when the action started, or C{None} if there has
+        been no start message added so far.
         """
         if self.start_message:
             return self.start_message.timestamp
