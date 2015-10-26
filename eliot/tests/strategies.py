@@ -98,7 +98,7 @@ _start_action_fields = fixed_dictionaries(
 start_action_message_dicts = builds(
     union, message_dicts, _start_action_fields).map(
         lambda x: x.update({TASK_LEVEL_FIELD: x[TASK_LEVEL_FIELD].set(-1, 1)}))
-start_action_messages = start_action_message_dicts.map(thaw).map(
+start_action_messages = start_action_message_dicts.map(
     written_from_pmap)
 
 
