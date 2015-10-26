@@ -62,7 +62,7 @@ message_core_dicts = fixed_dictionaries(
 # Text generation is slow. We can make it faster by not generating so
 # much. These are reasonable values.
 message_data_dicts = dictionaries(
-    keys=labels, values=text(average_size=10),
+    keys=labels, values=labels,
     # People don't normally put much more than twenty fields in their
     # messages, surely?
     average_size=10,
@@ -115,8 +115,8 @@ _end_action_fields = one_of(
         ACTION_STATUS_FIELD: just(FAILED_STATUS),
         # Text generation is slow. We can make it faster by not generating so
         # much. Thqese are reasonable values.
-        EXCEPTION_FIELD: text(average_size=20),
-        REASON_FIELD: text(average_size=20),
+        EXCEPTION_FIELD: labels,
+        REASON_FIELD: labels,
     }),
 )
 
