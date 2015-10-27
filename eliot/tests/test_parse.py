@@ -149,6 +149,23 @@ class TaskTests(TestCase):
         parsed_structure = ActionStructure.from_written(task.root())
         self.assertEqual(parsed_structure, action_structure)
 
+    @given(structure_and_messages=STRUCTURES_WITH_MESSAGES)
+    def test_is_complete(self, structure_and_messages):
+        """
+        ``Task.is_complete()`` only returns true when all messages within the
+        tree have been delivered.
+        """
+        action_structure, messages = structure_and_messages
+
+        task = Task()
+        completed = []
+        for message in messages:
+            task = task.add(message)
+            completed.append(task.is_complete())
+
+        self.assertEqual(completed,
+                         [False for m in messages[:-1]] + [True])
+
     def test_parse_contents(self):
         """
         L{{Task.add}} parses the contents of the messages it receives.

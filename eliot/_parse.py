@@ -5,7 +5,7 @@ Parse a stream of serialized messages into a forest of
 
 from __future__ import unicode_literals
 
-from pyrsistent import PClass, pmap_field
+from pyrsistent import PClass, pmap_field, pset_field
 
 from ._message import WrittenMessage, TASK_UUID_FIELD
 from ._action import (
@@ -19,7 +19,7 @@ class Task(PClass):
     A tree of actions with the same task UUID.
     """
     _nodes = pmap_field(TaskLevel, (WrittenAction, WrittenMessage))
-
+    _completed = pset_field(TaskLevel)
     _root_level = TaskLevel(level=[])
 
     def root(self):
@@ -27,6 +27,13 @@ class Task(PClass):
         @return: The root L{WrittenAction}.
         """
         return self._nodes[self._root_level]
+
+    def is_complete(self):
+        """
+        @return bool: True only if all messages in the task tree have been
+        added to it.
+        """
+        return self._root_level in self._completed
 
     def _insert_action(self, node):
         """
@@ -38,7 +45,22 @@ class Task(PClass):
 
         @return: Updated L{Task}.
         """
-        task = self.transform(["_nodes", node.task_level], node)
+        task = self
+        if (node.end_message and node.start_message
+            and (len(node.children) ==
+                 node.end_message.task_level.level[-1] - 2)):
+            # Possibly this action is complete, make sure all sub-actions
+            # are complete:
+            completed = True
+            for child in node.children:
+                if (isinstance(child, WrittenAction) and
+                        child.task_level not in self._completed):
+                    completed = False
+                    break
+            if completed:
+                task = task.transform(["_completed"],
+                                      lambda s: s.add(node.task_level))
+        task = task.transform(["_nodes", node.task_level], node)
         return task._ensure_node_parents(node)
 
     def _ensure_node_parents(self, child):
@@ -92,6 +114,7 @@ class Task(PClass):
             # Special case where there is no action:
             if written_message.task_level.level == [1]:
                 return self.transform(
-                    ["_nodes", self._root_level], written_message)
+                    ["_nodes", self._root_level], written_message,
+                    ["_completed"], lambda s: s.add(self._root_level))
             else:
                 return self._ensure_node_parents(written_message)
