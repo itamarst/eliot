@@ -118,3 +118,34 @@ class Task(PClass):
                     ["_completed"], lambda s: s.add(self._root_level))
             else:
                 return self._ensure_node_parents(written_message)
+
+
+class Parser(PClass):
+    """
+    Parse serialized Eliot messages into L{Task} instances.
+    """
+    def add(self, message_dict):
+        """
+        Update the L{} with a dictionary containing a serialized Eliot
+        message.
+
+        @param message_dict: Dictionary whose task UUID matches this one.
+
+        @return: Tuple of (list of completed L{Task} instances, updated L{Parser}).
+        """
+
+    def incomplete_tasks(self):
+        """
+        @return: List of L{Task} that are not yet complete.
+        """
+
+    @classmethod
+    def parse_stream(cls, iterable):
+        return
+        parser = Parser()
+        for message_dict in iterable:
+            completed, parser = parser.add(message_dict)
+            for task in completed:
+                yield task
+        for task in parser.incomplete_tasks():
+            yield task
