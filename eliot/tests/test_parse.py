@@ -5,6 +5,7 @@ Tests for L{eliot._parse}.
 from __future__ import unicode_literals
 
 from unittest import TestCase
+from itertools import chain, izip_longest
 
 from six import text_type as unicode
 
@@ -14,8 +15,10 @@ from pyrsistent import PClass, field, pvector_field
 
 from .. import start_action, Message
 from ..testing import MemoryLogger
-from .._parse import Task
-from .._message import WrittenMessage, MESSAGE_TYPE_FIELD, TASK_LEVEL_FIELD
+from .._parse import Task, Parser
+from .._message import (
+    WrittenMessage, MESSAGE_TYPE_FIELD, TASK_LEVEL_FIELD, TASK_UUID_FIELD,
+)
 from .._action import FAILED_STATUS, ACTION_STATUS_FIELD, WrittenAction
 from .strategies import labels
 
@@ -184,3 +187,36 @@ class TaskTests(TestCase):
         for message in messages:
             task = task.add(message)
         self.assertEqual(task.root(), expected)
+
+
+class ParserTests(TestCase):
+    """
+    Tests for L{Parser}.
+    """
+    @given(structure_and_messages1=STRUCTURES_WITH_MESSAGES,
+           structure_and_messages2=STRUCTURES_WITH_MESSAGES)
+    def test_parse_into_tasks(self, structure_and_messages1,
+                              structure_and_messages2):
+        """
+        Adding messages to a L{Parser} parses them into a L{Task} instances.
+        """
+        _, messages1 = structure_and_messages1
+        _, messages2 = structure_and_messages2
+        assume(messages1[0][TASK_UUID_FIELD] != messages2[0][TASK_UUID_FIELD])
+
+        def parse_all(messages):
+            task = Task()
+            for message in messages:
+                task = task.add(message)
+            return task
+
+        parser = Parser()
+        all_tasks = []
+        for message in chain(*izip_longest(messages1, messages2)):
+            if message is not None:
+                completed_tasks, parser = parser.add(message)
+                all_tasks.extend(completed_tasks)
+
+        self.assertItemsEqual(
+            all_tasks,
+            [parse_all(msgs) for msgs in (messages1, messages2)])

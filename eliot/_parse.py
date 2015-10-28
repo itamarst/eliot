@@ -5,7 +5,7 @@ Parse a stream of serialized messages into a forest of
 
 from __future__ import unicode_literals
 
-from pyrsistent import PClass, pmap_field, pset_field
+from pyrsistent import PClass, pmap_field, pset_field, discard
 
 from ._message import WrittenMessage, TASK_UUID_FIELD
 from ._action import (
@@ -123,7 +123,11 @@ class Task(PClass):
 class Parser(PClass):
     """
     Parse serialized Eliot messages into L{Task} instances.
+
+    @ivar _tasks: Map from UUID to corresponding L{Task}.
     """
+    _tasks = pmap_field(unicode, Task)
+
     def add(self, message_dict):
         """
         Update the L{} with a dictionary containing a serialized Eliot
@@ -133,6 +137,18 @@ class Parser(PClass):
 
         @return: Tuple of (list of completed L{Task} instances, updated L{Parser}).
         """
+        uuid = message_dict[TASK_UUID_FIELD]
+        if uuid in self._tasks:
+            task = self._tasks[uuid]
+        else:
+            task = Task()
+        task = task.add(message_dict)
+        if task.is_complete():
+            parser = self.transform(["_tasks", uuid], discard)
+            return [task], parser
+        else:
+            parser = self.transform(["_tasks", uuid], task)
+            return [], parser
 
     def incomplete_tasks(self):
         """
