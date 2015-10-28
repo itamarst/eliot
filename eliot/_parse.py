@@ -129,7 +129,7 @@ class Parser(PClass):
         Update the L{} with a dictionary containing a serialized Eliot
         message.
 
-        @param message_dict: Dictionary whose task UUID matches this one.
+        @param message_dict: Dictionary of serialized Eliot message.
 
         @return: Tuple of (list of completed L{Task} instances, updated L{Parser}).
         """
