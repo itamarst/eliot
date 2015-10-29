@@ -194,15 +194,20 @@ class ParserTests(TestCase):
     Tests for L{Parser}.
     """
     @given(structure_and_messages1=STRUCTURES_WITH_MESSAGES,
-           structure_and_messages2=STRUCTURES_WITH_MESSAGES)
+           structure_and_messages2=STRUCTURES_WITH_MESSAGES,
+           structure_and_messages3=STRUCTURES_WITH_MESSAGES)
     def test_parse_into_tasks(self, structure_and_messages1,
-                              structure_and_messages2):
+                              structure_and_messages2,
+                              structure_and_messages3):
         """
         Adding messages to a L{Parser} parses them into a L{Task} instances.
         """
         _, messages1 = structure_and_messages1
         _, messages2 = structure_and_messages2
-        assume(messages1[0][TASK_UUID_FIELD] != messages2[0][TASK_UUID_FIELD])
+        _, messages3 = structure_and_messages3
+        all_messages = (messages1, messages2, messages3)
+        # Need unique UUIDs per task:
+        assume(len(set(m[0][TASK_UUID_FIELD] for m in all_messages)) == 3)
 
         def parse_all(messages):
             task = Task()
@@ -212,11 +217,10 @@ class ParserTests(TestCase):
 
         parser = Parser()
         all_tasks = []
-        for message in chain(*izip_longest(messages1, messages2)):
+        for message in chain(*izip_longest(*all_messages)):
             if message is not None:
                 completed_tasks, parser = parser.add(message)
                 all_tasks.extend(completed_tasks)
 
         self.assertItemsEqual(
-            all_tasks,
-            [parse_all(msgs) for msgs in (messages1, messages2)])
+            all_tasks, [parse_all(msgs) for msgs in all_messages])
