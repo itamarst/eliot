@@ -5,6 +5,8 @@ Parse a stream of serialized messages into a forest of
 
 from __future__ import unicode_literals
 
+from six import text_type as unicode
+
 from pyrsistent import PClass, pmap_field, pset_field, discard
 
 from ._message import WrittenMessage, TASK_UUID_FIELD

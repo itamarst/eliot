@@ -5,9 +5,10 @@ Tests for L{eliot._parse}.
 from __future__ import unicode_literals
 
 from unittest import TestCase
-from itertools import chain, izip_longest
+from itertools import chain
 
-from six import text_type as unicode
+from six import text_type as unicode, assertCountEqual
+from six.moves import zip_longest
 
 from hypothesis import strategies as st, given, assume
 
@@ -221,13 +222,13 @@ class ParserTests(TestCase):
 
         parser = Parser()
         all_tasks = []
-        for message in chain(*izip_longest(*all_messages)):
+        for message in chain(*zip_longest(*all_messages)):
             if message is not None:
                 completed_tasks, parser = parser.add(message)
                 all_tasks.extend(completed_tasks)
 
-        self.assertItemsEqual(
-            all_tasks, [parse_to_task(msgs) for msgs in all_messages])
+        assertCountEqual(
+            self, all_tasks, [parse_to_task(msgs) for msgs in all_messages])
 
     @given(structure_and_messages=STRUCTURES_WITH_MESSAGES)
     def test_incomplete_tasks(self, structure_and_messages):
@@ -275,7 +276,7 @@ class ParserTests(TestCase):
         all_messages = (messages1, messages2, messages3[:-1])
 
         all_tasks = list(Parser.parse_stream(
-            [m for m in chain(*izip_longest(*all_messages))
+            [m for m in chain(*zip_longest(*all_messages))
              if m is not None]))
-        self.assertItemsEqual(
-            all_tasks, [parse_to_task(msgs) for msgs in all_messages])
+        assertCountEqual(
+            self, all_tasks, [parse_to_task(msgs) for msgs in all_messages])
