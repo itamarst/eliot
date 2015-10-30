@@ -132,12 +132,13 @@ class Parser(PClass):
 
     def add(self, message_dict):
         """
-        Update the L{} with a dictionary containing a serialized Eliot
+        Update the L{Parser} with a dictionary containing a serialized Eliot
         message.
 
         @param message_dict: Dictionary of serialized Eliot message.
 
-        @return: Tuple of (list of completed L{Task} instances, updated L{Parser}).
+        @return: Tuple of (list of completed L{Task} instances, updated
+            L{Parser}).
         """
         uuid = message_dict[TASK_UUID_FIELD]
         if uuid in self._tasks:
