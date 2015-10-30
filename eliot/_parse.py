@@ -154,6 +154,7 @@ class Parser(PClass):
         """
         @return: List of L{Task} that are not yet complete.
         """
+        return list(self._tasks.values())
 
     @classmethod
     def parse_stream(cls, iterable):

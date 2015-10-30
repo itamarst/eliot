@@ -224,3 +224,26 @@ class ParserTests(TestCase):
 
         self.assertItemsEqual(
             all_tasks, [parse_all(msgs) for msgs in all_messages])
+
+    @given(structure_and_messages=STRUCTURES_WITH_MESSAGES)
+    def test_incomplete_tasks(self, structure_and_messages):
+        """
+        Until a L{Task} is fully parsed, it is returned in
+        L{Parser.incomplete_tasks}.
+        """
+        _, messages = structure_and_messages
+        parser = Parser()
+        task = Task()
+        incomplete_matches = []
+        for message in messages[:-1]:
+            _, parser = parser.add(message)
+            task = task.add(message)
+            incomplete_matches.append(parser.incomplete_tasks() == [task])
+
+        task = task.add(messages[-1])
+        _, parser = parser.add(messages[-1])
+        self.assertEqual(
+            dict(incomplete_matches=incomplete_matches,
+                 final_incompleted=parser.incomplete_tasks()),
+            dict(incomplete_matches=[True] * (len(messages) - 1),
+                 final_incompleted=[]))
