@@ -100,6 +100,20 @@ def _structure_and_messages(structure):
 STRUCTURES_WITH_MESSAGES = action_structures().flatmap(_structure_and_messages)
 
 
+def parse_to_task(messages):
+    """
+    Feed a set of messages to a L{Task}.
+
+    @param messages: Sequence of messages dictionaries to parse.
+
+    @return: Resulting L{Task}.
+    """
+    task = Task()
+    for message in messages:
+        task = task.add(message)
+    return task
+
+
 class TaskTests(TestCase):
     """
     Tests for L{Task}.
@@ -123,9 +137,7 @@ class TaskTests(TestCase):
                 del messages[i]
                 break
 
-        task = Task()
-        for message in messages:
-            task = task.add(message)
+        task = parse_to_task(messages)
         parsed_structure = ActionStructure.from_written(task.root())
 
         # We expect the action with missing start message to otherwise
@@ -183,9 +195,7 @@ class TaskTests(TestCase):
             [WrittenMessage.from_dict(messages[1])],
             WrittenMessage.from_dict(messages[2]))
 
-        task = Task()
-        for message in messages:
-            task = task.add(message)
+        task = parse_to_task(messages)
         self.assertEqual(task.root(), expected)
 
 
@@ -209,12 +219,6 @@ class ParserTests(TestCase):
         # Need unique UUIDs per task:
         assume(len(set(m[0][TASK_UUID_FIELD] for m in all_messages)) == 3)
 
-        def parse_all(messages):
-            task = Task()
-            for message in messages:
-                task = task.add(message)
-            return task
-
         parser = Parser()
         all_tasks = []
         for message in chain(*izip_longest(*all_messages)):
@@ -223,7 +227,7 @@ class ParserTests(TestCase):
                 all_tasks.extend(completed_tasks)
 
         self.assertItemsEqual(
-            all_tasks, [parse_all(msgs) for msgs in all_messages])
+            all_tasks, [parse_to_task(msgs) for msgs in all_messages])
 
     @given(structure_and_messages=STRUCTURES_WITH_MESSAGES)
     def test_incomplete_tasks(self, structure_and_messages):
@@ -270,14 +274,8 @@ class ParserTests(TestCase):
         # Two complete tasks, one incomplete task:
         all_messages = (messages1, messages2, messages3[:-1])
 
-        def parse_all(messages):
-            task = Task()
-            for message in messages:
-                task = task.add(message)
-            return task
-
         all_tasks = list(Parser.parse_stream(
             [m for m in chain(*izip_longest(*all_messages))
              if m is not None]))
         self.assertItemsEqual(
-            all_tasks, [parse_all(msgs) for msgs in all_messages])
+            all_tasks, [parse_to_task(msgs) for msgs in all_messages])
