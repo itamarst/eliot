@@ -158,7 +158,15 @@ class Parser(PClass):
 
     @classmethod
     def parse_stream(cls, iterable):
-        return
+        """
+        Parse a stream of messages into a stream of L{Task} instances.
+
+        :param iterable: An iterable of serialized Eliot message dictionaries.
+
+        :return: An iterable of parsed L{Task} instances. Remaining
+            incomplete L{Task} will be returned when the input stream is
+            exhausted.
+        """
         parser = Parser()
         for message_dict in iterable:
             completed, parser = parser.add(message_dict)

@@ -247,3 +247,37 @@ class ParserTests(TestCase):
                  final_incompleted=parser.incomplete_tasks()),
             dict(incomplete_matches=[True] * (len(messages) - 1),
                  final_incompleted=[]))
+
+    @given(structure_and_messages1=STRUCTURES_WITH_MESSAGES,
+           structure_and_messages2=STRUCTURES_WITH_MESSAGES,
+           structure_and_messages3=STRUCTURES_WITH_MESSAGES)
+    def test_parse_stream(self, structure_and_messages1,
+                          structure_and_messages2,
+                          structure_and_messages3):
+        """
+        L{Parser.parse_stream} returns an iterable of completed and then
+        incompleted tasks.
+        """
+        _, messages1 = structure_and_messages1
+        _, messages2 = structure_and_messages2
+        _, messages3 = structure_and_messages3
+        # Need at least one non-dropped message in partial tree:
+        assume(len(messages3) > 1)
+        # Need unique UUIDs per task:
+        assume(len(set(m[0][TASK_UUID_FIELD] for m in
+                   (messages1, messages2, messages3))) == 3)
+
+        # Two complete tasks, one incomplete task:
+        all_messages = (messages1, messages2, messages3[:-1])
+
+        def parse_all(messages):
+            task = Task()
+            for message in messages:
+                task = task.add(message)
+            return task
+
+        all_tasks = list(Parser.parse_stream(
+            [m for m in chain(*izip_longest(*all_messages))
+             if m is not None]))
+        self.assertItemsEqual(
+            all_tasks, [parse_all(msgs) for msgs in all_messages])
