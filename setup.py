@@ -54,7 +54,7 @@ setup(
             # Allows us to measure code coverage:
             "coverage",
             # Bug-seeking missile:
-            "hypothesis",
+            "hypothesis >= 1.14.0",
             # Tasteful testing for Python:
             "testtools",
         ]

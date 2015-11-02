@@ -5,8 +5,6 @@ Hypothesis strategies for eliot.
 from __future__ import unicode_literals
 
 from functools import partial
-from uuid import uuid4
-
 from six import text_type as unicode
 
 from hypothesis.strategies import (
@@ -21,6 +19,7 @@ from hypothesis.strategies import (
     one_of,
     recursive,
     text,
+    uuids,
 )
 
 from pyrsistent import pmap, pvector, ny, thaw
@@ -32,7 +31,6 @@ from .._action import (
 from .._message import (
     EXCEPTION_FIELD, REASON_FIELD, TASK_LEVEL_FIELD, TASK_UUID_FIELD,
     WrittenMessage)
-
 
 
 task_level_indexes = integers(min_value=1)
@@ -50,11 +48,9 @@ labels = text(average_size=3, min_size=1, alphabet="CGAT")
 
 timestamps = floats(min_value=0)
 
-uuids = builds(lambda: unicode(uuid4()))
-
 message_core_dicts = fixed_dictionaries(
     dict(task_level=task_level_lists.map(pvector),
-         task_uuid=uuids,
+         task_uuid=uuids().map(unicode),
          timestamp=timestamps)).map(pmap)
 
 
