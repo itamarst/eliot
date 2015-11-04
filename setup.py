@@ -43,7 +43,7 @@ setup(
         # Struct-like objects:
         "characteristic",
         # Persistent objects for Python:
-        "pyrsistent",
+        "pyrsistent >= 0.11.8",  # version with multi-type pvector/pmap_field
     ],
     extras_require={
         "journald": [
@@ -54,7 +54,7 @@ setup(
             # Allows us to measure code coverage:
             "coverage",
             # Bug-seeking missile:
-            "hypothesis",
+            "hypothesis >= 1.14.0",
             # Tasteful testing for Python:
             "testtools",
         ]
