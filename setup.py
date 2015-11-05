@@ -40,10 +40,12 @@ setup(
         "six",
         # Internal code documentation:
         "zope.interface",
-        # Struct-like objects:
+        # Struct-like objects; eventually to be replaced by pyrsistent:
         "characteristic",
         # Persistent objects for Python:
         "pyrsistent >= 0.11.8",  # version with multi-type pvector/pmap_field
+        # Interval trees for performance analysis:
+        "intervaltree",
     ],
     extras_require={
         "journald": [
@@ -62,7 +64,7 @@ setup(
     entry_points={
         'console_scripts': [
             'eliot-prettyprint = eliot.prettyprint:_main',
-            'eliot2flamegraph = eliot._flamegraph:_main',
+            'eliot-flamegraph = eliot._flamegraph:_main',
         ]
     },
     keywords="logging",

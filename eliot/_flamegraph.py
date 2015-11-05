@@ -29,68 +29,64 @@ root.
 This is not a guarantee that is what is going on exactly but it's likely
 a reasonable approximation, and will be accurate for blocking code.
 
+Consider using intervaltree library.
+
 The code below is a broken sketch of a previous attempt.
 """
 from sys import stdin, stdout
 
-from pyrsistent import PRecord, pmap_field, field, discard
+from intervaltree import IntervalTree
+
+from pyrsistent import pvector
 
 from ._message import (
     TIMESTAMP_FIELD, TASK_UUID_FIELD, TASK_LEVEL_FIELD,
 )
 from ._action import (
-    ACTION_TYPE_FIELD, ACTION_STATUS_FIELD, STARTED_STATUS, TaskLevel,
+    WrittenAction,
 )
 from ._bytesjson import loads
+from ._parse import Parser
 
 
-class CallStacks(PRecord):
-    starts = pmap_field(tuple, tuple)
-    last_timestamp = field(initial=0.0)
-
-    def update_timestamp(self, message):
-        timestamp = message[TIMESTAMP_FIELD]
-        if timestamp > self.last_timestamp:
-            return self.set(last_timestamp=timestamp)
-        else:
-            return self
+def json_messages():
+    for line in stdin:
+        yield loads(line)
 
 
-def get_key(message):
-    return (message[TASK_UUID_FIELD],
-            TaskLevel(level=message[TASK_LEVEL_FIELD]).parent())
+def task_to_call_stacks(root_action):
+    interval_tree = IntervalTree()
+
+    def add(ancestors, current):
+        ancestors = ancestors.append(current.action_type)
+        # Add initial estimate of action interval:
+        start = current.start_message.timestamp
+        end = current.end_message.timestamp
+        interval_tree.addi(start, end, ancestors)
+        # Remove any overlap with parent, since we're higher on call stack:
+        interval_tree.slice(start)
+        interval_tree.slice(end)
+        interval_tree.discardi(start, end, ancestors[:-1])
+        # Add children:
+        for child in current.children:
+            if isinstance(child, WrittenAction):
+                add(ancestors, child)
+    add(pvector(), root_action)
+    # Parallel, same-type actions probably shouldn't be counted twice;
+    # it's confusing enough with different types:
+    # interval_tree.merge_overlaps()
+    return interval_tree
 
 
 def _main():
-    """
-    Command-line program that reads in JSON from stdin and writes out
-    pretty-printed messages to stdout.
-    """
-    calls = CallStacks()
+    for parsed_task in Parser.parse_stream(json_messages()):
+        root = parsed_task.root()
+        if not isinstance(root, WrittenAction):
+            continue
+        for interval in task_to_call_stacks(root):
+            stdout.write(";".join(interval.data) + " %d\n" % (
+                interval.length() * 1000000),)
 
-    for line in stdin:
-        message = loads(line)
-        calls = calls.update_timestamp(message)
-        if ACTION_TYPE_FIELD in message:
-            if message[ACTION_STATUS_FIELD] == STARTED_STATUS:
-                level = TaskLevel(level=message[TASK_LEVEL_FIELD])
-                current_type = message[ACTION_TYPE_FIELD]
-                if level.level == [1]:
-                    type_stack = [current_type]
-                else:
-                    parent_level = level.parent().parent()
-                    type_stack = calls.starts.get(
-                        (message[TASK_UUID_FIELD], parent_level), [[]])[0] + [
-                            current_type]
-                calls = calls.transform(
-                    ["starts", get_key(message)],
-                    (type_stack, message[TIMESTAMP_FIELD]))
-            else:
-                key = get_key(message)
-                type_stack, start_timestamp = calls.starts.get(
-                    key, (None, None))
-                if start_timestamp is not None:
-                    calls = calls.transform(["starts", key], discard)
-                    stdout.write(";".join(type_stack) + " %d\n" % (
-                        (1000000 * message[TIMESTAMP_FIELD] -
-                         1000000 * start_timestamp),))
+
+if __name__ == '__main__':
+    _main()
