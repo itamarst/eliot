@@ -54,10 +54,19 @@ def json_messages():
         yield loads(line)
 
 
-def task_to_call_stacks(root_action):
+def task_to_call_stacks(root_action, results=None):
     interval_tree = IntervalTree()
+    if results is None:
+        results = []
+    results.append(interval_tree)
 
     def add(ancestors, current):
+        if current.action_type == "eliot:remote_task":
+            for child in current.children:
+                if isinstance(child, WrittenAction):
+                    task_to_call_stacks(child, results)
+            return
+
         ancestors = ancestors.append(current.action_type)
         # Add initial estimate of action interval:
         start = current.start_message.timestamp
@@ -75,7 +84,7 @@ def task_to_call_stacks(root_action):
     # Parallel, same-type actions probably shouldn't be counted twice;
     # it's confusing enough with different types:
     # interval_tree.merge_overlaps()
-    return interval_tree
+    return results
 
 
 def _main():
@@ -83,9 +92,10 @@ def _main():
         root = parsed_task.root()
         if not isinstance(root, WrittenAction):
             continue
-        for interval in task_to_call_stacks(root):
-            stdout.write(";".join(interval.data) + " %d\n" % (
-                interval.length() * 1000000),)
+        for call_stacks in task_to_call_stacks(root):
+            for interval in call_stacks:
+                stdout.write(";".join(interval.data) + " %d\n" % (
+                    interval.length() * 1000000),)
 
 
 if __name__ == '__main__':
