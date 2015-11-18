@@ -54,6 +54,20 @@ def json_messages():
         yield loads(line)
 
 
+def get_all_timestamps(action):
+    if action.start_message is not None:
+        yield action.start_message.timestamp
+    for child in action.children:
+        if isinstance(child, WrittenAction) and (
+                child.action_type != "eliot:task"):
+            for result in get_all_timestamps(child):
+                yield result
+        else:
+            yield child.timestamp
+    if action.end_message is not None:
+        yield action.end_message.timestamp
+
+
 def task_to_call_stacks(root_action, results=None):
     interval_tree = IntervalTree()
     if results is None:
@@ -67,10 +81,13 @@ def task_to_call_stacks(root_action, results=None):
                     task_to_call_stacks(child, results)
             return
 
-        ancestors = ancestors.append(current.action_type)
+        ancestors = ancestors.append(current.action_type or "*unknown*")
         # Add initial estimate of action interval:
-        start = current.start_message.timestamp
-        end = current.end_message.timestamp
+        timestamps = list(get_all_timestamps(current))
+        start = min(timestamps)
+        end = max(timestamps)
+        if end == start:
+            end += 0.00001
         interval_tree.addi(start, end, ancestors)
         # Remove any overlap with parent, since we're higher on call stack:
         interval_tree.slice(start)
