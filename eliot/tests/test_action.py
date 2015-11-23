@@ -32,7 +32,9 @@ from .._message import (
 from .._output import MemoryLogger
 from .._validation import ActionType, Field, _ActionSerializers
 from ..testing import assertContainsFields
-from .. import _action, add_destination, remove_destination
+from .. import (
+    _action, add_destination, remove_destination, extract_fields_for_failures,
+)
 
 from .strategies import (
     message_dicts,
@@ -1248,3 +1250,88 @@ class WrittenActionTests(testtools.TestCase):
         self.assertRaises(
             DuplicateChild,
             WrittenAction.from_messages, start_message, messages)
+
+
+class FailedActionFieldExtraction(TestCase):
+    """
+    Tests for extracting fields from exceptions in failed actions.
+    """
+    def get_failed_action_message(self, exception):
+        """
+        Fail an action using the given exception.
+
+        :return: Logged dictionary from the exception failing an action.
+        """
+        logger = MemoryLogger()
+        action = Action(logger, "uuid", TaskLevel(level=[1]), "sys:me")
+        try:
+            with action:
+                raise exception
+        except exception.__class__:
+            pass
+        return logger.messages[-1]
+
+    def test_matching_class(self):
+        """
+        If an exception fails an action and the exact type has registered
+        extractor, extract errors using it.
+        """
+        class MyException(Exception):
+            pass
+        extract_fields_for_failures(MyException,
+                                    lambda e: {"key": e.args[0]})
+        message = self.get_failed_action_message(MyException("a value"))
+        assertContainsFields(self, message, {"key": "a value"})
+
+    def test_subclass_falls_back_to_parent(self):
+        """
+        If an exception fails an action and the exact type has not been
+        registered but the error is a subclass of a registered class,
+        extract errors using it.
+        """
+        class MyException(Exception):
+            pass
+
+        class SubException(MyException):
+            pass
+
+        extract_fields_for_failures(MyException,
+                                    lambda e: {"key": e.args[0]})
+        message = self.get_failed_action_message(SubException("the value"))
+        assertContainsFields(self, message, {"key": "the value"})
+
+    def test_subclass_matches_first(self):
+        """
+        If both a superclass and base class have registered extractors, the
+        more specific one is used.
+        """
+        class MyException(Exception):
+            pass
+
+        class SubException(MyException):
+            pass
+
+        class SubSubException(SubException):
+            pass
+
+        extract_fields_for_failures(MyException,
+                                    lambda e: {"parent": e.args[0]})
+        extract_fields_for_failures(MyException,
+                                    lambda e: {"child": e.args[0]})
+        message = self.get_failed_action_message(SubSubException("the value"))
+        assertContainsFields(self, message, {"child": "the value"})
+
+    def test_error_in_extracter(self):
+        """
+        If an error occurs in extraction, log the message as usual just
+        without the extra fields, and an additional traceback.
+        """
+
+    def test_environmenterror(self):
+        """
+        ``EnvironmentError`` has a registered extractor that extracts the
+        errno.
+        """
+        message = self.get_failed_action_message(
+            EnvironmentError(12, "oh noes"))
+        assertContainsFields(self, message, {"errno": 12})
