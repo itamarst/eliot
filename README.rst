@@ -26,7 +26,7 @@ Features:
 * Excellent support for unit testing your code's logging.
 * Optional Twisted support.
 * Native journald support, easily usable by Logstash/Elasticsearch.
-* Supports CPython 2.7, 3.3, 3.4 and PyPy.
+* Supports CPython 2.7, 3.3, 3.4, 3.5 and PyPy.
 
 .. _PEP 8: http://legacy.python.org/dev/peps/pep-0008/
 .. _Twisted: https://twistedmatrix.com/documents/current/core/development/policy/coding-standard.html
