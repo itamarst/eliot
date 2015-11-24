@@ -813,14 +813,32 @@ def startTask(logger=None, action_type=u"", _serializers=None, **fields):
 class ErrorExtraction(object):
     """
     Extract fields from exceptions for failed-action messages.
+
+    @ivar registry: Map exception class to function that extracts fields.
     """
     def __init__(self):
         self.registry = {}
 
     def extract_fields_for_failures(self, exception_class, extracter):
+        """
+        Register a function that converts exceptions to fields.
+
+        @param exception_class: Class to register for.
+
+        @param extracter: Single-argument callable that takes an exception
+            of the given class (or a subclass) and returns a dictionary,
+            fields to include in a failed action message.
+        """
         self.registry[exception_class] = extracter
 
     def get_fields_for_exception(self, exception):
+        """
+        Given an exception instance, return fields to add to the failed action
+        message.
+
+        @param exception: An exception instance.
+        @return: Dictionary with fields to include.
+        """
         for klass in getmro(exception.__class__):
             if klass in self.registry:
                 return self.registry[klass](exception)
