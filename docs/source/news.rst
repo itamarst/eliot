@@ -8,6 +8,11 @@ Features:
 
 * Python 3.5 support.
 
+Bug fixes:
+
+* Journald support works on Python 3.
+
+
 0.9.0
 ^^^^^
 
