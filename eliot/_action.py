@@ -334,7 +334,8 @@ class Action(object):
             if self._serializers is not None:
                 serializer = self._serializers.success
         else:
-            fields = _error_extraction.get_fields_for_exception(exception)
+            fields = _error_extraction.get_fields_for_exception(
+                self._logger, exception)
             fields[EXCEPTION_FIELD] = "%s.%s" % (exception.__class__.__module__,
                                              exception.__class__.__name__)
             fields[REASON_FIELD] = safeunicode(exception)
@@ -831,17 +832,25 @@ class ErrorExtraction(object):
         """
         self.registry[exception_class] = extracter
 
-    def get_fields_for_exception(self, exception):
+    def get_fields_for_exception(self, logger, exception):
         """
         Given an exception instance, return fields to add to the failed action
         message.
 
+        @param logger: ``ILogger`` currently being used.
         @param exception: An exception instance.
+
         @return: Dictionary with fields to include.
         """
         for klass in getmro(exception.__class__):
             if klass in self.registry:
-                return self.registry[klass](exception)
+                extracter = self.registry[klass]
+                try:
+                    return extracter(exception)
+                except:
+                    from ._traceback import writeTraceback
+                    writeTraceback(logger)
+                    return {}
         return {}
 
 _error_extraction = ErrorExtraction()

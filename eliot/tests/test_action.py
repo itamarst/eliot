@@ -1326,6 +1326,27 @@ class FailedActionFieldExtraction(TestCase):
         If an error occurs in extraction, log the message as usual just
         without the extra fields, and an additional traceback.
         """
+        class MyException(Exception):
+            pass
+
+        def extract(e):
+            return e.nosuchattribute
+        extract_fields_for_failures(MyException, extract)
+
+        logger = MemoryLogger()
+        action = Action(logger, "uuid", TaskLevel(level=[1]), "sys:me")
+        try:
+            with action:
+                raise MyException()
+        except MyException:
+            pass
+
+        assertContainsFields(self, logger.messages[1],
+                             {"action_type": "sys:me",
+                              "action_status": "failed"})
+        assertContainsFields(self, logger.messages[0],
+                             {"message_type": "eliot:traceback"})
+        self.assertIn("nosuchattribute", str(logger.messages[0]["reason"]))
 
     def test_environmenterror(self):
         """
