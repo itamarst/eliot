@@ -19,6 +19,7 @@ from ..testing import (
     assertContainsFields, validateLogging, capture_logging,
     MemoryLogger,
 )
+from .test_action import make_error_extraction_tests
 
 
 class TracebackLoggingTests(TestCase):
@@ -200,3 +201,17 @@ class TracebackLoggingTests(TestCase):
             except:
                 writeFailure(Failure(), logger, "system")
             self.assertEqual(warnings[-1].category, DeprecationWarning)
+
+
+def get_traceback_messages(exception):
+    """
+    Given an exception instance generate a traceback Eliot message.
+    """
+    logger = MemoryLogger()
+    try:
+        raise exception
+    except exception.__class__:
+        writeTraceback(logger)
+    return logger.messages
+TracebackExtractionTests = make_error_extraction_tests(get_traceback_messages)
+

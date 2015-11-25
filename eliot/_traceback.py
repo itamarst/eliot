@@ -15,7 +15,7 @@ from six import exec_
 from ._message import EXCEPTION_FIELD, REASON_FIELD
 from ._util import safeunicode
 from ._validation import MessageType, Field
-
+from ._errors import _error_extraction
 
 TRACEBACK_MESSAGE = MessageType(
     "eliot:traceback",
@@ -40,6 +40,8 @@ def _writeTracebackMessage(logger, typ, exception, traceback):
     """
     msg = TRACEBACK_MESSAGE(reason=exception, traceback=traceback,
                             exception=typ)
+    msg = msg.bind(**_error_extraction.get_fields_for_exception(
+        logger, exception))
     msg.write(logger)
 
 
