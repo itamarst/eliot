@@ -16,17 +16,17 @@ class ErrorExtraction(object):
     def __init__(self):
         self.registry = {}
 
-    def extract_fields_for_failures(self, exception_class, extracter):
+    def extract_fields_for_failures(self, exception_class, extractor):
         """
         Register a function that converts exceptions to fields.
 
         @param exception_class: Class to register for.
 
-        @param extracter: Single-argument callable that takes an exception
+        @param extractor: Single-argument callable that takes an exception
             of the given class (or a subclass) and returns a dictionary,
             fields to include in a failed action message.
         """
-        self.registry[exception_class] = extracter
+        self.registry[exception_class] = extractor
 
     def get_fields_for_exception(self, logger, exception):
         """
@@ -40,9 +40,9 @@ class ErrorExtraction(object):
         """
         for klass in getmro(exception.__class__):
             if klass in self.registry:
-                extracter = self.registry[klass]
+                extractor = self.registry[klass]
                 try:
-                    return extracter(exception)
+                    return extractor(exception)
                 except:
                     from ._traceback import writeTraceback
                     writeTraceback(logger)
