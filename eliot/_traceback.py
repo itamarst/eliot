@@ -17,6 +17,8 @@ from ._util import safeunicode
 from ._validation import MessageType, Field
 from ._errors import _error_extraction
 
+# The fields here are actually subset of what you might get in practice,
+# due to exception extraction, so don't rely on this for validation.
 TRACEBACK_MESSAGE = MessageType(
     "eliot:traceback",
     [Field(REASON_FIELD, safeunicode, "The exception's value."),
