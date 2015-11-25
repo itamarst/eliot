@@ -12,7 +12,6 @@ from uuid import uuid4
 from itertools import count
 from contextlib import contextmanager
 from warnings import warn
-from inspect import getmro
 
 from pyrsistent import (
     field, PClass, optional, pmap_field, pvector_field, pvector,
@@ -28,7 +27,7 @@ from ._message import (
     TASK_UUID_FIELD,
 )
 from ._util import safeunicode
-
+from ._errors import _error_extraction
 
 ACTION_STATUS_FIELD = 'action_status'
 ACTION_TYPE_FIELD = 'action_type'
@@ -809,52 +808,3 @@ def startTask(logger=None, action_type=u"", _serializers=None, **fields):
                     _serializers)
     action._start(fields)
     return action
-
-
-class ErrorExtraction(object):
-    """
-    Extract fields from exceptions for failed-action messages.
-
-    @ivar registry: Map exception class to function that extracts fields.
-    """
-    def __init__(self):
-        self.registry = {}
-
-    def extract_fields_for_failures(self, exception_class, extracter):
-        """
-        Register a function that converts exceptions to fields.
-
-        @param exception_class: Class to register for.
-
-        @param extracter: Single-argument callable that takes an exception
-            of the given class (or a subclass) and returns a dictionary,
-            fields to include in a failed action message.
-        """
-        self.registry[exception_class] = extracter
-
-    def get_fields_for_exception(self, logger, exception):
-        """
-        Given an exception instance, return fields to add to the failed action
-        message.
-
-        @param logger: ``ILogger`` currently being used.
-        @param exception: An exception instance.
-
-        @return: Dictionary with fields to include.
-        """
-        for klass in getmro(exception.__class__):
-            if klass in self.registry:
-                extracter = self.registry[klass]
-                try:
-                    return extracter(exception)
-                except:
-                    from ._traceback import writeTraceback
-                    writeTraceback(logger)
-                    return {}
-        return {}
-
-_error_extraction = ErrorExtraction()
-extract_fields_for_failures = _error_extraction.extract_fields_for_failures
-
-# Default handler for OSError and IOError by registered EnvironmentError:
-extract_fields_for_failures(EnvironmentError, lambda e: {"errno": e.errno})

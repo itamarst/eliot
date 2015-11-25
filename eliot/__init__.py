@@ -3,14 +3,14 @@ Eliot: Logging for Complex & Distributed Systems.
 """
 # Expose the public API:
 from ._message import Message
-from ._action import (
-    startAction, startTask, Action, extract_fields_for_failures,
-)
+from ._action import startAction, startTask, Action
 from ._output import (
     ILogger, Logger, MemoryLogger, to_file, FileDestination,
 )
 from ._validation import Field, fields, MessageType, ActionType
 from ._traceback import writeTraceback, writeFailure
+from ._errors import extract_fields_for_failures
+
 addDestination = Logger._destinations.add
 removeDestination = Logger._destinations.remove
 addGlobalFields = Logger._destinations.addGlobalFields

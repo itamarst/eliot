@@ -1,5 +1,6 @@
 """
-Logging of tracebacks and L{twisted.python.failure.Failure} instances.
+Logging of tracebacks and L{twisted.python.failure.Failure} instances,
+as well as common utilities for handling exception logging.
 """
 
 from __future__ import unicode_literals
