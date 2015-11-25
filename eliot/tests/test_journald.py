@@ -42,16 +42,17 @@ def last_journald_message():
     # It may take a little for messages to actually reach journald, so we
     # write out marker message and wait until it arrives. We can then be
     # sure the message right before it is the one we want.
-    marker = unicode(uuid4()).encode("ascii")
-    sd_journal_send(MESSAGE=marker)
-    while True:
+    marker = unicode(uuid4())
+    sd_journal_send(MESSAGE=marker.encode("ascii"))
+    for i in range(500):
         messages = check_output(
             [b"journalctl", b"-a", b"-o", b"json", b"-n2",
-             b"_PID=%d" % (getpid(),)])
+             b"_PID=" + str(getpid()).encode("ascii")])
         messages = [loads(m) for m in messages.splitlines()]
         if len(messages) == 2 and messages[1]["MESSAGE"] == marker:
             return messages[0]
         sleep(0.01)
+    raise RuntimeError("Message never arrived?!")
 
 
 class SdJournaldSendTests(TestCase):
@@ -71,7 +72,7 @@ class SdJournaldSendTests(TestCase):
         """
         sd_journal_send(MESSAGE=value)
         result = last_journald_message()
-        self.assertEqual(value, result["MESSAGE"])
+        self.assertEqual(value, result["MESSAGE"].encode("utf-8"))
 
     def test_message(self):
         """
@@ -101,7 +102,8 @@ class SdJournaldSendTests(TestCase):
         sd_journal_send(MESSAGE=b"hello", BONUS_FIELD=b"world")
         result = last_journald_message()
         self.assertEqual((b"hello", b"world"),
-                         (result["MESSAGE"], result["BONUS_FIELD"]))
+                         (result["MESSAGE"].encode("ascii"),
+                          result["BONUS_FIELD"].encode("ascii")))
 
     def test_error(self):
         """

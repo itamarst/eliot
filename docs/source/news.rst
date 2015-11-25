@@ -1,6 +1,13 @@
 What's New
 ==========
 
+0.10.0
+^^^^^^
+
+Bug fixes:
+
+* Journald support works on Python 3.
+
 0.9.0
 ^^^^^
 
