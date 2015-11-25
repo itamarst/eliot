@@ -8,6 +8,11 @@ Features:
 
 * ``extract_fields_for_exceptions`` allows for more useful :ref:`logging of failed actions<extract errors>` by extracting additional fields from exceptions.
 
+Bug fixes:
+
+* Journald support works on Python 3.
+
+
 0.9.0
 ^^^^^
 
