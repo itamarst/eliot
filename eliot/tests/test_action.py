@@ -1274,7 +1274,8 @@ def make_error_extraction_tests(get_messages):
                 pass
             extract_fields_for_failures(MyException,
                                         lambda e: {"key": e.args[0]})
-            [message] = get_messages(MyException("a value"))
+            exception = MyException("a value")
+            [message] = get_messages(exception)
             assertContainsFields(self, message, {"key": "a value"})
 
         def test_subclass_falls_back_to_parent(self):
@@ -1360,5 +1361,31 @@ def get_failed_action_messages(exception):
     except exception.__class__:
         pass
     return logger.messages
-FailedActionExtractionTests = make_error_extraction_tests(
-    get_failed_action_messages)
+
+
+class FailedActionExtractionTests(make_error_extraction_tests(
+        get_failed_action_messages)):
+    """
+    Tests for error extraction in failed actions.
+    """
+    def test_regular_fields(self):
+        """
+        The normal failed action fields are still present when error
+        extraction is used.
+        """
+        class MyException(Exception):
+            pass
+        extract_fields_for_failures(MyException,
+                                    lambda e: {"key": e.args[0]})
+
+        exception = MyException("because")
+        messages = get_failed_action_messages(exception)
+        assertContainsFields(self, messages[0],
+                             {"task_uuid": "uuid",
+                              "task_level": [1, 1],
+                              "action_type": "sys:me",
+                              "action_status": "failed",
+                              "reason": "because",
+                              "exception":
+                              "eliot.tests.test_action.MyException"})
+

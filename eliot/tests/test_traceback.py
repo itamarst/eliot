@@ -19,6 +19,7 @@ from ..testing import (
     assertContainsFields, validateLogging, capture_logging,
     MemoryLogger,
 )
+from .._errors import extract_fields_for_failures
 from .test_action import make_error_extraction_tests
 
 
@@ -213,5 +214,28 @@ def get_traceback_messages(exception):
     except exception.__class__:
         writeTraceback(logger)
     return logger.messages
-TracebackExtractionTests = make_error_extraction_tests(get_traceback_messages)
+
+
+class TracebackExtractionTests(
+        make_error_extraction_tests(get_traceback_messages)):
+    """
+    Error extraction tests for tracebacks.
+    """
+    def test_regular_fields(self):
+        """
+        The normal traceback fields are still present when error
+        extraction is used.
+        """
+        class MyException(Exception):
+            pass
+        extract_fields_for_failures(MyException,
+                                    lambda e: {"key": e.args[0]})
+        exception = MyException("because")
+        messages = get_traceback_messages(exception)
+        assertContainsFields(self, messages[0],
+                             {"message_type": "eliot:traceback",
+                              "reason": exception,
+                              "exception": MyException})
+
+
 
