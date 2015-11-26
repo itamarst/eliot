@@ -1,5 +1,5 @@
-Logging Across Processes and Threads
-====================================
+Spanning Processes and Threads
+==============================
 
 Introduction
 ------------
