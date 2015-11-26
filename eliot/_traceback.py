@@ -68,10 +68,11 @@ def _get_traceback_no_io():
             None
         def getline(self, *args, **kwargs):
             return ""
+        def lazycache(self, *args, **kwargs):
+            return None
     module.linecache = FakeLineCache()
     return module
 _traceback_no_io = _get_traceback_no_io()
-
 
 
 def writeTraceback(logger=None, system=None):

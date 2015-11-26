@@ -7,6 +7,7 @@ What's New
 Features:
 
 * ``register_exception_extractor`` allows for more useful :ref:`logging of failed actions and tracebacks<extract errors>` by extracting additional fields from exceptions.
+* Python 3.5 support.
 
 Bug fixes:
 
