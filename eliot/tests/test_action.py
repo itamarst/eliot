@@ -33,7 +33,7 @@ from .._output import MemoryLogger
 from .._validation import ActionType, Field, _ActionSerializers
 from ..testing import assertContainsFields
 from .. import (
-    _action, add_destination, remove_destination, extract_fields_for_failures,
+    _action, add_destination, remove_destination, register_exception_extractor,
 )
 
 from .strategies import (
@@ -1272,8 +1272,8 @@ def make_error_extraction_tests(get_messages):
             """
             class MyException(Exception):
                 pass
-            extract_fields_for_failures(MyException,
-                                        lambda e: {"key": e.args[0]})
+            register_exception_extractor(MyException,
+                                         lambda e: {"key": e.args[0]})
             exception = MyException("a value")
             [message] = get_messages(exception)
             assertContainsFields(self, message, {"key": "a value"})
@@ -1290,8 +1290,8 @@ def make_error_extraction_tests(get_messages):
             class SubException(MyException):
                 pass
 
-            extract_fields_for_failures(MyException,
-                                        lambda e: {"key": e.args[0]})
+            register_exception_extractor(MyException,
+                                         lambda e: {"key": e.args[0]})
             [message] = get_messages(SubException("the value"))
             assertContainsFields(self, message, {"key": "the value"})
 
@@ -1309,10 +1309,10 @@ def make_error_extraction_tests(get_messages):
             class SubSubException(SubException):
                 pass
 
-            extract_fields_for_failures(MyException,
-                                        lambda e: {"parent": e.args[0]})
-            extract_fields_for_failures(SubException,
-                                        lambda e: {"child": e.args[0]})
+            register_exception_extractor(MyException,
+                                         lambda e: {"parent": e.args[0]})
+            register_exception_extractor(SubException,
+                                         lambda e: {"child": e.args[0]})
             [message] = get_messages(SubSubException("the value"))
             assertContainsFields(self, message, {"child": "the value"})
 
@@ -1326,7 +1326,7 @@ def make_error_extraction_tests(get_messages):
 
             def extract(e):
                 return e.nosuchattribute
-            extract_fields_for_failures(MyException, extract)
+            register_exception_extractor(MyException, extract)
 
             messages = get_failed_action_messages(MyException())
             assertContainsFields(self, messages[1],
@@ -1375,8 +1375,8 @@ class FailedActionExtractionTests(make_error_extraction_tests(
         """
         class MyException(Exception):
             pass
-        extract_fields_for_failures(MyException,
-                                    lambda e: {"key": e.args[0]})
+        register_exception_extractor(MyException,
+                                     lambda e: {"key": e.args[0]})
 
         exception = MyException("because")
         messages = get_failed_action_messages(exception)
@@ -1388,4 +1388,3 @@ class FailedActionExtractionTests(make_error_extraction_tests(
                               "reason": "because",
                               "exception":
                               "eliot.tests.test_action.MyException"})
-

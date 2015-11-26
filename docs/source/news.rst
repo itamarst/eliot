@@ -6,7 +6,7 @@ What's New
 
 Features:
 
-* ``extract_fields_for_exceptions`` allows for more useful :ref:`logging of failed actions<extract errors>` by extracting additional fields from exceptions.
+* ``register_exception_extractor`` allows for more useful :ref:`logging of failed actions and tracebacks<extract errors>` by extracting additional fields from exceptions.
 
 Bug fixes:
 

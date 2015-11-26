@@ -19,7 +19,7 @@ from ..testing import (
     assertContainsFields, validateLogging, capture_logging,
     MemoryLogger,
 )
-from .._errors import extract_fields_for_failures
+from .._errors import register_exception_extractor
 from .test_action import make_error_extraction_tests
 
 
@@ -228,14 +228,11 @@ class TracebackExtractionTests(
         """
         class MyException(Exception):
             pass
-        extract_fields_for_failures(MyException,
-                                    lambda e: {"key": e.args[0]})
+        register_exception_extractor(MyException,
+                                     lambda e: {"key": e.args[0]})
         exception = MyException("because")
         messages = get_traceback_messages(exception)
         assertContainsFields(self, messages[0],
                              {"message_type": "eliot:traceback",
                               "reason": exception,
                               "exception": MyException})
-
-
-

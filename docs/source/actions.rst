@@ -158,8 +158,8 @@ For example, the following registration means all failed actions that fail with 
        def __init__(self, code):
            self.code = code
 
-   from eliot import extract_fields_for_failures
-   extract_fields_for_failures(MyException, lambda e: {"code": e.code})
+   from eliot import register_exception_extractor
+   register_exception_extractor(MyException, lambda e: {"code": e.code})
 
 If no extraction function is registered for a class Eliot will look for registered functions for its base classes.
 By default Eliot will automatically extract fields from ``OSError``, ``IOError`` and other subclasses of Python's ``EnvironmentError``.

@@ -16,7 +16,7 @@ class ErrorExtraction(object):
     def __init__(self):
         self.registry = {}
 
-    def extract_fields_for_failures(self, exception_class, extractor):
+    def register_exception_extractor(self, exception_class, extractor):
         """
         Register a function that converts exceptions to fields.
 
@@ -50,7 +50,8 @@ class ErrorExtraction(object):
         return {}
 
 _error_extraction = ErrorExtraction()
-extract_fields_for_failures = _error_extraction.extract_fields_for_failures
+register_exception_extractor = _error_extraction.register_exception_extractor
+get_fields_for_exception = _error_extraction.get_fields_for_exception
 
 # Default handler for OSError and IOError by registered EnvironmentError:
-extract_fields_for_failures(EnvironmentError, lambda e: {"errno": e.errno})
+register_exception_extractor(EnvironmentError, lambda e: {"errno": e.errno})
