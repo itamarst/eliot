@@ -26,7 +26,7 @@ Generating logs
 
 The following example demonstrates how to enable ``journald`` output.
 
-.. literalinclude:: ../../examples/journald.py
+.. literalinclude:: ../../../examples/journald.py
 
 
 Querying logs

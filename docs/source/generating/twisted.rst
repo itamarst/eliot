@@ -15,7 +15,7 @@ Non-blocking Destinations
 This is useful because it keeps the Twisted reactor from blocking, e.g. if you're writing to a log file and the hard drive is overloaded.
 ``ThreadedWriter`` is a Twisted ``Service`` and starting it will call ``add_destination`` for you and stopping it will call ``remove_destination``; there is no need to call those directly.
 
-.. literalinclude:: ../../examples/logfile.py
+.. literalinclude:: ../../../examples/logfile.py
 
 If you want log rotation you can pass in an ``eliot.FileDestination`` wrapping one of the classes from `twisted.python.logfile`_ as the destination file.
 
