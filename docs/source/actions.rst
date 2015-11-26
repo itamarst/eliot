@@ -140,26 +140,3 @@ You can add fields to both the start message and the success message of an actio
 
 If you want to include some extra information in case of failures beyond the exception you can always log a regular message with that information.
 Since the message will be recorded inside the context of the action its information will be clearly tied to the result of the action by the person (or code!) reading the logs later on.
-
-
-.. _extract errors:
-
-Error Handling
---------------
-
-When an action fails with an exception a failed action message is logged.
-You can customize which fields are included in this message by registering a callable that converts exceptions into fields.
-
-For example, the following registration means all failed actions that fail with a ``MyException`` will have a ``code`` field in the action end message:
-
-.. code-block:: python
-
-   class MyException(Exception):
-       def __init__(self, code):
-           self.code = code
-
-   from eliot import register_exception_extractor
-   register_exception_extractor(MyException, lambda e: {"code": e.code})
-
-If no extraction function is registered for a class Eliot will look for registered functions for its base classes.
-By default Eliot will automatically extract fields from ``OSError``, ``IOError`` and other subclasses of Python's ``EnvironmentError``.
