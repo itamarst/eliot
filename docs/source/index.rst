@@ -28,11 +28,11 @@ Contents:
 
 .. toctree::
    introduction
+   news
    generating/index
    outputting/index
    reading/index
    development
-   news
    :maxdepth: 2
 
 
