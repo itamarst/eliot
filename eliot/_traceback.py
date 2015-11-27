@@ -1,5 +1,6 @@
 """
-Logging of tracebacks and L{twisted.python.failure.Failure} instances.
+Logging of tracebacks and L{twisted.python.failure.Failure} instances,
+as well as common utilities for handling exception logging.
 """
 
 from __future__ import unicode_literals
@@ -14,8 +15,10 @@ from six import exec_
 from ._message import EXCEPTION_FIELD, REASON_FIELD
 from ._util import safeunicode
 from ._validation import MessageType, Field
+from ._errors import _error_extraction
 
-
+# The fields here are actually subset of what you might get in practice,
+# due to exception extraction, so don't rely on this for validation.
 TRACEBACK_MESSAGE = MessageType(
     "eliot:traceback",
     [Field(REASON_FIELD, safeunicode, "The exception's value."),
@@ -39,6 +42,8 @@ def _writeTracebackMessage(logger, typ, exception, traceback):
     """
     msg = TRACEBACK_MESSAGE(reason=exception, traceback=traceback,
                             exception=typ)
+    msg = msg.bind(**_error_extraction.get_fields_for_exception(
+        logger, exception))
     msg.write(logger)
 
 

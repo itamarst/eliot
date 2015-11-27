@@ -27,7 +27,7 @@ from ._message import (
     TASK_UUID_FIELD,
 )
 from ._util import safeunicode
-
+from ._errors import _error_extraction
 
 ACTION_STATUS_FIELD = 'action_status'
 ACTION_TYPE_FIELD = 'action_type'
@@ -333,7 +333,8 @@ class Action(object):
             if self._serializers is not None:
                 serializer = self._serializers.success
         else:
-            fields = {}
+            fields = _error_extraction.get_fields_for_exception(
+                self._logger, exception)
             fields[EXCEPTION_FIELD] = "%s.%s" % (exception.__class__.__module__,
                                              exception.__class__.__name__)
             fields[REASON_FIELD] = safeunicode(exception)

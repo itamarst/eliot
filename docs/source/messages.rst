@@ -47,21 +47,3 @@ New values will override ones on the base ``Message``, but ``bind()`` does not m
       msg = Message.new(key=123, value=u"hello")
       # And this one has fields key=123, value=u"other", extra=456
       msg2 = msg.bind(value=u"other", extra=456)
-
-
-Tracebacks
-----------
-
-You can also log tracebacks when your code hits an unexpected exception:
-
-.. code-block:: python
-
-    from eliot import write_traceback
-
-    class YourClass(object):
-
-        def run(self):
-            try:
-                 dosomething()
-            except:
-                 write_traceback()

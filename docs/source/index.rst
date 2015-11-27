@@ -31,6 +31,7 @@ Contents:
    messages
    output
    actions
+   errors
    threads
    types
    types-testing

@@ -19,6 +19,8 @@ from ..testing import (
     assertContainsFields, validateLogging, capture_logging,
     MemoryLogger,
 )
+from .._errors import register_exception_extractor
+from .test_action import make_error_extraction_tests
 
 
 class TracebackLoggingTests(TestCase):
@@ -200,3 +202,37 @@ class TracebackLoggingTests(TestCase):
             except:
                 writeFailure(Failure(), logger, "system")
             self.assertEqual(warnings[-1].category, DeprecationWarning)
+
+
+def get_traceback_messages(exception):
+    """
+    Given an exception instance generate a traceback Eliot message.
+    """
+    logger = MemoryLogger()
+    try:
+        raise exception
+    except exception.__class__:
+        writeTraceback(logger)
+    return logger.messages
+
+
+class TracebackExtractionTests(
+        make_error_extraction_tests(get_traceback_messages)):
+    """
+    Error extraction tests for tracebacks.
+    """
+    def test_regular_fields(self):
+        """
+        The normal traceback fields are still present when error
+        extraction is used.
+        """
+        class MyException(Exception):
+            pass
+        register_exception_extractor(MyException,
+                                     lambda e: {"key": e.args[0]})
+        exception = MyException("because")
+        messages = get_traceback_messages(exception)
+        assertContainsFields(self, messages[0],
+                             {"message_type": "eliot:traceback",
+                              "reason": exception,
+                              "exception": MyException})

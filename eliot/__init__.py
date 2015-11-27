@@ -9,6 +9,8 @@ from ._output import (
 )
 from ._validation import Field, fields, MessageType, ActionType
 from ._traceback import writeTraceback, writeFailure
+from ._errors import register_exception_extractor
+
 addDestination = Logger._destinations.add
 removeDestination = Logger._destinations.remove
 addGlobalFields = Logger._destinations.addGlobalFields
@@ -28,6 +30,7 @@ __all__ = ["Message", "writeTraceback", "writeFailure",
            "Field", "fields", "MessageType", "ActionType",
            "ILogger", "Logger", "MemoryLogger", "addDestination",
            "removeDestination", "addGlobalFields", "FileDestination",
+           "register_exception_extractor",
 
            # PEP 8 variants:
            "write_traceback", "write_failure", "start_action", "start_task",
