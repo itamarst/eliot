@@ -1,5 +1,5 @@
-Logging Errors and Exceptions
-=============================
+Errors and Exceptions
+=====================
 
 
 Exceptions and Tracebacks

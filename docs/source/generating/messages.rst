@@ -1,8 +1,8 @@
-Logging Messages and Tracebacks
-===============================
-
 Messages
---------
+========
+
+Basic usage
+-----------
 
 At its base, Eliot outputs structured messages composed of named fields.
 Eliot messages are typically serialized to JSON objects.

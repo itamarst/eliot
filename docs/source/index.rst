@@ -28,20 +28,11 @@ Contents:
 
 .. toctree::
    introduction
-   messages
-   output
-   actions
-   errors
-   threads
-   types
-   types-testing
-   reading
-   journald
-   elasticsearch
-   twisted
-   fields
-   development
    news
+   generating/index
+   outputting/index
+   reading/index
+   development
    :maxdepth: 2
 
 

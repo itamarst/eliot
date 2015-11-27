@@ -1,5 +1,5 @@
-Logging Actions and Tasks
-=========================
+Actions and Tasks
+=================
 
 Actions: A Start and a Finish
 -----------------------------
