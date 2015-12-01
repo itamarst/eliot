@@ -1353,14 +1353,16 @@ def get_failed_action_messages(exception):
 
     :return: Logged dictionaries from the exception failing an action.
     """
+    action_type = ActionType("sys:me", [], [])
     logger = MemoryLogger()
-    action = Action(logger, "uuid", TaskLevel(level=[1]), "sys:me")
+    action = action_type.as_task(logger=logger)
     try:
         with action:
             raise exception
     except exception.__class__:
         pass
-    return logger.messages
+    logger.validate()
+    return logger.messages[1:]
 
 
 class FailedActionExtractionTests(make_error_extraction_tests(
@@ -1381,8 +1383,7 @@ class FailedActionExtractionTests(make_error_extraction_tests(
         exception = MyException("because")
         messages = get_failed_action_messages(exception)
         assertContainsFields(self, messages[0],
-                             {"task_uuid": "uuid",
-                              "task_level": [1, 1],
+                             {"task_level": [2],
                               "action_type": "sys:me",
                               "action_status": "failed",
                               "reason": "because",

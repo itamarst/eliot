@@ -17,8 +17,6 @@ from ._util import safeunicode
 from ._validation import MessageType, Field
 from ._errors import _error_extraction
 
-# The fields here are actually subset of what you might get in practice,
-# due to exception extraction, so don't rely on this for validation.
 TRACEBACK_MESSAGE = MessageType(
     "eliot:traceback",
     [Field(REASON_FIELD, safeunicode, "The exception's value."),
@@ -27,7 +25,9 @@ TRACEBACK_MESSAGE = MessageType(
            lambda typ: "%s.%s" % (typ.__module__, typ.__name__),
            "The exception type's FQPN.")],
     "An unexpected exception indicating a bug.")
-
+# The fields here are actually subset of what you might get in practice,
+# due to exception extraction, so we hackily modify the serializer:
+TRACEBACK_MESSAGE._serializer.allow_additional_fields = True
 
 
 def _writeTracebackMessage(logger, typ, exception, traceback):

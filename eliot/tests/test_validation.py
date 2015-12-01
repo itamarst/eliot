@@ -669,7 +669,6 @@ class ActionTypeStartMessage(TestCase, ActionTypeTestsMixin):
         return actionType._serializers.start
 
 
-
 class ActionTypeSuccessMessage(TestCase, ActionTypeTestsMixin):
     """
     Tests for L{ActionType} validation of action success messages.
@@ -702,10 +701,20 @@ class ActionTypeFailureMessage(TestCase, ActionTypeTestsMixin):
                 "reason": "because",
                 }
 
-
     def getSerializer(self, actionType):
         return actionType._serializers.failure
 
+    def test_validateExtraField(self):
+        """
+        Additional fields (which can be added by exception extraction) don't
+        cause a validation failure for failed action messages.
+        """
+        actionType = self.actionType()
+        message = self.getValidMessage()
+        message.update(
+             {"task_level": "/", "task_uuid": "123", "timestamp": "xxx"})
+        message.update({"extra_field": "hello"})
+        self.getSerializer(actionType).validate(message)
 
 
 class ChildActionTypeStartMessage(TestCase):

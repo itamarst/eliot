@@ -1,6 +1,13 @@
 What's New
 ==========
 
+0.10.1
+^^^^^^
+
+Bug fixes:
+
+* Fixed regression in 0.10.0: fix validation of failed actions and tracebacks with extracted additional fields.
+
 0.10.0
 ^^^^^^
 
