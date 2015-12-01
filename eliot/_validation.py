@@ -205,8 +205,10 @@ class _MessageSerializer(object):
 
     @ivar fields: A C{dict} mapping a C{unicode} field name to the respective
         L{Field}.
+    @ivar allow_additional_fields: If true, additional fields don't cause
+        validation failure.
     """
-    def __init__(self, fields):
+    def __init__(self, fields, allow_additional_fields=False):
         keys = []
         for field in fields:
             if not isinstance(field, Field):
@@ -229,7 +231,7 @@ class _MessageSerializer(object):
                 raise ValueError(keys, "The field name %r is reserved for use "
                                  "by the logging framework" % (reserved,))
         self.fields = dict((field.key, field) for field in fields)
-
+        self.allow_additional_fields = allow_additional_fields
 
     def serialize(self, message):
         """
@@ -260,6 +262,10 @@ class _MessageSerializer(object):
             if key not in message:
                 raise ValidationError(message, "Field %r is missing" % (key,))
             field.validate(message[key])
+
+        if self.allow_additional_fields:
+            return
+        # Otherwise, additional fields are not allowed:
         fieldSet = set(self.fields) | set(RESERVED_FIELDS)
         for key in message:
             if key not in fieldSet:
@@ -397,9 +403,13 @@ class ActionType(object):
             actionTypeField, makeActionStatusField(FAILED_STATUS), REASON,
             EXCEPTION]
 
-        self._serializers = _ActionSerializers(_MessageSerializer(startFields),
-                                               _MessageSerializer(successFields),
-                                               _MessageSerializer(failureFields))
+        self._serializers = _ActionSerializers(
+            _MessageSerializer(startFields),
+            _MessageSerializer(successFields),
+            # Failed action messages can have extra fields from exception
+            # extraction:
+            _MessageSerializer(failureFields,
+                               allow_additional_fields=True))
 
 
     def __call__(self, logger=None, **fields):

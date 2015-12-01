@@ -213,7 +213,11 @@ def get_traceback_messages(exception):
         raise exception
     except exception.__class__:
         writeTraceback(logger)
-    return logger.messages
+    # MemoryLogger.validate() mutates messages:
+    # https://github.com/ClusterHQ/eliot/issues/243
+    messages = [message.copy() for message in logger.messages]
+    logger.validate()
+    return messages
 
 
 class TracebackExtractionTests(
