@@ -1,6 +1,13 @@
 What's New
 ==========
 
+0.11.0
+^^^^^^
+
+Features:
+
+* Eliot tasks can now more easily :ref:`span multiple threads <cross thread tasks>` using the new ``eliot.preserve_context`` API.
+
 0.10.1
 ^^^^^^
 
