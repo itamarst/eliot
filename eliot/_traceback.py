@@ -5,15 +5,12 @@ as well as common utilities for handling exception logging.
 
 from __future__ import unicode_literals
 
-import types
 import traceback
 import sys
 from warnings import warn
 
-from six import exec_
-
 from ._message import EXCEPTION_FIELD, REASON_FIELD
-from ._util import safeunicode
+from ._util import safeunicode, load_module
 from ._validation import MessageType, Field
 from ._errors import _error_extraction
 
@@ -57,12 +54,7 @@ def _get_traceback_no_io():
     """
     Return a version of L{traceback} that doesn't do I/O.
     """
-    module = types.ModuleType(str("_traceback_no_io"))
-    path = traceback.__file__
-    if path.endswith(".pyc") or path.endswith(".pyo"):
-        path = path[:-1]
-    with open(path) as f:
-        exec_(f.read(), module.__dict__, module.__dict__)
+    module = load_module(str("_traceback_no_io"), traceback)
     class FakeLineCache(object):
         def checkcache(self, *args, **kwargs):
             None

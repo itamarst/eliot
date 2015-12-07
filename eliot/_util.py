@@ -4,7 +4,9 @@ Utilities that don't go anywhere else.
 
 from __future__ import unicode_literals
 
-from six import text_type as unicode
+from types import ModuleType
+
+from six import exec_, text_type as unicode
 
 
 def safeunicode(o):
@@ -37,3 +39,22 @@ def saferepr(o):
     except:
         # Not much we can do about this...
         return "eliot: unknown, unicode() raised exception"
+
+
+def load_module(name, original_module):
+    """
+    Load a copy of a module, distinct from what you'd get if you imported
+    it directly.
+
+    @param str name: The name of the new module.
+    @param original_module: The original module we're recreating.
+
+    @return: A new, distinct module.
+    """
+    module = ModuleType(name)
+    path = original_module.__file__
+    if path.endswith(".pyc") or path.endswith(".pyo"):
+        path = path[:-1]
+    with open(path) as f:
+        exec_(f.read(), module.__dict__, module.__dict__)
+    return module

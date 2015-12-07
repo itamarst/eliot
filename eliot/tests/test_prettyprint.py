@@ -39,7 +39,7 @@ class FormattingTests(TestCase):
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0 -> /1/2
 2015-09-25 15:09:14Z
-  message_type: messagey
+  message_type: 'messagey'
   keys: [123, 456]
 """)
 
@@ -52,7 +52,7 @@ class FormattingTests(TestCase):
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
 2015-09-25 15:09:14Z
-  abc: def
+  abc: 'def'
   key: 1234
 """)
 
@@ -71,25 +71,9 @@ class FormattingTests(TestCase):
             """\
 8bc6ded2-446c-4b6d-abbc-4f21f1c9a7d8 -> /2/2/2/1
 2015-09-25 15:12:38Z
-  action_type: visited
-  action_status: started
-  place: Statue #1
-""")
-
-    def test_linebreaks_stripped(self):
-        """
-        Linebreaks are stripped from end of string values.
-        """
-        message = {"timestamp": 1443193754,
-                   "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
-                   "task_level": [1],
-                   "key": "hello\n\n\n"}
-        self.assertEqual(
-            pretty_format(message),
-            """\
-8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
-2015-09-25 15:09:14Z
-  key: hello
+  action_type: 'visited'
+  action_status: 'started'
+  place: 'Statue #1'
 """)
 
     def test_multi_line(self):
@@ -99,17 +83,53 @@ class FormattingTests(TestCase):
         message = {"timestamp": 1443193754,
                    "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
                    "task_level": [1],
-                   "key": "hello\nthere\nmonkeys!",
+                   "key": "hello\nthere\nmonkeys!\n",
                    "more": "stuff"}
         self.assertEqual(
             pretty_format(message),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
 2015-09-25 15:09:14Z
-  key: hello
-       there
-       monkeys!
-  more: stuff
+  key: 'hello
+     |  there
+     |  monkeys!
+     |  '
+  more: 'stuff'
+""")
+
+    def test_tabs(self):
+        """
+        Tabs are formatted as tabs, not quoted.
+        """
+        message = {"timestamp": 1443193754,
+                   "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
+                   "task_level": [1],
+                   "key": "hello\tmonkeys!"}
+        self.assertEqual(
+            pretty_format(message),
+            """\
+8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
+2015-09-25 15:09:14Z
+  key: 'hello	monkeys!'
+""")
+
+    def test_structured(self):
+        """
+        Structured field values (e.g. a dictionary) are formatted in a helpful
+        manner.
+        """
+        message = {"timestamp": 1443193754,
+                   "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
+                   "task_level": [1],
+                   "key": {"value": 123,
+                           "another": [1, 2, {"more": "data"}]}}
+        self.assertEqual(
+            pretty_format(message),
+            """\
+8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
+2015-09-25 15:09:14Z
+  key: {'another': [1, 2, {'more': 'data'}],
+     |  'value': 123}
 """)
 
 

@@ -4,19 +4,34 @@ API and command-line support for human-readable Eliot messages.
 
 from __future__ import unicode_literals
 
+import pprint
 from datetime import datetime
 from sys import stdin, stdout, argv
+
 from ._bytesjson import loads
 from ._message import (
     TIMESTAMP_FIELD, TASK_UUID_FIELD, TASK_LEVEL_FIELD, MESSAGE_TYPE_FIELD,
 )
 from ._action import ACTION_TYPE_FIELD, ACTION_STATUS_FIELD
+from ._util import load_module
 
 from six import text_type as unicode, PY2, PY3
 if PY3:
     # Ensure binary stdin, since we expect specifically UTF-8 encoded
     # messages, not platform-encoding messages.
     stdin = stdin.buffer
+
+
+# On Python 2 pprint formats unicode with u'' prefix, which is inconsistent
+# with Python 3 and not very nice to read. So we modify a copy to omit the u''.
+if PY2:
+    def _nicer_unicode_repr(o, original_repr=repr):
+        if isinstance(o, unicode):
+            return original_repr(o.encode("utf-8"))
+        else:
+            return original_repr(o)
+    pprint = load_module(b"unicode_pprint", pprint)
+    pprint.repr = _nicer_unicode_repr
 
 
 def pretty_format(message):
@@ -31,11 +46,13 @@ def pretty_format(message):
             MESSAGE_TYPE_FIELD, ACTION_TYPE_FIELD, ACTION_STATUS_FIELD}
 
     def add_field(previous, key, value):
-        value = unicode(value).rstrip("\n")
+        value = unicode(pprint.pformat(value, width=40)).replace(
+            "\\n", "\n ").replace("\\t", "\t")
         # Reindent second line and later to match up with first line's
         # indentation:
         lines = value.split("\n")
-        indent = " " * (2 + len(key) + 2)  # lines are "  <key>: <value>"
+        # indent lines are "  <key length>|  <value>"
+        indent = "{}| ".format(" " * (2 + len(key)))
         value = "\n".join([lines[0]] + [indent + l for l in lines[1:]])
         return "  %s: %s\n" % (key, value)
 
