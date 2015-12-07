@@ -95,7 +95,11 @@ def _main():
         stdout.write(_CLI_HELP)
         raise SystemExit()
     for line in stdin:
-        message = loads(line)
+        try:
+            message = loads(line)
+        except ValueError:
+            # Not JSON, skip this line:
+            continue
         result = pretty_format(message) + "\n"
         if PY2:
             result = result.encode("utf-8")
