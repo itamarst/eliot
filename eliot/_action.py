@@ -817,7 +817,7 @@ class TooManyCalls(Exception):
     This typically indicates a coding bug: the result of
     C{preserve_context} should only be called once, and
     C{preserve_context} should therefore be called each time you want to
-    pass pass the callable to a thread.
+    pass the callable to a thread.
     """
 
 
