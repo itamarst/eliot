@@ -25,15 +25,19 @@ from .._action import (
     Action, _ExecutionContext, currentAction, startTask, startAction,
     ACTION_STATUS_FIELD, ACTION_TYPE_FIELD, FAILED_STATUS, STARTED_STATUS,
     SUCCEEDED_STATUS, DuplicateChild, InvalidStartMessage, InvalidStatus,
-    TaskLevel, WrittenAction, WrongActionType, WrongTask, WrongTaskLevel)
+    TaskLevel, WrittenAction, WrongActionType, WrongTask, WrongTaskLevel,
+    TooManyCalls)
 from .._message import (
     EXCEPTION_FIELD, REASON_FIELD, TASK_LEVEL_FIELD, TASK_UUID_FIELD,
+    MESSAGE_TYPE_FIELD, Message,
 )
 from .._output import MemoryLogger
 from .._validation import ActionType, Field, _ActionSerializers
-from ..testing import assertContainsFields
+from ..testing import assertContainsFields, capture_logging
+from .._parse import Parser
 from .. import (
     _action, add_destination, remove_destination, register_exception_extractor,
+    preserve_context,
 )
 
 from .strategies import (
@@ -1389,3 +1393,62 @@ class FailedActionExtractionTests(make_error_extraction_tests(
                               "reason": "because",
                               "exception":
                               "eliot.tests.test_action.MyException"})
+
+
+
+class PreserveContextTests(TestCase):
+    """
+    Tests for L{preserve_context}.
+    """
+    def add(self, x, y):
+        """
+        Add two inputs.
+        """
+        Message.log(message_type="child")
+        return x + y
+
+    def test_no_context(self):
+        """
+        If C{preserve_context} is run outside an action context it just
+        returns the same function.
+        """
+        wrapped = preserve_context(self.add)
+        self.assertEqual(wrapped(2, 3), 5)
+
+    def test_with_context_calls_underlying(self):
+        """
+        If run inside an Eliot context, the result of C{preserve_context} is
+        the result of calling the underlying function.
+        """
+        with startAction(action_type="parent"):
+            wrapped = preserve_context(self.add)
+            self.assertEqual(wrapped(3, y=4), 7)
+
+    @capture_logging(None)
+    def test_with_context_preserves_context(self, logger):
+        """
+        If run inside an Eliot context, the result of C{preserve_context} runs
+        the wrapped function within a C{eliot:task} which is a child of
+        the original action.
+        """
+        with startAction(action_type="parent"):
+            wrapped = preserve_context(lambda: self.add(3, 4))
+        thread = Thread(target=wrapped)
+        thread.start()
+        thread.join()
+        [tree] = Parser.parse_stream(logger.messages)
+        root = tree.root()
+        self.assertEqual((root.action_type,
+                          root.children[0].action_type,
+                          root.children[0].children[0].contents[
+                              MESSAGE_TYPE_FIELD]),
+                         ("parent", "eliot:remote_task", "child"))
+
+    def test_callable_only_once(self):
+        """
+        The result of C{preserve_context} can only be called once.
+        """
+        with startAction(action_type="parent"):
+            wrapped = preserve_context(self.add)
+        wrapped(1, 2)
+        self.assertRaises(TooManyCalls, wrapped, 3, 4)
