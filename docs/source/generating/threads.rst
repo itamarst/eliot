@@ -8,6 +8,33 @@ In many applications we are interested in tasks that exist in more than just a s
 For example, one server may send a request to another server over a network and we would like to trace the combined operation across both servers' logs.
 To make this as easy as possible Eliot supports serializing task identifiers for transfer over the network (or between threads), allowing tasks to span multiple processes.
 
+.. _cross thread tasks:
+
+Cross-Thread Tasks
+------------------
+
+To trace actions across threads Eliot provides the ``eliot.preserve_context`` API.
+It takes a callable that is about to be passed to a thread constructor and preserves the current Eliot context, returning a new callable.
+This new callable should only be used, in the thread where it will run; it will restore the Eliot context and run the original function inside of it.
+For example:
+
+.. literalinclude:: ../../../examples/cross_thread.py
+
+Here's what the result is when run:
+
+.. code-block:: shell
+
+   $ python examples/cross_thread.py | eliot-tree
+   11a85c42-a13f-491c-ad44-c48b2efad0e3
+   +-- main_thread@1/started
+       +-- eliot:remote_task@2,1/started
+           +-- in_thread@2,2,1/started
+               |-- x: 3
+               `-- y: 4
+               +-- in_thread@2,2,2/succeeded
+                   |-- result: 7
+           +-- eliot:remote_task@2,3/succeeded
+       +-- main_thread@3/succeeded
 
 .. _cross process tasks:
 
