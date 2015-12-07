@@ -122,8 +122,7 @@ class FormattingTests(TestCase):
                    "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
                    "task_level": [1],
                    "key": {"value": 123,
-                           "another": [1, 2, {"more": "data"}]},
-        }
+                           "another": [1, 2, {"more": "data"}]}}
         self.assertEqual(
             pretty_format(message),
             """\
