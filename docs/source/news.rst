@@ -6,7 +6,7 @@ What's New
 
 Features:
 
-* ``eliot-prettyprint`` command line tool now pretty prints structured field values in a more useful manner.
+* ``eliot-prettyprint`` command line tool now pretty prints field values in a more informative manner.
 
 0.10.1
 ^^^^^^
