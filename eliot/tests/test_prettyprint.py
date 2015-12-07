@@ -124,18 +124,37 @@ class CommandLineTests(TestCase):
         result = check_output(["eliot-prettyprint", "--help"])
         self.assertEqual(result, _CLI_HELP.encode("utf-8"))
 
+    def write_and_read(self, lines):
+        """
+        Write the given lines to the command-line on stdin, return stdout.
+
+        @param lines: Sequences of lines to write, as bytes, and lacking
+            new lines.
+        @return: Unicode-decoded result of subprocess stdout.
+        """
+        process = Popen([b"eliot-prettyprint"], stdin=PIPE, stdout=PIPE)
+        process.stdin.write(b"".join(line + b"\n" for line in lines))
+        process.stdin.close()
+        return process.stdout.read().decode("utf-8")
+
     def test_output(self):
         """
         Lacking command-line arguments the process reads JSON lines from stdin
         and writes out a pretty-printed version.
         """
         messages = [SIMPLE_MESSAGE, UNTYPED_MESSAGE, SIMPLE_MESSAGE]
-        process = Popen([b"eliot-prettyprint"], stdin=PIPE, stdout=PIPE)
-        process.stdin.write(b"".join(
-            [dumps(message) + b"\n" for message in messages])
-        )
-        process.stdin.close()
-        stdout = process.stdout.read().decode("utf-8")
+        stdout = self.write_and_read(map(dumps, messages))
         self.assertEqual(
             stdout,
             "".join(pretty_format(message) + "\n" for message in messages))
+
+    def test_bad_message(self):
+        """
+        Unparseable lines are skipped.
+        """
+        lines = [dumps(SIMPLE_MESSAGE), b"NOT JSON!!", dumps(UNTYPED_MESSAGE)]
+        stdout = self.write_and_read(lines)
+        self.assertEqual(
+            stdout,
+            "".join(pretty_format(message) + "\n" for message in
+                    (SIMPLE_MESSAGE, UNTYPED_MESSAGE)))
