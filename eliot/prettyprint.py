@@ -34,6 +34,10 @@ if PY2:
     pprint.repr = _nicer_unicode_repr
 
 
+# Fields that all Eliot messages are expected to have:
+REQUIRED_FIELDS = {TASK_LEVEL_FIELD, TASK_UUID_FIELD, TIMESTAMP_FIELD}
+
+
 def pretty_format(message):
     """
     Convert a message dictionary into a human-readable string.
@@ -98,7 +102,10 @@ def _main():
         try:
             message = loads(line)
         except ValueError:
-            stdout.write("(Unparseable JSON, skipping...)\n\n")
+            stdout.write("Not JSON: {}\n".format(line))
+            continue
+        if REQUIRED_FIELDS - set(message.keys()):
+            stdout.write("Not an Eliot message: {}\n".format(line))
             continue
         result = pretty_format(message) + "\n"
         if PY2:

@@ -7,8 +7,10 @@ from __future__ import unicode_literals
 from unittest import TestCase
 from subprocess import check_output, Popen, PIPE
 
+from pyrsistent import pmap
+
 from .._bytesjson import dumps
-from ..prettyprint import pretty_format, _CLI_HELP
+from ..prettyprint import pretty_format, _CLI_HELP, REQUIRED_FIELDS
 
 
 SIMPLE_MESSAGE = {
@@ -168,13 +170,28 @@ class CommandLineTests(TestCase):
             stdout,
             "".join(pretty_format(message) + "\n" for message in messages))
 
-    def test_bad_message(self):
+    def test_not_json_message(self):
         """
-        Unparseable lines are skipped.
+        Non-JSON lines are not formatted.
         """
         lines = [dumps(SIMPLE_MESSAGE), b"NOT JSON!!", dumps(UNTYPED_MESSAGE)]
         stdout = self.write_and_read(lines)
         self.assertEqual(
             stdout,
-            "{}\n(Unparseable JSON, skipping...)\n\n{}\n".format(
+            "{}\nNot JSON: NOT JSON!!\n\n{}\n".format(
                 pretty_format(SIMPLE_MESSAGE), pretty_format(UNTYPED_MESSAGE)))
+
+    def test_missing_required_field(self):
+        """
+        Non-Eliot JSON messages are not formatted.
+        """
+        base = pmap(SIMPLE_MESSAGE)
+        messages = [dumps(dict(base.remove(field)))
+                    for field in REQUIRED_FIELDS] + [dumps(SIMPLE_MESSAGE)]
+        stdout = self.write_and_read(messages)
+        self.assertEqual(
+            stdout,
+            "{}{}\n".format(
+                "".join("Not an Eliot message: {}\n\n".format(msg)
+                        for msg in messages[:-1]),
+                pretty_format(SIMPLE_MESSAGE)))
