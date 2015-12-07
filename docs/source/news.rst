@@ -1,6 +1,13 @@
 What's New
 ==========
 
+0.11.0
+^^^^^^
+
+Features:
+
+* ``eliot-prettyprint`` command line tool now pretty prints structured field values in a more useful manner.
+
 0.10.1
 ^^^^^^
 
