@@ -8,7 +8,7 @@ Features:
 
 * Eliot tasks can now more easily :ref:`span multiple threads <cross thread tasks>` using the new ``eliot.preserve_context`` API.
 * ``eliot-prettyprint`` command line tool now pretty prints field values in a more informative manner.
-
+* ``eliot-prettyprint`` now handles non-JSON lines by skipping them rather than dying.
 
 0.10.1
 ^^^^^^
