@@ -827,7 +827,9 @@ def preserve_context(f):
     restore context and call given function when the resulting callable is
     run. This allows continuing the action context within a different thread.
 
-    The result should only be used once.
+    The result should only be used once, since it relies on
+    L{Action.serialize_task_id} whose results should only be deserialized
+    once.
 
     @param f: A callable.
 
@@ -838,17 +840,12 @@ def preserve_context(f):
     if action is None:
         return f
     task_id = action.serialize_task_id()
-    already_called = []
+    called = threading.Lock()
 
     def restore_eliot_context(*args, **kwargs):
-        # This mechanism for ensuring the result is only called once
-        # suffers from a race condition if multiple threads try to call
-        # the result at once. However, the goal here is a sanity check to
-        # catch bugs so as long as it works most of the time that is
-        # sufficient.
-        if already_called:
+        # Make sure the function has not already been called:
+        if not called.acquire(False):
             raise TooManyCalls(f)
-        already_called.append(True)
 
         with Action.continue_task(task_id=task_id):
             return f(*args, **kwargs)
