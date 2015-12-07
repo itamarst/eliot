@@ -597,7 +597,9 @@ class StartActionAndTaskTests(TestCase):
         resulting L{Action}.
         """
         logger = MemoryLogger()
-        serializers = _ActionSerializers(None, None, None)
+        serializers = _ActionSerializers(start=None,
+                                         success=None,
+                                         failure=None)
         action = startTask(logger, "sys:do", serializers)
         self.assertIs(action._serializers, serializers)
 
@@ -608,7 +610,9 @@ class StartActionAndTaskTests(TestCase):
         resulting L{Action}.
         """
         logger = MemoryLogger()
-        serializers = _ActionSerializers(None, None, None)
+        serializers = _ActionSerializers(start=None,
+                                         success=None,
+                                         failure=None)
         action = startAction(logger, "sys:do", serializers)
         self.assertIs(action._serializers, serializers)
 

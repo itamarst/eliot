@@ -5,8 +5,9 @@ Utilities to aid unit testing L{eliot} and code that uses it.
 from __future__ import unicode_literals
 
 from unittest import SkipTest
-from collections import namedtuple
 from functools import wraps
+
+from pyrsistent import PClass, field
 
 from ._action import (
     ACTION_STATUS_FIELD,
@@ -56,8 +57,7 @@ def assertContainsFields(test, message, fields):
 
 
 
-class LoggedAction(namedtuple(
-        "LoggedAction", "startMessage endMessage children")):
+class LoggedAction(PClass):
     """
     An action whose start and finish messages have been logged.
 
@@ -70,6 +70,14 @@ class LoggedAction(namedtuple(
     @ivar children: A C{list} of direct child L{LoggedMessage} and
         L{LoggedAction} instances.
     """
+    startMessage = field(mandatory=True)
+    endMessage = field(mandatory=True)
+    children = field(mandatory=True)
+
+    def __new__(cls, startMessage, endMessage, children):
+        return PClass.__new__(cls, startMessage=startMessage,
+                              endMessage=endMessage, children=children)
+
     @property
     def start_message(self):
         return self.startMessage
@@ -193,12 +201,17 @@ class LoggedAction(namedtuple(
 
 
 
-class LoggedMessage(namedtuple("LoggedMessage", "message")):
+class LoggedMessage(PClass):
     """
     A message that has been logged.
 
     @ivar message: A C{dict}, the message contents.
     """
+    message = field(mandatory=True)
+
+    def __new__(cls, message):
+        return PClass.__new__(cls, message=message)
+
     @classmethod
     def ofType(klass, messages, messageType):
         """

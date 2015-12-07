@@ -41,8 +41,6 @@ setup(
         "six",
         # Internal code documentation:
         "zope.interface",
-        # Struct-like objects:
-        "characteristic",
         # Persistent objects for Python:
         "pyrsistent >= 0.11.8",  # version with multi-type pvector/pmap_field
     ],
