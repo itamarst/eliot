@@ -808,3 +808,45 @@ def startTask(logger=None, action_type=u"", _serializers=None, **fields):
                     _serializers)
     action._start(fields)
     return action
+
+
+class TooManyCalls(Exception):
+    """
+    The callable was called more than once.
+
+    This typically indicates a coding bug: the result of
+    C{preserve_context} should only be called once, and
+    C{preserve_context} should therefore be called each time you want to
+    pass the callable to a thread.
+    """
+
+
+def preserve_context(f):
+    """
+    Package up the given function with the current Eliot context, and then
+    restore context and call given function when the resulting callable is
+    run. This allows continuing the action context within a different thread.
+
+    The result should only be used once, since it relies on
+    L{Action.serialize_task_id} whose results should only be deserialized
+    once.
+
+    @param f: A callable.
+
+    @return: One-time use callable that calls given function in context of
+        a child of current Eliot action.
+    """
+    action = currentAction()
+    if action is None:
+        return f
+    task_id = action.serialize_task_id()
+    called = threading.Lock()
+
+    def restore_eliot_context(*args, **kwargs):
+        # Make sure the function has not already been called:
+        if not called.acquire(False):
+            raise TooManyCalls(f)
+
+        with Action.continue_task(task_id=task_id):
+            return f(*args, **kwargs)
+    return restore_eliot_context

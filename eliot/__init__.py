@@ -3,7 +3,7 @@ Eliot: Logging for Complex & Distributed Systems.
 """
 # Expose the public API:
 from ._message import Message
-from ._action import startAction, startTask, Action
+from ._action import startAction, startTask, Action, preserve_context
 from ._output import (
     ILogger, Logger, MemoryLogger, to_file, FileDestination,
 )
@@ -26,7 +26,7 @@ add_global_fields = addGlobalFields
 
 
 __all__ = ["Message", "writeTraceback", "writeFailure",
-           "startAction", "startTask", "Action",
+           "startAction", "startTask", "Action", "preserve_context",
            "Field", "fields", "MessageType", "ActionType",
            "ILogger", "Logger", "MemoryLogger", "addDestination",
            "removeDestination", "addGlobalFields", "FileDestination",
