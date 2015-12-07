@@ -102,10 +102,11 @@ def _main():
         try:
             message = loads(line)
         except ValueError:
-            stdout.write("Not JSON: {}\n".format(line))
+            stdout.write("Not JSON: {}\n\n".format(line.rstrip(b"\n")))
             continue
         if REQUIRED_FIELDS - set(message.keys()):
-            stdout.write("Not an Eliot message: {}\n".format(line))
+            stdout.write("Not an Eliot message: {}\n\n".format(
+                line.rstrip(b"\n")))
             continue
         result = pretty_format(message) + "\n"
         if PY2:

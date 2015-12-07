@@ -157,7 +157,9 @@ class CommandLineTests(TestCase):
         process = Popen([b"eliot-prettyprint"], stdin=PIPE, stdout=PIPE)
         process.stdin.write(b"".join(line + b"\n" for line in lines))
         process.stdin.close()
-        return process.stdout.read().decode("utf-8")
+        result = process.stdout.read().decode("utf-8")
+        process.stdout.close()
+        return result
 
     def test_output(self):
         """
@@ -174,12 +176,14 @@ class CommandLineTests(TestCase):
         """
         Non-JSON lines are not formatted.
         """
-        lines = [dumps(SIMPLE_MESSAGE), b"NOT JSON!!", dumps(UNTYPED_MESSAGE)]
+        not_json = b"NOT JSON!!"
+        lines = [dumps(SIMPLE_MESSAGE), not_json, dumps(UNTYPED_MESSAGE)]
         stdout = self.write_and_read(lines)
         self.assertEqual(
             stdout,
-            "{}\nNot JSON: NOT JSON!!\n\n{}\n".format(
-                pretty_format(SIMPLE_MESSAGE), pretty_format(UNTYPED_MESSAGE)))
+            "{}\nNot JSON: {}\n\n{}\n".format(
+                pretty_format(SIMPLE_MESSAGE), str(not_json),
+                pretty_format(UNTYPED_MESSAGE)))
 
     def test_missing_required_field(self):
         """
