@@ -176,5 +176,5 @@ class CommandLineTests(TestCase):
         stdout = self.write_and_read(lines)
         self.assertEqual(
             stdout,
-            "".join(pretty_format(message) + "\n" for message in
-                    (SIMPLE_MESSAGE, UNTYPED_MESSAGE)))
+            "{}\n(Unparseable JSON, skipping...)\n\n{}\n".format(
+                pretty_format(SIMPLE_MESSAGE), pretty_format(UNTYPED_MESSAGE)))

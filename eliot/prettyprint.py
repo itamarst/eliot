@@ -98,7 +98,7 @@ def _main():
         try:
             message = loads(line)
         except ValueError:
-            # Not JSON, skip this line:
+            stdout.write("(Unparseable JSON, skipping...)\n\n")
             continue
         result = pretty_format(message) + "\n"
         if PY2:
