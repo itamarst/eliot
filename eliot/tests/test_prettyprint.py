@@ -7,8 +7,10 @@ from __future__ import unicode_literals
 from unittest import TestCase
 from subprocess import check_output, Popen, PIPE
 
+from pyrsistent import pmap
+
 from .._bytesjson import dumps
-from ..prettyprint import pretty_format, _CLI_HELP
+from ..prettyprint import pretty_format, _CLI_HELP, REQUIRED_FIELDS
 
 
 SIMPLE_MESSAGE = {
@@ -144,18 +146,56 @@ class CommandLineTests(TestCase):
         result = check_output(["eliot-prettyprint", "--help"])
         self.assertEqual(result, _CLI_HELP.encode("utf-8"))
 
+    def write_and_read(self, lines):
+        """
+        Write the given lines to the command-line on stdin, return stdout.
+
+        @param lines: Sequences of lines to write, as bytes, and lacking
+            new lines.
+        @return: Unicode-decoded result of subprocess stdout.
+        """
+        process = Popen([b"eliot-prettyprint"], stdin=PIPE, stdout=PIPE)
+        process.stdin.write(b"".join(line + b"\n" for line in lines))
+        process.stdin.close()
+        result = process.stdout.read().decode("utf-8")
+        process.stdout.close()
+        return result
+
     def test_output(self):
         """
         Lacking command-line arguments the process reads JSON lines from stdin
         and writes out a pretty-printed version.
         """
         messages = [SIMPLE_MESSAGE, UNTYPED_MESSAGE, SIMPLE_MESSAGE]
-        process = Popen([b"eliot-prettyprint"], stdin=PIPE, stdout=PIPE)
-        process.stdin.write(b"".join(
-            [dumps(message) + b"\n" for message in messages])
-        )
-        process.stdin.close()
-        stdout = process.stdout.read().decode("utf-8")
+        stdout = self.write_and_read(map(dumps, messages))
         self.assertEqual(
             stdout,
             "".join(pretty_format(message) + "\n" for message in messages))
+
+    def test_not_json_message(self):
+        """
+        Non-JSON lines are not formatted.
+        """
+        not_json = b"NOT JSON!!"
+        lines = [dumps(SIMPLE_MESSAGE), not_json, dumps(UNTYPED_MESSAGE)]
+        stdout = self.write_and_read(lines)
+        self.assertEqual(
+            stdout,
+            "{}\nNot JSON: {}\n\n{}\n".format(
+                pretty_format(SIMPLE_MESSAGE), str(not_json),
+                pretty_format(UNTYPED_MESSAGE)))
+
+    def test_missing_required_field(self):
+        """
+        Non-Eliot JSON messages are not formatted.
+        """
+        base = pmap(SIMPLE_MESSAGE)
+        messages = [dumps(dict(base.remove(field)))
+                    for field in REQUIRED_FIELDS] + [dumps(SIMPLE_MESSAGE)]
+        stdout = self.write_and_read(messages)
+        self.assertEqual(
+            stdout,
+            "{}{}\n".format(
+                "".join("Not an Eliot message: {}\n\n".format(msg)
+                        for msg in messages[:-1]),
+                pretty_format(SIMPLE_MESSAGE)))
