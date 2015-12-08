@@ -7,8 +7,9 @@ from __future__ import unicode_literals, absolute_import
 import sys
 import json as pyjson
 
-from characteristic import attributes
 from six import text_type as unicode, PY3
+
+from pyrsistent import PClass, field
 
 from . import _bytesjson as slow_json
 if PY3:
@@ -340,8 +341,7 @@ class MemoryLogger(object):
 
 
 
-@attributes(["file"])
-class FileDestination(object):
+class FileDestination(PClass):
     """
     Callable that writes JSON messages to a file.
 
@@ -355,23 +355,27 @@ class FileDestination(object):
 
     @ivar _linebreak: C{"\n"} as either bytes or unicode.
     """
+    file = field(mandatory=True)
+    _dumps = field(mandatory=True)
+    _linebreak = field(mandatory=True)
 
-    def __init__(self):
+    def __new__(cls, file):
         unicodeFile = False
         if PY3:
             try:
-                self.file.write(b"")
+                file.write(b"")
             except TypeError:
                 unicodeFile = True
 
         if unicodeFile:
             # On Python 3 native json module outputs unicode:
-            self._dumps = pyjson.dumps
-            self._linebreak = u"\n"
+            _dumps = pyjson.dumps
+            _linebreak = u"\n"
         else:
-            self._dumps = fast_json.dumps
-            self._linebreak = b"\n"
-
+            _dumps = fast_json.dumps
+            _linebreak = b"\n"
+        return PClass.__new__(
+            cls, file=file, _dumps=_dumps, _linebreak=_linebreak)
 
     def __call__(self, message):
         """

@@ -7,10 +7,10 @@ although in theory it could be done then as well.
 
 from __future__ import unicode_literals
 
-from collections import namedtuple
-
 import six
 unicode = six.text_type
+
+from pyrsistent import PClass, field as pyrsistent_field
 
 from ._message import (
     Message,
@@ -333,12 +333,13 @@ class MessageType(object):
 
 
 
-class _ActionSerializers(namedtuple("_ActionSerializers",
-                                    ["start", "success", "failure"])):
+class _ActionSerializers(PClass):
     """
     Serializers for the three action messages: start, success and failure.
     """
-
+    start = pyrsistent_field(mandatory=True)
+    success = pyrsistent_field(mandatory=True)
+    failure = pyrsistent_field(mandatory=True)
 
 
 class ActionType(object):
@@ -404,12 +405,12 @@ class ActionType(object):
             EXCEPTION]
 
         self._serializers = _ActionSerializers(
-            _MessageSerializer(startFields),
-            _MessageSerializer(successFields),
+            start=_MessageSerializer(startFields),
+            success=_MessageSerializer(successFields),
             # Failed action messages can have extra fields from exception
             # extraction:
-            _MessageSerializer(failureFields,
-                               allow_additional_fields=True))
+            failure=_MessageSerializer(failureFields,
+                                       allow_additional_fields=True))
 
 
     def __call__(self, logger=None, **fields):
