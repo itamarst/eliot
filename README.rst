@@ -1,10 +1,6 @@
 Eliot: Logging for Complex & Distributed Systems
 ================================================
 
-.. image:: https://coveralls.io/repos/ClusterHQ/eliot/badge.png?branch=master
-           :target: https://coveralls.io/r/ClusterHQ/eliot
-           :alt: Coveralls test coverage information
-
 .. image:: https://travis-ci.org/ClusterHQ/eliot.png?branch=master
            :target: http://travis-ci.org/ClusterHQ/eliot
            :alt: Build Status
@@ -26,7 +22,7 @@ Features:
 * Excellent support for unit testing your code's logging.
 * Optional Twisted support.
 * Native journald support, easily usable by Logstash/Elasticsearch.
-* Supports CPython 2.7, 3.3, 3.4, 3.5 and PyPy.
+* Supports CPython 2.7, 3.3, 3.4, 3.5, 3.6 and PyPy.
 
 .. _PEP 8: http://legacy.python.org/dev/peps/pep-0008/
 .. _Twisted: https://twistedmatrix.com/documents/current/core/development/policy/coding-standard.html

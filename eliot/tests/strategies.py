@@ -33,10 +33,10 @@ from .._message import (
     WrittenMessage)
 
 
-task_level_indexes = integers(min_value=1)
+task_level_indexes = integers(min_value=1, max_value=10)
 # Task levels can be arbitrarily deep, but in the wild rarely as much as 100.
 # Five seems a sensible average.
-task_level_lists = lists(task_level_indexes, min_size=1, average_size=5)
+task_level_lists = lists(task_level_indexes, min_size=1, max_size=6)
 task_levels = task_level_lists.map(lambda level: TaskLevel(level=level))
 
 
@@ -44,9 +44,9 @@ task_levels = task_level_lists.map(lambda level: TaskLevel(level=level))
 # a restricted alphabet so they're easier to read, and in general large
 # amount of randomness in label generation doesn't enhance our testing in
 # any way, since we don't parse type names or user field values.
-labels = text(average_size=3, min_size=1, alphabet="CGAT")
+labels = text(min_size=1, max_size=8, alphabet="CGAT")
 
-timestamps = floats(min_value=0)
+timestamps = floats(min_value=0, max_value=1000.0)
 
 message_core_dicts = fixed_dictionaries(
     dict(task_level=task_level_lists.map(pvector),
@@ -58,9 +58,9 @@ message_core_dicts = fixed_dictionaries(
 # much. These are reasonable values.
 message_data_dicts = dictionaries(
     keys=labels, values=labels,
-    # People don't normally put much more than twenty fields in their
+    # People don't normally put much more than ten fields in their
     # messages, surely?
-    average_size=10,
+    max_size=10,
 ).map(pmap)
 
 
@@ -159,7 +159,7 @@ written_actions = recursive(
     lambda children: builds(
         _make_written_action,
         start_message=start_action_messages,
-        child_messages=lists(children, average_size=5),
+        child_messages=lists(children, max_size=5),
         end_message_dict=builds(
             union, message_dicts, _end_action_fields) | none(),
     ),

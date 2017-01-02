@@ -8,7 +8,7 @@ from unittest import TestCase
 from threading import Thread
 from warnings import catch_warnings, simplefilter
 
-from hypothesis import assume, given, Settings
+from hypothesis import assume, given, settings, HealthCheck
 from hypothesis.strategies import (
     integers,
     lists,
@@ -226,7 +226,7 @@ class ActionTests(TestCase):
         self.assertEqual([child._logger, child._identification,
                           child._task_level],
                          [logger2, {"task_uuid": "unique",
-                          "action_type": "newsystem:newname"},
+                                    "action_type": "newsystem:newname"},
                           TaskLevel(level=[1])])
 
 
@@ -1195,8 +1195,8 @@ class WrittenActionTests(testtools.TestCase):
 
     # This test is slow, and when run under coverage on pypy on Travis won't
     # make the default of 5 examples. 1 is enough.
-    @given(start_action_messages, lists(written_messages | written_actions),
-           settings=Settings(min_satisfying_examples=1))
+    @given(start_action_messages, lists(written_messages | written_actions))
+    @settings(min_satisfying_examples=1, suppress_health_check=[HealthCheck.too_slow])
     def test_children(self, start_message, child_messages):
         """
         We can construct a L{WrittenAction} with child messages. These messages
