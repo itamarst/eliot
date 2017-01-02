@@ -7,7 +7,7 @@ Eliot: Logging for Complex & Distributed Systems
 
 Eliot is a Python logging system that outputs causal chains of actions happening within and across process boundaries: a logical trace of the system's operation.
 
-Eliot is released by `ClusterHQ`_ under the Apache 2.0 License.
+Eliot was created by ClusterHQ and is maintained by Itamar Turner-Trauring and others, under the Apache 2.0 License.
 Download from `PyPI`_, read the `documentation`_, file bugs at `Github`_.
 Need help? Join the ``#eliot`` IRC channel on ``irc.freenode.net``.
 
@@ -29,5 +29,4 @@ Features:
 .. _documentation: https://eliot.readthedocs.org/
 .. _Github: https://github.com/ClusterHQ/eliot
 .. _PyPI: https://pypi.python.org/pypi/eliot
-.. _ClusterHQ: https://clusterhq.com
 .. _eliot-tree: https://warehouse.python.org/project/eliot-tree/
