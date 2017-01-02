@@ -17,7 +17,7 @@ from pyrsistent import (
     field, PClass, optional, pmap_field, pvector_field, pvector,
 )
 
-from six import text_type as unicode
+from six import text_type as unicode, integer_types
 
 from ._message import (
     Message,
@@ -96,7 +96,7 @@ class TaskLevel(PClass):
         the second item in the task.
     """
 
-    level = pvector_field(int)
+    level = pvector_field(integer_types)
 
     # PClass really ought to provide this ordering facility for us:
     # tobgu/pyrsistent#45.
