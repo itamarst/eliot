@@ -79,7 +79,7 @@ def action_structures(draw):
     A Hypothesis strategy that creates a tree of L{ActionStructure} and
     L{unicode}.
     """
-    tree = draw(st.recursive(labels, st.lists, max_leaves=50))
+    tree = draw(st.recursive(labels, st.lists, max_leaves=20))
 
     def to_structure(tree_or_message):
         if isinstance(tree_or_message, list):
