@@ -16,12 +16,13 @@ install: pip install tox coverage coveralls
 
 script:
   - tox
+  # Coverage reporting is disabled for now since it conflicts with Hypothesis usage.
   # Combine all the coverage reports from the different tox envs:
-  - coverage combine
-  - coverage report --show-missing
+  #- coverage combine
+  #- coverage report --show-missing
 
-after_success:
-  - coveralls
+#after_success:
+#  - coveralls
 
 notifications:
     email: false

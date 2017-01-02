@@ -1,10 +1,6 @@
 Eliot: Logging for Complex & Distributed Systems
 ================================================
 
-.. image:: https://coveralls.io/repos/ClusterHQ/eliot/badge.png?branch=master
-           :target: https://coveralls.io/r/ClusterHQ/eliot
-           :alt: Coveralls test coverage information
-
 .. image:: https://travis-ci.org/ClusterHQ/eliot.png?branch=master
            :target: http://travis-ci.org/ClusterHQ/eliot
            :alt: Build Status
