@@ -223,6 +223,26 @@ class DeferredContextTests(TestCase):
                               "action_type": "sys:me",
                               "action_status": "succeeded"})
 
+    def test_addActionFinishSuccessResult(self):
+        """
+        When C{result_field} is passed to L{DeferredContext.addActionFinish}
+        and the L{Deferred} fires successfully, the result of the deferred
+        is logged in the named field.
+        """
+        d = Deferred()
+        logger = MemoryLogger()
+        action = Action(logger, "uuid", TaskLevel(level=[1]), "sys:me")
+        with action.context():
+            DeferredContext(d).addActionFinish(result_field="result_key")
+        result = object()
+        d.callback(result)
+        assertContainsFields(self, logger.messages[0],
+                             {"task_uuid": "uuid",
+                              "task_level": [1, 1],
+                              "action_type": "sys:me",
+                              "result_key": result,
+                              "action_status": "succeeded"})
+
 
     def test_addActionFinishSuccessPassThrough(self):
         """
