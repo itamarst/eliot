@@ -835,6 +835,13 @@ class ActionTypeTests(TestCase):
         self.assertEqual(actionType.description, "")
 
 
+    def test_asTaskDefaultLogger(self):
+        """
+        L{ActionType.asTask} doesn't require passing in a logger.
+        """
+        actionType = self.actionType()
+        actionType.asTask(key=5)
+
 
 class EndToEndValidationTests(TestCase):
     """
