@@ -786,19 +786,19 @@ class ActionTypeTests(TestCase):
         self.assertEqual(ActionType._startAction, startAction)
 
 
-    def test_asTask(self):
+    def test_as_task(self):
         """
-        L{ActionType.asTask} returns the result of calling C{self._startTask}.
+        L{ActionType.as_task} returns the result of calling C{self._startTask}.
         """
         actionType = self.actionType()
         actionType._startTask = lambda *args, **kwargs: 1234
-        result = actionType.asTask(object())
+        result = actionType.as_task(object())
         self.assertEqual(result, 1234)
 
 
-    def test_asTaskArguments(self):
+    def test_as_taskArguments(self):
         """
-        L{ActionType.asTask} calls C{self._startTask} with the logger,
+        L{ActionType.as_task} calls C{self._startTask} with the logger,
         action type and passed in fields.
         """
         called = []
@@ -806,7 +806,7 @@ class ActionTypeTests(TestCase):
         actionType._startTask = lambda *args, **kwargs: called.append(
             (args, kwargs))
         logger = object()
-        actionType.asTask(logger, key=5)
+        actionType.as_task(logger, key=5)
         self.assertEqual(called, [((logger, "myapp:mysystem:myaction",
                                     actionType._serializers),
                                    {"key": 5})])
@@ -834,6 +834,13 @@ class ActionTypeTests(TestCase):
         actionType = ActionType("name", [], [])
         self.assertEqual(actionType.description, "")
 
+
+    def test_as_taskDefaultLogger(self):
+        """
+        L{ActionType.as_task} doesn't require passing in a logger.
+        """
+        actionType = self.actionType()
+        actionType.as_task(key=5)
 
 
 class EndToEndValidationTests(TestCase):

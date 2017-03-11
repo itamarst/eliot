@@ -447,7 +447,7 @@ class ActionType(object):
                                  **fields)
 
 
-    def asTask(self, logger, **fields):
+    def as_task(self, logger=None, **fields):
         """
         Start a new L{eliot.Action} of this type as a task (i.e. top-level
         action) with the given start fields.
@@ -455,7 +455,7 @@ class ActionType(object):
         See L{ActionType.__call__} for example of usage.
 
         @param logger: A L{eliot.ILogger} provider to which the action's
-            messages will be written.
+            messages will be written, or C{None} to use the default one.
 
         @param fields: Extra fields to add to the message.
 
@@ -465,8 +465,8 @@ class ActionType(object):
                                **fields)
 
 
-    # PEP 8 variant:
-    as_task = asTask
+    # Backwards compatible variant:
+    asTask = as_task
 
 
 

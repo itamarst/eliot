@@ -1,6 +1,13 @@
 What's New
 ==========
 
+0.13.0
+^^^^^^
+
+Features:
+
+* `ActionType.as_task` no longer requires a logger argument, matching the other APIs where passing in a logger is optional.
+
 0.12.0
 ^^^^^^
 
