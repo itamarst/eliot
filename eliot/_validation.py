@@ -447,7 +447,7 @@ class ActionType(object):
                                  **fields)
 
 
-    def asTask(self, logger=None, **fields):
+    def as_task(self, logger=None, **fields):
         """
         Start a new L{eliot.Action} of this type as a task (i.e. top-level
         action) with the given start fields.
@@ -465,8 +465,8 @@ class ActionType(object):
                                **fields)
 
 
-    # PEP 8 variant:
-    as_task = asTask
+    # Backwards compatible variant:
+    asTask = as_task
 
 
 
