@@ -140,3 +140,20 @@ You can add fields to both the start message and the success message of an actio
 
 If you want to include some extra information in case of failures beyond the exception you can always log a regular message with that information.
 Since the message will be recorded inside the context of the action its information will be clearly tied to the result of the action by the person (or code!) reading the logs later on.
+
+Getting the Current Action
+--------------------------
+
+Sometimes it can be useful to get the current action.
+For example, you might want to record the current task UUID for future reference, in a bug report for example.
+You might also want to pass around the ``Action`` explicitly, rather than relying on the implicit context.
+
+You can get the current ``Action`` by calling ``eliot.current_action()``.
+For example:
+
+.. code-block:: python
+
+   from eliot import current_action
+
+   def get_current_uuid():
+       return current_action().task_uuid
