@@ -6,7 +6,8 @@ What's New
 
 Features:
 
-* `ActionType.as_task` no longer requires a logger argument, matching the other APIs where passing in a logger is optional.
+* ``eliot.current_action()`` returns the current ``Action``, and ``Action.task_uuid`` is the task's UUID.
+* ``ActionType.as_task`` no longer requires a logger argument, matching the other APIs where passing in a logger is optional.
 
 0.12.0
 ^^^^^^

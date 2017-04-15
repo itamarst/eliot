@@ -3,7 +3,7 @@ Eliot: Logging for Complex & Distributed Systems.
 """
 # Expose the public API:
 from ._message import Message
-from ._action import startAction, startTask, Action, preserve_context
+from ._action import startAction, startTask, Action, preserve_context, currentAction as current_action
 from ._output import (
     ILogger, Logger, MemoryLogger, to_file, FileDestination,
 )
@@ -31,6 +31,7 @@ __all__ = ["Message", "writeTraceback", "writeFailure",
            "ILogger", "Logger", "MemoryLogger", "addDestination",
            "removeDestination", "addGlobalFields", "FileDestination",
            "register_exception_extractor",
+           "current_action",
 
            # PEP 8 variants:
            "write_traceback", "write_failure", "start_action", "start_task",

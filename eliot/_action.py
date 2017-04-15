@@ -235,6 +235,14 @@ class Action(object):
         self._finished = False
 
 
+    @property
+    def task_uuid(self):
+        """
+        @return str: the current action's task UUID.
+        """
+        return self._identification[TASK_UUID_FIELD]
+
+
     def serializeTaskId(self):
         """
         Create a unique identifier for the current location within the task.

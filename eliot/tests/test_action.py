@@ -53,6 +53,7 @@ from .strategies import (
     union,
     written_from_pmap,
 )
+import eliot
 
 
 class ExecutionContextTests(TestCase):
@@ -174,7 +175,7 @@ class ExecutionContextTests(TestCase):
         """
         self.assertIsInstance(_action._context, _ExecutionContext)
         self.assertEqual(_action.currentAction, _action._context.current)
-
+        self.assertEqual(eliot.current_action, _action._context.current)
 
 
 class ActionTests(TestCase):
@@ -194,6 +195,15 @@ class ActionTests(TestCase):
                               "action_type": "sys:thename",
                               "action_status": "started",
                               "key": "value"})
+
+
+    def test_task_uuid(self):
+        """
+        L{Action.task_uuid} return the task's UUID.
+        """
+        logger = MemoryLogger()
+        action = Action(logger, "unique", TaskLevel(level=[]), "sys:thename")
+        self.assertEqual(action.task_uuid, "unique")
 
 
     def test_startMessageSerialization(self):
