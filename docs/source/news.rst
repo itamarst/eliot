@@ -4,7 +4,7 @@ What's New
 1.0.0
 ^^^^^
 
-Crochet is stable, and has been for a while, so switching to v1.0.
+Eliot is stable, and has been for a while, so switching to v1.0.
 
 Features:
 
