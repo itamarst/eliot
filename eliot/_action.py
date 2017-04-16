@@ -414,7 +414,7 @@ class Action(object):
         """
         _context.push(self)
         try:
-            yield
+            yield self
         finally:
             _context.pop()
 

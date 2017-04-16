@@ -6,7 +6,8 @@ What's New
 
 Features:
 
-* ``eliot.current_action()`` returns the current ``Action``, and ``Action.task_uuid`` is the task's UUID.
+* New APIs: ``eliot.current_action()`` returns the current ``Action``, and ``Action.task_uuid`` is the task's UUID.
+* You can now do ``with YOUR_ACTION().context() as action:``, i.e. ``Action.context()`` context manager returns the ``Action`` instance.
 * ``ActionType.as_task`` no longer requires a logger argument, matching the other APIs where passing in a logger is optional.
 
 0.12.0
