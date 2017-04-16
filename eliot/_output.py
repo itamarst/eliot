@@ -123,6 +123,16 @@ class ILogger(Interface):
     """
     Write out message dictionaries to some destination.
     """
+    def bind(**arguments):
+        """
+		Bind given argument(s) to this logger.
+
+        Every message logged via this logger will include these arguments
+
+        @param **arguments: key/value pairs to bind to this logger
+		"""
+
+
     def write(dictionary, serializer=None):
         """
         Write a dictionary to the appropriate destination.
@@ -149,6 +159,11 @@ class Logger(object):
     """
     _destinations = Destinations()
 
+
+    def __init__(self):
+        self.binded_args = dict()
+
+
     def _safeUnicodeDictionary(self, dictionary):
         """
         Serialize a dictionary to a unicode string no matter what it contains.
@@ -169,11 +184,18 @@ class Logger(object):
             return saferepr(dictionary)
 
 
+    def bind(self, **arguments):
+        """
+        Bind given arguments to this logger
+        """
+        self.binded_args.update(arguments)
+
+
     def write(self, dictionary, serializer=None):
         """
         Serialize the dictionary, and write it to C{self._destinations}.
         """
-        dictionary = dictionary.copy()
+        dictionary = dict(self.binded_args, **dictionary.copy())
         try:
             if serializer is not None:
                 serializer.serialize(dictionary)
@@ -241,6 +263,7 @@ class MemoryLogger(object):
     """
     def __init__(self):
         self.reset()
+        self.binded_args = dict()
 
 
     def flushTracebacks(self, exceptionType):
@@ -269,11 +292,18 @@ class MemoryLogger(object):
     flush_tracebacks = flushTracebacks
 
 
+    def bind(self, **arguments):
+        """
+        Bind given arguments to this logger
+        """
+        self.binded_args.update(arguments)
+
+
     def write(self, dictionary, serializer=None):
         """
         Add the dictionary to list of messages.
         """
-        self.messages.append(dictionary)
+        self.messages.append(dict(self.binded_args, **dictionary))
         self.serializers.append(serializer)
         if serializer is TRACEBACK_MESSAGE._serializer:
             self.tracebackMessages.append(dictionary)

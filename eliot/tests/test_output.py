@@ -48,6 +48,17 @@ class MemoryLoggerTests(TestCase):
         logger.validate()
 
 
+    def test_write_binded(self):
+        """
+        Binded values are stored on a list.
+        """
+        logger = MemoryLogger()
+        logger.bind(a='b')
+        logger.write({'c': 1})
+        self.assertEqual(logger.messages, [{'a': 'b', 'c': 1}])
+        logger.validate()
+
+
     def test_notStringFieldKeys(self):
         """
         Field keys must be unicode or bytes; if not L{MemoryLogger.validate}
@@ -404,6 +415,19 @@ class LoggerTests(TestCase):
         d = {"hello": 1}
         logger.write(d)
         self.assertEqual(written, [d])
+
+
+    def test_write_binded(self):
+        """
+        Values added in L{Logger.bind} are are included in messages sent to
+        the L{Destinations} object.
+        """
+        logger, written = makeLogger()
+
+        logger.bind(hi=0)
+        d = {"hello": 1}
+        logger.write(d)
+        self.assertEqual(written, [{"hi": 0, "hello": 1}])
 
 
     def test_serializer(self):
