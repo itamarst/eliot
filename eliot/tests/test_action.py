@@ -354,6 +354,15 @@ class ActionTests(TestCase):
             self.assertIs(currentAction(), action)
 
 
+    def test_withContextReturnsaction(self):
+        """
+        L{Action.context().__enter__} returns the action.
+        """
+        action = Action(MemoryLogger(), "", TaskLevel(level=[]), "")
+        with action.context() as action2:
+            self.assertIs(action, action2)
+
+
     def test_withContextUnsetOnReturn(self):
         """
         L{Action.context().__exit__} unsets the action on successful block

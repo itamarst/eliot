@@ -83,10 +83,8 @@ Finally, you can unwrap the ``DeferredContext`` and access the wrapped ``Deferre
      from eliot import startAction
      from eliot.twisted import DeferredContext
 
-
      def go():
-         action = startAction(action_type=u"yourapp:subsystem:frob")
-         with action.context():
+         with startAction(action_type=u"your_type").context() as action:
              d = DeferredContext(Deferred())
              # gotResult(result, x=1) will be called in the context of the action:
              d.addCallback(gotResult, x=1)

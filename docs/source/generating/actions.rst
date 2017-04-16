@@ -110,6 +110,16 @@ Keep in mind that code within the context block that is run after the action is 
      else:
          action.finish()
 
+The ``context()`` method returns the ``Action``:
+
+.. code-block:: python
+
+     from eliot import start_action
+
+     with start_action(action_type=u"your_type").context() as action:
+         # do some stuff...
+         action.finish()
+
 You can also explicitly run a function within the action context:
 
 .. code-block:: python
