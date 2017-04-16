@@ -108,7 +108,7 @@ class MessageTests(TestCase):
 
     def test_logCallsDefaultLoggerWrite(self):
         """
-        L{Message.log} calls the given logger's C{write} method with a
+        L{Message.log} calls the default logger's C{write} method with a
         dictionary that is superset of the L{Message} contents.
         """
         messages = []

@@ -41,13 +41,10 @@ Here's an example demonstrating how we create a message type, bind some values a
 
     def deliver_pizzas(deliveries):
         person = get_free_delivery_person()
-        # Create a base message with some, but not all, of the fields filled in:
-        base_message = LOG_DELIVERY_SCHEDULED(name=person.name)
         for location, count in deliveries:
             delivery_database.insert(person, location, count)
-            # Bind additional message fields and then log the resulting message:
-            message = base_message.bind(count=count, location=location)
-            message.write()
+            LOG_DELIVERY_SCHEDULED.log(
+                name=person.name, count=count, location=location)
 
 Fields
 ------
@@ -124,12 +121,16 @@ Or you can even use existing ``Field`` instances with ``fields``:
     LOG_USER_REGISTRATION = MessageType(u"yourapp:authentication:registration",
                                         fields(USERNAME, age=int))
 
-Given a ``MessageType`` you can create a ``Message`` instance with the ``message_type`` field pre-populated.
+Given a ``MessageType`` you can create a ``Message`` instance with the ``message_type`` field pre-populated by calling the type.
 You can then use it the way you would normally use ``Message``, e.g. ``bind()`` or ``write()``.
+You can also just call ``MessageType.log()`` to write out a message directly:
 
 .. code-block:: python
 
-    LOG_USER_REGISTRATION(username=user, age=193).write()
+    # Simple version:
+    LOG_USER_REGISTRATION.log(username=user, age=193)
+    # Equivalent more complex API:
+    LOG_USER_REGISTRATION(username=user).bind(age=193).write()
 
 A ``Message`` created from a ``MessageType`` will automatically use the ``MessageType`` ``Field`` instances to serialize its fields.
 

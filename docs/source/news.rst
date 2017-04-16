@@ -1,11 +1,14 @@
 What's New
 ==========
 
-0.13.0
-^^^^^^
+1.0.0
+^^^^^
+
+Crochet is stable, and has been for a while, so switching to v1.0.
 
 Features:
 
+* New API: ``MessageType.log()``, the equivalent of ``Message.log()``, allows you to quickly create a new typed log message and write it out.
 * New APIs: ``eliot.current_action()`` returns the current ``Action``, and ``Action.task_uuid`` is the task's UUID.
 * You can now do ``with YOUR_ACTION().context() as action:``, i.e. ``Action.context()`` context manager returns the ``Action`` instance.
 * ``ActionType.as_task`` no longer requires a logger argument, matching the other APIs where passing in a logger is optional.

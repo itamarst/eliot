@@ -420,9 +420,9 @@ class MessageTypeTests(TestCase):
         """
         Return a L{MessageType} suitable for unit tests.
         """
-        return MessageType("myapp:mysystem",
-                           [Field.forTypes("key", [int], u""),
-                            Field.forTypes("value", [int], u"")],
+        return MessageType(u"myapp:mysystem",
+                           [Field.forTypes(u"key", [int], u""),
+                            Field.forTypes(u"value", [int], u"")],
                            u"A message type")
 
 
@@ -524,6 +524,20 @@ class MessageTypeTests(TestCase):
                          {"message_type": messageType.message_type,
                           "key": 2,
                           "value": 3})
+
+    def test_logCallsDefaultLoggerWrite(self):
+        """
+        L{MessageType.log} calls the given logger's C{write} method with a
+        dictionary that is superset of the L{Message} contents.
+        """
+        messages = []
+        add_destination(messages.append)
+        self.addCleanup(remove_destination, messages.append)
+        message_type = self.messageType()
+        message_type.log(key=1234, value=3)
+        self.assertEqual(messages[0][u"key"], 1234)
+        self.assertEqual(messages[0][u"value"], 3)
+        self.assertEqual(messages[0][u"message_type"], message_type.message_type)
 
 
     def test_description(self):

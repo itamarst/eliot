@@ -331,6 +331,13 @@ class MessageType(object):
         return Message(fields, self._serializer)
 
 
+    def log(self, **fields):
+        """
+        Write a new L{Message} of this type to the default L{Logger}.
+
+        The keyword arguments will become contents of the L{Message}.
+        """
+        self(**fields).write()
 
 
 class _ActionSerializers(PClass):
