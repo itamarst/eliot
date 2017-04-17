@@ -50,12 +50,17 @@ class DeferredContext(object):
 
     @ivar result: The wrapped L{Deferred}.
     """
-    def __init__(self, deferred):
+    def __init__(self, deferred, context=None):
         """
         @param deferred: L{twisted.internet.defer.Deferred} to wrap.
+        @param context: L{eliot.Action} to run callbacks in. If L{None},
+            then use current action.
         """
         self.result = deferred
-        self._action = currentAction()
+        if context is None:
+            self._action = currentAction()
+        else:
+            self._action = context
         self._finishAdded = False
         if self._action is None:
             raise RuntimeError(
