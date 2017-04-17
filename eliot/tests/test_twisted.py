@@ -10,7 +10,7 @@ from functools import wraps
 import json
 
 try:
-    from twisted.internet.defer import Deferred, succeed, fail
+    from twisted.internet.defer import Deferred, succeed, fail, inlineCallbacks
     from twisted.trial.unittest import TestCase
     from twisted.python.failure import Failure
     from twisted.python.log import LogPublisher, textFromEventDict
@@ -28,7 +28,7 @@ else:
 from .._action import startAction, currentAction, Action, TaskLevel
 from .._output import MemoryLogger, Logger
 from .._message import Message
-from ..testing import assertContainsFields
+from ..testing import assertContainsFields, capture_logging
 from .. import removeDestination, addDestination
 from .._traceback import writeTraceback
 from .common import FakeSys
@@ -60,6 +60,79 @@ def withActionContext(f):
         with action.context():
             return f(self)
     return test
+
+
+
+class inlineCallbacksTests(TestCase):
+    """
+    Tests for C{twisted.internet.defer.inlineCallbacks} decorated functions.
+    """
+    @capture_logging(None)
+    def test_maintainsContext(self, logger):
+        """
+        Context should be maintained
+        """
+        action1 = startAction(action_type='action1')
+        action2 = startAction(action_type='action2')
+
+        task1_id = action1.serializeTaskId().split('@')[0]
+        task2_id = action2.serializeTaskId().split('@')[0]
+
+        @inlineCallbacks
+        def doStuff(action, label, d1, d2):
+            with action.context():
+                Message.log(i='first', label=label)
+                yield d1
+                Message.log(i='second', label=label)
+                yield d2
+                Message.log(i='third', label=label)
+            action.finish()
+
+        a1 = Deferred()
+        a2 = Deferred()
+
+        b1 = Deferred()
+        b2 = Deferred()
+
+        r1 = doStuff(action1, 'action1', a1, a2)
+        r2 = doStuff(action2, 'action2', b1, b2)
+
+        # the order of these callbacks is important to the test
+        a1.callback(None)
+        b1.callback(None)
+        b2.callback(None)
+        a2.callback(None)
+
+        r1 = self.successResultOf(r1)
+        r2 = self.successResultOf(r2)
+
+        action1_messages = [x for x in logger.messages if x['task_uuid'] == task1_id]
+        action2_messages = [x for x in logger.messages if x['task_uuid'] == task2_id]
+
+        def props(x, names):
+            return tuple([x[name] for name in names])
+
+        inner1 = [props(x, ('i', 'label', 'task_uuid')) for x in action1_messages[1:3]]
+        inner2 = [props(x, ('i', 'label', 'task_uuid')) for x in action2_messages[1:3]]
+
+        self.assertEqual(inner1, [
+            ('first', 'action1', task1_id),
+            ('second', 'action1', task1_id),
+            ('third', 'action1', task1_id),
+        ])
+        self.assertEqual(inner2, [
+            ('first', 'action2', task2_id),
+            ('second', 'action2', task2_id),
+            ('third', 'action2', task2_id),
+        ])
+
+        # maybe superfluous
+        self.assertEqual(len(action1_messages), 5,
+            "Action1 should have 1 start, 3 middle, 1 finish messages: %r" % (
+                action1_messages,))
+        self.assertEqual(len(action2_messages), 5,
+            "Action2 should have 1 start, 3 middle, 1 finish messages: %r" % (
+                action2_messages,))
 
 
 
