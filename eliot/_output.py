@@ -11,7 +11,7 @@ from six import text_type as unicode, PY3
 
 from pyrsistent import PClass, field
 
-from . import _bytesjson as slow_json
+from . import _bytesjson as bytesjson
 from zope.interface import Interface, implementer
 
 from ._traceback import writeTraceback, TRACEBACK_MESSAGE
@@ -21,20 +21,6 @@ from ._message import (
     MESSAGE_TYPE_FIELD,
     REASON_FIELD, )
 from ._util import saferepr, safeunicode
-
-if PY3:
-    fast_json = slow_json
-else:
-    try:
-        # ujson has some issues, in particular it is far too lenient on bad
-        # inputs... but on the other hand it's much faster than built-in
-        # json module on CPython. So we use it until we come up with some
-        # better. We import built-in module for use by the validation code
-        # path, since we want to validate messages encode in all JSON
-        # encoders.
-        import ujson as fast_json
-    except ImportError:
-        import json as fast_json
 
 
 class _DestinationsSendError(Exception):
@@ -320,10 +306,8 @@ class MemoryLogger(object):
             if serializer is not None:
                 serializer.serialize(dictionary)
 
-            # Make sure we can be encoded with different JSON encoder, since
-            # ujson has different behavior in some cases:
-            fast_json.dumps(dictionary)
-            slow_json.dumps(dictionary)
+            bytesjson.dumps(dictionary)
+            pyjson.dumps(dictionary)
 
     def serialize(self):
         """
@@ -386,7 +370,7 @@ class FileDestination(PClass):
             _dumps = pyjson.dumps
             _linebreak = u"\n"
         else:
-            _dumps = fast_json.dumps
+            _dumps = bytesjson.dumps
             _linebreak = b"\n"
         return PClass.__new__(
             cls, file=file, _dumps=_dumps, _linebreak=_linebreak)
