@@ -6,6 +6,7 @@ Eliot: Logging for Complex & Distributed Systems
            :alt: Build Status
 
 Eliot is a Python logging system that outputs causal chains of actions happening within and across process boundaries: a logical trace of the system's operation.
+In particular, Eliot can be used to *generate* meaningful, useful logs; tools like Logstash and ElasticSearch are still necessary to aggregate and store logs.
 
 Eliot was originally created by ClusterHQ and is maintained by Itamar Turner-Trauring and others, under the Apache 2.0 License.
 Download from `PyPI`_, read the `documentation`_, file bugs at `Github`_.
