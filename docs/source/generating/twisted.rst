@@ -29,10 +29,10 @@ If you wish you can direct Eliot logs to Twisted's logging subsystem, if that is
 
 .. code-block:: python
 
-   from eliot import addDestination
+   from eliot import add_destination
    from eliot.twisted import TwistedDestination
 
-   addDestination(TwistedDestination())
+   add_destination(TwistedDestination())
 
 
 Trial Integration
@@ -71,10 +71,10 @@ To understand why, consider the following example:
 
 .. code-block:: python
 
-     from eliot import startAction
+     from eliot import start_action
 
      def go():
-         action = startAction(action_type=u"yourapp:subsystem:frob")
+         action = start_action(action_type=u"yourapp:subsystem:frob")
          with action:
              d = Deferred()
              d.addCallback(gotResult, x=1)
@@ -94,11 +94,11 @@ Finally, you can unwrap the ``DeferredContext`` and access the wrapped ``Deferre
 
 .. code-block:: python
 
-     from eliot import startAction
+     from eliot import start_action
      from eliot.twisted import DeferredContext
 
      def go():
-         with startAction(action_type=u"your_type").context() as action:
+         with start_action(action_type=u"your_type").context() as action:
              d = DeferredContext(Deferred())
              # gotResult(result, x=1) will be called in the context of the action:
              d.addCallback(gotResult, x=1)
