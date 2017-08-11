@@ -18,7 +18,7 @@ from six import PY3, PY2
 from zope.interface.verify import verifyClass
 
 from .._output import (
-    MemoryLogger, ILogger, Destinations, Logger, fast_json as json, to_file,
+    MemoryLogger, ILogger, Destinations, Logger, bytesjson as json, to_file,
     FileDestination, _DestinationsSendError)
 from .._validation import ValidationError, Field, _MessageSerializer
 from .._traceback import writeTraceback
