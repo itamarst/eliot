@@ -12,6 +12,16 @@ from six import text_type as unicode, PY3
 from pyrsistent import PClass, field
 
 from . import _bytesjson as slow_json
+from zope.interface import Interface, implementer
+
+from ._traceback import writeTraceback, TRACEBACK_MESSAGE
+from ._message import (
+    Message,
+    EXCEPTION_FIELD,
+    MESSAGE_TYPE_FIELD,
+    REASON_FIELD, )
+from ._util import saferepr, safeunicode
+
 if PY3:
     fast_json = slow_json
 else:
@@ -25,16 +35,6 @@ else:
         import ujson as fast_json
     except ImportError:
         import json as fast_json
-
-from zope.interface import Interface, implementer
-
-from ._traceback import writeTraceback, TRACEBACK_MESSAGE
-from ._message import (
-    Message,
-    EXCEPTION_FIELD,
-    MESSAGE_TYPE_FIELD,
-    REASON_FIELD, )
-from ._util import saferepr, safeunicode
 
 
 class _DestinationsSendError(Exception):
@@ -96,7 +96,7 @@ class Destinations(object):
         A destination should never ever throw an exception. Seriously.
         A destination should not mutate the dictionary it is given.
 
-        @param destination: A callable that takes message dictionaries,
+        @param destination: A callable that takes message dictionaries.
         """
         self._destinations.append(destination)
 
@@ -121,8 +121,8 @@ class ILogger(Interface):
         Write a dictionary to the appropriate destination.
 
         @param serializer: Either C{None}, or a
-            L{eliot._validation._MessageSerializer} which can be used to validate
-            this message.
+            L{eliot._validation._MessageSerializer} which can be used to
+            validate this message.
 
         @param dictionary: The message to write out. The given dictionary
              will not be mutated.
@@ -206,8 +206,8 @@ class UnflushedTracebacks(Exception):
     """
     The L{MemoryLogger} had some tracebacks logged which were not flushed.
 
-    This means either your code has a bug and logged an unexpected traceback. If
-    you expected the traceback then you will need to flush it using
+    This means either your code has a bug and logged an unexpected traceback.
+    If you expected the traceback then you will need to flush it using
     L{MemoryLogger.flushTracebacks}.
     """
 
@@ -240,8 +240,8 @@ class MemoryLogger(object):
         """
         Flush all logged tracebacks whose exception is of the given type.
 
-        This means they are expected tracebacks and should not cause the test to
-        fail.
+        This means they are expected tracebacks and should not cause the test
+        to fail.
 
         @param exceptionType: A subclass of L{Exception}.
 
@@ -318,8 +318,8 @@ class MemoryLogger(object):
         """
         Clear all logged messages.
 
-        Any logged tracebacks will also be cleared, and will therefore not cause
-        a test failure.
+        Any logged tracebacks will also be cleared, and will therefore not
+        cause a test failure.
 
         This is useful to ensure a logger is in a known state before testing
         logging of a specific code path.
