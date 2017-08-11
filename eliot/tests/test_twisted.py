@@ -12,7 +12,6 @@ try:
     from twisted.trial.unittest import TestCase
     from twisted.python.failure import Failure
     from twisted.logger import globalLogPublisher
-    from twisted.python import log as twlog
 except ImportError:
     # Make tests not run at all.
     TestCase = object
@@ -21,7 +20,7 @@ else:
     # logwriter.py causes a failure:
     from ..twisted import (
         DeferredContext, AlreadyFinished, _passthrough, redirectLogsForTrial,
-        _RedirectLogsForTrial
+        _RedirectLogsForTrial, TwistedDestination
     )
 
 from .._action import startAction, currentAction, Action, TaskLevel
@@ -461,6 +460,7 @@ class RedirectLogsForTrialTests(TestCase):
         @type programPath: L{str}
         """
         destination = _RedirectLogsForTrial(FakeSys([programPath], b""))()
+        self.assertIsInstance(destination, TwistedDestination)
         # If this was not added as destination, removing it will raise an
         # exception:
         try:
@@ -553,7 +553,24 @@ class RedirectLogsForTrialTests(TestCase):
         result = redirect()
         self.assertIs(result, None)
 
-    def redirectToTwisted(self):
+    def test_publicAPI(self):
+        """
+        L{redirectLogsForTrial} is an instance of L{_RedirectLogsForTrial}.
+        """
+        self.assertIsInstance(redirectLogsForTrial, _RedirectLogsForTrial)
+
+    def test_defaults(self):
+        """
+        By default L{redirectLogsForTrial} looks at L{sys.argv}.
+        """
+        self.assertEqual(redirectLogsForTrial._sys, sys)
+
+
+class TwistedDestinationTests(TestCase):
+    """
+    Tests for L{TwistedDestination}.
+    """
+    def redirect_to_twisted(self):
         """
         Redirect Eliot logs to Twisted.
 
@@ -568,13 +585,12 @@ class RedirectLogsForTrialTests(TestCase):
                                 event["eliot"]))
         globalLogPublisher.addObserver(got_event)
         self.addCleanup(globalLogPublisher.removeObserver, got_event)
-        destination = _RedirectLogsForTrial(
-            FakeSys(["trial"], b"")
-        )()
+        destination = TwistedDestination()
+        addDestination(destination)
         self.addCleanup(removeDestination, destination)
         return written
 
-    def redirectToList(self):
+    def redirect_to_list(self):
         """
         Redirect Eliot logs to a list.
 
@@ -591,8 +607,8 @@ class RedirectLogsForTrialTests(TestCase):
         """
         Regular eliot messages are pretty-printed to the given L{LogPublisher}.
         """
-        writtenToTwisted = self.redirectToTwisted()
-        written = self.redirectToList()
+        writtenToTwisted = self.redirect_to_twisted()
+        written = self.redirect_to_list()
         logger = Logger()
         Message.new(x=123, y=456).write(logger)
         self.assertEqual(
@@ -604,8 +620,8 @@ class RedirectLogsForTrialTests(TestCase):
         Traceback eliot messages are written to the given L{LogPublisher} with
         the traceback formatted for easier reading.
         """
-        writtenToTwisted = self.redirectToTwisted()
-        written = self.redirectToList()
+        writtenToTwisted = self.redirect_to_twisted()
+        written = self.redirect_to_list()
         logger = Logger()
 
         def raiser():
@@ -618,15 +634,3 @@ class RedirectLogsForTrialTests(TestCase):
         self.assertEqual(
             writtenToTwisted, [("critical", written[0])]
         )
-
-    def test_publicAPI(self):
-        """
-        L{redirectLogsForTrial} is an instance of L{_RedirectLogsForTrial}.
-        """
-        self.assertIsInstance(redirectLogsForTrial, _RedirectLogsForTrial)
-
-    def test_defaults(self):
-        """
-        By default L{redirectLogsForTrial} looks at L{sys.argv}.
-        """
-        self.assertEqual(redirectLogsForTrial._sys, sys)

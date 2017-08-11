@@ -22,6 +22,19 @@ If you want log rotation you can pass in an ``eliot.FileDestination`` wrapping o
 .. _twisted.python.logfile: https://twistedmatrix.com/documents/current/api/twisted.python.logfile.html
 
 
+``twisted.logger`` integration
+------------------------------
+
+If you wish you can direct Eliot logs to Twisted's logging subsystem, if that is the primary logging system you're using.
+
+.. code-block:: python
+
+   from eliot import addDestination
+   from eliot.twisted import TwistedDestination
+
+   addDestination(TwistedDestination())
+
+
 Trial Integration
 -----------------
 If you're using Twisted's ``trial`` program to run your tests you can redirect your Eliot logs to Twisted's logs by calling ``eliot.twisted.redirectLogsForTrial()``.
@@ -29,7 +42,8 @@ This function will automatically detect whether or not it is running under ``tri
 If it is then you will be able to read your Eliot logs in ``_trial_temp/test.log``, where ``trial`` writes out logs by default.
 If it is not running under ``trial`` it will not do anything.
 In addition calling it multiple times has the same effect as calling it once.
-As a result you can simply call it in your package's ``__init__.py`` and rely on it doing the right thing.
+
+The way you use it is by putting it in your package's ``__init__.py``: it will do the right thing and only redirect if you're using ``trial``.
 Take care if you are separately redirecting Twisted logs to Eliot; you should make sure not to call ``redirectLogsForTrial`` in that case so as to prevent infinite loops.
 
 

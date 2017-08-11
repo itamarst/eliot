@@ -4,6 +4,11 @@ What's New
 1.1.0
 ^^^^^
 
+Features:
+
+* ``eliot.twisted.TwistedDestination`` allows redirecting Eliot logs to ``twisted.logger``.
+  Thanks to Glyph Lefkowitz for the feature request.
+
 Misc:
 
 * Coding standard switched to PEP-8.

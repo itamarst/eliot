@@ -157,6 +157,31 @@ class DeferredContext(object):
         return self.result
 
 
+class TwistedDestination(object):
+    """
+    An Eliot logging destination that forwards logs to Twisted's logging.
+
+    Do not use if you're also redirecting Twisted's logs to Eliot, since then
+    you'll have an infinite loop.
+    """
+
+    def __init__(self):
+        self._logger = TwistedLogger(namespace="eliot")
+
+    def __call__(self, message):
+        """
+        Log an Eliot message to Twisted's log.
+
+        @param message: A rendered Eliot message.
+        @type message: L{dict}
+        """
+        if message.get("message_type") == "eliot:traceback":
+            method = self._logger.critical
+        else:
+            method = self._logger.info
+        method(format="Eliot message: {eliot}", eliot=message)
+
+
 class _RedirectLogsForTrial(object):
     """
     When called inside a I{trial} process redirect Eliot log messages to
@@ -164,6 +189,9 @@ class _RedirectLogsForTrial(object):
 
     This allows reading Eliot logs output by running unit tests with
     I{trial} in its normal log location: C{_trial_temp/test.log}.
+
+    The way you use it is by calling it a module level in some module that will
+    be loaded by trial, typically the top-level C{__init__.py} of your package.
 
     This function can usually be safely called in all programs since it will
     have no side-effects if used outside of trial. The only exception is you
@@ -190,21 +218,7 @@ class _RedirectLogsForTrial(object):
 
     def __init__(self, sys):
         self._sys = sys
-        self._logger = TwistedLogger(namespace="eliot")
         self._redirected = False
-
-    def _logEliotMessage(self, message):
-        """
-        Log an Eliot message to Twisted's log.
-
-        @param message: A rendered Eliot message.
-        @type message: L{dict}
-        """
-        if message.get("message_type") == "eliot:traceback":
-            method = self._logger.critical
-        else:
-            method = self._logger.info
-        method(format="Eliot message: {eliot}", eliot=message)
 
     def __call__(self):
         """
@@ -217,8 +231,9 @@ class _RedirectLogsForTrial(object):
             and not self._redirected
         ):
             self._redirected = True
-            addDestination(self._logEliotMessage)
-            return self._logEliotMessage
+            destination = TwistedDestination()
+            addDestination(destination)
+            return destination
 
 
 redirectLogsForTrial = _RedirectLogsForTrial(sys)
