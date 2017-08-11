@@ -824,7 +824,7 @@ class SerializationTests(TestCase):
         self.addCleanup(remove_destination, messages.append)
         Action.continueTask(task_id=taskId)
         assertContainsFields(
-            self, messages[0], {
+            self, messages[-1], {
                 "task_uuid": "uniq456",
                 "task_level": [3, 4, 1, 1],
                 "action_type": "eliot:remote_task",
@@ -948,8 +948,8 @@ class WrittenActionTests(testtools.TestCase):
     @given(start_action_messages)
     def test_from_single_start_message(self, message):
         """
-        A L{WrittenAction} can be constructed from a single "start" message. Such
-        an action inherits the C{action_type} of the start message, has no
+        A L{WrittenAction} can be constructed from a single "start" message.
+        Such an action inherits the C{action_type} of the start message, has no
         C{end_time}, and has a C{status} of C{STARTED_STATUS}.
         """
         action = WrittenAction.from_messages(message)
@@ -1021,8 +1021,8 @@ class WrittenActionTests(testtools.TestCase):
     @given(start_action_messages, message_dicts, integers(min_value=2))
     def test_different_task_uuid(self, start_message, end_message_dict, n):
         """
-        By definition, an action is either a top-level task or takes place within
-        such a task. If we try to assemble actions from messages with
+        By definition, an action is either a top-level task or takes place
+        within such a task. If we try to assemble actions from messages with
         differing task UUIDs, we raise an error.
         """
         assume(start_message.task_uuid != end_message_dict['task_uuid'])
@@ -1088,7 +1088,8 @@ class WrittenActionTests(testtools.TestCase):
 
     @given(start_action_messages, message_dicts, text(), integers(min_value=1))
     def test_action_type_mismatch(
-        self, start_message, end_message_dict, end_type, n):
+        self, start_message, end_message_dict, end_type, n
+    ):
         """
         The end message of an action must have the same C{ACTION_TYPE_FIELD} as
         the start message of an action. If we try to end an action with a
@@ -1111,8 +1112,8 @@ class WrittenActionTests(testtools.TestCase):
     @given(start_action_messages, message_dicts, integers(min_value=2))
     def test_successful_end(self, start_message, end_message_dict, n):
         """
-        A L{WrittenAction} can be constructed with just a start message and an end
-        message: in this case, an end message that indicates the action was
+        A L{WrittenAction} can be constructed with just a start message and an
+        end message: in this case, an end message that indicates the action was
         successful.
 
         Such an action inherits the C{end_time} from the end message, and has
@@ -1148,11 +1149,12 @@ class WrittenActionTests(testtools.TestCase):
         text(),
         integers(min_value=2))
     def test_failed_end(
-        self, start_message, end_message_dict, exception, reason, n):
+        self, start_message, end_message_dict, exception, reason, n
+    ):
         """
-        A L{WrittenAction} can be constructed with just a start message and an end
-        message: in this case, an end message that indicates that the action
-        failed.
+        A L{WrittenAction} can be constructed with just a start message and an
+        end message: in this case, an end message that indicates that the
+        action failed.
 
         Such an action inherits the C{end_time} from the end message, has a
         C{status} of C{FAILED_STATUS}, and an C{exception} and C{reason} that
@@ -1222,7 +1224,9 @@ class WrittenActionTests(testtools.TestCase):
                 TaskLevel(level=sibling_task_level(start_message, i)),
                 message) for (i, message) in enumerate(child_messages, 2)]
         action = WrittenAction.from_messages(start_message, messages)
-        task_level = lambda m: m.task_level
+
+        def task_level(m):
+            return m.task_level
         self.assertEqual(sorted(messages, key=task_level), action.children)
 
     @given(start_action_messages, message_dicts)
@@ -1399,7 +1403,8 @@ def get_failed_action_messages(exception):
 
 
 class FailedActionExtractionTests(
-    make_error_extraction_tests(get_failed_action_messages)):
+    make_error_extraction_tests(get_failed_action_messages)
+):
     """
     Tests for error extraction in failed actions.
     """

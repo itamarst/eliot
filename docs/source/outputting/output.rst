@@ -8,11 +8,13 @@ For example, if we want each message to be encoded in JSON and written on a new 
 .. code-block:: python
 
     import json, sys
-    from eliot import add_destination
+    from eliot import add_destinations
 
     def stdout(message):
         sys.stdout.write(json.dumps(message) + "\n")
-    add_destination(stdout)
+    add_destinations(stdout)
+
+Up to a 1000 messages will be buffered in memory until the first set of destinations are added, at which point those messages will be delivered to newly added set of destinations.
 
 
 Outputting to Files
@@ -50,3 +52,5 @@ Use the ``eliot.add_global_fields`` API to do so, e.g.:
     from eliot import add_global_fields
 
     add_global_fields(process_id="%s:%d" % (sys.argv[0], os.getpid()))
+
+You should call ``add_global_fields`` before ``add_destinations`` to ensure all messages get the global fields.
