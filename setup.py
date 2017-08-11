@@ -1,11 +1,6 @@
 from setuptools import setup
 
 import versioneer
-versioneer.VCS = 'git'
-versioneer.versionfile_source = 'eliot/_version.py'
-versioneer.versionfile_build = 'eliot/_version.py'
-versioneer.tag_prefix = ''
-versioneer.parentdir_prefix = 'eliot-'
 
 
 def read(path):
