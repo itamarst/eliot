@@ -4,11 +4,10 @@ APIs for using Eliot from Twisted.
 
 from __future__ import absolute_import, unicode_literals
 
-import json
 import os
 import sys
 
-from twisted.python import log
+from twisted.logger import Logger as TwistedLogger
 from twisted.python.failure import Failure
 
 from ._action import currentAction
@@ -55,8 +54,8 @@ class DeferredContext(object):
         self._finishAdded = False
         if self._action is None:
             raise RuntimeError(
-                "DeferredContext() should only be created in the context of an "
-                "eliot.Action.")
+                "DeferredContext() should only be created in the context of "
+                "an eliot.Action.")
 
     def addCallbacks(
         self,
@@ -65,7 +64,8 @@ class DeferredContext(object):
         callbackArgs=None,
         callbackKeywords=None,
         errbackArgs=None,
-        errbackKeywords=None):
+        errbackKeywords=None
+    ):
         """
         Add a pair of callbacks that will be run in the context of an eliot
         action.
@@ -132,9 +132,9 @@ class DeferredContext(object):
 
     def addActionFinish(self):
         """
-        Indicates all callbacks that should run within the action's context have
-        been added, and that the action should therefore finish once those
-        callbacks have fired.
+        Indicates all callbacks that should run within the action's context
+        have been added, and that the action should therefore finish once
+        those callbacks have fired.
 
         @return: The wrapped L{Deferred}.
 
@@ -185,15 +185,12 @@ class _RedirectLogsForTrial(object):
     @ivar _sys: An object similar to, and typically identical to, Python's
         L{sys} module.
 
-    @ivar _log: An object similar to, and typically identical to,
-        L{twisted.python.log}.
-
     @ivar _redirected: L{True} if trial logs have been redirected once already.
     """
 
-    def __init__(self, sys, log):
+    def __init__(self, sys):
         self._sys = sys
-        self._log = log
+        self._logger = TwistedLogger(namespace="eliot")
         self._redirected = False
 
     def _logEliotMessage(self, message):
@@ -203,10 +200,11 @@ class _RedirectLogsForTrial(object):
         @param message: A rendered Eliot message.
         @type message: L{dict}
         """
-        self._log.msg("ELIOT: " + json.dumps(message))
         if message.get("message_type") == "eliot:traceback":
-            self._log.msg(
-                "ELIOT Extracted Traceback:\n" + message["traceback"])
+            method = self._logger.critical
+        else:
+            method = self._logger.info
+        method(format="Eliot message: {eliot}", eliot=message)
 
     def __call__(self):
         """
@@ -216,10 +214,11 @@ class _RedirectLogsForTrial(object):
         """
         if (
             os.path.basename(self._sys.argv[0]) == 'trial'
-            and not self._redirected):
+            and not self._redirected
+        ):
             self._redirected = True
             addDestination(self._logEliotMessage)
             return self._logEliotMessage
 
 
-redirectLogsForTrial = _RedirectLogsForTrial(sys, log)
+redirectLogsForTrial = _RedirectLogsForTrial(sys)

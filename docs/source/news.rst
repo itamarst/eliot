@@ -8,6 +8,7 @@ Misc:
 
 * Coding standard switched to PEP-8.
 * Dropped support for Python 3.3.
+* Dropped support for versions of Twisted older than 15.2 (or whenever it was that ``twisted.logger`` was introduced).
 
 1.0.0
 ^^^^^
