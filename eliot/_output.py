@@ -12,6 +12,16 @@ from six import text_type as unicode, PY3
 from pyrsistent import PClass, field
 
 from . import _bytesjson as slow_json
+from zope.interface import Interface, implementer
+
+from ._traceback import writeTraceback, TRACEBACK_MESSAGE
+from ._message import (
+    Message,
+    EXCEPTION_FIELD,
+    MESSAGE_TYPE_FIELD,
+    REASON_FIELD, )
+from ._util import saferepr, safeunicode
+
 if PY3:
     fast_json = slow_json
 else:
@@ -26,16 +36,6 @@ else:
     except ImportError:
         import json as fast_json
 
-from zope.interface import Interface, implementer
-
-from ._traceback import writeTraceback, TRACEBACK_MESSAGE
-from ._message import (
-    Message,
-    EXCEPTION_FIELD,
-    MESSAGE_TYPE_FIELD,
-    REASON_FIELD, )
-from ._util import saferepr, safeunicode
-
 
 class _DestinationsSendError(Exception):
     """
@@ -46,7 +46,20 @@ class _DestinationsSendError(Exception):
 
     def __init__(self, errors):
         self.errors = errors
-        Exception.__init__(self)
+        Exception.__init__(self, errors)
+
+
+class BufferingDestination(object):
+    """
+    Buffer messages in memory.
+    """
+    def __init__(self):
+        self.messages = []
+
+    def __call__(self, message):
+        self.messages.append(message)
+        while len(self.messages) > 1000:
+            self.messages.pop(0)
 
 
 class Destinations(object):
@@ -58,7 +71,8 @@ class Destinations(object):
     """
 
     def __init__(self):
-        self._destinations = []
+        self._destinations = [BufferingDestination()]
+        self._any_added = False
         self._globalFields = {}
 
     def addGlobalFields(self, **fields):
@@ -89,16 +103,28 @@ class Destinations(object):
         if errors:
             raise _DestinationsSendError(errors)
 
-    def add(self, destination):
+    def add(self, *destinations):
         """
-        Add a new destination.
+        Adds new destinations.
 
         A destination should never ever throw an exception. Seriously.
         A destination should not mutate the dictionary it is given.
 
-        @param destination: A callable that takes message dictionaries,
+        @param destinations: A list of callables that takes message
+            dictionaries.
         """
-        self._destinations.append(destination)
+        buffered_messages = None
+        if not self._any_added:
+            # These are first set of messages added, so we need to clear
+            # BufferingDestination:
+            self._any_added = True
+            buffered_messages = self._destinations[0].messages
+            self._destinations = []
+        self._destinations.extend(destinations)
+        if buffered_messages:
+            # Re-deliver buffered messages:
+            for message in buffered_messages:
+                self.send(message)
 
     def remove(self, destination):
         """
@@ -121,8 +147,8 @@ class ILogger(Interface):
         Write a dictionary to the appropriate destination.
 
         @param serializer: Either C{None}, or a
-            L{eliot._validation._MessageSerializer} which can be used to validate
-            this message.
+            L{eliot._validation._MessageSerializer} which can be used to
+            validate this message.
 
         @param dictionary: The message to write out. The given dictionary
              will not be mutated.
@@ -206,8 +232,8 @@ class UnflushedTracebacks(Exception):
     """
     The L{MemoryLogger} had some tracebacks logged which were not flushed.
 
-    This means either your code has a bug and logged an unexpected traceback. If
-    you expected the traceback then you will need to flush it using
+    This means either your code has a bug and logged an unexpected traceback.
+    If you expected the traceback then you will need to flush it using
     L{MemoryLogger.flushTracebacks}.
     """
 
@@ -240,8 +266,8 @@ class MemoryLogger(object):
         """
         Flush all logged tracebacks whose exception is of the given type.
 
-        This means they are expected tracebacks and should not cause the test to
-        fail.
+        This means they are expected tracebacks and should not cause the test
+        to fail.
 
         @param exceptionType: A subclass of L{Exception}.
 
@@ -318,8 +344,8 @@ class MemoryLogger(object):
         """
         Clear all logged messages.
 
-        Any logged tracebacks will also be cleared, and will therefore not cause
-        a test failure.
+        Any logged tracebacks will also be cleared, and will therefore not
+        cause a test failure.
 
         This is useful to ensure a logger is in a known state before testing
         logging of a specific code path.
