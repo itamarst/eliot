@@ -35,9 +35,10 @@ def sd_journal_send(**kwargs):
     """
     # The function uses printf formatting, so we need to quote
     # percentages.
-    fields = [_ffi.new("char[]",
-                       key.encode("ascii") + b'=' + value.replace(b"%", b"%%"))
-              for key, value in kwargs.items()]
+    fields = [
+        _ffi.new(
+            "char[]", key.encode("ascii") + b'=' + value.replace(b"%", b"%%"))
+        for key, value in kwargs.items()]
     fields.append(_ffi.NULL)
     result = _journald.sd_journal_send(*fields)
     if result != 0:
@@ -56,6 +57,7 @@ class JournaldDestination(object):
     traceback messages will get priority 2 ("critical"). All other
     messages will get priority 1 ("info").
     """
+
     def __init__(self):
         self._identifier = basename(argv[0]).encode("utf-8")
 
@@ -75,8 +77,9 @@ class JournaldDestination(object):
             eliot_type = message[MESSAGE_TYPE_FIELD]
             if eliot_type == u"eliot:traceback":
                 priority = b"2"
-        sd_journal_send(MESSAGE=dumps(message),
-                        ELIOT_TASK=message[TASK_UUID_FIELD].encode("utf-8"),
-                        ELIOT_TYPE=eliot_type.encode("utf-8"),
-                        SYSLOG_IDENTIFIER=self._identifier,
-                        PRIORITY=priority)
+        sd_journal_send(
+            MESSAGE=dumps(message),
+            ELIOT_TASK=message[TASK_UUID_FIELD].encode("utf-8"),
+            ELIOT_TYPE=eliot_type.encode("utf-8"),
+            SYSLOG_IDENTIFIER=self._identifier,
+            PRIORITY=priority)

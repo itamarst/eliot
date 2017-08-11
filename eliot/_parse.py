@@ -11,9 +11,11 @@ from pyrsistent import PClass, pmap_field, pset_field, discard
 
 from ._message import WrittenMessage, TASK_UUID_FIELD
 from ._action import (
-    TaskLevel, WrittenAction, ACTION_STATUS_FIELD, STARTED_STATUS,
-    ACTION_TYPE_FIELD,
-)
+    TaskLevel,
+    WrittenAction,
+    ACTION_STATUS_FIELD,
+    STARTED_STATUS,
+    ACTION_TYPE_FIELD, )
 
 
 class Task(PClass):
@@ -48,15 +50,16 @@ class Task(PClass):
         @return: Updated L{Task}.
         """
         task = self
-        if (node.end_message and node.start_message
-            and (len(node.children) ==
-                 node.end_message.task_level.level[-1] - 2)):
+        if (
+            node.end_message and node.start_message and
+            (len(node.children) == node.end_message.task_level.level[-1] - 2)):
             # Possibly this action is complete, make sure all sub-actions
             # are complete:
             completed = True
             for child in node.children:
-                if (isinstance(child, WrittenAction) and
-                        child.task_level not in self._completed):
+                if (
+                    isinstance(child, WrittenAction)
+                    and child.task_level not in self._completed):
                     completed = False
                     break
             if completed:
@@ -83,8 +86,8 @@ class Task(PClass):
 
         parent = self._nodes.get(task_level.parent())
         if parent is None:
-            parent = WrittenAction(task_level=task_level.parent(),
-                                   task_uuid=child.task_uuid)
+            parent = WrittenAction(
+                task_level=task_level.parent(), task_uuid=child.task_uuid)
         parent = parent._add_child(child)
         return self._insert_action(parent)
 
@@ -103,8 +106,9 @@ class Task(PClass):
             action_level = written_message.task_level.parent()
             action = self._nodes.get(action_level)
             if action is None:
-                action = WrittenAction(task_level=action_level,
-                                       task_uuid=message_dict[TASK_UUID_FIELD])
+                action = WrittenAction(
+                    task_level=action_level,
+                    task_uuid=message_dict[TASK_UUID_FIELD])
             if message_dict[ACTION_STATUS_FIELD] == STARTED_STATUS:
                 # Either newly created MissingAction, or one created by
                 # previously added descendant of the action.
@@ -115,9 +119,9 @@ class Task(PClass):
         else:
             # Special case where there is no action:
             if written_message.task_level.level == [1]:
-                return self.transform(
-                    ["_nodes", self._root_level], written_message,
-                    ["_completed"], lambda s: s.add(self._root_level))
+                return self.transform([
+                    "_nodes", self._root_level], written_message, [
+                        "_completed"], lambda s: s.add(self._root_level))
             else:
                 return self._ensure_node_parents(written_message)
 

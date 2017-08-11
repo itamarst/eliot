@@ -1,11 +1,6 @@
 from setuptools import setup
 
 import versioneer
-versioneer.VCS = 'git'
-versioneer.versionfile_source = 'eliot/_version.py'
-versioneer.versionfile_build = 'eliot/_version.py'
-versioneer.tag_prefix = ''
-versioneer.parentdir_prefix = 'eliot-'
 
 
 def read(path):
@@ -25,7 +20,6 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',

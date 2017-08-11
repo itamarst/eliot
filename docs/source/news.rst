@@ -1,6 +1,14 @@
 What's New
 ==========
 
+1.1.0
+^^^^^
+
+Misc:
+
+* Coding standard switched to PEP-8.
+* Dropped support for Python 3.3.
+
 1.0.0
 ^^^^^
 

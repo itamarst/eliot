@@ -14,12 +14,10 @@ from ._action import (
     ACTION_TYPE_FIELD,
     STARTED_STATUS,
     FAILED_STATUS,
-    SUCCEEDED_STATUS,
-)
+    SUCCEEDED_STATUS, )
 from ._message import MESSAGE_TYPE_FIELD, TASK_LEVEL_FIELD, TASK_UUID_FIELD
 from ._output import MemoryLogger
 from . import _output
-
 
 COMPLETED_STATUSES = (FAILED_STATUS, SUCCEEDED_STATUS)
 
@@ -56,7 +54,6 @@ def assertContainsFields(test, message, fields):
     test.assertEqual(messageSubset, fields)
 
 
-
 class LoggedAction(PClass):
     """
     An action whose start and finish messages have been logged.
@@ -75,18 +72,19 @@ class LoggedAction(PClass):
     children = field(mandatory=True)
 
     def __new__(cls, startMessage, endMessage, children):
-        return PClass.__new__(cls, startMessage=startMessage,
-                              endMessage=endMessage, children=children)
+        return PClass.__new__(
+            cls,
+            startMessage=startMessage,
+            endMessage=endMessage,
+            children=children)
 
     @property
     def start_message(self):
         return self.startMessage
 
-
     @property
     def end_message(self):
         return self.endMessage
-
 
     @classmethod
     def fromMessages(klass, uuid, level, messages):
@@ -133,9 +131,10 @@ class LoggedAction(PClass):
                 else:
                     # Presumably a message in this action:
                     children.append(LoggedMessage(message))
-            elif (len(messageLevel) == len(levelPrefix) + 2 and
-                  messageLevel[:-2] == levelPrefix and
-                  messageLevel[-1] == 1):
+            elif (
+                len(messageLevel) == len(levelPrefix) + 2
+                and messageLevel[:-2] == levelPrefix
+                and messageLevel[-1] == 1):
                 # If start message level is [1], [1, 2, 1] implies first
                 # message of a direct child.
                 child = klass.fromMessages(
@@ -145,10 +144,8 @@ class LoggedAction(PClass):
             raise ValueError(uuid, level)
         return klass(startMessage, endMessage, children)
 
-
     # PEP 8 variant:
     from_messages = fromMessages
-
 
     @classmethod
     def ofType(klass, messages, actionType):
@@ -164,17 +161,17 @@ class LoggedAction(PClass):
         """
         result = []
         for message in messages:
-            if (message.get(ACTION_TYPE_FIELD) == actionType.action_type and
-                message[ACTION_STATUS_FIELD] == STARTED_STATUS):
-                result.append(klass.fromMessages(message[TASK_UUID_FIELD],
-                                                 message[TASK_LEVEL_FIELD],
-                                                 messages))
+            if (
+                message.get(ACTION_TYPE_FIELD) == actionType.action_type
+                and message[ACTION_STATUS_FIELD] == STARTED_STATUS):
+                result.append(
+                    klass.fromMessages(
+                        message[TASK_UUID_FIELD], message[TASK_LEVEL_FIELD],
+                        messages))
         return result
-
 
     # PEP 8 variant:
     of_type = ofType
-
 
     def descendants(self):
         """
@@ -189,7 +186,6 @@ class LoggedAction(PClass):
                 for descendant in child.descendants():
                     yield descendant
 
-
     @property
     def succeeded(self):
         """
@@ -198,7 +194,6 @@ class LoggedAction(PClass):
         @return: C{bool} indicating whether the action succeeded.
         """
         return self.endMessage[ACTION_STATUS_FIELD] == SUCCEEDED_STATUS
-
 
 
 class LoggedMessage(PClass):
@@ -230,10 +225,8 @@ class LoggedMessage(PClass):
                 result.append(klass(message))
         return result
 
-
     # PEP 8 variant:
     of_type = ofType
-
 
 
 class UnflushedTracebacks(Exception):
@@ -244,7 +237,6 @@ class UnflushedTracebacks(Exception):
     traceback. If you expected the traceback then you will need to flush it
     using L{MemoryLogger.flushTracebacks}.
     """
-
 
 
 def validateLogging(assertion, *assertionArgs, **assertionKwargs):
@@ -280,6 +272,7 @@ def validateLogging(assertion, *assertionArgs, **assertionKwargs):
     @param assertionKwargs: Additional keyword arguments to pass to
         C{assertion}.
     """
+
     def decorator(function):
         @wraps(function)
         def wrapper(self, *args, **kwargs):
@@ -287,9 +280,11 @@ def validateLogging(assertion, *assertionArgs, **assertionKwargs):
 
             kwargs["logger"] = logger = MemoryLogger()
             self.addCleanup(logger.validate)
+
             def checkForUnflushed():
                 if not skipped and logger.tracebackMessages:
                     raise UnflushedTracebacks(logger.tracebackMessages)
+
             self.addCleanup(checkForUnflushed)
             # TestCase runs cleanups in reverse order, and we want this to
             # run *before* tracebacks are checked:
@@ -303,13 +298,12 @@ def validateLogging(assertion, *assertionArgs, **assertionKwargs):
                 raise
 
         return wrapper
-    return decorator
 
+    return decorator
 
 
 # PEP 8 variant:
 validate_logging = validateLogging
-
 
 
 def capture_logging(assertion, *assertionArgs, **assertionKwargs):
@@ -318,6 +312,7 @@ def capture_logging(assertion, *assertionArgs, **assertionKwargs):
 
     See L{validate_logging} for details on the rest of its behavior.
     """
+
     def decorator(function):
         @validate_logging(assertion, *assertionArgs, **assertionKwargs)
         @wraps(function)
@@ -328,9 +323,12 @@ def capture_logging(assertion, *assertionArgs, **assertionKwargs):
 
             def cleanup():
                 _output._DEFAULT_LOGGER = current_logger
+
             self.addCleanup(cleanup)
             return function(self, logger)
+
         return wrapper
+
     return decorator
 
 
@@ -362,15 +360,14 @@ def assertHasMessage(testCase, logger, messageType, fields=None):
     if fields is None:
         fields = {}
     messages = LoggedMessage.ofType(logger.messages, messageType)
-    testCase.assertTrue(messages, "No messages of type %s" % (messageType,))
+    testCase.assertTrue(messages, "No messages of type %s" % (messageType, ))
     loggedMessage = messages[0]
     assertContainsFields(testCase, loggedMessage.message, fields)
     return loggedMessage
 
 
-
-def assertHasAction(testCase, logger, actionType, succeeded, startFields=None,
-                    endFields=None):
+def assertHasAction(
+    testCase, logger, actionType, succeeded, startFields=None, endFields=None):
     """
     Assert that the given logger has an action of the given type, and the first
     action found of this type has the given fields and success status.
@@ -406,7 +403,7 @@ def assertHasAction(testCase, logger, actionType, succeeded, startFields=None,
     if endFields is None:
         endFields = {}
     actions = LoggedAction.ofType(logger.messages, actionType)
-    testCase.assertTrue(actions, "No actions of type %s" % (actionType,))
+    testCase.assertTrue(actions, "No actions of type %s" % (actionType, ))
     action = actions[0]
     testCase.assertEqual(action.succeeded, succeeded)
     assertContainsFields(testCase, action.startMessage, startFields)

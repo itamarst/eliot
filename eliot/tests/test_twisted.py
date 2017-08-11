@@ -38,13 +38,13 @@ class PassthroughTests(TestCase):
     """
     Tests for L{_passthrough}.
     """
+
     def test_passthrough(self):
         """
         L{_passthrough} returns the passed-in value.
         """
         obj = object()
         self.assertIs(obj, _passthrough(obj))
-
 
 
 def withActionContext(f):
@@ -55,25 +55,26 @@ def withActionContext(f):
     """
     logger = MemoryLogger()
     action = startAction(logger, "test")
+
     @wraps(f)
     def test(self):
         with action.context():
             return f(self)
-    return test
 
+    return test
 
 
 class DeferredContextTests(TestCase):
     """
     Tests for L{DeferredContext}.
     """
+
     def test_requireContext(self):
         """
         L{DeferredContext} raises a L{RuntimeError} if it is called without an
         action context.
         """
         self.assertRaises(RuntimeError, DeferredContext, Deferred())
-
 
     @withActionContext
     def test_result(self):
@@ -85,7 +86,6 @@ class DeferredContextTests(TestCase):
         context = DeferredContext(result)
         self.assertIs(context.result, result)
 
-
     @withActionContext
     def test_addCallbacksCallbackToDeferred(self):
         """
@@ -94,14 +94,15 @@ class DeferredContextTests(TestCase):
         C{addCallbacks}.
         """
         called = []
+
         def f(value, x, y):
             called.append((value, x, y))
+
         result = Deferred()
         context = DeferredContext(result)
-        context.addCallbacks(f, lambda x: None, (1,), {"y": 2})
+        context.addCallbacks(f, lambda x: None, (1, ), {"y": 2})
         result.callback(0)
         self.assertEqual(called, [(0, 1, 2)])
-
 
     @withActionContext
     def test_addCallbacksErrbackToDeferred(self):
@@ -111,15 +112,16 @@ class DeferredContextTests(TestCase):
         C{addCallbacks}.
         """
         called = []
+
         def f(value, x, y):
             value.trap(RuntimeError)
             called.append((x, y))
+
         result = Deferred()
         context = DeferredContext(result)
-        context.addCallbacks(lambda x: None, f, None, None, (1,), {"y": 2})
+        context.addCallbacks(lambda x: None, f, None, None, (1, ), {"y": 2})
         result.errback(RuntimeError())
         self.assertEqual(called, [(1, 2)])
-
 
     @withActionContext
     def test_addCallbacksReturnSelf(self):
@@ -128,9 +130,8 @@ class DeferredContextTests(TestCase):
         """
         result = Deferred()
         context = DeferredContext(result)
-        self.assertIs(context, context.addCallbacks(
-            lambda x: None, lambda x: None))
-
+        self.assertIs(
+            context, context.addCallbacks(lambda x: None, lambda x: None))
 
     def test_addCallbacksCallbackContext(self):
         """
@@ -145,10 +146,9 @@ class DeferredContextTests(TestCase):
         with action1.context():
             d = DeferredContext(d)
             with action2.context():
-                d.addCallbacks(lambda x: context.append(currentAction()),
-                               lambda x: x)
+                d.addCallbacks(
+                    lambda x: context.append(currentAction()), lambda x: x)
         self.assertEqual(context, [action1])
-
 
     def test_addCallbacksErrbackContext(self):
         """
@@ -163,10 +163,9 @@ class DeferredContextTests(TestCase):
         with action1.context():
             d = DeferredContext(d)
             with action2.context():
-                d.addCallbacks(lambda x: x,
-                               lambda x: context.append(currentAction()))
+                d.addCallbacks(
+                    lambda x: x, lambda x: context.append(currentAction()))
         self.assertEqual(context, [action1])
-
 
     @withActionContext
     def test_addCallbacksCallbackResult(self):
@@ -178,7 +177,6 @@ class DeferredContextTests(TestCase):
         d = DeferredContext(d)
         d.addCallbacks(lambda x: [x, 1], lambda x: x)
         self.assertEqual(self.successResultOf(d), [0, 1])
-
 
     @withActionContext
     def test_addCallbacksErrbackResult(self):
@@ -192,7 +190,6 @@ class DeferredContextTests(TestCase):
         d.addCallbacks(lambda x: x, lambda x: [x.value, 1])
         self.assertEqual(self.successResultOf(d), [exception, 1])
 
-
     def test_addActionFinishNoImmediateLogging(self):
         """
         L{DeferredContext.addActionFinish} does not log anything if the
@@ -205,7 +202,6 @@ class DeferredContextTests(TestCase):
             DeferredContext(d).addActionFinish()
         self.assertFalse(logger.messages)
 
-
     def test_addActionFinishSuccess(self):
         """
         When the L{Deferred} referred to by L{DeferredContext.addActionFinish}
@@ -217,12 +213,12 @@ class DeferredContextTests(TestCase):
         with action.context():
             DeferredContext(d).addActionFinish()
         d.callback("result")
-        assertContainsFields(self, logger.messages[0],
-                             {"task_uuid": "uuid",
-                              "task_level": [1, 1],
-                              "action_type": "sys:me",
-                              "action_status": "succeeded"})
-
+        assertContainsFields(
+            self, logger.messages[0], {
+                "task_uuid": "uuid",
+                "task_level": [1, 1],
+                "action_type": "sys:me",
+                "action_status": "succeeded"})
 
     def test_addActionFinishSuccessPassThrough(self):
         """
@@ -239,7 +235,6 @@ class DeferredContextTests(TestCase):
         d.addCallback(result.append)
         self.assertEqual(result, ["result"])
 
-
     def test_addActionFinishFailure(self):
         """
         When the L{Deferred} referred to in L{DeferredContext.addActionFinish}
@@ -252,16 +247,15 @@ class DeferredContextTests(TestCase):
             DeferredContext(d).addActionFinish()
         exception = RuntimeError("because")
         d.errback(exception)
-        assertContainsFields(self, logger.messages[0],
-                             {"task_uuid": "uuid",
-                              "task_level": [1, 1],
-                              "action_type": "sys:me",
-                              "action_status": "failed",
-                              "reason": "because",
-                              "exception":
-                              "%s.RuntimeError" % (RuntimeError.__module__,)})
-        d.addErrback(lambda _: None) # don't let Failure go to Twisted logs
-
+        assertContainsFields(
+            self, logger.messages[0], {
+                "task_uuid": "uuid",
+                "task_level": [1, 1],
+                "action_type": "sys:me",
+                "action_status": "failed",
+                "reason": "because",
+                "exception": "%s.RuntimeError" % (RuntimeError.__module__, )})
+        d.addErrback(lambda _: None)  # don't let Failure go to Twisted logs
 
     def test_addActionFinishFailurePassThrough(self):
         """
@@ -279,7 +273,6 @@ class DeferredContextTests(TestCase):
         d.addErrback(result.append)
         self.assertEqual(result, [failure])
 
-
     @withActionContext
     def test_addActionFinishRaisesAfterAddActionFinish(self):
         """
@@ -291,7 +284,6 @@ class DeferredContextTests(TestCase):
         d.addActionFinish()
         self.assertRaises(AlreadyFinished, d.addActionFinish)
 
-
     @withActionContext
     def test_addCallbacksRaisesAfterAddActionFinish(self):
         """
@@ -301,9 +293,8 @@ class DeferredContextTests(TestCase):
         """
         d = DeferredContext(Deferred())
         d.addActionFinish()
-        self.assertRaises(AlreadyFinished, d.addCallbacks, lambda x: x,
-                          lambda x: x)
-
+        self.assertRaises(
+            AlreadyFinished, d.addCallbacks, lambda x: x, lambda x: x)
 
     @withActionContext
     def test_addActionFinishResult(self):
@@ -312,7 +303,6 @@ class DeferredContextTests(TestCase):
         """
         d = Deferred()
         self.assertIs(d, DeferredContext(d).addActionFinish())
-
 
     # Having made sure DeferredContext.addCallbacks does the right thing
     # regarding action contexts, for addCallback/addErrback/addBoth we only
@@ -327,16 +317,24 @@ class DeferredContextTests(TestCase):
         result = Deferred()
         context = DeferredContext(result)
         called = []
-        def addCallbacks(callback, errback,
-                         callbackArgs=None, callbackKeywords=None,
-                         errbackArgs=None, errbackKeywords=None):
-            called.append((callback, errback, callbackArgs, callbackKeywords,
-                           errbackArgs, errbackKeywords))
+
+        def addCallbacks(
+            callback,
+            errback,
+            callbackArgs=None,
+            callbackKeywords=None,
+            errbackArgs=None,
+            errbackKeywords=None):
+            called.append((
+                callback, errback, callbackArgs, callbackKeywords, errbackArgs,
+                errbackKeywords))
+
         context.addCallbacks = addCallbacks
         f = lambda x, y, z: None
         context.addCallback(f, 2, z=3)
-        self.assertEqual(called, [(f, _passthrough, (2,), {"z": 3}, None, None)])
-
+        self.assertEqual(
+            called, [(f, _passthrough, (2, ), {
+                "z": 3}, None, None)])
 
     @withActionContext
     def test_addCallbackReturnsSelf(self):
@@ -347,7 +345,6 @@ class DeferredContextTests(TestCase):
         context = DeferredContext(result)
         self.assertIs(context, context.addCallback(lambda x: None))
 
-
     @withActionContext
     def test_addErrbackCallsAddCallbacks(self):
         """
@@ -357,16 +354,24 @@ class DeferredContextTests(TestCase):
         result = Deferred()
         context = DeferredContext(result)
         called = []
-        def addCallbacks(callback, errback,
-                         callbackArgs=None, callbackKeywords=None,
-                         errbackArgs=None, errbackKeywords=None):
-            called.append((callback, errback, callbackArgs, callbackKeywords,
-                           errbackArgs, errbackKeywords))
+
+        def addCallbacks(
+            callback,
+            errback,
+            callbackArgs=None,
+            callbackKeywords=None,
+            errbackArgs=None,
+            errbackKeywords=None):
+            called.append((
+                callback, errback, callbackArgs, callbackKeywords, errbackArgs,
+                errbackKeywords))
+
         context.addCallbacks = addCallbacks
         f = lambda x, y, z: None
         context.addErrback(f, 2, z=3)
-        self.assertEqual(called, [(_passthrough, f, None, None, (2,), {"z": 3})])
-
+        self.assertEqual(
+            called, [(_passthrough, f, None, None, (2, ), {
+                "z": 3})])
 
     @withActionContext
     def test_addErrbackReturnsSelf(self):
@@ -377,7 +382,6 @@ class DeferredContextTests(TestCase):
         context = DeferredContext(result)
         self.assertIs(context, context.addErrback(lambda x: None))
 
-
     @withActionContext
     def test_addBothCallsAddCallbacks(self):
         """
@@ -387,16 +391,22 @@ class DeferredContextTests(TestCase):
         result = Deferred()
         context = DeferredContext(result)
         called = []
-        def addCallbacks(callback, errback,
-                         callbackArgs=None, callbackKeywords=None,
-                         errbackArgs=None, errbackKeywords=None):
-            called.append((callback, errback, callbackArgs, callbackKeywords,
-                           errbackArgs, errbackKeywords))
+
+        def addCallbacks(
+            callback,
+            errback,
+            callbackArgs=None,
+            callbackKeywords=None,
+            errbackArgs=None,
+            errbackKeywords=None):
+            called.append((
+                callback, errback, callbackArgs, callbackKeywords, errbackArgs,
+                errbackKeywords))
+
         context.addCallbacks = addCallbacks
         f = lambda x, y, z: None
         context.addBoth(f, 2, z=3)
-        self.assertEqual(called, [(f, f, (2,), {"z": 3}, (2,), {"z": 3})])
-
+        self.assertEqual(called, [(f, f, (2, ), {"z": 3}, (2, ), {"z": 3})])
 
     @withActionContext
     def test_addBothReturnsSelf(self):
@@ -408,11 +418,11 @@ class DeferredContextTests(TestCase):
         self.assertIs(context, context.addBoth(lambda x: None))
 
 
-
 class RedirectLogsForTrialTests(TestCase):
     """
     Tests for L{redirectLogsForTrial}.
     """
+
     def assertDestinationAdded(self, programPath):
         """
         Assert that when running under the given program a new destination is
@@ -421,15 +431,14 @@ class RedirectLogsForTrialTests(TestCase):
         @param programPath: A path to a program.
         @type programPath: L{str}
         """
-        destination = _RedirectLogsForTrial(FakeSys([programPath], b""),
-                                            LogPublisher())()
+        destination = _RedirectLogsForTrial(
+            FakeSys([programPath], b""), LogPublisher())()
         # If this was not added as destination, removing it will raise an
         # exception:
         try:
             removeDestination(destination)
         except ValueError:
             self.fail("Destination was not added.")
-
 
     def test_withTrial(self):
         """
@@ -438,14 +447,12 @@ class RedirectLogsForTrialTests(TestCase):
         """
         self.assertDestinationAdded("trial")
 
-
     def test_withAbsoluteTrialPath(self):
         """
         When C{sys.argv[0]} is an absolute path ending with C{"trial"} a new
         destination is added by L{redirectLogsForTrial}.
         """
         self.assertDestinationAdded("/usr/bin/trial")
-
 
     def test_withRelativeTrialPath(self):
         """
@@ -454,7 +461,6 @@ class RedirectLogsForTrialTests(TestCase):
         """
         self.assertDestinationAdded("./trial")
 
-
     def test_withoutTrialNoDestination(self):
         """
         When C{sys.argv[0]} is not C{"trial"} no destination is added by
@@ -462,9 +468,8 @@ class RedirectLogsForTrialTests(TestCase):
         """
         originalDestinations = Logger._destinations._destinations[:]
         _RedirectLogsForTrial(FakeSys(["myprogram.py"], b""), LogPublisher())()
-        self.assertEqual(Logger._destinations._destinations,
-                         originalDestinations)
-
+        self.assertEqual(
+            Logger._destinations._destinations, originalDestinations)
 
     def test_trialAsPathNoDestination(self):
         """
@@ -472,46 +477,45 @@ class RedirectLogsForTrialTests(TestCase):
         name no destination is added by L{redirectLogsForTrial}.
         """
         originalDestinations = Logger._destinations._destinations[:]
-        _RedirectLogsForTrial(FakeSys(["./trial/myprogram.py"], b""),
-                              LogPublisher())()
-        self.assertEqual(Logger._destinations._destinations,
-                         originalDestinations)
-
+        _RedirectLogsForTrial(
+            FakeSys(["./trial/myprogram.py"], b""), LogPublisher())()
+        self.assertEqual(
+            Logger._destinations._destinations, originalDestinations)
 
     def test_withoutTrialResult(self):
         """
         When not running under I{trial} L{None} is returned.
         """
         self.assertIs(
-            None, _RedirectLogsForTrial(FakeSys(["myprogram.py"], b""),
-                                        LogPublisher())())
-
+            None,
+            _RedirectLogsForTrial(
+                FakeSys(["myprogram.py"], b""), LogPublisher())())
 
     def test_noDuplicateAdds(self):
         """
         If a destination has already been added, calling L{redirectLogsForTrial}
         a second time does not add another destination.
         """
-        redirect = _RedirectLogsForTrial(FakeSys(["trial"], b""), LogPublisher())
+        redirect = _RedirectLogsForTrial(
+            FakeSys(["trial"], b""), LogPublisher())
         destination = redirect()
         self.addCleanup(removeDestination, destination)
         originalDestinations = Logger._destinations._destinations[:]
         redirect()
-        self.assertEqual(Logger._destinations._destinations,
-                         originalDestinations)
-
+        self.assertEqual(
+            Logger._destinations._destinations, originalDestinations)
 
     def test_noDuplicateAddsResult(self):
         """
         If a destination has already been added, calling L{redirectLogsForTrial}
         a second time returns L{None}.
         """
-        redirect = _RedirectLogsForTrial(FakeSys(["trial"], b""), LogPublisher())
+        redirect = _RedirectLogsForTrial(
+            FakeSys(["trial"], b""), LogPublisher())
         destination = redirect()
         self.addCleanup(removeDestination, destination)
         result = redirect()
         self.assertIs(result, None)
-
 
     def redirectToLogPublisher(self):
         """
@@ -523,10 +527,10 @@ class RedirectLogsForTrialTests(TestCase):
         written = []
         publisher = LogPublisher()
         publisher.addObserver(lambda m: written.append(textFromEventDict(m)))
-        destination = _RedirectLogsForTrial(FakeSys(["trial"], b""), publisher)()
+        destination = _RedirectLogsForTrial(
+            FakeSys(["trial"], b""), publisher)()
         self.addCleanup(removeDestination, destination)
         return written
-
 
     def redirectToList(self):
         """
@@ -541,7 +545,6 @@ class RedirectLogsForTrialTests(TestCase):
         self.addCleanup(removeDestination, destination)
         return written
 
-
     def test_normalMessages(self):
         """
         Regular eliot messages are pretty-printed to the given L{LogPublisher}.
@@ -550,9 +553,8 @@ class RedirectLogsForTrialTests(TestCase):
         written = self.redirectToList()
         logger = Logger()
         Message.new(x=123, y=456).write(logger)
-        self.assertEqual(writtenToTwisted,
-                         ["ELIOT: %s" % (json.dumps(written[0]),)])
-
+        self.assertEqual(
+            writtenToTwisted, ["ELIOT: %s" % (json.dumps(written[0]), )])
 
     def test_tracebackMessages(self):
         """
@@ -565,6 +567,7 @@ class RedirectLogsForTrialTests(TestCase):
 
         def raiser():
             raise RuntimeError("because")
+
         try:
             raiser()
         except Exception:
@@ -573,14 +576,13 @@ class RedirectLogsForTrialTests(TestCase):
 
         lines = expectedTraceback.split("\n")
         # Remove source code lines:
-        expectedTraceback = "\n".join(
-            [l for l in lines if not l.startswith("    ")])
+        expectedTraceback = "\n".join([
+            l for l in lines if not l.startswith("    ")])
 
-        self.assertEqual(writtenToTwisted,
-                         ["ELIOT: %s" % (json.dumps(written[0]),),
-                          "ELIOT Extracted Traceback:\n%s" % (expectedTraceback,)
-                      ])
-
+        self.assertEqual(
+            writtenToTwisted, [
+                "ELIOT: %s" % (json.dumps(written[0]), ),
+                "ELIOT Extracted Traceback:\n%s" % (expectedTraceback, )])
 
     def test_publicAPI(self):
         """
@@ -588,11 +590,11 @@ class RedirectLogsForTrialTests(TestCase):
         """
         self.assertIsInstance(redirectLogsForTrial, _RedirectLogsForTrial)
 
-
     def test_defaults(self):
         """
         By default L{redirectLogsForTrial} looks at L{sys.argv} and
         L{twisted.python.log} for trial detection and log output.
         """
-        self.assertEqual((redirectLogsForTrial._sys, redirectLogsForTrial._log),
-                         (sys, twlog))
+        self.assertEqual(
+            (redirectLogsForTrial._sys,
+             redirectLogsForTrial._log), (sys, twlog))

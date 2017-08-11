@@ -12,7 +12,7 @@ import struct
 from binascii import b2a_hex, a2b_hex
 
 _STRUCTURE = b">QI"
-_OFFSET = (2 ** 62) + 10 # last 10 are leap seconds
+_OFFSET = (2**62) + 10  # last 10 are leap seconds
 
 
 def encode(timestamp):
@@ -30,7 +30,6 @@ def encode(timestamp):
     return "@" + encoded.decode("ascii")
 
 
-
 def decode(tai64n):
     """
     Convert TAI64N string to seconds since epoch.
@@ -46,4 +45,3 @@ def decode(tai64n):
     seconds, nanoseconds = struct.unpack(_STRUCTURE, a2b_hex(tai64n[1:]))
     seconds -= _OFFSET
     return seconds + (nanoseconds / 1000000000.0)
-

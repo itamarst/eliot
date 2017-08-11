@@ -25,6 +25,7 @@ class MessageTests(TestCase):
     """
     Test for L{Message}.
     """
+
     def test_new(self):
         """
         L{Message.new} returns a new L{Message} that is initialized with the
@@ -32,7 +33,6 @@ class MessageTests(TestCase):
         """
         msg = Message.new(key="value", another=2)
         self.assertEqual(msg.contents(), {"key": "value", "another": 2})
-
 
     def test_contentsCopies(self):
         """
@@ -42,7 +42,6 @@ class MessageTests(TestCase):
         del msg.contents()["key"]
         self.assertEqual(msg.contents(), {"key": "value"})
 
-
     def test_bindOverwrites(self):
         """
         L{Message.bind} returns a new L{Message} whose contents include the
@@ -51,9 +50,10 @@ class MessageTests(TestCase):
         msg = Message.new(key="value", another=2)
         another = msg.bind(another=3, more=4)
         self.assertIsInstance(another, Message)
-        self.assertEqual(another.contents(), {"key": "value", "another": 3,
-                                              "more": 4})
-
+        self.assertEqual(
+            another.contents(), {"key": "value",
+                                 "another": 3,
+                                 "more": 4})
 
     def test_bindPreservesOriginal(self):
         """
@@ -62,7 +62,6 @@ class MessageTests(TestCase):
         msg = Message.new(key=4)
         msg.bind(key=6)
         self.assertEqual(msg.contents(), {"key": 4})
-
 
     def test_writeCallsLoggerWrite(self):
         """
@@ -74,7 +73,6 @@ class MessageTests(TestCase):
         msg.write(logger)
         self.assertEqual(len(logger.messages), 1)
         self.assertEqual(logger.messages[0]["key"], 4)
-
 
     def test_writeDefaultLogger(self):
         """
@@ -95,16 +93,17 @@ class MessageTests(TestCase):
         in that case. In general we want ``Message`` objects to be effectively
         immutable.
         """
+
         class Logger(list):
             def write(self, d, serializer):
                 self.append(d)
+
         logger = Logger()
         msg = Message.new(key=4)
         msg.write(logger)
         logger[0]["key"] = 5
         msg.write(logger)
         self.assertEqual(logger[1]["key"], 4)
-
 
     def test_logCallsDefaultLoggerWrite(self):
         """
@@ -117,14 +116,12 @@ class MessageTests(TestCase):
         Message.log(some_key=1234)
         self.assertEqual(messages[0][u"some_key"], 1234)
 
-
     def test_defaultTime(self):
         """
         L{Message._time} returns L{time.time} by default.
         """
         msg = Message({})
         self.assertIs(msg._time, time.time)
-
 
     def test_writeAddsTimestamp(self):
         """
@@ -138,24 +135,21 @@ class MessageTests(TestCase):
         msg.write(logger)
         self.assertEqual(logger.messages[0]["timestamp"], timestamp)
 
-
     def test_explicitAction(self):
         """
         L{Message.write} adds the identification fields from the given
         L{Action} to the dictionary written to the logger.
         """
         logger = MemoryLogger()
-        action = Action(logger, "unique", TaskLevel(level=[]),
-                        "sys:thename")
+        action = Action(logger, "unique", TaskLevel(level=[]), "sys:thename")
         msg = Message.new(key=2)
         msg.write(logger, action)
         written = logger.messages[0]
         del written["timestamp"]
-        self.assertEqual(written,
-                         {"task_uuid": "unique",
-                          "task_level": [1],
-                          "key": 2})
-
+        self.assertEqual(
+            written, {"task_uuid": "unique",
+                      "task_level": [1],
+                      "key": 2})
 
     def test_implicitAction(self):
         """
@@ -163,19 +157,18 @@ class MessageTests(TestCase):
         fields from the current execution context's L{Action} to the
         dictionary written to the logger.
         """
-        action = Action(MemoryLogger(), "unique", TaskLevel(level=[]),
-                        "sys:thename")
+        action = Action(
+            MemoryLogger(), "unique", TaskLevel(level=[]), "sys:thename")
         logger = MemoryLogger()
         msg = Message.new(key=2)
         with action:
             msg.write(logger)
         written = logger.messages[0]
         del written["timestamp"]
-        self.assertEqual(written,
-                         {"task_uuid": "unique",
-                          "task_level": [1],
-                          "key": 2})
-
+        self.assertEqual(
+            written, {"task_uuid": "unique",
+                      "task_level": [1],
+                      "key": 2})
 
     def test_missingAction(self):
         """
@@ -190,11 +183,9 @@ class MessageTests(TestCase):
         Message.new(key=3).write(logger)
 
         message1, message2 = logger.messages
-        self.assertEqual(
-            (UUID(message1["task_uuid"]) != UUID(message2["task_uuid"]),
-             message1["task_level"], message2["task_level"]),
-            (True, [1], [1]))
-
+        self.assertEqual((
+            UUID(message1["task_uuid"]) != UUID(message2["task_uuid"]),
+            message1["task_level"], message2["task_level"]), (True, [1], [1]))
 
     def test_actionCounter(self):
         """
@@ -211,21 +202,21 @@ class MessageTests(TestCase):
         self.assertEqual([m["task_level"] for m in logger.messages],
                          [[1], [2], [3], [4], [5], [6]])
 
-
     def test_writePassesSerializer(self):
         """
         If a L{Message} is created with a serializer, it is passed as a second
         argument to the logger when C{write} is called.
         """
+
         class ListLogger(list):
             def write(self, dictionary, serializer):
                 self.append(serializer)
+
         logger = ListLogger()
         serializer = object()
         msg = Message({}, serializer)
         msg.write(logger)
         self.assertIs(logger[0], serializer)
-
 
     def test_serializerPassedInBind(self):
         """
@@ -237,7 +228,6 @@ class MessageTests(TestCase):
         msg2 = msg.bind(x=1)
         self.assertIs(msg2._serializer, serializer)
 
-
     def test_newWithSerializer(self):
         """
         L{Message.new} can accept a serializer.
@@ -245,7 +235,6 @@ class MessageTests(TestCase):
         serializer = object()
         msg = Message.new(serializer, x=1)
         self.assertIs(msg._serializer, serializer)
-
 
 
 class WrittenMessageTests(TestCase):
@@ -262,10 +251,9 @@ class WrittenMessageTests(TestCase):
             'timestamp': 1,
             'task_uuid': 'unique',
             'task_level': [1],
-            'foo': 'bar',
-        })
-        self.assertEqual(WrittenMessage.from_dict(log_entry).as_dict(), log_entry)
-
+            'foo': 'bar', })
+        self.assertEqual(
+            WrittenMessage.from_dict(log_entry).as_dict(), log_entry)
 
     def test_from_dict(self):
         """
@@ -276,8 +264,7 @@ class WrittenMessageTests(TestCase):
             'timestamp': 1,
             'task_uuid': 'unique',
             'task_level': [1],
-            'foo': 'bar',
-        })
+            'foo': 'bar', })
         parsed = WrittenMessage.from_dict(log_entry)
         self.assertEqual(parsed.timestamp, 1)
         self.assertEqual(parsed.task_uuid, 'unique')

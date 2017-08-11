@@ -13,6 +13,7 @@ class ErrorExtraction(object):
 
     @ivar registry: Map exception class to function that extracts fields.
     """
+
     def __init__(self):
         self.registry = {}
 
@@ -48,6 +49,7 @@ class ErrorExtraction(object):
                     writeTraceback(logger)
                     return {}
         return {}
+
 
 _error_extraction = ErrorExtraction()
 register_exception_extractor = _error_extraction.register_exception_extractor

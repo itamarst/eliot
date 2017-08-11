@@ -8,21 +8,17 @@ import json
 import os
 import sys
 
-
 from twisted.python import log
 from twisted.python.failure import Failure
 
 from ._action import currentAction
 from . import addDestination
 
-
 __all__ = ["AlreadyFinished", "DeferredContext", "redirectLogsForTrial"]
-
 
 
 def _passthrough(result):
     return result
-
 
 
 class AlreadyFinished(Exception):
@@ -34,7 +30,6 @@ class AlreadyFinished(Exception):
     underlying L{Deferred} when passing on to some other piece of code that
     doesn't care about the action context.
     """
-
 
 
 class DeferredContext(object):
@@ -50,6 +45,7 @@ class DeferredContext(object):
 
     @ivar result: The wrapped L{Deferred}.
     """
+
     def __init__(self, deferred):
         """
         @param deferred: L{twisted.internet.defer.Deferred} to wrap.
@@ -62,10 +58,14 @@ class DeferredContext(object):
                 "DeferredContext() should only be created in the context of an "
                 "eliot.Action.")
 
-
-    def addCallbacks(self, callback, errback,
-                     callbackArgs=None, callbackKeywords=None,
-                     errbackArgs=None, errbackKeywords=None):
+    def addCallbacks(
+        self,
+        callback,
+        errback,
+        callbackArgs=None,
+        callbackKeywords=None,
+        errbackArgs=None,
+        errbackKeywords=None):
         """
         Add a pair of callbacks that will be run in the context of an eliot
         action.
@@ -78,15 +78,17 @@ class DeferredContext(object):
         """
         if self._finishAdded:
             raise AlreadyFinished()
+
         def callbackWithContext(*args, **kwargs):
             return self._action.run(callback, *args, **kwargs)
+
         def errbackWithContext(*args, **kwargs):
             return self._action.run(errback, *args, **kwargs)
-        self.result.addCallbacks(callbackWithContext, errbackWithContext,
-                                 callbackArgs, callbackKeywords, errbackArgs,
-                                 errbackKeywords)
-        return self
 
+        self.result.addCallbacks(
+            callbackWithContext, errbackWithContext, callbackArgs,
+            callbackKeywords, errbackArgs, errbackKeywords)
+        return self
 
     def addCallback(self, callback, *args, **kw):
         """
@@ -99,9 +101,8 @@ class DeferredContext(object):
         @raises AlreadyFinished: L{DeferredContext.addActionFinish} has been
             called. This indicates a programmer error.
         """
-        return self.addCallbacks(callback, _passthrough, callbackArgs=args,
-                                 callbackKeywords=kw)
-
+        return self.addCallbacks(
+            callback, _passthrough, callbackArgs=args, callbackKeywords=kw)
 
     def addErrback(self, errback, *args, **kw):
         """
@@ -114,9 +115,8 @@ class DeferredContext(object):
         @raises AlreadyFinished: L{DeferredContext.addActionFinish} has been
             called. This indicates a programmer error.
         """
-        return self.addCallbacks(_passthrough, errback, errbackArgs=args,
-                                 errbackKeywords=kw)
-
+        return self.addCallbacks(
+            _passthrough, errback, errbackArgs=args, errbackKeywords=kw)
 
     def addBoth(self, callback, *args, **kw):
         """
@@ -129,7 +129,6 @@ class DeferredContext(object):
             called. This indicates a programmer error.
         """
         return self.addCallbacks(callback, callback, args, kw, args, kw)
-
 
     def addActionFinish(self):
         """
@@ -145,6 +144,7 @@ class DeferredContext(object):
         if self._finishAdded:
             raise AlreadyFinished()
         self._finishAdded = True
+
         def done(result):
             if isinstance(result, Failure):
                 exception = result.value
@@ -152,9 +152,9 @@ class DeferredContext(object):
                 exception = None
             self._action.finish(exception)
             return result
+
         self.result.addBoth(done)
         return self.result
-
 
 
 class _RedirectLogsForTrial(object):
@@ -190,11 +190,11 @@ class _RedirectLogsForTrial(object):
 
     @ivar _redirected: L{True} if trial logs have been redirected once already.
     """
+
     def __init__(self, sys, log):
         self._sys = sys
         self._log = log
         self._redirected = False
-
 
     def _logEliotMessage(self, message):
         """
@@ -205,8 +205,8 @@ class _RedirectLogsForTrial(object):
         """
         self._log.msg("ELIOT: " + json.dumps(message))
         if message.get("message_type") == "eliot:traceback":
-            self._log.msg("ELIOT Extracted Traceback:\n" + message["traceback"])
-
+            self._log.msg(
+                "ELIOT Extracted Traceback:\n" + message["traceback"])
 
     def __call__(self):
         """
@@ -214,12 +214,12 @@ class _RedirectLogsForTrial(object):
 
         @return: The destination added to Eliot if any, otherwise L{None}.
         """
-        if (os.path.basename(self._sys.argv[0]) == 'trial' and
-            not self._redirected):
+        if (
+            os.path.basename(self._sys.argv[0]) == 'trial'
+            and not self._redirected):
             self._redirected = True
             addDestination(self._logEliotMessage)
             return self._logEliotMessage
-
 
 
 redirectLogsForTrial = _RedirectLogsForTrial(sys, log)

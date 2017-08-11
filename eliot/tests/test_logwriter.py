@@ -37,11 +37,11 @@ class BlockingFile(object):
 
     Also, allow calling C{getvalue} after C{close}, unlike L{BytesIO}.
     """
+
     def __init__(self):
         self.file = BytesIO()
         self.lock = threading.Lock()
         self.data = b""
-
 
     def block(self):
         """
@@ -49,13 +49,11 @@ class BlockingFile(object):
         """
         self.lock.acquire()
 
-
     def unblock(self):
         """
         Allow writes if L{block} was previous called.
         """
         self.lock.release()
-
 
     def getvalue(self):
         """
@@ -65,19 +63,15 @@ class BlockingFile(object):
         """
         return self.data
 
-
     def write(self, data):
         with self.lock:
             self.file.write(data)
 
-
     def flush(self):
         self.data = self.file.getvalue()
 
-
     def close(self):
         self.file.close()
-
 
 
 class ThreadedWriterTests(TestCase):
@@ -88,19 +82,18 @@ class ThreadedWriterTests(TestCase):
     arbitrarily wait for up to 5 seconds to reduce chances of slow thread
     switching causing the test to fail.
     """
+
     def test_interface(self):
         """
         L{ThreadedWriter} provides L{IService}.
         """
         verifyClass(IService, ThreadedWriter)
 
-
     def test_name(self):
         """
         L{ThreadedWriter} has a name.
         """
         self.assertEqual(ThreadedWriter.name, u"Eliot Log Writer")
-
 
     def test_startServiceRunning(self):
         """
@@ -113,7 +106,6 @@ class ThreadedWriterTests(TestCase):
         self.addCleanup(writer.stopService)
         self.assertTrue(writer.running)
 
-
     def test_stopServiceRunning(self):
         """
         L{ThreadedWriter.stopService} stops the service as required by the
@@ -125,7 +117,6 @@ class ThreadedWriterTests(TestCase):
         d.addCallback(lambda _: self.assertFalse(writer.running))
         return d
 
-
     def test_startServiceStartsThread(self):
         """
         L{ThreadedWriter.startService} starts up a thread running
@@ -134,11 +125,13 @@ class ThreadedWriterTests(TestCase):
         previousThreads = threading.enumerate()
         result = []
         event = threading.Event()
+
         def _writer():
             current = threading.currentThread()
             if current not in previousThreads:
                 result.append(current)
             event.set()
+
         writer = ThreadedWriter(FileDestination(file=BytesIO()), reactor)
         writer._writer = _writer
         writer.startService()
@@ -157,16 +150,15 @@ class ThreadedWriterTests(TestCase):
         writer.startService()
         start = time.time()
         while set(threading.enumerate()) == previousThreads and (
-                time.time() - start < 5):
+            time.time() - start < 5):
             time.sleep(0.0001)
         # If not true the next assertion might pass by mistake:
         self.assertNotEqual(set(threading.enumerate()), previousThreads)
         writer.stopService()
         while set(threading.enumerate()) != previousThreads and (
-                time.time() - start < 5):
+            time.time() - start < 5):
             time.sleep(0.0001)
         self.assertEqual(set(threading.enumerate()), previousThreads)
-
 
     def test_stopServiceFinishesWriting(self):
         """
@@ -190,7 +182,6 @@ class ThreadedWriterTests(TestCase):
             time.sleep(0.0001)
         self.assertEqual(f.getvalue(), b'{"write": 123}\n' * 100)
 
-
     def test_stopServiceResult(self):
         """
         L{ThreadedWriter.stopService} returns a L{Deferred} that fires only
@@ -209,9 +200,9 @@ class ThreadedWriterTests(TestCase):
         def done(_):
             self.assertEqual(f.getvalue(), b'{"hello": 123}\n')
             self.assertNotEqual(threading.enumerate(), threads)
+
         d.addCallback(done)
         return d
-
 
     def test_noChangeToIOThread(self):
         """
@@ -229,7 +220,6 @@ class ThreadedWriterTests(TestCase):
             threadable.ioThread, (None, threading.currentThread().ident)))
         return d
 
-
     def test_startServiceRegistersDestination(self):
         """
         L{ThreadedWriter.startService} registers itself as an Eliot log
@@ -243,7 +233,6 @@ class ThreadedWriterTests(TestCase):
         d.addCallback(lambda _: self.assertIn(b"abc", f.getvalue()))
         return d
 
-
     def test_stopServiceUnregistersDestination(self):
         """
         L{ThreadedWriter.stopService} unregisters itself as an Eliot log
@@ -254,7 +243,6 @@ class ThreadedWriterTests(TestCase):
         d = writer.stopService()
         d.addCallback(lambda _: removeDestination(writer))
         return self.assertFailure(d, ValueError)
-
 
     def test_call(self):
         """
@@ -281,6 +269,7 @@ class ThreadedFileWriterTests(TestCase):
     """
     Tests for ``ThreadedFileWriter``.
     """
+
     def test_deprecation_warning(self):
         """
         Instantiating ``ThreadedFileWriter`` gives a ``DeprecationWarning``.
@@ -336,5 +325,6 @@ class ThreadedFileWriterTests(TestCase):
 
         def done(_):
             self.assertTrue(f.closed)
+
         d.addCallback(done)
         return d

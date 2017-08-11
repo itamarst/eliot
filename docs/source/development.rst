@@ -5,6 +5,7 @@ To run the full test suite, the Daemontools package should be installed.
 
 All modules should have the ``from __future__ import unicode_literals`` statement, to ensure Unicode is used by default.
 
-Coding standard is `Twisted's`_, but you should also expose PEP 8 compatible method names for use by non-Twisted projects.
+Coding standard is PEP8, with the only exception being camel case methods for the Twisted-related modules.
+Some camel case methods remain for backwards compatibility reasons with the old coding standard.
 
-.. _Twisted's: https://twistedmatrix.com/documents/current/core/development/policy/coding-standard.html
+You should use ``yapf`` to format code.

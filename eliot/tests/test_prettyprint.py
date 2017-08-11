@@ -12,7 +12,6 @@ from pyrsistent import pmap
 from .._bytesjson import dumps
 from ..prettyprint import pretty_format, _CLI_HELP, REQUIRED_FIELDS
 
-
 SIMPLE_MESSAGE = {
     "timestamp": 1443193754,
     "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
@@ -32,13 +31,13 @@ class FormattingTests(TestCase):
     """
     Tests for L{pretty_format}.
     """
+
     def test_message(self):
         """
         A typed message is printed as expected.
         """
         self.assertEqual(
-            pretty_format(SIMPLE_MESSAGE),
-            """\
+            pretty_format(SIMPLE_MESSAGE), """\
 8c668cde-235b-4872-af4e-caea524bd1c0 -> /1/2
 2015-09-25 15:09:14Z
   message_type: 'messagey'
@@ -50,8 +49,7 @@ class FormattingTests(TestCase):
         A message with no type is printed as expected.
         """
         self.assertEqual(
-            pretty_format(UNTYPED_MESSAGE),
-            """\
+            pretty_format(UNTYPED_MESSAGE), """\
 8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
 2015-09-25 15:09:14Z
   abc: 'def'
@@ -62,15 +60,15 @@ class FormattingTests(TestCase):
         """
         An action message is printed as expected.
         """
-        message = {"task_uuid": "8bc6ded2-446c-4b6d-abbc-4f21f1c9a7d8",
-                   "place": "Statue #1",
-                   "task_level": [2, 2, 2, 1],
-                   "action_type": "visited",
-                   "timestamp": 1443193958.0,
-                   "action_status": "started"}
+        message = {
+            "task_uuid": "8bc6ded2-446c-4b6d-abbc-4f21f1c9a7d8",
+            "place": "Statue #1",
+            "task_level": [2, 2, 2, 1],
+            "action_type": "visited",
+            "timestamp": 1443193958.0,
+            "action_status": "started"}
         self.assertEqual(
-            pretty_format(message),
-            """\
+            pretty_format(message), """\
 8bc6ded2-446c-4b6d-abbc-4f21f1c9a7d8 -> /2/2/2/1
 2015-09-25 15:12:38Z
   action_type: 'visited'
@@ -82,14 +80,14 @@ class FormattingTests(TestCase):
         """
         Multiple line values are indented nicely.
         """
-        message = {"timestamp": 1443193754,
-                   "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
-                   "task_level": [1],
-                   "key": "hello\nthere\nmonkeys!\n",
-                   "more": "stuff"}
+        message = {
+            "timestamp": 1443193754,
+            "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
+            "task_level": [1],
+            "key": "hello\nthere\nmonkeys!\n",
+            "more": "stuff"}
         self.assertEqual(
-            pretty_format(message),
-            """\
+            pretty_format(message), """\
 8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
 2015-09-25 15:09:14Z
   key: 'hello
@@ -103,13 +101,13 @@ class FormattingTests(TestCase):
         """
         Tabs are formatted as tabs, not quoted.
         """
-        message = {"timestamp": 1443193754,
-                   "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
-                   "task_level": [1],
-                   "key": "hello\tmonkeys!"}
+        message = {
+            "timestamp": 1443193754,
+            "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
+            "task_level": [1],
+            "key": "hello\tmonkeys!"}
         self.assertEqual(
-            pretty_format(message),
-            """\
+            pretty_format(message), """\
 8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
 2015-09-25 15:09:14Z
   key: 'hello	monkeys!'
@@ -120,14 +118,16 @@ class FormattingTests(TestCase):
         Structured field values (e.g. a dictionary) are formatted in a helpful
         manner.
         """
-        message = {"timestamp": 1443193754,
-                   "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
-                   "task_level": [1],
-                   "key": {"value": 123,
-                           "another": [1, 2, {"more": "data"}]}}
+        message = {
+            "timestamp": 1443193754,
+            "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
+            "task_level": [1],
+            "key": {
+                "value": 123,
+                "another": [1, 2, {
+                    "more": "data"}]}}
         self.assertEqual(
-            pretty_format(message),
-            """\
+            pretty_format(message), """\
 8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
 2015-09-25 15:09:14Z
   key: {'another': [1, 2, {'more': 'data'}],
@@ -139,6 +139,7 @@ class CommandLineTests(TestCase):
     """
     Tests for the command-line tool.
     """
+
     def test_help(self):
         """
         C{--help} prints out the help text and exits.
@@ -169,8 +170,8 @@ class CommandLineTests(TestCase):
         messages = [SIMPLE_MESSAGE, UNTYPED_MESSAGE, SIMPLE_MESSAGE]
         stdout = self.write_and_read(map(dumps, messages))
         self.assertEqual(
-            stdout,
-            "".join(pretty_format(message) + "\n" for message in messages))
+            stdout, "".join(
+                pretty_format(message) + "\n" for message in messages))
 
     def test_not_json_message(self):
         """
@@ -180,22 +181,21 @@ class CommandLineTests(TestCase):
         lines = [dumps(SIMPLE_MESSAGE), not_json, dumps(UNTYPED_MESSAGE)]
         stdout = self.write_and_read(lines)
         self.assertEqual(
-            stdout,
-            "{}\nNot JSON: {}\n\n{}\n".format(
-                pretty_format(SIMPLE_MESSAGE), str(not_json),
-                pretty_format(UNTYPED_MESSAGE)))
+            stdout, "{}\nNot JSON: {}\n\n{}\n".format(
+                pretty_format(SIMPLE_MESSAGE),
+                str(not_json), pretty_format(UNTYPED_MESSAGE)))
 
     def test_missing_required_field(self):
         """
         Non-Eliot JSON messages are not formatted.
         """
         base = pmap(SIMPLE_MESSAGE)
-        messages = [dumps(dict(base.remove(field)))
-                    for field in REQUIRED_FIELDS] + [dumps(SIMPLE_MESSAGE)]
+        messages = [
+            dumps(dict(base.remove(field)))
+            for field in REQUIRED_FIELDS] + [dumps(SIMPLE_MESSAGE)]
         stdout = self.write_and_read(messages)
         self.assertEqual(
-            stdout,
-            "{}{}\n".format(
-                "".join("Not an Eliot message: {}\n\n".format(msg)
-                        for msg in messages[:-1]),
-                pretty_format(SIMPLE_MESSAGE)))
+            stdout, "{}{}\n".format(
+                "".join(
+                    "Not an Eliot message: {}\n\n".format(msg)
+                    for msg in messages[:-1]), pretty_format(SIMPLE_MESSAGE)))

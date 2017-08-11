@@ -16,13 +16,13 @@ class CodecTests(TestCase):
     """
     Tests for L{encode} and L{decode}.
     """
+
     def test_encode(self):
         """
         L{encode} encodes timestamps in TAI64N format.
         """
         t = 1387299889.153187625
         self.assertEqual(encode(t), "@4000000052b0843b092174b9")
-
 
     def test_decode(self):
         """
@@ -32,18 +32,19 @@ class CodecTests(TestCase):
         self.assertAlmostEqual(t, decode(encode(t)), 9)
 
 
-
 class FunctionalTests(TestCase):
     """
     Functional tests for L{encode}.
     """
+
     def test_encode(self):
         """
         The daemontools tai64nlocal tool can correctly decode timestamps output
         by L{encode}.
         """
         try:
-            process = subprocess.Popen(["tai64nlocal"], bufsize=4096,
+            process = subprocess.Popen(["tai64nlocal"],
+                                       bufsize=4096,
                                        stdin=subprocess.PIPE,
                                        stdout=subprocess.PIPE)
         except OSError as e:
@@ -57,6 +58,8 @@ class FunctionalTests(TestCase):
         process.stdin.write((encode(timestamp) + "\n").encode("ascii"))
         process.stdin.close()
         decodedToLocalTime = process.stdout.read().strip()
-        self.assertEqual(time.strftime("%Y-%m-%d %H:%M:%S.12345",
-                                       time.localtime(timestamp)).encode("ascii"),
-                         decodedToLocalTime[:25])
+        self.assertEqual(
+            time.strftime(
+                "%Y-%m-%d %H:%M:%S.12345",
+                time.localtime(timestamp)).encode("ascii"),
+            decodedToLocalTime[:25])
