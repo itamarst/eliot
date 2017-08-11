@@ -1,6 +1,13 @@
 What's New
 ==========
 
+1.1.0
+^^^^^
+
+Misc:
+
+* Coding standard switched to PEP-8.
+
 1.0.0
 ^^^^^
 

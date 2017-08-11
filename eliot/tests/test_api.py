@@ -14,13 +14,13 @@ class PublicAPITests(TestCase):
     """
     Tests for the public API.
     """
+
     def test_addDestination(self):
         """
         L{eliot.addDestination} adds destinations to the L{Destinations}
         attached to L{Logger}.
         """
         self.assertEqual(eliot.addDestination, Logger._destinations.add)
-
 
     def test_removeDestination(self):
         """
@@ -29,27 +29,25 @@ class PublicAPITests(TestCase):
         """
         self.assertEqual(eliot.removeDestination, Logger._destinations.remove)
 
-
     def test_addGlobalFields(self):
         """
         L{eliot.addGlobalFields} calls the corresponding method on the
         L{Destinations} attached to L{Logger}.
         """
-        self.assertEqual(eliot.addGlobalFields,
-                         Logger._destinations.addGlobalFields)
-
+        self.assertEqual(
+            eliot.addGlobalFields, Logger._destinations.addGlobalFields)
 
 
 class PEP8Tests(TestCase):
     """
     Tests for the PEP 8 variant of the the public API.
     """
+
     def test_add_destination(self):
         """
         L{eliot.addDestionation} is the same as L{eliot.add_destination}.
         """
         self.assertIs(eliot.add_destination, eliot.addDestination)
-
 
     def test_remove_destination(self):
         """
@@ -57,13 +55,11 @@ class PEP8Tests(TestCase):
         """
         self.assertIs(eliot.remove_destination, eliot.removeDestination)
 
-
     def test_add_global_fields(self):
         """
         L{eliot.add_global_fields} is the same as L{eliot.addGlobalFields}.
         """
         self.assertIs(eliot.add_global_fields, eliot.addGlobalFields)
-
 
     def test_write_traceback(self):
         """
@@ -71,20 +67,17 @@ class PEP8Tests(TestCase):
         """
         self.assertIs(eliot.write_traceback, eliot.writeTraceback)
 
-
     def test_write_failure(self):
         """
         L{eliot.writeFailure} is the same as L{eliot.write_failure}.
         """
         self.assertIs(eliot.write_failure, eliot.writeFailure)
 
-
     def test_start_task(self):
         """
         L{eliot.startTask} is the same as L{eliot.start_task}.
         """
         self.assertIs(eliot.start_task, eliot.startTask)
-
 
     def test_start_action(self):
         """

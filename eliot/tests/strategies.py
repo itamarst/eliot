@@ -19,11 +19,9 @@ from hypothesis.strategies import (
     one_of,
     recursive,
     text,
-    uuids,
-)
+    uuids, )
 
 from pyrsistent import pmap, pvector, ny, thaw
-
 
 from .._action import (
     ACTION_STATUS_FIELD, ACTION_TYPE_FIELD, FAILED_STATUS, STARTED_STATUS,
@@ -32,13 +30,11 @@ from .._message import (
     EXCEPTION_FIELD, REASON_FIELD, TASK_LEVEL_FIELD, TASK_UUID_FIELD,
     WrittenMessage)
 
-
 task_level_indexes = integers(min_value=1, max_value=10)
 # Task levels can be arbitrarily deep, but in the wild rarely as much as 100.
 # Five seems a sensible average.
 task_level_lists = lists(task_level_indexes, min_size=1, max_size=6)
 task_levels = task_level_lists.map(lambda level: TaskLevel(level=level))
-
 
 # Text generation is slow, and most of the things are short labels. We set
 # a restricted alphabet so they're easier to read, and in general large
@@ -49,19 +45,19 @@ labels = text(min_size=1, max_size=8, alphabet="CGAT")
 timestamps = floats(min_value=0, max_value=1000.0)
 
 message_core_dicts = fixed_dictionaries(
-    dict(task_level=task_level_lists.map(pvector),
-         task_uuid=uuids().map(unicode),
-         timestamp=timestamps)).map(pmap)
-
+    dict(
+        task_level=task_level_lists.map(pvector),
+        task_uuid=uuids().map(unicode),
+        timestamp=timestamps)).map(pmap)
 
 # Text generation is slow. We can make it faster by not generating so
 # much. These are reasonable values.
 message_data_dicts = dictionaries(
-    keys=labels, values=labels,
+    keys=labels,
+    values=labels,
     # People don't normally put much more than ten fields in their
     # messages, surely?
-    max_size=10,
-).map(pmap)
+    max_size=10, ).map(pmap)
 
 
 def written_from_pmap(d):
@@ -89,15 +85,15 @@ def union(*dicts):
 message_dicts = builds(union, message_data_dicts, message_core_dicts)
 written_messages = message_dicts.map(written_from_pmap)
 
-_start_action_fields = fixed_dictionaries(
-    { ACTION_STATUS_FIELD: just(STARTED_STATUS),
-      ACTION_TYPE_FIELD: labels,
-    })
+_start_action_fields = fixed_dictionaries({
+    ACTION_STATUS_FIELD:
+    just(STARTED_STATUS),
+    ACTION_TYPE_FIELD:
+    labels, })
 start_action_message_dicts = builds(
     union, message_dicts, _start_action_fields).map(
         lambda x: x.update({TASK_LEVEL_FIELD: x[TASK_LEVEL_FIELD].set(-1, 1)}))
-start_action_messages = start_action_message_dicts.map(
-    written_from_pmap)
+start_action_messages = start_action_message_dicts.map(written_from_pmap)
 
 
 def sibling_task_level(message, n):
@@ -105,15 +101,14 @@ def sibling_task_level(message, n):
 
 
 _end_action_fields = one_of(
-    just({ACTION_STATUS_FIELD: SUCCEEDED_STATUS}),
+    just({
+        ACTION_STATUS_FIELD: SUCCEEDED_STATUS}),
     fixed_dictionaries({
         ACTION_STATUS_FIELD: just(FAILED_STATUS),
         # Text generation is slow. We can make it faster by not generating so
         # much. Thqese are reasonable values.
         EXCEPTION_FIELD: labels,
-        REASON_FIELD: labels,
-    }),
-)
+        REASON_FIELD: labels, }), )
 
 
 def _make_written_action(start_message, child_messages, end_message_dict):
@@ -141,13 +136,14 @@ def _make_written_action(start_message, child_messages, end_message_dict):
 
     if end_message_dict:
         end_message = written_from_pmap(
-            union(end_message_dict, {
-                ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
-                TASK_UUID_FIELD: task_uuid,
-                TASK_LEVEL_FIELD: sibling_task_level(
-                    start_message, 2 + len(children)),
-            })
-        )
+            union(
+                end_message_dict, {
+                    ACTION_TYPE_FIELD:
+                    start_message.contents[ACTION_TYPE_FIELD],
+                    TASK_UUID_FIELD:
+                    task_uuid,
+                    TASK_LEVEL_FIELD:
+                    sibling_task_level(start_message, 2 + len(children)), }))
     else:
         end_message = None
 
@@ -160,9 +156,7 @@ written_actions = recursive(
         _make_written_action,
         start_message=start_action_messages,
         child_messages=lists(children, max_size=5),
-        end_message_dict=builds(
-            union, message_dicts, _end_action_fields) | none(),
-    ),
+        end_message_dict=builds(union, message_dicts, _end_action_fields) | none(), ),
 )
 
 
@@ -186,7 +180,8 @@ def _map_messages(f, written_action):
         return f(written_action)
 
     start_message = f(written_action.start_message)
-    children = written_action.children.transform([ny], partial(_map_messages, f))
+    children = written_action.children.transform([ny],
+                                                 partial(_map_messages, f))
     if written_action.end_message:
         end_message = f(written_action.end_message)
     else:
@@ -195,8 +190,7 @@ def _map_messages(f, written_action):
     return WrittenAction.from_messages(
         start_message=start_message,
         children=pvector(children),
-        end_message=end_message,
-    )
+        end_message=end_message, )
 
 
 def reparent_action(task_uuid, task_level, written_action):
@@ -218,7 +212,7 @@ def reparent_action(task_uuid, task_level, written_action):
         return (
             message.transform(
                 ['_logged_dict', TASK_LEVEL_FIELD],
-                lambda level: new_prefix + level[old_prefix_len:])
-            .transform(['_logged_dict', TASK_UUID_FIELD], task_uuid))
+                lambda level: new_prefix + level[old_prefix_len:]).transform([
+                    '_logged_dict', TASK_UUID_FIELD], task_uuid))
 
     return _map_messages(fix_message, written_action)

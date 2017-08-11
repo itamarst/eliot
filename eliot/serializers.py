@@ -20,13 +20,11 @@ def timestamp(dt):
     return dt.strftime(_TIME_FORMAT)
 
 
-
 def identity(value):
     """
     Return the passed in object.
     """
     return value
-
 
 
 def md5hex(data):

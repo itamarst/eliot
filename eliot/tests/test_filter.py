@@ -19,6 +19,7 @@ class EliotFilterTests(TestCase):
     """
     Tests for L{EliotFilter}.
     """
+
     def test_expression(self):
         """
         For each item in the incoming sequence L{EliotFilter.run} calls
@@ -30,10 +31,13 @@ class EliotFilterTests(TestCase):
         efilter._evaluate = lambda expr: {"x": len(expr), "orig": expr}
         self.assertEqual(f.getvalue(), b"")
         efilter.run()
-        self.assertEqual(f.getvalue(),
-                         json.dumps({"x": 4, "orig": "abcd"}) + b"\n" +
-                         json.dumps({"x": 2, "orig": [1, 2]}) +  b'\n')
-
+        self.assertEqual(
+            f.getvalue(),
+            json.dumps({
+                "x": 4,
+                "orig": "abcd"}) + b"\n" + json.dumps({
+                    "x": 2,
+                    "orig": [1, 2]}) + b'\n')
 
     def evaluateExpression(self, expr, message):
         """
@@ -43,7 +47,6 @@ class EliotFilterTests(TestCase):
         efilter = EliotFilter(expr, [], BytesIO())
         return efilter._evaluate(message)
 
-
     def test_J(self):
         """
         The expression has access to the decoded JSON message as C{J} in its
@@ -51,7 +54,6 @@ class EliotFilterTests(TestCase):
         """
         result = self.evaluateExpression("J['a']", {"a": 123})
         self.assertEqual(result, 123)
-
 
     def test_otherLocals(self):
         """
@@ -61,7 +63,6 @@ class EliotFilterTests(TestCase):
         result = self.evaluateExpression(
             "isinstance(datetime.utcnow() - datetime.utcnow(), timedelta)", {})
         self.assertEqual(result, True)
-
 
     def test_datetimeSerialization(self):
         """
@@ -73,7 +74,6 @@ class EliotFilterTests(TestCase):
         expected = json.dumps(dt.isoformat()) + b"\n"
         self.assertEqual(f.getvalue(), expected)
 
-
     def test_SKIP(self):
         """
         A result of C{SKIP} indicates nothing should be output.
@@ -83,17 +83,16 @@ class EliotFilterTests(TestCase):
         self.assertEqual(f.getvalue(), b"")
 
 
-
 class MainTests(TestCase):
     """
     Test cases for L{main}.
     """
+
     def test_default(self):
         """
         By default L{main} uses information from L{sys}.
         """
-        self.assertEqual(inspect.getargspec(main).defaults, (sys,))
-
+        self.assertEqual(inspect.getargspec(main).defaults, (sys, ))
 
     def test_stdinOut(self):
         """
@@ -104,7 +103,6 @@ class MainTests(TestCase):
         main(sys)
         self.assertEqual(sys.stdout.getvalue(), b"1\n4\n")
 
-
     def test_success(self):
         """
         A successful run returns C{0}.
@@ -112,7 +110,6 @@ class MainTests(TestCase):
         sys = FakeSys(["eliotfilter", "J[0]"], b"[1, 2]\n[4, 5]\n")
         result = main(sys)
         self.assertEqual(result, 0)
-
 
     def test_noArguments(self):
         """

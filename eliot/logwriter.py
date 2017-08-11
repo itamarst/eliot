@@ -40,7 +40,6 @@ class ThreadedWriter(Service):
     """
     name = u"Eliot Log Writer"
 
-
     def __init__(self, destination, reactor):
         """
         @param destination: The underlying destination for log files. This will
@@ -55,7 +54,6 @@ class ThreadedWriter(Service):
         self._mainReactor = reactor
         self._thread = None
 
-
     def startService(self):
         """
         Start the writer thread.
@@ -65,7 +63,6 @@ class ThreadedWriter(Service):
         self._thread.start()
         addDestination(self)
 
-
     def stopService(self):
         """
         Stop the writer thread, wait for it to finish.
@@ -74,9 +71,8 @@ class ThreadedWriter(Service):
         removeDestination(self)
         self._reactor.callFromThread(self._reactor.stop)
         return deferToThreadPool(
-            self._mainReactor, self._mainReactor.getThreadPool(),
-            self._thread.join)
-
+            self._mainReactor,
+            self._mainReactor.getThreadPool(), self._thread.join)
 
     def __call__(self, data):
         """
@@ -86,7 +82,6 @@ class ThreadedWriter(Service):
         @param data: C{bytes} to write to disk.
         """
         self._reactor.callFromThread(self._destination, data)
-
 
     def _writer(self):
         """
@@ -103,6 +98,7 @@ class ThreadedFileWriter(ThreadedWriter):
     This exists for backwards compatibility purpose. The recommended API is
     ``ThreadedWriter``.
     """
+
     def __init__(self, logFile, reactor):
         """
         @param logFile: A C{file}-like object that is at the end of its
@@ -117,8 +113,8 @@ class ThreadedFileWriter(ThreadedWriter):
         warn(
             "ThreadedFileWriter is deprecated since 0.9.0. "
             "Use ThreadedWriter instead.",
-            DeprecationWarning, stacklevel=2
-        )
+            DeprecationWarning,
+            stacklevel=2)
         self._logFile = logFile
         ThreadedWriter.__init__(self, FileDestination(file=logFile), reactor)
 

@@ -10,8 +10,10 @@ from sys import stdin, stdout, argv
 
 from ._bytesjson import loads
 from ._message import (
-    TIMESTAMP_FIELD, TASK_UUID_FIELD, TASK_LEVEL_FIELD, MESSAGE_TYPE_FIELD,
-)
+    TIMESTAMP_FIELD,
+    TASK_UUID_FIELD,
+    TASK_LEVEL_FIELD,
+    MESSAGE_TYPE_FIELD, )
 from ._action import ACTION_TYPE_FIELD, ACTION_STATUS_FIELD
 from ._util import load_module
 
@@ -21,18 +23,18 @@ if PY3:
     # messages, not platform-encoding messages.
     stdin = stdin.buffer
 
-
 # On Python 2 pprint formats unicode with u'' prefix, which is inconsistent
 # with Python 3 and not very nice to read. So we modify a copy to omit the u''.
 if PY2:
+
     def _nicer_unicode_repr(o, original_repr=repr):
         if isinstance(o, unicode):
             return original_repr(o.encode("utf-8"))
         else:
             return original_repr(o)
+
     pprint = load_module(b"unicode_pprint", pprint)
     pprint.repr = _nicer_unicode_repr
-
 
 # Fields that all Eliot messages are expected to have:
 REQUIRED_FIELDS = {TASK_LEVEL_FIELD, TASK_UUID_FIELD, TIMESTAMP_FIELD}
@@ -46,8 +48,9 @@ def pretty_format(message):
 
     @return: Unicode string.
     """
-    skip = {TIMESTAMP_FIELD, TASK_UUID_FIELD, TASK_LEVEL_FIELD,
-            MESSAGE_TYPE_FIELD, ACTION_TYPE_FIELD, ACTION_STATUS_FIELD}
+    skip = {
+        TIMESTAMP_FIELD, TASK_UUID_FIELD, TASK_LEVEL_FIELD, MESSAGE_TYPE_FIELD,
+        ACTION_TYPE_FIELD, ACTION_STATUS_FIELD}
 
     def add_field(previous, key, value):
         value = unicode(pprint.pformat(value, width=40)).replace(
@@ -77,8 +80,7 @@ def pretty_format(message):
         # just using it for formatting we needn't bother.
         datetime.utcfromtimestamp(message[TIMESTAMP_FIELD]).isoformat(
             sep=str(" ")),
-        remaining,
-    )
+        remaining, )
 
 
 _CLI_HELP = """\
@@ -105,8 +107,8 @@ def _main():
             stdout.write("Not JSON: {}\n\n".format(line.rstrip(b"\n")))
             continue
         if REQUIRED_FIELDS - set(message.keys()):
-            stdout.write("Not an Eliot message: {}\n\n".format(
-                line.rstrip(b"\n")))
+            stdout.write(
+                "Not an Eliot message: {}\n\n".format(line.rstrip(b"\n")))
             continue
         result = pretty_format(message) + "\n"
         if PY2:

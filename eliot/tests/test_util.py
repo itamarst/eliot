@@ -41,7 +41,5 @@ class LoadModuleTests(TestCase):
         loaded.repr = lambda o: str("OVERRIDE")
         # Demonstrate that override applies to copy but not original:
         self.assertEqual(
-            dict(original=pprint.pformat(123),
-                 loaded=loaded.pformat(123)),
-            dict(original='123',
-                 loaded="OVERRIDE"))
+            dict(original=pprint.pformat(123), loaded=loaded.pformat(123)),
+            dict(original='123', loaded="OVERRIDE"))

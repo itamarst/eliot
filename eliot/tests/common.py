@@ -9,6 +9,7 @@ class FakeSys(object):
     """
     A fake L{sys} module.
     """
+
     def __init__(self, argv, stdinBytes):
         """
         @param argv: List of command-line arguments.

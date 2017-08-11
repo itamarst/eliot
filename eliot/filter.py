@@ -8,7 +8,6 @@ if __name__ == '__main__':
     import eliot.filter
     eliot.filter.main()
 
-
 import sys
 from datetime import datetime, timedelta
 
@@ -19,6 +18,7 @@ class _JSONEncoder(json.JSONEncoder):
     """
     JSON encoder that supports L{datetime}.
     """
+
     def default(self, o):
         if isinstance(o, datetime):
             return o.isoformat()
@@ -28,7 +28,6 @@ class _JSONEncoder(json.JSONEncoder):
 _encoder = _JSONEncoder()
 
 
-
 class EliotFilter(object):
     """
     Filter Eliot log lines using a Python expression.
@@ -36,7 +35,6 @@ class EliotFilter(object):
     @ivar code: A Python code object, the compiled filter expression.
     """
     _SKIP = object()
-
 
     def __init__(self, expr, incoming, output):
         """
@@ -53,7 +51,6 @@ class EliotFilter(object):
         self.incoming = incoming
         self.output = output
 
-
     def run(self):
         """
         For each incoming message, decode the JSON, evaluate expression, encode
@@ -66,7 +63,6 @@ class EliotFilter(object):
                 continue
             self.output.write(_encoder.encode(result).encode("utf-8") + b"\n")
 
-
     def _evaluate(self, message):
         """
         Evaluate the expression with the given Python object in its locals.
@@ -75,11 +71,13 @@ class EliotFilter(object):
 
         @return: The resulting object.
         """
-        return eval(self.code, globals(), {"J": message,
-                                           "timedelta": timedelta,
-                                           "datetime": datetime,
-                                           "SKIP": self._SKIP})
-
+        return eval(
+            self.code,
+            globals(), {
+                "J": message,
+                "timedelta": timedelta,
+                "datetime": datetime,
+                "SKIP": self._SKIP})
 
 
 USAGE = b"""\

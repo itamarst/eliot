@@ -18,8 +18,7 @@ from ._message import (
     MESSAGE_TYPE_FIELD,
     TASK_LEVEL_FIELD,
     TASK_UUID_FIELD,
-    TIMESTAMP_FIELD,
-)
+    TIMESTAMP_FIELD, )
 from ._action import (
     startAction,
     startTask,
@@ -27,8 +26,7 @@ from ._action import (
     ACTION_TYPE_FIELD,
     STARTED_STATUS,
     SUCCEEDED_STATUS,
-    FAILED_STATUS,
-)
+    FAILED_STATUS, )
 
 
 class ValidationError(Exception):
@@ -40,7 +38,6 @@ class ValidationError(Exception):
 # Types that can be encoded to JSON:
 _JSON_TYPES = {type(None), int, float, unicode, list, dict, bytes, bool}
 _JSON_TYPES |= set(six.integer_types)
-
 
 RESERVED_FIELDS = (TASK_LEVEL_FIELD, TASK_UUID_FIELD, TIMESTAMP_FIELD)
 
@@ -59,6 +56,7 @@ class Field(object):
     @ivar description: A description of what this field contains.
     @type description: C{unicode}
     """
+
     def __init__(self, key, serializer, description="", extraValidator=None):
         """
         @param serializer: A function that takes a single rich input and
@@ -76,7 +74,6 @@ class Field(object):
         self._serializer = serializer
         self._extraValidator = extraValidator
 
-
     def validate(self, input):
         """
         Validate the given input value against this L{Field} definition.
@@ -92,7 +89,6 @@ class Field(object):
         if self._extraValidator is not None:
             self._extraValidator(input)
 
-
     def serialize(self, input):
         """
         Convert the given input to a value that can actually be logged.
@@ -102,7 +98,6 @@ class Field(object):
         @return: A serialized value.
         """
         return self._serializer(input)
-
 
     @classmethod
     def forValue(klass, key, value, description):
@@ -119,16 +114,16 @@ class Field(object):
 
         @return: A L{Field}.
         """
+
         def validate(checked):
             if checked != value:
-                raise ValidationError(checked,
-                                      "Field %r must be %r" % (key, value))
-        return klass(key, lambda _: value, description, validate)
+                raise ValidationError(
+                    checked, "Field %r must be %r" % (key, value))
 
+        return klass(key, lambda _: value, description, validate)
 
     # PEP 8 variant:
     for_value = forValue
-
 
     @classmethod
     def forTypes(klass, key, classes, description, extraValidator=None):
@@ -155,24 +150,22 @@ class Field(object):
             if k is None:
                 k = type(None)
             if k not in _JSON_TYPES:
-                raise TypeError("%s is not JSON-encodeable" % (k,))
+                raise TypeError("%s is not JSON-encodeable" % (k, ))
             fixedClasses.append(k)
         fixedClasses = tuple(fixedClasses)
 
         def validate(value):
             if not isinstance(value, fixedClasses):
                 raise ValidationError(
-                    value, "Field %r requires type to be one of %s" %
-                    (key, classes))
+                    value,
+                    "Field %r requires type to be one of %s" % (key, classes))
             if extraValidator is not None:
                 extraValidator(value)
 
         return klass(key, lambda v: v, description, extraValidator=validate)
 
-
     # PEP 8 variant:
     for_types = forTypes
-
 
 
 def fields(*fields, **keys):
@@ -190,13 +183,11 @@ def fields(*fields, **keys):
         Field.forTypes(key, [value], "") for key, value in keys.items()]
 
 
-
 REASON = Field.forTypes(REASON_FIELD, [unicode], "The reason for an event.")
-TRACEBACK = Field.forTypes("traceback", [unicode],
-                           "The traceback for an exception.")
-EXCEPTION = Field.forTypes("exception", [unicode],
-                           "The FQPN of an exception class.")
-
+TRACEBACK = Field.forTypes(
+    "traceback", [unicode], "The traceback for an exception.")
+EXCEPTION = Field.forTypes(
+    "exception", [unicode], "The FQPN of an exception class.")
 
 
 class _MessageSerializer(object):
@@ -208,28 +199,31 @@ class _MessageSerializer(object):
     @ivar allow_additional_fields: If true, additional fields don't cause
         validation failure.
     """
+
     def __init__(self, fields, allow_additional_fields=False):
         keys = []
         for field in fields:
             if not isinstance(field, Field):
-                raise TypeError(
-                    'Expected a Field instance but got', field)
+                raise TypeError('Expected a Field instance but got', field)
             keys.append(field.key)
         if len(set(keys)) != len(keys):
             raise ValueError(keys, "Duplicate field name")
         if ACTION_TYPE_FIELD in keys:
             if MESSAGE_TYPE_FIELD in keys:
-                raise ValueError(keys, "Messages must have either "
-                                 "'action_type' or 'message_type', not both")
+                raise ValueError(
+                    keys, "Messages must have either "
+                    "'action_type' or 'message_type', not both")
         elif MESSAGE_TYPE_FIELD not in keys:
-            raise ValueError(keys, "Messages must have either 'action_type' ",
-                             "or 'message_type'")
+            raise ValueError(
+                keys, "Messages must have either 'action_type' ",
+                "or 'message_type'")
         if any(key.startswith("_") for key in keys):
             raise ValueError(keys, "Field names must not start with '_'")
         for reserved in RESERVED_FIELDS:
             if reserved in keys:
-                raise ValueError(keys, "The field name %r is reserved for use "
-                                 "by the logging framework" % (reserved,))
+                raise ValueError(
+                    keys, "The field name %r is reserved for use "
+                    "by the logging framework" % (reserved, ))
         self.fields = dict((field.key, field) for field in fields)
         self.allow_additional_fields = allow_additional_fields
 
@@ -248,7 +242,6 @@ class _MessageSerializer(object):
         for key, field in self.fields.items():
             message[key] = field.serialize(message[key])
 
-
     def validate(self, message):
         """
         Validate the given message.
@@ -260,7 +253,7 @@ class _MessageSerializer(object):
         """
         for key, field in self.fields.items():
             if key not in message:
-                raise ValidationError(message, "Field %r is missing" % (key,))
+                raise ValidationError(message, "Field %r is missing" % (key, ))
             field.validate(message[key])
 
         if self.allow_additional_fields:
@@ -269,7 +262,7 @@ class _MessageSerializer(object):
         fieldSet = set(self.fields) | set(RESERVED_FIELDS)
         for key in message:
             if key not in fieldSet:
-                raise ValidationError(message, "Unexpected field %r" % (key,))
+                raise ValidationError(message, "Unexpected field %r" % (key, ))
 
 
 class MessageType(object):
@@ -301,6 +294,7 @@ class MessageType(object):
     @ivar description: A description of what this message means.
     @type description: C{unicode}
     """
+
     def __init__(self, message_type, fields, description=""):
         """
         @ivar type: The name of the type,
@@ -315,9 +309,9 @@ class MessageType(object):
         self.message_type = message_type
         self.description = description
         self._serializer = _MessageSerializer(
-            fields + [Field.forValue(MESSAGE_TYPE_FIELD, message_type,
-                                     "The message type.")])
-
+            fields + [
+                Field.forValue(
+                    MESSAGE_TYPE_FIELD, message_type, "The message type.")])
 
     def __call__(self, **fields):
         """
@@ -329,7 +323,6 @@ class MessageType(object):
         """
         fields[MESSAGE_TYPE_FIELD] = self.message_type
         return Message(fields, self._serializer)
-
 
     def log(self, **fields):
         """
@@ -393,32 +386,35 @@ class ActionType(object):
     _startAction = staticmethod(startAction)
     _startTask = staticmethod(startTask)
 
-
-    def __init__(self, action_type, startFields, successFields, description=""):
+    def __init__(
+        self, action_type, startFields, successFields, description=""):
         self.action_type = action_type
         self.description = description
 
-        actionTypeField = Field.forValue(ACTION_TYPE_FIELD, action_type,
-                                         "The action type")
+        actionTypeField = Field.forValue(
+            ACTION_TYPE_FIELD, action_type, "The action type")
+
         def makeActionStatusField(value):
-            return Field.forValue(ACTION_STATUS_FIELD, value,
-                                  "The action status")
+            return Field.forValue(
+                ACTION_STATUS_FIELD, value, "The action status")
+
         startFields = startFields + [
-            actionTypeField, makeActionStatusField(STARTED_STATUS)]
+            actionTypeField,
+            makeActionStatusField(STARTED_STATUS)]
         successFields = successFields + [
-            actionTypeField, makeActionStatusField(SUCCEEDED_STATUS)]
+            actionTypeField,
+            makeActionStatusField(SUCCEEDED_STATUS)]
         failureFields = [
-            actionTypeField, makeActionStatusField(FAILED_STATUS), REASON,
-            EXCEPTION]
+            actionTypeField,
+            makeActionStatusField(FAILED_STATUS), REASON, EXCEPTION]
 
         self._serializers = _ActionSerializers(
             start=_MessageSerializer(startFields),
             success=_MessageSerializer(successFields),
             # Failed action messages can have extra fields from exception
             # extraction:
-            failure=_MessageSerializer(failureFields,
-                                       allow_additional_fields=True))
-
+            failure=_MessageSerializer(
+                failureFields, allow_additional_fields=True))
 
     def __call__(self, logger=None, **fields):
         """
@@ -450,9 +446,8 @@ class ActionType(object):
 
         @rtype: L{eliot.Action}
         """
-        return self._startAction(logger, self.action_type, self._serializers,
-                                 **fields)
-
+        return self._startAction(
+            logger, self.action_type, self._serializers, **fields)
 
     def as_task(self, logger=None, **fields):
         """
@@ -468,13 +463,11 @@ class ActionType(object):
 
         @rtype: L{eliot.Action}
         """
-        return self._startTask(logger, self.action_type, self._serializers,
-                               **fields)
-
+        return self._startTask(
+            logger, self.action_type, self._serializers, **fields)
 
     # Backwards compatible variant:
     asTask = as_task
-
 
 
 __all__ = []

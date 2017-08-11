@@ -15,12 +15,13 @@ from ._validation import MessageType, Field
 from ._errors import _error_extraction
 
 TRACEBACK_MESSAGE = MessageType(
-    "eliot:traceback",
-    [Field(REASON_FIELD, safeunicode, "The exception's value."),
-     Field("traceback", safeunicode, "The traceback."),
-     Field(EXCEPTION_FIELD,
-           lambda typ: "%s.%s" % (typ.__module__, typ.__name__),
-           "The exception type's FQPN.")],
+    "eliot:traceback", [
+        Field(REASON_FIELD, safeunicode, "The exception's value."),
+        Field("traceback", safeunicode, "The traceback."),
+        Field(
+            EXCEPTION_FIELD,
+            lambda typ: "%s.%s" % (typ.__module__, typ.__name__),
+            "The exception type's FQPN.")],
     "An unexpected exception indicating a bug.")
 # The fields here are actually subset of what you might get in practice,
 # due to exception extraction, so we hackily modify the serializer:
@@ -37,10 +38,10 @@ def _writeTracebackMessage(logger, typ, exception, traceback):
 
     @param traceback: The traceback, a C{str}.
     """
-    msg = TRACEBACK_MESSAGE(reason=exception, traceback=traceback,
-                            exception=typ)
-    msg = msg.bind(**_error_extraction.get_fields_for_exception(
-        logger, exception))
+    msg = TRACEBACK_MESSAGE(
+        reason=exception, traceback=traceback, exception=typ)
+    msg = msg.bind(
+        **_error_extraction.get_fields_for_exception(logger, exception))
     msg.write(logger)
 
 
@@ -55,15 +56,21 @@ def _get_traceback_no_io():
     Return a version of L{traceback} that doesn't do I/O.
     """
     module = load_module(str("_traceback_no_io"), traceback)
+
     class FakeLineCache(object):
         def checkcache(self, *args, **kwargs):
             None
+
         def getline(self, *args, **kwargs):
             return ""
+
         def lazycache(self, *args, **kwargs):
             return None
+
     module.linecache = FakeLineCache()
     return module
+
+
 _traceback_no_io = _get_traceback_no_io()
 
 
@@ -79,13 +86,14 @@ def writeTraceback(logger=None, system=None):
              writeTraceback(logger)
     """
     if system is not None:
-        warn("The `system` argument to writeTraceback is no longer used.",
-             DeprecationWarning, stacklevel=2)
+        warn(
+            "The `system` argument to writeTraceback is no longer used.",
+            DeprecationWarning,
+            stacklevel=2)
 
     typ, exception, tb = sys.exc_info()
     traceback = "".join(_traceback_no_io.format_exception(typ, exception, tb))
     _writeTracebackMessage(logger, typ, exception, traceback)
-
 
 
 def writeFailure(failure, logger=None, system=None):
@@ -107,10 +115,13 @@ def writeFailure(failure, logger=None, system=None):
     @return: None
     """
     if system is not None:
-        warn("The `system` argument to writeFailure is no longer used.",
-             DeprecationWarning, stacklevel=2)
+        warn(
+            "The `system` argument to writeFailure is no longer used.",
+            DeprecationWarning,
+            stacklevel=2)
 
     # Failure.getBriefTraceback does not include source code, so does not do
     # I/O.
-    _writeTracebackMessage(logger, failure.value.__class__,
-                           failure.value, failure.getBriefTraceback())
+    _writeTracebackMessage(
+        logger, failure.value.__class__, failure.value,
+        failure.getBriefTraceback())

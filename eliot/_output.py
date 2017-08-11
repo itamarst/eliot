@@ -26,8 +26,6 @@ else:
     except ImportError:
         import json as fast_json
 
-
-
 from zope.interface import Interface, implementer
 
 from ._traceback import writeTraceback, TRACEBACK_MESSAGE
@@ -35,10 +33,8 @@ from ._message import (
     Message,
     EXCEPTION_FIELD,
     MESSAGE_TYPE_FIELD,
-    REASON_FIELD,
-)
+    REASON_FIELD, )
 from ._util import saferepr, safeunicode
-
 
 
 class _DestinationsSendError(Exception):
@@ -47,10 +43,10 @@ class _DestinationsSendError(Exception):
 
     @ivar errors: A list of tuples output from C{sys.exc_info()}.
     """
+
     def __init__(self, errors):
         self.errors = errors
         Exception.__init__(self)
-
 
 
 class Destinations(object):
@@ -60,10 +56,10 @@ class Destinations(object):
     The global instance of this class is where L{Logger} instances will
     send written messages.
     """
+
     def __init__(self):
         self._destinations = []
         self._globalFields = {}
-
 
     def addGlobalFields(self, **fields):
         """
@@ -73,7 +69,6 @@ class Destinations(object):
         @param fields: Keyword arguments mapping field names to values.
         """
         self._globalFields.update(fields)
-
 
     def send(self, message):
         """
@@ -94,7 +89,6 @@ class Destinations(object):
         if errors:
             raise _DestinationsSendError(errors)
 
-
     def add(self, destination):
         """
         Add a new destination.
@@ -105,7 +99,6 @@ class Destinations(object):
         @param destination: A callable that takes message dictionaries,
         """
         self._destinations.append(destination)
-
 
     def remove(self, destination):
         """
@@ -118,11 +111,11 @@ class Destinations(object):
         self._destinations.remove(destination)
 
 
-
 class ILogger(Interface):
     """
     Write out message dictionaries to some destination.
     """
+
     def write(dictionary, serializer=None):
         """
         Write a dictionary to the appropriate destination.
@@ -135,7 +128,6 @@ class ILogger(Interface):
              will not be mutated.
         @type dictionary: C{dict}
         """
-
 
 
 @implementer(ILogger)
@@ -163,11 +155,10 @@ class Logger(object):
         """
         try:
             return unicode(
-                dict((saferepr(key), saferepr(value)) for (key, value)
-                     in dictionary.items()))
+                dict((saferepr(key), saferepr(value))
+                     for (key, value) in dictionary.items()))
         except:
             return saferepr(dictionary)
-
 
     def write(self, dictionary, serializer=None):
         """
@@ -179,8 +170,9 @@ class Logger(object):
                 serializer.serialize(dictionary)
         except:
             writeTraceback(self)
-            msg = Message({MESSAGE_TYPE_FIELD: "eliot:serialization_failure",
-                           "message": self._safeUnicodeDictionary(dictionary)})
+            msg = Message({
+                MESSAGE_TYPE_FIELD: "eliot:serialization_failure",
+                "message": self._safeUnicodeDictionary(dictionary)})
             msg.write(self)
             return
 
@@ -194,11 +186,14 @@ class Logger(object):
                     # infinite recursion. So instead we have to manually
                     # construct a message.
                     msg = Message({
-                        MESSAGE_TYPE_FIELD: "eliot:destination_failure",
-                        REASON_FIELD: safeunicode(exception),
+                        MESSAGE_TYPE_FIELD:
+                        "eliot:destination_failure",
+                        REASON_FIELD:
+                        safeunicode(exception),
                         EXCEPTION_FIELD:
                         exc_type.__module__ + "." + exc_type.__name__,
-                        "message": self._safeUnicodeDictionary(dictionary)})
+                        "message":
+                        self._safeUnicodeDictionary(dictionary)})
                     self._destinations.send(dict(msg._freeze()))
                 except:
                     # Nothing we can do here, raising exception to caller will
@@ -215,8 +210,6 @@ class UnflushedTracebacks(Exception):
     you expected the traceback then you will need to flush it using
     L{MemoryLogger.flushTracebacks}.
     """
-
-
 
 
 @implementer(ILogger)
@@ -239,9 +232,9 @@ class MemoryLogger(object):
         tracebacks using L{eliot.writeTraceback} or L{eliot.writeFailure}. Do
         not mutate this list.
     """
+
     def __init__(self):
         self.reset()
-
 
     def flushTracebacks(self, exceptionType):
         """
@@ -264,10 +257,8 @@ class MemoryLogger(object):
         self.tracebackMessages = remaining
         return result
 
-
     # PEP 8 variant:
     flush_tracebacks = flushTracebacks
-
 
     def write(self, dictionary, serializer=None):
         """
@@ -277,7 +268,6 @@ class MemoryLogger(object):
         self.serializers.append(serializer)
         if serializer is TRACEBACK_MESSAGE._serializer:
             self.tracebackMessages.append(dictionary)
-
 
     def validate(self):
         """
@@ -299,7 +289,8 @@ class MemoryLogger(object):
                     if isinstance(key, bytes):
                         key.decode("utf-8")
                     else:
-                        raise TypeError(dictionary, "%r is not unicode" % (key,))
+                        raise TypeError(
+                            dictionary, "%r is not unicode" % (key, ))
             if serializer is not None:
                 serializer.serialize(dictionary)
 
@@ -307,7 +298,6 @@ class MemoryLogger(object):
             # ujson has different behavior in some cases:
             fast_json.dumps(dictionary)
             slow_json.dumps(dictionary)
-
 
     def serialize(self):
         """
@@ -324,7 +314,6 @@ class MemoryLogger(object):
             result.append(dictionary)
         return result
 
-
     def reset(self):
         """
         Clear all logged messages.
@@ -338,7 +327,6 @@ class MemoryLogger(object):
         self.messages = []
         self.serializers = []
         self.tracebackMessages = []
-
 
 
 class FileDestination(PClass):
@@ -392,7 +380,6 @@ def to_file(output_file):
     @param output_file: A file-like object.
     """
     Logger._destinations.add(FileDestination(file=output_file))
-
 
 
 # The default Logger, used when none is specified:

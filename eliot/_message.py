@@ -11,7 +11,6 @@ from six import text_type as unicode
 
 from pyrsistent import PClass, thaw, pmap_field, pmap
 
-
 MESSAGE_TYPE_FIELD = 'message_type'
 TASK_UUID_FIELD = 'task_uuid'
 TASK_LEVEL_FIELD = 'task_level'
@@ -33,7 +32,6 @@ class Message(object):
     # Overrideable for testing purposes:
     _time = time.time
 
-
     @classmethod
     def new(_class, _serializer=None, **fields):
         """
@@ -50,7 +48,6 @@ class Message(object):
         """
         return _class(fields, _serializer)
 
-
     @classmethod
     def log(_class, **fields):
         """
@@ -59,7 +56,6 @@ class Message(object):
         The keyword arguments will become contents of the L{Message}.
         """
         _class.new(**fields).write()
-
 
     def __init__(self, contents, serializer=None):
         """
@@ -77,7 +73,6 @@ class Message(object):
         self._contents = pmap(contents)
         self._serializer = serializer
 
-
     def bind(self, **fields):
         """
         Return a new L{Message} with this message's contents plus the
@@ -85,20 +80,17 @@ class Message(object):
         """
         return Message(self._contents.update(fields), self._serializer)
 
-
     def contents(self):
         """
         Return a copy of L{Message} contents.
         """
         return dict(self._contents)
 
-
     def _timestamp(self):
         """
         Return the current time.
         """
         return self._time()
-
 
     def _freeze(self, action=None):
         """
@@ -123,8 +115,7 @@ class Message(object):
         return self._contents.update({
             TIMESTAMP_FIELD: timestamp,
             TASK_UUID_FIELD: task_uuid,
-            TASK_LEVEL_FIELD: task_level,
-        })
+            TASK_LEVEL_FIELD: task_level, })
 
     def write(self, logger=None, action=None):
         """
@@ -147,7 +138,6 @@ class Message(object):
         logger.write(dict(logged_dict), self._serializer)
 
 
-
 class WrittenMessage(PClass):
     """
     A L{Message} that has been logged.
@@ -163,14 +153,12 @@ class WrittenMessage(PClass):
         """
         return self._logged_dict[TIMESTAMP_FIELD]
 
-
     @property
     def task_uuid(self):
         """
         The UUID of the task in which the message was logged.
         """
         return self._logged_dict[TASK_UUID_FIELD]
-
 
     @property
     def task_level(self):
@@ -179,15 +167,13 @@ class WrittenMessage(PClass):
         """
         return TaskLevel(level=self._logged_dict[TASK_LEVEL_FIELD])
 
-
     @property
     def contents(self):
         """
         A C{PMap}, the message contents without Eliot metadata.
         """
-        return self._logged_dict.discard(
-            TIMESTAMP_FIELD).discard(TASK_UUID_FIELD).discard(TASK_LEVEL_FIELD)
-
+        return self._logged_dict.discard(TIMESTAMP_FIELD).discard(
+            TASK_UUID_FIELD).discard(TASK_LEVEL_FIELD)
 
     @classmethod
     def from_dict(cls, logged_dictionary):
@@ -199,7 +185,6 @@ class WrittenMessage(PClass):
         """
         return cls(_logged_dict=logged_dictionary)
 
-
     def as_dict(self):
         """
         Return the dictionary that was used to write this message.
@@ -209,8 +194,6 @@ class WrittenMessage(PClass):
         return self._logged_dict
 
 
-
 # Import at end to deal with circular imports:
 from ._action import currentAction, TaskLevel
 from . import _output
-

@@ -15,20 +15,20 @@ class JSONEncoder(pyjson.JSONEncoder):
     """
     JSON encoder that supports L{bytes}.
     """
+
     def default(self, o):
         if isinstance(o, bytes):
             return o.decode("utf-8")
         return pyjson.JSONEncoder.default(self, o)
 
-_encoder = JSONEncoder()
 
+_encoder = JSONEncoder()
 
 
 def _loads(s):
     if isinstance(s, bytes):
         s = s.decode("utf-8")
     return pyjson.loads(s)
-
 
 
 def _dumps(obj):

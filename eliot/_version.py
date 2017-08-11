@@ -1,4 +1,3 @@
-
 # This file helps to compute a version number in source trees obtained from
 # git-archive tarball (such as those provided by githubs download-from-tag
 # feature). Distribution tarballs (built by setup.py sdist) and build
@@ -30,9 +29,11 @@ def run_command(commands, args, cwd=None, verbose=False, hide_stderr=False):
     for c in commands:
         try:
             # remember shell=False, so use git.cmd on windows, not just git
-            p = subprocess.Popen([c] + args, cwd=cwd, stdout=subprocess.PIPE,
-                                 stderr=(subprocess.PIPE if hide_stderr
-                                         else None))
+            p = subprocess.Popen(
+                [c] + args,
+                cwd=cwd,
+                stdout=subprocess.PIPE,
+                stderr=(subprocess.PIPE if hide_stderr else None))
             break
         except EnvironmentError:
             e = sys.exc_info()[1]
@@ -44,7 +45,7 @@ def run_command(commands, args, cwd=None, verbose=False, hide_stderr=False):
             return None
     else:
         if verbose:
-            print("unable to find command, tried %s" % (commands,))
+            print("unable to find command, tried %s" % (commands, ))
         return None
     stdout = p.communicate()[0].strip()
     if sys.version_info[0] >= 3:
@@ -62,8 +63,9 @@ def versions_from_parentdir(parentdir_prefix, root, verbose=False):
     dirname = os.path.basename(root)
     if not dirname.startswith(parentdir_prefix):
         if verbose:
-            print("guessing rootdir is '%s', but '%s' doesn't start with "
-                  "prefix '%s'" % (root, dirname, parentdir_prefix))
+            print(
+                "guessing rootdir is '%s', but '%s' doesn't start with "
+                "prefix '%s'" % (root, dirname, parentdir_prefix))
         return None
     return {"version": dirname[len(parentdir_prefix):], "full": ""}
 
@@ -114,7 +116,7 @@ def git_versions_from_keywords(keywords, tag_prefix, verbose=False):
         # "stabilization", as well as "HEAD" and "master".
         tags = set([r for r in refs if re.search(r'\d', r)])
         if verbose:
-            print("discarding '%s', no digits" % ",".join(refs-tags))
+            print("discarding '%s', no digits" % ",".join(refs - tags))
     if verbose:
         print("likely tags: %s" % ",".join(sorted(tags)))
     for ref in sorted(tags):
@@ -123,13 +125,11 @@ def git_versions_from_keywords(keywords, tag_prefix, verbose=False):
             r = ref[len(tag_prefix):]
             if verbose:
                 print("picking %s" % r)
-            return {"version": r,
-                    "full": keywords["full"].strip()}
+            return {"version": r, "full": keywords["full"].strip()}
     # no suitable tags, so version is "0+unknown", but full hex is still there
     if verbose:
         print("no suitable tags, using unknown + full revision id")
-    return {"version": "0+unknown",
-            "full": keywords["full"].strip()}
+    return {"version": "0+unknown", "full": keywords["full"].strip()}
 
 
 def git_parse_vcs_describe(git_describe, tag_prefix, verbose=False):
@@ -144,13 +144,13 @@ def git_parse_vcs_describe(git_describe, tag_prefix, verbose=False):
     # now we have TAG-NUM-gHEX or HEX
 
     if "-" not in git_describe:  # just HEX
-        return "0+untagged.g"+git_describe+dirty_suffix, dirty
+        return "0+untagged.g" + git_describe + dirty_suffix, dirty
 
     # just TAG-NUM-gHEX
     mo = re.search(r'^(.+)-(\d+)-g([0-9a-f]+)$', git_describe)
     if not mo:
         # unparseable. Maybe git-describe is misbehaving?
-        return "0+unparseable"+dirty_suffix, dirty
+        return "0+unparseable" + dirty_suffix, dirty
 
     # tag
     full_tag = mo.group(1)
@@ -194,9 +194,9 @@ def git_versions_from_vcs(tag_prefix, root, verbose=False):
         GITS = ["git.cmd", "git.exe"]
     # if there is a tag, this yields TAG-NUM-gHEX[-dirty]
     # if there are no tags, this yields HEX[-dirty] (no NUM)
-    stdout = run_command(GITS, ["describe", "--tags", "--dirty",
-                                "--always", "--long"],
-                         cwd=root)
+    stdout = run_command(
+        GITS, ["describe", "--tags", "--dirty", "--always", "--long"],
+        cwd=root)
     # --long was added in git-1.5.5
     if stdout is None:
         return {}  # try next method
@@ -234,6 +234,6 @@ def get_versions(default={"version": "0+unknown", "full": ""}, verbose=False):
     except NameError:
         return default
 
-    return (git_versions_from_vcs(tag_prefix, root, verbose)
-            or versions_from_parentdir(parentdir_prefix, root, verbose)
-            or default)
+    return (
+        git_versions_from_vcs(tag_prefix, root, verbose)
+        or versions_from_parentdir(parentdir_prefix, root, verbose) or default)

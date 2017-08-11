@@ -45,9 +45,9 @@ def last_journald_message():
     marker = unicode(uuid4())
     sd_journal_send(MESSAGE=marker.encode("ascii"))
     for i in range(500):
-        messages = check_output(
-            [b"journalctl", b"-a", b"-o", b"json", b"-n2",
-             b"_PID=" + str(getpid()).encode("ascii")])
+        messages = check_output([
+            b"journalctl", b"-a", b"-o", b"json", b"-n2",
+            b"_PID=" + str(getpid()).encode("ascii")])
         messages = [loads(m) for m in messages.splitlines()]
         if len(messages) == 2 and messages[1]["MESSAGE"] == marker:
             return messages[0]
@@ -59,8 +59,10 @@ class SdJournaldSendTests(TestCase):
     """
     Functional tests for L{sd_journal_send}.
     """
-    @skipUnless(_journald_available(),
-                "journald unavailable or inactive on this machine.")
+
+    @skipUnless(
+        _journald_available(),
+        "journald unavailable or inactive on this machine.")
     def setUp(self):
         pass
 
@@ -101,9 +103,9 @@ class SdJournaldSendTests(TestCase):
         """
         sd_journal_send(MESSAGE=b"hello", BONUS_FIELD=b"world")
         result = last_journald_message()
-        self.assertEqual((b"hello", b"world"),
-                         (result["MESSAGE"].encode("ascii"),
-                          result["BONUS_FIELD"].encode("ascii")))
+        self.assertEqual((b"hello", b"world"), (
+            result["MESSAGE"].encode("ascii"),
+            result["BONUS_FIELD"].encode("ascii")))
 
     def test_error(self):
         """
@@ -120,8 +122,10 @@ class JournaldDestinationTests(TestCase):
     """
     Tests for L{JournaldDestination}.
     """
-    @skipUnless(_journald_available(),
-                "journald unavailable or inactive on this machine.")
+
+    @skipUnless(
+        _journald_available(),
+        "journald unavailable or inactive on this machine.")
     def setUp(self):
         self.destination = JournaldDestination()
         self.logger = MemoryLogger()
@@ -153,8 +157,8 @@ class JournaldDestinationTests(TestCase):
         """
         action_type = "test:type"
         start_action(self.logger, action_type=action_type)
-        self.assert_field_for(self.logger.messages[0], "ELIOT_TYPE",
-                              action_type)
+        self.assert_field_for(
+            self.logger.messages[0], "ELIOT_TYPE", action_type)
 
     def test_message_type(self):
         """
@@ -162,8 +166,8 @@ class JournaldDestinationTests(TestCase):
         """
         message_type = "test:type:message"
         Message.new(message_type=message_type).write(self.logger)
-        self.assert_field_for(self.logger.messages[0], "ELIOT_TYPE",
-                              message_type)
+        self.assert_field_for(
+            self.logger.messages[0], "ELIOT_TYPE", message_type)
 
     def test_no_type(self):
         """
@@ -177,8 +181,9 @@ class JournaldDestinationTests(TestCase):
         The task UUID is stored in the ELIOT_TASK field.
         """
         start_action(self.logger, action_type="xxx")
-        self.assert_field_for(self.logger.messages[0], "ELIOT_TASK",
-                              self.logger.messages[0][TASK_UUID_FIELD])
+        self.assert_field_for(
+            self.logger.messages[0], "ELIOT_TASK",
+            self.logger.messages[0][TASK_UUID_FIELD])
 
     def test_info_priorities(self):
         """
@@ -226,7 +231,7 @@ class JournaldDestinationTests(TestCase):
             # Recreate JournaldDestination with the newly set argv[0].
             self.destination = JournaldDestination()
             Message.new(message_type="msg").write(self.logger)
-            self.assert_field_for(self.logger.messages[0], "SYSLOG_IDENTIFIER",
-                                  u"testing123")
+            self.assert_field_for(
+                self.logger.messages[0], "SYSLOG_IDENTIFIER", u"testing123")
         finally:
             argv[0] = original

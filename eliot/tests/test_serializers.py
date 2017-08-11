@@ -15,14 +15,13 @@ class SerializerTests(TestCase):
     """
     Tests for standard serializers.
     """
+
     def test_timestamp(self):
         """
         L{timestamp} converts a UTC L{datetime} to a Unicode strings.
         """
         dt = datetime(2012, 9, 28, 14, 53, 6, 123456)
-        self.assertEqual(timestamp(dt),
-                         "2012-09-28T14:53:06.123456Z")
-
+        self.assertEqual(timestamp(dt), "2012-09-28T14:53:06.123456Z")
 
     def test_identity(self):
         """
@@ -30,7 +29,6 @@ class SerializerTests(TestCase):
         """
         obj = object()
         self.assertIs(identity(obj), obj)
-
 
     def test_md5hex(self):
         """

@@ -18,8 +18,10 @@ from .. import start_action, Message
 from ..testing import MemoryLogger
 from .._parse import Task, Parser
 from .._message import (
-    WrittenMessage, MESSAGE_TYPE_FIELD, TASK_LEVEL_FIELD, TASK_UUID_FIELD,
-)
+    WrittenMessage,
+    MESSAGE_TYPE_FIELD,
+    TASK_LEVEL_FIELD,
+    TASK_UUID_FIELD, )
 from .._action import FAILED_STATUS, ACTION_STATUS_FIELD, WrittenAction
 from .strategies import labels
 
@@ -48,8 +50,9 @@ class ActionStructure(PClass):
                 raise AssertionError("Missing end message.")
             return cls(
                 type=written.action_type,
-                failed=(written.end_message.contents[ACTION_STATUS_FIELD] ==
-                        FAILED_STATUS),
+                failed=(
+                    written.end_message.contents[ACTION_STATUS_FIELD] ==
+                    FAILED_STATUS),
                 children=[cls.from_written(o) for o in written.children])
 
     @classmethod
@@ -89,6 +92,7 @@ def action_structures(draw):
                 children=[to_structure(o) for o in tree_or_message])
         else:
             return tree_or_message
+
     return to_structure(tree)
 
 
@@ -96,6 +100,8 @@ def _structure_and_messages(structure):
     messages = ActionStructure.to_eliot(structure, MemoryLogger())
     return st.permutations(messages).map(
         lambda permuted: (structure, permuted))
+
+
 # Hypothesis strategy that creates a tuple of ActionStructure/unicode and
 # corresponding serialized Eliot messages, randomly shuffled.
 STRUCTURES_WITH_MESSAGES = action_structures().flatmap(_structure_and_messages)
@@ -119,6 +125,7 @@ class TaskTests(TestCase):
     """
     Tests for L{Task}.
     """
+
     @given(structure_and_messages=STRUCTURES_WITH_MESSAGES)
     def test_missing_action(self, structure_and_messages):
         """
@@ -179,8 +186,7 @@ class TaskTests(TestCase):
             task = task.add(message)
             completed.append(task.is_complete())
 
-        self.assertEqual(completed,
-                         [False for m in messages[:-1]] + [True])
+        self.assertEqual(completed, [False for m in messages[:-1]] + [True])
 
     def test_parse_contents(self):
         """
@@ -192,8 +198,8 @@ class TaskTests(TestCase):
             ctx.add_success_fields(foo=[1, 2])
         messages = logger.messages
         expected = WrittenAction.from_messages(
-            WrittenMessage.from_dict(messages[0]),
-            [WrittenMessage.from_dict(messages[1])],
+            WrittenMessage.from_dict(messages[0]), [
+                WrittenMessage.from_dict(messages[1])],
             WrittenMessage.from_dict(messages[2]))
 
         task = parse_to_task(messages)
@@ -204,12 +210,14 @@ class ParserTests(TestCase):
     """
     Tests for L{Parser}.
     """
-    @given(structure_and_messages1=STRUCTURES_WITH_MESSAGES,
-           structure_and_messages2=STRUCTURES_WITH_MESSAGES,
-           structure_and_messages3=STRUCTURES_WITH_MESSAGES)
-    def test_parse_into_tasks(self, structure_and_messages1,
-                              structure_and_messages2,
-                              structure_and_messages3):
+
+    @given(
+        structure_and_messages1=STRUCTURES_WITH_MESSAGES,
+        structure_and_messages2=STRUCTURES_WITH_MESSAGES,
+        structure_and_messages3=STRUCTURES_WITH_MESSAGES)
+    def test_parse_into_tasks(
+        self, structure_and_messages1, structure_and_messages2,
+        structure_and_messages3):
         """
         Adding messages to a L{Parser} parses them into a L{Task} instances.
         """
@@ -248,17 +256,20 @@ class ParserTests(TestCase):
         task = task.add(messages[-1])
         _, parser = parser.add(messages[-1])
         self.assertEqual(
-            dict(incomplete_matches=incomplete_matches,
-                 final_incompleted=parser.incomplete_tasks()),
-            dict(incomplete_matches=[True] * (len(messages) - 1),
-                 final_incompleted=[]))
+            dict(
+                incomplete_matches=incomplete_matches,
+                final_incompleted=parser.incomplete_tasks()),
+            dict(
+                incomplete_matches=[True] * (len(messages) - 1),
+                final_incompleted=[]))
 
-    @given(structure_and_messages1=STRUCTURES_WITH_MESSAGES,
-           structure_and_messages2=STRUCTURES_WITH_MESSAGES,
-           structure_and_messages3=STRUCTURES_WITH_MESSAGES)
-    def test_parse_stream(self, structure_and_messages1,
-                          structure_and_messages2,
-                          structure_and_messages3):
+    @given(
+        structure_and_messages1=STRUCTURES_WITH_MESSAGES,
+        structure_and_messages2=STRUCTURES_WITH_MESSAGES,
+        structure_and_messages3=STRUCTURES_WITH_MESSAGES)
+    def test_parse_stream(
+        self, structure_and_messages1, structure_and_messages2,
+        structure_and_messages3):
         """
         L{Parser.parse_stream} returns an iterable of completed and then
         incompleted tasks.
@@ -269,14 +280,18 @@ class ParserTests(TestCase):
         # Need at least one non-dropped message in partial tree:
         assume(len(messages3) > 1)
         # Need unique UUIDs per task:
-        assume(len(set(m[0][TASK_UUID_FIELD] for m in
-                   (messages1, messages2, messages3))) == 3)
+        assume(
+            len(
+                set(
+                    m[0][TASK_UUID_FIELD]
+                    for m in (messages1, messages2, messages3))) == 3)
 
         # Two complete tasks, one incomplete task:
         all_messages = (messages1, messages2, messages3[:-1])
 
-        all_tasks = list(Parser.parse_stream(
-            [m for m in chain(*zip_longest(*all_messages))
-             if m is not None]))
+        all_tasks = list(
+            Parser.parse_stream([
+                m for m in chain(*zip_longest(*all_messages))
+                if m is not None]))
         assertCountEqual(
             self, all_tasks, [parse_to_task(msgs) for msgs in all_messages])
