@@ -46,7 +46,20 @@ class _DestinationsSendError(Exception):
 
     def __init__(self, errors):
         self.errors = errors
-        Exception.__init__(self)
+        Exception.__init__(self, errors)
+
+
+class BufferingDestination(object):
+    """
+    Buffer messages in memory.
+    """
+    def __init__(self):
+        self.messages = []
+
+    def __call__(self, message):
+        self.messages.append(message)
+        while len(self.messages) > 1000:
+            self.messages.pop(0)
 
 
 class Destinations(object):
@@ -58,7 +71,8 @@ class Destinations(object):
     """
 
     def __init__(self):
-        self._destinations = []
+        self._destinations = [BufferingDestination()]
+        self._any_added = False
         self._globalFields = {}
 
     def addGlobalFields(self, **fields):
@@ -99,7 +113,18 @@ class Destinations(object):
         @param destinations: A list of callables that takes message
             dictionaries.
         """
+        buffered_messages = None
+        if not self._any_added:
+            # These are first set of messages added, so we need to clear
+            # BufferingDestination:
+            self._any_added = True
+            buffered_messages = self._destinations[0].messages
+            self._destinations = []
         self._destinations.extend(destinations)
+        if buffered_messages:
+            # Re-deliver buffered messages:
+            for message in buffered_messages:
+                self.send(message)
 
     def remove(self, destination):
         """

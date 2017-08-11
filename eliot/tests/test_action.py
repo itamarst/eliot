@@ -824,7 +824,7 @@ class SerializationTests(TestCase):
         self.addCleanup(remove_destination, messages.append)
         Action.continueTask(task_id=taskId)
         assertContainsFields(
-            self, messages[0], {
+            self, messages[-1], {
                 "task_uuid": "uniq456",
                 "task_level": [3, 4, 1, 1],
                 "action_type": "eliot:remote_task",

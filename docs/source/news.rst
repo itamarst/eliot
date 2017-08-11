@@ -6,6 +6,9 @@ What's New
 
 Features:
 
+* Messages are no longer lost if they are logged before any destinations are added.
+  In particular, messages will be buffered in memory until the first set of destinations are added, at which point those messages will be delivered.
+  Thanks to Jean-Paul Calderone for the feature request.
 * ``eliot.add_destinations`` replaces ``eliot.add_destination``, and accepts multiple Destinations at once.
 * ``eliot.twisted.TwistedDestination`` allows redirecting Eliot logs to ``twisted.logger``.
   Thanks to Glyph Lefkowitz for the feature request.

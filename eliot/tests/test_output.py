@@ -213,8 +213,8 @@ class MemoryLoggerTests(TestCase):
 
     def test_flushTracebacksUnflushedUnreturned(self):
         """
-        Any tracebacks uncleared by L{MemoryLogger.flushTracebacks} (because they
-        are of a different type) are not returned.
+        Any tracebacks uncleared by L{MemoryLogger.flushTracebacks} (because
+        they are of a different type) are not returned.
         """
         logger = MemoryLogger()
         exception = RuntimeError()
@@ -356,6 +356,48 @@ class DestinationsTests(TestCase):
                 "y": "hello",
                 "z": 456,
                 "msg": "X"}])
+
+    def test_buffering(self):
+        """
+        Before any destinations are set up to 1000 messages are buffered, and
+        then delivered to the first registered destinations.
+        """
+        destinations = Destinations()
+        messages = [{"k": i} for i in range(1050)]
+        for m in messages:
+            destinations.send(m)
+        dest, dest2 = [], []
+        destinations.add(dest.append, dest2.append)
+        self.assertEqual(
+            (dest, dest2), (messages[-1000:], messages[-1000:]))
+
+    def test_buffering_second_batch(self):
+        """
+        The second batch of added destination don't get the buffered messages.
+        """
+        destinations = Destinations()
+        message = {"m": 1}
+        message2 = {"m": 2}
+        destinations.send(message)
+        dest = []
+        dest2 = []
+        destinations.add(dest.append)
+        destinations.add(dest2.append)
+        destinations.send(message2)
+        self.assertEqual((dest, dest2),
+                         ([message, message2], [message2]))
+
+    def test_global_fields_buffering(self):
+        """
+        Global fields are added to buffered messages, when possible.
+        """
+        destinations = Destinations()
+        message = {"m": 1}
+        destinations.send(message)
+        destinations.addGlobalFields(k=123)
+        dest = []
+        destinations.add(dest.append)
+        self.assertEqual(dest, [{"m": 1, "k": 123}])
 
 
 def makeLogger():
