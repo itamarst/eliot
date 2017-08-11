@@ -33,7 +33,7 @@ A preliminary `JavaScript implementation`_ is also available.
 .. _documentation: https://eliot.readthedocs.org/
 .. _Github: https://github.com/ClusterHQ/eliot
 .. _PyPI: https://pypi.python.org/pypi/eliot
-.. _eliot-tree: https://warehouse.python.org/project/eliot-tree/
+.. _eliot-tree: https://github.com/jonathanj/eliottree
 .. _eliot-profiler: https://github.com/jamespic/eliot-profiler
 .. _eliot-profiler-analysis: https://github.com/jamespic/eliot-profiler-analysis
 .. _JavaScript implementation: https://github.com/jonathanj/eliot.js
