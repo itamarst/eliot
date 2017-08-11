@@ -13,7 +13,7 @@ Non-blocking Destinations
 
 ``eliot.logwriter.ThreadedWriter`` is a logging destination that wraps a blocking destination and writes to it in a non-reactor thread.
 This is useful because it keeps the Twisted reactor from blocking, e.g. if you're writing to a log file and the hard drive is overloaded.
-``ThreadedWriter`` is a Twisted ``Service`` and starting it will call ``add_destination`` for you and stopping it will call ``remove_destination``; there is no need to call those directly.
+``ThreadedWriter`` is a Twisted ``Service`` and starting it will call ``add_destinations`` for you and stopping it will call ``remove_destination``; there is no need to call those directly.
 
 .. literalinclude:: ../../../examples/logfile.py
 
@@ -29,10 +29,10 @@ If you wish you can direct Eliot logs to Twisted's logging subsystem, if that is
 
 .. code-block:: python
 
-   from eliot import add_destination
+   from eliot import add_destinations
    from eliot.twisted import TwistedDestination
 
-   add_destination(TwistedDestination())
+   add_destinations(TwistedDestination())
 
 
 Trial Integration

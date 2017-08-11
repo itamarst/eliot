@@ -266,11 +266,13 @@ class DestinationsTests(TestCase):
         message = {"hoorj": "blargh"}
         dest = []
         dest2 = []
-        destinations.add(dest.append)
-        destinations.add(dest2.append)
+        dest3 = []
+        destinations.add(dest.append, dest2.append)
+        destinations.add(dest3.append)
         destinations.send(message)
         self.assertEqual(dest, [message])
         self.assertEqual(dest2, [message])
+        self.assertEqual(dest3, [message])
 
     def test_destinationExceptionMultipleDestinations(self):
         """

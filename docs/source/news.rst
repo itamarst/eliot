@@ -6,6 +6,7 @@ What's New
 
 Features:
 
+* ``eliot.add_destinations`` replaces ``eliot.add_destination``, and accepts multiple Destinations at once.
 * ``eliot.twisted.TwistedDestination`` allows redirecting Eliot logs to ``twisted.logger``.
   Thanks to Glyph Lefkowitz for the feature request.
 

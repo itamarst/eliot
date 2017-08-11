@@ -20,7 +20,10 @@ class PublicAPITests(TestCase):
         L{eliot.addDestination} adds destinations to the L{Destinations}
         attached to L{Logger}.
         """
-        self.assertEqual(eliot.addDestination, Logger._destinations.add)
+        o = object()
+        eliot.addDestination(o)
+        self.addCleanup(eliot.removeDestination, o)
+        self.assertIn(o, Logger._destinations._destinations)
 
     def test_removeDestination(self):
         """

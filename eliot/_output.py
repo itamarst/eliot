@@ -89,16 +89,17 @@ class Destinations(object):
         if errors:
             raise _DestinationsSendError(errors)
 
-    def add(self, destination):
+    def add(self, *destinations):
         """
-        Add a new destination.
+        Adds new destinations.
 
         A destination should never ever throw an exception. Seriously.
         A destination should not mutate the dictionary it is given.
 
-        @param destination: A callable that takes message dictionaries.
+        @param destinations: A list of callables that takes message
+            dictionaries.
         """
-        self._destinations.append(destination)
+        self._destinations.extend(destinations)
 
     def remove(self, destination):
         """

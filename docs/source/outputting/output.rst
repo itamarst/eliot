@@ -8,11 +8,11 @@ For example, if we want each message to be encoded in JSON and written on a new 
 .. code-block:: python
 
     import json, sys
-    from eliot import add_destination
+    from eliot import add_destinations
 
     def stdout(message):
         sys.stdout.write(json.dumps(message) + "\n")
-    add_destination(stdout)
+    add_destinations(stdout)
 
 
 Outputting to Files
