@@ -24,9 +24,15 @@ Features:
 * Native journald support, easily usable by Logstash/Elasticsearch.
 * Supports CPython 2.7, 3.4, 3.5, 3.6 and PyPy.
 
+Eliot is supported by 3rd party libraries like  `eliot-tree`_, `eliot-profiler`_, and `eliot-profiler-analysis`_.
+A preliminary `JavaScript implementation`_ is also available.
+
 .. _PEP 8: http://legacy.python.org/dev/peps/pep-0008/
 .. _Twisted: https://twistedmatrix.com/documents/current/core/development/policy/coding-standard.html
 .. _documentation: https://eliot.readthedocs.org/
 .. _Github: https://github.com/ClusterHQ/eliot
 .. _PyPI: https://pypi.python.org/pypi/eliot
 .. _eliot-tree: https://warehouse.python.org/project/eliot-tree/
+.. _eliot-profiler: https://github.com/jamespic/eliot-profiler
+.. _eliot-profiler-analysis: https://github.com/jamespic/eliot-profiler-analysis
+.. _JavaScript implementation: https://github.com/jonathanj/eliot.js
