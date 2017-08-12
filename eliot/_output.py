@@ -58,6 +58,7 @@ class Destinations(object):
 
     def __init__(self):
         self._destinations = [BufferingDestination()]
+        self._unserialized_destinations = []
         self._any_added = False
         self._globalFields = {}
 
@@ -70,7 +71,7 @@ class Destinations(object):
         """
         self._globalFields.update(fields)
 
-    def send(self, message):
+    def send(self, message, serialized_message):
         """
         Deliver a message to all destinations.
 
@@ -83,13 +84,18 @@ class Destinations(object):
         errors = []
         for dest in self._destinations:
             try:
+                dest(serialized_message)
+            except:
+                errors.append(sys.exc_info())
+        for dest in self._unserialized_destinations:
+            try:
                 dest(message)
             except:
                 errors.append(sys.exc_info())
         if errors:
             raise _DestinationsSendError(errors)
 
-    def add(self, *destinations):
+    def add(self, *destinations, serialized=True):
         """
         Adds new destinations.
 
@@ -106,7 +112,10 @@ class Destinations(object):
             self._any_added = True
             buffered_messages = self._destinations[0].messages
             self._destinations = []
-        self._destinations.extend(destinations)
+        if serialized:
+            self._destinations.extend(destinations)
+        else:
+            self._unserialized_destinations.extend(destinations)
         if buffered_messages:
             # Re-deliver buffered messages:
             for message in buffered_messages:
@@ -176,10 +185,10 @@ class Logger(object):
         """
         Serialize the dictionary, and write it to C{self._destinations}.
         """
-        dictionary = dictionary.copy()
+        serialized_dictionary = dictionary.copy()
         try:
             if serializer is not None:
-                serializer.serialize(dictionary)
+                serializer.serialize(serialized_dictionary)
         except:
             writeTraceback(self)
             msg = Message({
@@ -189,7 +198,7 @@ class Logger(object):
             return
 
         try:
-            self._destinations.send(dictionary)
+            self._destinations.send(dictionary, serialized_dictionary)
         except _DestinationsSendError as e:
             for (exc_type, exception, exc_traceback) in e.errors:
                 try:

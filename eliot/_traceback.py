@@ -9,15 +9,28 @@ import traceback
 import sys
 from warnings import warn
 
+from six import string_types
+
 from ._message import EXCEPTION_FIELD, REASON_FIELD
 from ._util import safeunicode, load_module
 from ._validation import MessageType, Field
 from ._errors import _error_extraction
 
+
+def _format_traceback(traceback):
+    """
+    Convert a traceback to a string.
+    """
+    if isinstance(traceback, string_types):
+        return safeunicode(traceback)
+    else:
+        return "".join(_traceback_no_io.format_tb(traceback))
+
+
 TRACEBACK_MESSAGE = MessageType(
     "eliot:traceback", [
         Field(REASON_FIELD, safeunicode, "The exception's value."),
-        Field("traceback", safeunicode, "The traceback."),
+        Field("traceback", _format_traceback, "The traceback."),
         Field(
             EXCEPTION_FIELD,
             lambda typ: "%s.%s" % (typ.__module__, typ.__name__),
@@ -91,8 +104,7 @@ def writeTraceback(logger=None, system=None):
             DeprecationWarning,
             stacklevel=2)
 
-    typ, exception, tb = sys.exc_info()
-    traceback = "".join(_traceback_no_io.format_exception(typ, exception, tb))
+    typ, exception, traceback = sys.exc_info()
     _writeTracebackMessage(logger, typ, exception, traceback)
 
 
@@ -124,4 +136,4 @@ def writeFailure(failure, logger=None, system=None):
     # I/O.
     _writeTracebackMessage(
         logger, failure.value.__class__, failure.value,
-        failure.getBriefTraceback())
+        failure.getTracebackObject() or failure.getBriefTraceback())
