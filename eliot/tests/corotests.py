@@ -8,9 +8,10 @@ versions of Python this code is a syntax error.
 import asyncio
 from unittest import TestCase
 
-from ..testing import assertContainsFields, capture_logging
+from ..testing import capture_logging
 from .._parse import Parser
-from .. import Message, start_action
+from .. import start_action
+from .._action import _ExecutionContext
 
 
 async def standalone_coro():
@@ -29,6 +30,15 @@ async def calling_coro():
         await standalone_coro()
 
 
+def run_coroutine(async_function):
+    """
+    Run a coroutine until it finishes.
+    """
+    loop = asyncio.new_event_loop()
+    loop.run_until_complete(async_function())
+    loop.close()
+
+
 class CoroutineTests(TestCase):
     """
     Tests for coroutines.
@@ -36,13 +46,11 @@ class CoroutineTests(TestCase):
     @capture_logging(None)
     def test_coroutine_vs_main_thread_context(self, logger):
         """
-        A coroutine has a different Eliot context than the thread that runs the
-        event loop.
+        A coroutine has a different Eliot logging context than the thread that
+        runs the event loop.
         """
         with start_action(action_type="eventloop"):
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(standalone_coro())
-            loop.close()
+            run_coroutine(standalone_coro)
         trees = Parser.parse_stream(logger.messages)
         self.assertEqual(
             sorted([(t.root().action_type, t.root().children) for t in trees]),
@@ -51,12 +59,61 @@ class CoroutineTests(TestCase):
     @capture_logging(None)
     def test_multiple_coroutines_contexts(self, logger):
         """
-        Each coroutine has its own Eliot context.
+        Each coroutine has its own Eliot logging context.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(calling_coro())
-        loop.close()
+        run_coroutine(calling_coro)
         trees = Parser.parse_stream(logger.messages)
         self.assertEqual(
             sorted([(t.root().action_type, t.root().children) for t in trees]),
             [("calling", []), ("standalone", [])])
+
+
+class ContextTests(TestCase):
+    """
+    Tests for coroutine support in ``eliot._action.ExecutionContext``.
+    """
+    def test_coroutine_vs_main_thread_context(self):
+        """
+        A coroutine has a different Eliot context than the thread that runs the
+        event loop.
+        """
+        ctx = _ExecutionContext()
+        current_context = []
+
+        async def coro():
+            current_context.append(("coro", ctx.current()))
+            ctx.push("A")
+            current_context.append(("coro", ctx.current()))
+
+        ctx.push("B")
+        current_context.append(("main", ctx.current()))
+        run_coroutine(coro)
+        current_context.append(("main", ctx.current()))
+        self.assertEqual(
+            current_context,
+            [("main", "B"), ("coro", None), ("coro", "A"), ("main", "B")])
+
+    def test_multiple_coroutines_contexts(self):
+        """
+        Each coroutine has its own Eliot separate context.
+        """
+        ctx = _ExecutionContext()
+        current_context = []
+
+        async def coro2():
+            current_context.append(("coro2", ctx.current()))
+            ctx.push("B")
+            current_context.append(("coro2", ctx.current()))
+
+        async def coro():
+            current_context.append(("coro", ctx.current()))
+            ctx.push("A")
+            current_context.append(("coro", ctx.current()))
+            await coro2()
+            current_context.append(("coro", ctx.current()))
+
+        run_coroutine(coro)
+        self.assertEqual(
+            current_context,
+            [("coro", None), ("coro", "A"), ("coro2", None),
+             ("coro2", "B"), ("coro", "A")])
