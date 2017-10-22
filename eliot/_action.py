@@ -7,11 +7,13 @@ top-level actions.
 
 from __future__ import unicode_literals, absolute_import
 
+import asyncio
 import threading
 from uuid import uuid4
 from itertools import count
 from contextlib import contextmanager
 from warnings import warn
+from weakref import WeakKeyDictionary
 
 from pyrsistent import (
     field,
@@ -46,16 +48,29 @@ class _ExecutionContext(threading.local):
     """
     Call stack-based context, storing the current L{Action}.
 
-    Bit like L{twisted.python.context}, but:
-
-    - Single purpose.
-    - Allows support for Python context managers (this could easily be added
-      to Twisted, though).
-    - Does not require Twisted; Eliot should not require Twisted if possible.
+    The context is thread-specific and coroutine-specific, since these have
+    their own "stacks".
     """
 
     def __init__(self):
-        self._stack = []
+        self._main_stack = []
+        self._per_task = WeakKeyDictionary()
+
+    def _get_stack(self):
+        """
+        Get the stack for the current asyncio Task.
+        """
+        try:
+            asyncio.get_event_loop()
+        except RuntimeError:
+            # No loop for this thread:
+            return self._main_stack
+        task = asyncio.Task.current_task()
+        if task is None:
+            return self._main_stack
+        if task not in self._per_task:
+            self._per_task[task] = []
+        return self._per_task[task]
 
     def push(self, action):
         """
@@ -64,22 +79,23 @@ class _ExecutionContext(threading.local):
         @param action: L{Action} that will be used for log messages and as
             parent of newly created L{Action} instances.
         """
-        self._stack.append(action)
+        self._get_stack().append(action)
 
     def pop(self):
         """
         Pop the front L{Action} on the stack.
         """
-        self._stack.pop(-1)
+        self._get_stack().pop(-1)
 
     def current(self):
         """
         @return: The current front L{Action}, or C{None} if there is no
             L{Action} set.
         """
-        if not self._stack:
+        stack = self._get_stack()
+        if not stack:
             return None
-        return self._stack[-1]
+        return stack[-1]
 
 
 _context = _ExecutionContext()
