@@ -238,7 +238,7 @@ class Action(object):
         """
         return self._identification[TASK_UUID_FIELD]
 
-    def serializeTaskId(self):
+    def serialize_task_id(self):
         """
         Create a unique identifier for the current location within the task.
 
@@ -251,7 +251,7 @@ class Action(object):
             self._nextTaskLevel().toString()).encode("ascii")
 
     @classmethod
-    def continueTask(cls, logger=None, task_id=_TASK_ID_NOT_SUPPLIED):
+    def continue_task(cls, logger=None, task_id=_TASK_ID_NOT_SUPPLIED):
         """
         Start a new action which is part of a serialized task.
 
@@ -259,22 +259,25 @@ class Action(object):
             messages, or C{None} if the default one should be used.
 
         @param task_id: A serialized task identifier, the output of
-            L{Action.serialize_task_id}. Required.
+            L{Action.serialize_task_id}, either ASCII-encoded bytes or unicode
+            string. Required.
 
         @return: The new L{Action} instance.
         """
         if task_id is _TASK_ID_NOT_SUPPLIED:
             raise RuntimeError("You must supply a task_id keyword argument.")
-        uuid, task_level = task_id.decode("ascii").split("@")
+        if isinstance(task_id, bytes):
+            task_id = task_id.decode("ascii")
+        uuid, task_level = task_id.split("@")
         action = cls(
             logger, uuid, TaskLevel.fromString(task_level),
             "eliot:remote_task")
         action._start({})
         return action
 
-    # PEP 8 variants:
-    serialize_task_id = serializeTaskId
-    continue_task = continueTask
+    # Backwards-compat variants:
+    serializeTaskId = serialize_task_id
+    continueTask = continue_task
 
     def _nextTaskLevel(self):
         """
