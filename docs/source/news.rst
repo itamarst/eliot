@@ -1,6 +1,13 @@
 What's New
 ==========
 
+1.2.0
+^^^^^
+
+Misc:
+
+* ``Action.continue_task`` can now accept text task IDs (``str`` in Python 3, ``unicode`` in Python 2).
+
 1.1.0
 ^^^^^
 
