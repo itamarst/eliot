@@ -6,8 +6,7 @@ from warnings import warn
 # Expose the public API:
 from ._message import Message
 from ._action import (
-    startAction, startTask, Action, preserve_context, currentAction as
-    current_action
+    startAction, startTask, Action, preserve_context, current_action
 )
 from ._output import (
     ILogger,
@@ -33,6 +32,7 @@ def add_destination(destination):
     Logger._destinations.add(destination)
 
 
+# Backwards compatibilty:
 addDestination = add_destination
 removeDestination = Logger._destinations.remove
 addGlobalFields = Logger._destinations.addGlobalFields

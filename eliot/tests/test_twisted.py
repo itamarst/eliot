@@ -23,7 +23,7 @@ else:
         _RedirectLogsForTrial, TwistedDestination
     )
 
-from .._action import startAction, currentAction, Action, TaskLevel
+from .._action import startAction, current_action, Action, TaskLevel
 from .._output import MemoryLogger, Logger
 from .._message import Message
 from ..testing import assertContainsFields
@@ -146,7 +146,7 @@ class DeferredContextTests(TestCase):
             d = DeferredContext(d)
             with action2.context():
                 d.addCallbacks(
-                    lambda x: context.append(currentAction()), lambda x: x
+                    lambda x: context.append(current_action()), lambda x: x
                 )
         self.assertEqual(context, [action1])
 
@@ -164,7 +164,7 @@ class DeferredContextTests(TestCase):
             d = DeferredContext(d)
             with action2.context():
                 d.addCallbacks(
-                    lambda x: x, lambda x: context.append(currentAction())
+                    lambda x: x, lambda x: context.append(current_action())
                 )
         self.assertEqual(context, [action1])
 

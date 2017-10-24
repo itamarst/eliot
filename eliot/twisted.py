@@ -10,7 +10,7 @@ import sys
 from twisted.logger import Logger as TwistedLogger
 from twisted.python.failure import Failure
 
-from ._action import currentAction
+from ._action import current_action
 from . import addDestination
 
 __all__ = ["AlreadyFinished", "DeferredContext", "redirectLogsForTrial"]
@@ -50,7 +50,7 @@ class DeferredContext(object):
         @param deferred: L{twisted.internet.defer.Deferred} to wrap.
         """
         self.result = deferred
-        self._action = currentAction()
+        self._action = current_action()
         self._finishAdded = False
         if self._action is None:
             raise RuntimeError(

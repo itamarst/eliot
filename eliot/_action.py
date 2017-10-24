@@ -99,7 +99,7 @@ class _ExecutionContext(threading.local):
 
 
 _context = _ExecutionContext()
-currentAction = _context.current
+current_action = _context.current
 
 
 class TaskLevel(PClass):
@@ -788,7 +788,7 @@ def startAction(logger=None, action_type="", _serializers=None, **fields):
 
     @return: A new L{Action}.
     """
-    parent = currentAction()
+    parent = current_action()
     if parent is None:
         return startTask(logger, action_type, _serializers, **fields)
     else:
@@ -851,7 +851,7 @@ def preserve_context(f):
     @return: One-time use callable that calls given function in context of
         a child of current Eliot action.
     """
-    action = currentAction()
+    action = current_action()
     if action is None:
         return f
     task_id = action.serialize_task_id()
