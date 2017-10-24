@@ -7,13 +7,11 @@ top-level actions.
 
 from __future__ import unicode_literals, absolute_import
 
-import asyncio
 import threading
 from uuid import uuid4
 from itertools import count
 from contextlib import contextmanager
 from warnings import warn
-from weakref import WeakKeyDictionary
 
 from pyrsistent import (
     field,
@@ -48,29 +46,23 @@ class _ExecutionContext(threading.local):
     """
     Call stack-based context, storing the current L{Action}.
 
-    The context is thread-specific and coroutine-specific, since these have
-    their own "stacks".
+    The context is thread-specific, but can be made e.g. coroutine-specific by
+    overriding C{get_sub_context}.
     """
 
     def __init__(self):
         self._main_stack = []
-        self._per_task = WeakKeyDictionary()
+        self.get_sub_context = lambda: None
 
     def _get_stack(self):
         """
         Get the stack for the current asyncio Task.
         """
-        try:
-            asyncio.get_event_loop()
-        except RuntimeError:
-            # No loop for this thread:
+        stack = self.get_sub_context()
+        if stack is None:
             return self._main_stack
-        task = asyncio.Task.current_task()
-        if task is None:
-            return self._main_stack
-        if task not in self._per_task:
-            self._per_task[task] = []
-        return self._per_task[task]
+        else:
+            return stack
 
     def push(self, action):
         """
@@ -100,6 +92,18 @@ class _ExecutionContext(threading.local):
 
 _context = _ExecutionContext()
 current_action = _context.current
+
+
+def use_asyncio_context():
+    """
+    Use a logging context that is tied to the current asyncio coroutine.
+
+    Call this first thing, before doing any other logging.
+
+    Does not currently support event loops other than asyncio.
+    """
+    from ._asyncio import AsyncioContext
+    _context.get_sub_context = AsyncioContext().get_stack
 
 
 class TaskLevel(PClass):

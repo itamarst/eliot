@@ -6,12 +6,14 @@ in earlier versions of Python this code is a syntax error.
 """
 
 import asyncio
+from threading import Thread
 from unittest import TestCase
 
 from ..testing import capture_logging
 from .._parse import Parser
 from .. import start_action
-from .._action import _ExecutionContext
+from .._action import _ExecutionContext, _context, use_asyncio_context
+from .._asyncio import AsyncioContext
 
 
 async def standalone_coro():
@@ -37,6 +39,7 @@ def run_coroutines(*async_functions):
     """
     loop = asyncio.get_event_loop()
     futures = [asyncio.ensure_future(f()) for f in async_functions]
+
     async def wait_for_futures():
         for future in futures:
             await future
@@ -47,6 +50,13 @@ class CoroutineTests(TestCase):
     """
     Tests for coroutines.
     """
+    def setUp(self):
+        use_asyncio_context()
+
+        def cleanup():
+            _context.get_sub_context = lambda: None
+        self.addCleanup(cleanup)
+
     @capture_logging(None)
     def test_coroutine_vs_main_thread_context(self, logger):
         """
@@ -93,12 +103,37 @@ class ContextTests(TestCase):
     """
     Tests for coroutine support in ``eliot._action.ExecutionContext``.
     """
+    def test_threadSafety(self):
+        """
+        Each thread gets its own execution context even when using asyncio
+        contexts.
+        """
+        ctx = _ExecutionContext()
+        ctx.get_sub_context = AsyncioContext().get_stack
+        first = object()
+        ctx.push(first)
+
+        second = object()
+        valuesInThread = []
+
+        def inthread():
+            ctx.push(second)
+            valuesInThread.append(ctx.current())
+
+        thread = Thread(target=inthread)
+        thread.start()
+        thread.join()
+        # Neither thread was affected by the other:
+        self.assertEqual(valuesInThread, [second])
+        self.assertIs(ctx.current(), first)
+
     def test_coroutine_vs_main_thread_context(self):
         """
         A coroutine has a different Eliot context than the thread that runs the
         event loop.
         """
         ctx = _ExecutionContext()
+        ctx.get_sub_context = AsyncioContext().get_stack
         current_context = []
 
         async def coro():
@@ -119,6 +154,7 @@ class ContextTests(TestCase):
         Each top-level ("Task") coroutine has its own Eliot separate context.
         """
         ctx = _ExecutionContext()
+        ctx.get_sub_context = AsyncioContext().get_stack
         current_context = []
 
         async def coro2():
@@ -146,6 +182,7 @@ class ContextTests(TestCase):
         context.
         """
         ctx = _ExecutionContext()
+        ctx.get_sub_context = AsyncioContext().get_stack
         current_context = []
 
         async def coro2():

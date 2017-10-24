@@ -6,7 +6,8 @@ from warnings import warn
 # Expose the public API:
 from ._message import Message
 from ._action import (
-    startAction, startTask, Action, preserve_context, current_action
+    startAction, startTask, Action, preserve_context, current_action,
+    use_asyncio_context,
 )
 from ._output import (
     ILogger,
@@ -46,6 +47,7 @@ add_destinations = Logger._destinations.add
 remove_destination = removeDestination
 add_global_fields = addGlobalFields
 
+
 __all__ = [
     "Message",
     "writeTraceback",
@@ -67,6 +69,7 @@ __all__ = [
     "FileDestination",
     "register_exception_extractor",
     "current_action",
+    "use_asyncio_context",
 
     # PEP 8 variants:
     "write_traceback",
