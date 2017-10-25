@@ -8,6 +8,7 @@ Generating Logs
    threads
    types
    types-testing
+   asyncio
    twisted
 
 
