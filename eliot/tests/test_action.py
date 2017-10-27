@@ -25,7 +25,7 @@ import testtools
 from testtools.matchers import MatchesStructure
 
 from .._action import (
-    Action, _ExecutionContext, currentAction, startTask, startAction,
+    Action, _ExecutionContext, current_action, startTask, startAction,
     ACTION_STATUS_FIELD, ACTION_TYPE_FIELD, FAILED_STATUS, STARTED_STATUS,
     SUCCEEDED_STATUS, DuplicateChild, InvalidStartMessage, InvalidStatus,
     TaskLevel, WrittenAction, WrongActionType, WrongTask, WrongTaskLevel,
@@ -178,7 +178,7 @@ class ExecutionContextTests(TestCase):
         module.
         """
         self.assertIsInstance(_action._context, _ExecutionContext)
-        self.assertEqual(_action.currentAction, _action._context.current)
+        self.assertEqual(_action.current_action, _action._context.current)
         self.assertEqual(eliot.current_action, _action._context.current)
 
 
@@ -292,7 +292,7 @@ class ActionTests(TestCase):
         """
         result = []
         action = Action(None, "", TaskLevel(level=[]), "")
-        action.run(lambda: result.append(currentAction()))
+        action.run(lambda: result.append(current_action()))
         self.assertEqual(result, [action])
 
     def test_runContextUnsetOnReturn(self):
@@ -301,7 +301,7 @@ class ActionTests(TestCase):
         """
         action = Action(None, "", TaskLevel(level=[]), "")
         action.run(lambda: None)
-        self.assertIs(currentAction(), None)
+        self.assertIs(current_action(), None)
 
     def test_runContextUnsetOnRaise(self):
         """
@@ -310,7 +310,7 @@ class ActionTests(TestCase):
         """
         action = Action(None, "", TaskLevel(level=[]), "")
         self.assertRaises(ZeroDivisionError, action.run, lambda: 1 / 0)
-        self.assertIs(currentAction(), None)
+        self.assertIs(current_action(), None)
 
     def test_withSetsContext(self):
         """
@@ -318,7 +318,7 @@ class ActionTests(TestCase):
         """
         action = Action(MemoryLogger(), "", TaskLevel(level=[]), "")
         with action:
-            self.assertIs(currentAction(), action)
+            self.assertIs(current_action(), action)
 
     def test_withUnsetOnReturn(self):
         """
@@ -327,7 +327,7 @@ class ActionTests(TestCase):
         action = Action(MemoryLogger(), "", TaskLevel(level=[]), "")
         with action:
             pass
-        self.assertIs(currentAction(), None)
+        self.assertIs(current_action(), None)
 
     def test_withUnsetOnRaise(self):
         """
@@ -341,7 +341,7 @@ class ActionTests(TestCase):
             pass
         else:
             self.fail("no exception")
-        self.assertIs(currentAction(), None)
+        self.assertIs(current_action(), None)
 
     def test_withContextSetsContext(self):
         """
@@ -349,7 +349,7 @@ class ActionTests(TestCase):
         """
         action = Action(MemoryLogger(), "", TaskLevel(level=[]), "")
         with action.context():
-            self.assertIs(currentAction(), action)
+            self.assertIs(current_action(), action)
 
     def test_withContextReturnsaction(self):
         """
@@ -367,7 +367,7 @@ class ActionTests(TestCase):
         action = Action(MemoryLogger(), "", TaskLevel(level=[]), "")
         with action.context():
             pass
-        self.assertIs(currentAction(), None)
+        self.assertIs(current_action(), None)
 
     def test_withContextNoLogging(self):
         """
@@ -392,7 +392,7 @@ class ActionTests(TestCase):
             pass
         else:
             self.fail("no exception")
-        self.assertIs(currentAction(), None)
+        self.assertIs(current_action(), None)
 
     def test_finish(self):
         """
@@ -651,7 +651,7 @@ class StartActionAndTaskTests(TestCase):
 
     def test_startActionNoParent(self):
         """
-        L{startAction} when C{currentAction()} is C{None} creates a top-level
+        L{startAction} when C{current_action()} is C{None} creates a top-level
         L{Action}.
         """
         logger = MemoryLogger()
@@ -661,7 +661,7 @@ class StartActionAndTaskTests(TestCase):
 
     def test_startActionNoParentLogStart(self):
         """
-        L{startAction} when C{currentAction()} is C{None} logs a start
+        L{startAction} when C{current_action()} is C{None} logs a start
         message.
         """
         logger = MemoryLogger()
@@ -676,7 +676,7 @@ class StartActionAndTaskTests(TestCase):
 
     def test_startActionWithParent(self):
         """
-        L{startAction} uses the C{currentAction()} as parent for a new
+        L{startAction} uses the C{current_action()} as parent for a new
         L{Action}.
         """
         logger = MemoryLogger()
@@ -689,7 +689,7 @@ class StartActionAndTaskTests(TestCase):
 
     def test_startActionWithParentLogStart(self):
         """
-        L{startAction} when C{currentAction()} is an L{Action} logs a start
+        L{startAction} when C{current_action()} is an L{Action} logs a start
         message.
         """
         logger = MemoryLogger()
