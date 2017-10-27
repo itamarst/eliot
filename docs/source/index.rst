@@ -1,5 +1,8 @@
 .. include:: ../../README.rst
 
+Example
+-------
+
 Here's an example of using Eliot, and the output rendered by the third-party `eliot-tree`_ utility:
 
 .. literalinclude:: ../../examples/linkcheck.py
