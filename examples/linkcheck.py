@@ -1,7 +1,6 @@
-import sys
-from eliot import start_action, to_file
 import requests
-to_file(sys.stdout)
+from eliot import start_action, to_file
+to_file(open("linkcheck.log", "w"))
 
 
 def check_links(urls):
@@ -14,4 +13,7 @@ def check_links(urls):
             except Exception as e:
                 raise ValueError(str(e))
 
-check_links(["http://google.com"], ["http://nosuchurl"])
+try:
+    check_links(["http://eliot.readthedocs.io", "http://nosuchurl"])
+except ValueError:
+    print("Not all links were valid.")

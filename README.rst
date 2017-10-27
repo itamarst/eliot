@@ -9,11 +9,11 @@ Most logging systems tell you *what* happened in your application, whereas ``eli
 
 ``eliot`` is a Python logging system that outputs causal chains of **actions**: actions can spawn other actions, and eventually they either **succeed or fail**.
 The resulting logs tell you the story of what your software did: what happened, and what caused it.
-Eliot works both within a single process and across multiple processes, allowing you trace causality across a distributed system.
 
+Eliot works well within a single process, but can also be used across multiple processes to trace causality across a distributed system.
 Eliot is only used to generate your logs; you will still need tools like Logstash and ElasticSearch to aggregate and store logs if you are using multiple processes.
 
-Eliot is maintained by Itamar Turner-Trauring and others, and released under the Apache 2.0 License.
+Eliot is maintained by Itamar Turner-Trauring, and released under the Apache 2.0 License.
 
 * `Read the documentation <https://eliot.readthedocs.io>`_.
 * Download from `PyPI`_.
