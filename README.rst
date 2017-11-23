@@ -17,8 +17,7 @@ Eliot supports Python 2.7, 3.4, 3.5, 3.6 and PyPy. It is maintained by Itamar Tu
 
 * `Read the documentation <https://eliot.readthedocs.io>`_.
 * Download from `PyPI`_.
-* File bugs at `Github`_.
-* Need help? `File an issue <https://github.com/ScatterHQ/eliot/issues/new>`_ or join the ``#eliot`` IRC channel on ``irc.freenode.net`` 
+* Need help or have any questions? `File an issue <https://github.com/ScatterHQ/eliot/issues/new>`_ on GitHub.
 
 Testimonials
 ------------
