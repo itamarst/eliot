@@ -104,7 +104,7 @@ class Message(object):
             C{task_level} entries.
         """
         if action is None:
-            action = currentAction()
+            action = current_action()
         if action is None:
             task_uuid = unicode(uuid4())
             task_level = [1]
@@ -195,5 +195,5 @@ class WrittenMessage(PClass):
 
 
 # Import at end to deal with circular imports:
-from ._action import currentAction, TaskLevel
+from ._action import current_action, TaskLevel
 from . import _output

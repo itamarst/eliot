@@ -1,45 +1,42 @@
-.. include:: ../../README.rst
+Eliot: Logging that tells you *why* it happened
+================================================
 
-Here's an example of using Eliot, and the output rendered by the third-party `eliot-tree`_ utility:
+Most logging systems tell you *what* happened in your application, whereas ``eliot`` also tells you *why* it happened.
 
-.. literalinclude:: ../../examples/linkcheck.py
+``eliot`` is a Python logging system that outputs causal chains of **actions**: actions can spawn other actions, and eventually they either **succeed or fail**.
+The resulting logs tell you the story of what your software did: what happened, and what caused it.
 
-.. code-block:: shell
+Eliot works well within a single process, but can also be used across multiple processes to trace causality across a distributed system.
+Eliot is only used to generate your logs; you will still need tools like Logstash and ElasticSearch to aggregate and store logs if you are using multiple processes.
 
-   $ python examples/linkcheck.py | eliot-tree
-   4c42a789-76f5-4f0b-b154-3dd0e3041445
-   +-- check_links@1/started
-       `-- urls: [u'http://google.com', u'http://nosuchurl']
-       +-- download@2,1/started
-           `-- url: http://google.com
-           +-- download@2,2/succeeded
-       +-- download@3,1/started
-           `-- url: http://nosuchurl
-           +-- download@3,2/failed
-               |-- exception: requests.exceptions.ConnectionError
-               |-- reason: ('Connection aborted.', gaierror(-2, 'Name or service not known'))
-       +-- check_links@4/failed
-           |-- exception: exceptions.ValueError
-           |-- reason: ('Connection aborted.', gaierror(-2, 'Name or service not known'))
+* **Start here:** :doc:`Quickstart documentation <quickstart>`
+* Need help? `File an issue <https://github.com/ScatterHQ/eliot/issues/new>`_ or join the ``#eliot`` IRC channel on ``irc.freenode.net`` 
+* Read on for the full documentation.
 
-.. _eliot-tree: https://warehouse.python.org/project/eliot-tree/
+Testimonials
+------------
 
-Contents:
+    "Eliot has made tracking down causes of failure (in complex external integrations and internal uses) tremendously easier. Our errors are logged to Sentry with the Eliot task UUID. That means we can go from a Sentry notification to a high-level trace of operations—with important metadata at each operation—in a few seconds. We immediately know which user did what in which part of the system."
+
+    —Jonathan Jacobs
+
+Documentation
+-------------
 
 .. toctree::
+   :maxdepth: 2
+   :titlesonly:
+
+   quickstart
    introduction
    news
    generating/index
    outputting/index
    reading/index
    development
-   :maxdepth: 2
 
 
-Indices and tables
-==================
+Project Information
+-------------------
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+Eliot is maintained by Itamar Turner-Trauring, and released under the Apache 2.0 License.

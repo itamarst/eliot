@@ -46,16 +46,23 @@ class _ExecutionContext(threading.local):
     """
     Call stack-based context, storing the current L{Action}.
 
-    Bit like L{twisted.python.context}, but:
-
-    - Single purpose.
-    - Allows support for Python context managers (this could easily be added
-      to Twisted, though).
-    - Does not require Twisted; Eliot should not require Twisted if possible.
+    The context is thread-specific, but can be made e.g. coroutine-specific by
+    overriding C{get_sub_context}.
     """
 
     def __init__(self):
-        self._stack = []
+        self._main_stack = []
+        self.get_sub_context = lambda: None
+
+    def _get_stack(self):
+        """
+        Get the stack for the current asyncio Task.
+        """
+        stack = self.get_sub_context()
+        if stack is None:
+            return self._main_stack
+        else:
+            return stack
 
     def push(self, action):
         """
@@ -64,26 +71,39 @@ class _ExecutionContext(threading.local):
         @param action: L{Action} that will be used for log messages and as
             parent of newly created L{Action} instances.
         """
-        self._stack.append(action)
+        self._get_stack().append(action)
 
     def pop(self):
         """
         Pop the front L{Action} on the stack.
         """
-        self._stack.pop(-1)
+        self._get_stack().pop(-1)
 
     def current(self):
         """
         @return: The current front L{Action}, or C{None} if there is no
             L{Action} set.
         """
-        if not self._stack:
+        stack = self._get_stack()
+        if not stack:
             return None
-        return self._stack[-1]
+        return stack[-1]
 
 
 _context = _ExecutionContext()
-currentAction = _context.current
+current_action = _context.current
+
+
+def use_asyncio_context():
+    """
+    Use a logging context that is tied to the current asyncio coroutine.
+
+    Call this first thing, before doing any other logging.
+
+    Does not currently support event loops other than asyncio.
+    """
+    from ._asyncio import AsyncioContext
+    _context.get_sub_context = AsyncioContext().get_stack
 
 
 class TaskLevel(PClass):
@@ -238,7 +258,7 @@ class Action(object):
         """
         return self._identification[TASK_UUID_FIELD]
 
-    def serializeTaskId(self):
+    def serialize_task_id(self):
         """
         Create a unique identifier for the current location within the task.
 
@@ -251,7 +271,7 @@ class Action(object):
             self._nextTaskLevel().toString()).encode("ascii")
 
     @classmethod
-    def continueTask(cls, logger=None, task_id=_TASK_ID_NOT_SUPPLIED):
+    def continue_task(cls, logger=None, task_id=_TASK_ID_NOT_SUPPLIED):
         """
         Start a new action which is part of a serialized task.
 
@@ -259,22 +279,25 @@ class Action(object):
             messages, or C{None} if the default one should be used.
 
         @param task_id: A serialized task identifier, the output of
-            L{Action.serialize_task_id}. Required.
+            L{Action.serialize_task_id}, either ASCII-encoded bytes or unicode
+            string. Required.
 
         @return: The new L{Action} instance.
         """
         if task_id is _TASK_ID_NOT_SUPPLIED:
             raise RuntimeError("You must supply a task_id keyword argument.")
-        uuid, task_level = task_id.decode("ascii").split("@")
+        if isinstance(task_id, bytes):
+            task_id = task_id.decode("ascii")
+        uuid, task_level = task_id.split("@")
         action = cls(
             logger, uuid, TaskLevel.fromString(task_level),
             "eliot:remote_task")
         action._start({})
         return action
 
-    # PEP 8 variants:
-    serialize_task_id = serializeTaskId
-    continue_task = continueTask
+    # Backwards-compat variants:
+    serializeTaskId = serialize_task_id
+    continueTask = continue_task
 
     def _nextTaskLevel(self):
         """
@@ -772,7 +795,7 @@ def startAction(logger=None, action_type="", _serializers=None, **fields):
 
     @return: A new L{Action}.
     """
-    parent = currentAction()
+    parent = current_action()
     if parent is None:
         return startTask(logger, action_type, _serializers, **fields)
     else:
@@ -835,7 +858,7 @@ def preserve_context(f):
     @return: One-time use callable that calls given function in context of
         a child of current Eliot action.
     """
-    action = currentAction()
+    action = current_action()
     if action is None:
         return f
     task_id = action.serialize_task_id()
