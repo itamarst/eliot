@@ -1,9 +1,8 @@
 Configuring Logging Output
 ==========================
 
-You can register "destinations" to handle logging output.
-A destination is a callable that takes a message dictionary.
-For example, if we want each message to be encoded in JSON and written on a new line on stdout:
+You can register "destinations" to handle logging output; a destination is a callable that takes a message dictionary.
+For example, if we want to just print each new message:
 
 .. code-block:: python
 
@@ -11,18 +10,22 @@ For example, if we want each message to be encoded in JSON and written on a new 
     from eliot import add_destinations
 
     def stdout(message):
-        sys.stdout.write(json.dumps(message) + "\n")
+        print(message)
     add_destinations(stdout)
 
+Before destinations are added
+-----------------------------
+
 Up to a 1000 messages will be buffered in memory until the first set of destinations are added, at which point those messages will be delivered to newly added set of destinations.
+This ensures that no messages will be lost if logging happens during configuration but before a destination is added.
 
 
-Outputting to Files
--------------------
+Outputting JSON to a file
+--------------------
 
-You can create a destination that logs to a file by calling ``eliot.FileDestination(file=yourfile)``.
+Since JSON is a common output format, Eliot provides a utility class that logs to a file, ``eliot.FileDestination(file=yourfile)``.
 Each Eliot message will be encoded in JSON and written on a new line.
-As a short hand you can call ``eliot.to_file`` which will create the destination and then add it.
+As a short hand you can call ``eliot.to_file``, which will create the destination and then add it automatically.
 For example:
 
 .. code-block:: python
@@ -36,6 +39,30 @@ For example:
     If you're using Twisted you can wrap a ``eliot.FileDestination`` with a non-blocking :ref:`eliot.logwriter.ThreadedWriter<ThreadedWriter>`.
     This allows you to log to a file without blocking the Twisted ``reactor``.
 
+.. _custom_json:
+
+Customizing JSON Encoding
+-------------------------
+
+If you're using Eliot's JSON output you may wish to customize encoding.
+For example, if you're using ``numpy`` the integer and float types won't serialize to JSON by default.
+You can do so by passing a custom ``json.JSONEncoder`` subclass to either ``eliot.FileDestination`` or ``eliot_to_file``:
+
+.. code-block:: python
+
+   import json
+   import numpy
+   from eliot import to_file
+
+   class NumpyEncoder(json.JSONEncoder):
+       def default(self, obj):
+           if isinstance(obj, (numpy.integer, numpy.floating)):
+             return float(obj)
+         return json.JSONEncoder.default(self, obj)
+
+   to_file(open("eliot.log", "ab"), encoder=NumpyEncoder)   
+
+For more details on JSON encoding see the Python `JSON documentation <https://docs.python.org/3/library/json.html>`_.
 
 .. _add_global_fields:
 
