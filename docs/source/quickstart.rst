@@ -9,7 +9,7 @@ Installing Eliot
 
 To install Eliot and the other tools we'll use in this example, run the following in your shell:
 
-.. code-block:: shell
+.. code-block:: shell-session
 
    $ pip install eliot eliot-tree requests
 
@@ -62,14 +62,14 @@ Running the code
 
 Let's run the code:
 
-.. code-block:: shell
+.. code-block:: shell-session
 
    $ python linkcheck.py
    Not all the links were valid.
 
 We can see the resulting log file is composed of JSON messages, one per line:
 
-.. code-block:: shell
+.. code-block:: shell-session
 
    $ cat linkcheck.log
    {"action_status": "started", "task_uuid": "b1cb58cf-2c2f-45c0-92b2-838ac00b20cc", "task_level": [1], "timestamp": 1509136967.2066844, "action_type": "check_links", "urls": ["http://eliot.readthedocs.io", "http://nosuchurl"]}
@@ -78,7 +78,8 @@ We can see the resulting log file is composed of JSON messages, one per line:
 So far these logs seem similar to the output of regular logging systems: individual isolated messages.
 But unlike those logging systems, Eliot produces logs that can be reconstructed into a tree, for example using the ``eliot-tree`` utility:
 
-.. code-block:: shell
+.. code-block:: shell-session
+   :emphasize-lines: 3,8,13,16-19,21-23
 
    $ eliot-tree linkcheck.log
    b1cb58cf-2c2f-45c0-92b2-838ac00b20cc
