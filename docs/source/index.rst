@@ -13,6 +13,15 @@ Eliot is only used to generate your logs; you will still need tools like Logstas
 * Need help or have any questions? `File an issue <https://github.com/ScatterHQ/eliot/issues/new>`_ on GitHub.
 * Read on for the full documentation.
 
+Media
+-----
+
+`Podcast.__init__ episode 133 <https://www.podcastinit.com/eliot-logging-with-itamar-turner-trauring-episode-133/>`_ covers Eliot:
+
+.. raw:: html
+
+   <script class="podigee-podcast-player" src="https://cdn.podigee.com/podcast-player/javascripts/podigee-podcast-player.js" data-configuration="https://www.podcastinit.com/?podigee_player=390"></script>
+
 Testimonials
 ------------
 
