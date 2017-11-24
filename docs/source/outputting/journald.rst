@@ -17,7 +17,7 @@ Installation
 Journald requires additional libraries that are not installed by default by Eliot.
 You can install them by running:
 
-.. code-block:: shell
+.. code-block:: shell-session
 
    $ pip install eliot[journald]
 
@@ -37,13 +37,13 @@ Useful options include ``--all`` which keeps long fields from being truncated an
 
 Let's generate some logs:
 
-.. code-block:: shell
+.. code-block:: shell-session
 
    $ python journald.py
 
 We can find all messages with a specific type:
 
-.. code-block:: shell
+.. code-block:: shell-session
 
    $ sudo journalctl --all --output cat ELIOT_TYPE=inbetween | eliot-prettyprint
    32ab1286-c356-439d-86f8-085fec3b65d0 -> /1
@@ -52,7 +52,7 @@ We can find all messages with a specific type:
 
 We can filter to those that indicate errors:
 
-.. code-block:: shell
+.. code-block:: shell-session
 
    $ sudo journalctl --all --output cat --priority=err ELIOT_TYPE=divide | eliot-prettyprint
    ce64eb77-bb7f-4e69-83f8-07d7cdaffaca -> /2
@@ -64,7 +64,7 @@ We can filter to those that indicate errors:
 
 We can also search by task UUID, in which case ``eliot-tree`` can also be used to process the output:
 
-.. code-block:: shell
+.. code-block:: shell-session
 
    $ sudo journalctl --all --output cat ELIOT_TASK=ce64eb77-bb7f-4e69-83f8-07d7cdaffaca | eliot-tree
    ce64eb77-bb7f-4e69-83f8-07d7cdaffaca

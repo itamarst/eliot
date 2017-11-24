@@ -22,7 +22,7 @@ For example:
 
 Here's what the result is when run:
 
-.. code-block:: shell
+.. code-block:: shell-session
 
    $ python examples/cross_thread.py | eliot-tree
    11a85c42-a13f-491c-ad44-c48b2efad0e3
@@ -57,13 +57,15 @@ The server that receives the request then extracts the identifier:
 Tracing logs across multiple processes makes debugging problems dramatically easier.
 For example, let's run the following:
 
-.. code-block:: shell
+.. code-block:: shell-session
 
    $ python examples/cross_process_server.py > server.log
    $ python examples/cross_process_client.py 5 0 > client.log
 
 Here are the resulting combined logs, as visualized by `eliot-tree`_.
-The reason the client received a 500 error code is completely obvious in these logs::
+The reason the client received a 500 error code is completely obvious in these logs:
+
+.. code-block:: shell-session
 
   $ cat client.log server.log | eliot-tree
   1e0be9be-ae56-49ef-9bce-60e850a7db09

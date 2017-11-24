@@ -3,7 +3,7 @@ Reading Eliot Logs
 
 Eliot includes a command-line tool that makes it easier to read JSON-formatted Eliot messages:
 
-.. code-block:: shell
+.. code-block:: shell-session
 
    $ python examples/stdout.py | eliot-prettyprint
    af79ef5c-280c-4b9f-9652-e14deb85d52d@/1

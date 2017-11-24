@@ -10,8 +10,17 @@ Eliot works well within a single process, but can also be used across multiple p
 Eliot is only used to generate your logs; you will still need tools like Logstash and ElasticSearch to aggregate and store logs if you are using multiple processes.
 
 * **Start here:** :doc:`Quickstart documentation <quickstart>`
-* Need help? `File an issue <https://github.com/ScatterHQ/eliot/issues/new>`_ or join the ``#eliot`` IRC channel on ``irc.freenode.net`` 
+* Need help or have any questions? `File an issue <https://github.com/ScatterHQ/eliot/issues/new>`_ on GitHub.
 * Read on for the full documentation.
+
+Media
+-----
+
+`Podcast.__init__ episode 133 <https://www.podcastinit.com/eliot-logging-with-itamar-turner-trauring-episode-133/>`_ covers Eliot:
+
+.. raw:: html
+
+   <script class="podigee-podcast-player" src="https://cdn.podigee.com/podcast-player/javascripts/podigee-podcast-player.js" data-configuration="https://www.podcastinit.com/?podigee_player=390"></script>
 
 Testimonials
 ------------
@@ -40,3 +49,5 @@ Project Information
 -------------------
 
 Eliot is maintained by Itamar Turner-Trauring, and released under the Apache 2.0 License.
+
+It supports Python 3.6, 3.5, 3.4, 2.7, as we as PyPy.
