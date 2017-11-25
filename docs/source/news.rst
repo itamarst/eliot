@@ -1,6 +1,14 @@
 What's New
 ==========
 
+1.3.0
+^^^^^
+
+Features:
+
+* The default JSON output format now supports custom JSON encoders. See :ref:`custom_json` for details.
+  Thanks to Jonathan Jacobs for feedback.
+
 1.2.0
 ^^^^^
 
@@ -8,6 +16,7 @@ Features:
 
 * Eliot now does the right thing for ``asyncio`` coroutines in Python 3.5 and later.
   See :ref:`asyncio_coroutine` for details.
+  Thanks to x0zzz for the bug report.
 
 Misc:
 
