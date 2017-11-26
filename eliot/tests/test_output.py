@@ -651,7 +651,6 @@ class ToFileTests(TestCase):
     """
     Tests for L{to_file}.
     """
-
     def test_to_file_adds_destination(self):
         """
         L{to_file} adds a L{FileDestination} destination with the given file.
@@ -673,6 +672,19 @@ class ToFileTests(TestCase):
         expected = FileDestination(file=f, encoder=encoder)
         self.addCleanup(Logger._destinations.remove, expected)
         self.assertIn(expected, Logger._destinations._destinations)
+
+    def test_bytes_values(self):
+        """
+        DEPRECATED: On Python 3L{FileDestination} will encode bytes as if they were
+        UTF-8 encoded strings when writing to BytesIO only.
+        """
+        message = {"x": b"abc"}
+        bytes_f = BytesIO()
+        destination = FileDestination(file=bytes_f)
+        destination(message)
+        self.assertEqual([
+            json.loads(line)
+            for line in bytes_f.getvalue().splitlines()], [{"x": "abc"}])
 
     def test_filedestination_writes_json_bytes(self):
         """
