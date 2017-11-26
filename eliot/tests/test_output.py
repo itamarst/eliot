@@ -662,6 +662,18 @@ class ToFileTests(TestCase):
         self.addCleanup(Logger._destinations.remove, expected)
         self.assertIn(expected, Logger._destinations._destinations)
 
+    def test_to_file_custom_encoder(self):
+        """
+        L{to_file} accepts a custom encoder, and sets it on the resulting
+        L{FileDestination}.
+        """
+        f = stdout
+        encoder = object()
+        to_file(f, encoder=encoder)
+        expected = FileDestination(file=f, encoder=encoder)
+        self.addCleanup(Logger._destinations.remove, expected)
+        self.assertIn(expected, Logger._destinations._destinations)
+
     def test_filedestination_writes_json_bytes(self):
         """
         L{FileDestination} writes JSON-encoded messages to a file that accepts
@@ -676,6 +688,27 @@ class ToFileTests(TestCase):
         self.assertEqual([
             json.loads(line)
             for line in bytes_f.getvalue().splitlines()], [message1, message2])
+
+    def test_filedestination_custom_encoder(self):
+        """
+        L{FileDestionation} can use a custom encoder.
+        """
+        custom = object()
+
+        class CustomEncoder(pyjson.JSONEncoder):
+            def default(self, o):
+                if o is custom:
+                    return "CUSTOM!"
+                else:
+                    return pyjson.JSONEncoder.default(self, o)
+
+        message = {"x": 123, "z": custom}
+        f = StringIO()
+        destination = FileDestination(file=f, encoder=CustomEncoder)
+        destination(message)
+        self.assertEqual(
+            json.loads(f.getvalue().splitlines()[0]),
+            {"x": 123, "z": "CUSTOM!"})
 
     def test_filedestination_flushes(self):
         """

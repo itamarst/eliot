@@ -354,10 +354,11 @@ class FileDestination(PClass):
     @ivar _linebreak: C{"\n"} as either bytes or unicode.
     """
     file = field(mandatory=True)
+    encoder = field(mandatory=True)
     _dumps = field(mandatory=True)
     _linebreak = field(mandatory=True)
 
-    def __new__(cls, file):
+    def __new__(cls, file, encoder=pyjson.JSONEncoder):
         unicodeFile = False
         if PY3:
             try:
@@ -373,23 +374,24 @@ class FileDestination(PClass):
             _dumps = bytesjson.dumps
             _linebreak = b"\n"
         return PClass.__new__(
-            cls, file=file, _dumps=_dumps, _linebreak=_linebreak)
+            cls, file=file, _dumps=_dumps, _linebreak=_linebreak,
+            encoder=encoder)
 
     def __call__(self, message):
         """
         @param message: A message dictionary.
         """
-        self.file.write(self._dumps(message) + self._linebreak)
+        self.file.write(self._dumps(message, cls=self.encoder) + self._linebreak)
         self.file.flush()
 
 
-def to_file(output_file):
+def to_file(output_file, encoder=pyjson.JSONEncoder):
     """
     Add a destination that writes a JSON message per line to the given file.
 
     @param output_file: A file-like object.
     """
-    Logger._destinations.add(FileDestination(file=output_file))
+    Logger._destinations.add(FileDestination(file=output_file, encoder=encoder))
 
 
 # The default Logger, used when none is specified:
