@@ -9,6 +9,12 @@ Features:
 * The default JSON output format now supports custom JSON encoders. See :ref:`custom_json` for details.
   Thanks to Jonathan Jacobs for feedback.
 
+Deprecations:
+
+* On Python 3, the JSON encoder used by ``to_file`` and ``FileDestination`` would accept ``bytes``... sometimes.
+  This is deprecated, and will cease to work in a future release of Python 3.
+  If you wish to include ``bytes`` in JSON logging, convert it to a string in the log-generating code, use Eliot's type, or use a custom JSON encoder.
+
 1.2.0
 ^^^^^
 
