@@ -57,7 +57,7 @@ You can do so by passing a custom ``json.JSONEncoder`` subclass to either ``elio
    class NumpyEncoder(json.JSONEncoder):
        def default(self, obj):
            if isinstance(obj, (numpy.integer, numpy.floating)):
-             return float(obj)
+               return float(obj)
            return json.JSONEncoder.default(self, obj)
 
    to_file(open("eliot.log", "ab"), encoder=NumpyEncoder)   
