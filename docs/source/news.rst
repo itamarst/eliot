@@ -12,7 +12,7 @@ Features:
 Deprecations:
 
 * On Python 3, the JSON encoder used by ``to_file`` and ``FileDestination`` would accept ``bytes``... sometimes.
-  This is deprecated, and will cease to work in a future release of Python 3.
+  This is deprecated, and will cease to work in a future release of Eliot (on Python 3, it will continue to work on Python 2).
   If you wish to include ``bytes`` in JSON logging, convert it to a string in the log-generating code, use Eliot's type, or use a custom JSON encoder.
 
 1.2.0
