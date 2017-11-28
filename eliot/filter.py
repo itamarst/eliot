@@ -59,7 +59,7 @@ class EliotFilter(object):
             result = self._evaluate(message)
             if result is self._SKIP:
                 continue
-            self.output.write(dumps(result, _DatetimeJSONEncoder) + b"\n")
+            self.output.write(dumps(result, cls=_DatetimeJSONEncoder) + b"\n")
 
     def _evaluate(self, message):
         """

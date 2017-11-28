@@ -715,7 +715,7 @@ class ToFileTests(TestCase):
                     return pyjson.JSONEncoder.default(self, o)
 
         message = {"x": 123, "z": custom}
-        f = StringIO()
+        f = BytesIO()
         destination = FileDestination(file=f, encoder=CustomEncoder)
         destination(message)
         self.assertEqual(
