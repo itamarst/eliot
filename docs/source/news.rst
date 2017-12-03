@@ -9,6 +9,11 @@ Features:
 * The default JSON output format now supports custom JSON encoders. See :ref:`custom_json` for details.
   Thanks to Jonathan Jacobs for feedback.
 
+Bug fixes:
+
+* ``MemoryLogger.validate()`` now gives more informative errors if JSON encoding fails.
+  Thanks to Jean-Paul Calderone for the bug report.
+
 Deprecations:
 
 * On Python 3, the JSON encoder used by ``to_file`` and ``FileDestination`` would accept ``bytes``... sometimes.

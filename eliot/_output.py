@@ -299,7 +299,8 @@ class MemoryLogger(object):
         Does minimal validation of types, and for messages with corresponding
         serializers use those to do additional validation.
 
-        @raises TypeError: If a field name is not unicode.
+        @raises TypeError: If a field name is not unicode, or the dictionary
+            fails to serialize to JSON.
 
         @raises eliot.ValidationError: If serializer was given and validation
             failed.
@@ -318,8 +319,12 @@ class MemoryLogger(object):
             if serializer is not None:
                 serializer.serialize(dictionary)
 
-            bytesjson.dumps(dictionary)
-            pyjson.dumps(dictionary)
+            try:
+                bytesjson.dumps(dictionary)
+                pyjson.dumps(dictionary)
+            except Exception as e:
+                raise TypeError("Message %s doesn't encode to JSON: %s" % (
+                    dictionary, e))
 
     def serialize(self):
         """
