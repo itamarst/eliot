@@ -1,6 +1,20 @@
 What's New
 ==========
 
+1.3.0
+^^^^^
+
+Features:
+
+* The default JSON output format now supports custom JSON encoders. See :ref:`custom_json` for details.
+  Thanks to Jonathan Jacobs for feedback.
+
+Deprecations:
+
+* On Python 3, the JSON encoder used by ``to_file`` and ``FileDestination`` would accept ``bytes``... sometimes.
+  This is deprecated, and will cease to work in a future release of Eliot (on Python 3, it will continue to work on Python 2).
+  If you wish to include ``bytes`` in JSON logging, convert it to a string in the log-generating code, use Eliot's type system, or use a custom JSON encoder.
+
 1.2.0
 ^^^^^
 
@@ -8,6 +22,7 @@ Features:
 
 * Eliot now does the right thing for ``asyncio`` coroutines in Python 3.5 and later.
   See :ref:`asyncio_coroutine` for details.
+  Thanks to x0zzz for the bug report.
 
 Misc:
 

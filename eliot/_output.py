@@ -19,7 +19,8 @@ from ._message import (
     Message,
     EXCEPTION_FIELD,
     MESSAGE_TYPE_FIELD,
-    REASON_FIELD, )
+    REASON_FIELD,
+)
 from ._util import saferepr, safeunicode
 
 
@@ -39,6 +40,7 @@ class BufferingDestination(object):
     """
     Buffer messages in memory.
     """
+
     def __init__(self):
         self.messages = []
 
@@ -167,8 +169,11 @@ class Logger(object):
         """
         try:
             return unicode(
-                dict((saferepr(key), saferepr(value))
-                     for (key, value) in dictionary.items()))
+                dict(
+                    (saferepr(key), saferepr(value))
+                    for (key, value) in dictionary.items()
+                )
+            )
         except:
             return saferepr(dictionary)
 
@@ -182,9 +187,12 @@ class Logger(object):
                 serializer.serialize(dictionary)
         except:
             writeTraceback(self)
-            msg = Message({
-                MESSAGE_TYPE_FIELD: "eliot:serialization_failure",
-                "message": self._safeUnicodeDictionary(dictionary)})
+            msg = Message(
+                {
+                    MESSAGE_TYPE_FIELD: "eliot:serialization_failure",
+                    "message": self._safeUnicodeDictionary(dictionary)
+                }
+            )
             msg.write(self)
             return
 
@@ -197,15 +205,18 @@ class Logger(object):
                     # if destination continues to error out we will get
                     # infinite recursion. So instead we have to manually
                     # construct a message.
-                    msg = Message({
-                        MESSAGE_TYPE_FIELD:
-                        "eliot:destination_failure",
-                        REASON_FIELD:
-                        safeunicode(exception),
-                        EXCEPTION_FIELD:
-                        exc_type.__module__ + "." + exc_type.__name__,
-                        "message":
-                        self._safeUnicodeDictionary(dictionary)})
+                    msg = Message(
+                        {
+                            MESSAGE_TYPE_FIELD:
+                            "eliot:destination_failure",
+                            REASON_FIELD:
+                            safeunicode(exception),
+                            EXCEPTION_FIELD:
+                            exc_type.__module__ + "." + exc_type.__name__,
+                            "message":
+                            self._safeUnicodeDictionary(dictionary)
+                        }
+                    )
                     self._destinations.send(dict(msg._freeze()))
                 except:
                     # Nothing we can do here, raising exception to caller will
@@ -302,7 +313,8 @@ class MemoryLogger(object):
                         key.decode("utf-8")
                     else:
                         raise TypeError(
-                            dictionary, "%r is not unicode" % (key, ))
+                            dictionary, "%r is not unicode" % (key, )
+                        )
             if serializer is not None:
                 serializer.serialize(dictionary)
 
@@ -354,10 +366,11 @@ class FileDestination(PClass):
     @ivar _linebreak: C{"\n"} as either bytes or unicode.
     """
     file = field(mandatory=True)
+    encoder = field(mandatory=True)
     _dumps = field(mandatory=True)
     _linebreak = field(mandatory=True)
 
-    def __new__(cls, file):
+    def __new__(cls, file, encoder=pyjson.JSONEncoder):
         unicodeFile = False
         if PY3:
             try:
@@ -373,23 +386,32 @@ class FileDestination(PClass):
             _dumps = bytesjson.dumps
             _linebreak = b"\n"
         return PClass.__new__(
-            cls, file=file, _dumps=_dumps, _linebreak=_linebreak)
+            cls,
+            file=file,
+            _dumps=_dumps,
+            _linebreak=_linebreak,
+            encoder=encoder
+        )
 
     def __call__(self, message):
         """
         @param message: A message dictionary.
         """
-        self.file.write(self._dumps(message) + self._linebreak)
+        self.file.write(
+            self._dumps(message, cls=self.encoder) + self._linebreak
+        )
         self.file.flush()
 
 
-def to_file(output_file):
+def to_file(output_file, encoder=pyjson.JSONEncoder):
     """
     Add a destination that writes a JSON message per line to the given file.
 
     @param output_file: A file-like object.
     """
-    Logger._destinations.add(FileDestination(file=output_file))
+    Logger._destinations.add(
+        FileDestination(file=output_file, encoder=encoder)
+    )
 
 
 # The default Logger, used when none is specified:

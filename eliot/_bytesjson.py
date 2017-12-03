@@ -7,32 +7,40 @@ instead we write our encoder that can support those.
 """
 
 import json as pyjson
+import warnings
 
 from six import PY2
 
 
-class JSONEncoder(pyjson.JSONEncoder):
-    """
-    JSON encoder that supports L{bytes}.
-    """
-
-    def default(self, o):
-        if isinstance(o, bytes):
-            return o.decode("utf-8")
-        return pyjson.JSONEncoder.default(self, o)
-
-
-_encoder = JSONEncoder()
-
-
 def _loads(s):
+    """
+    Support decoding bytes.
+    """
     if isinstance(s, bytes):
         s = s.decode("utf-8")
     return pyjson.loads(s)
 
 
-def _dumps(obj):
-    return _encoder.encode(obj).encode("utf-8")
+def _dumps(obj, cls=pyjson.JSONEncoder):
+    """
+    Encode to bytes, and presume bytes in inputs are UTF-8 encoded strings.
+    """
+
+    class WithBytes(cls):
+        """
+        JSON encoder that supports L{bytes}.
+        """
+
+        def default(self, o):
+            if isinstance(o, bytes):
+                warnings.warn(
+                    "Eliot will soon stop supporting encoding bytes in JSON"
+                    " on Python 3", DeprecationWarning
+                )
+                return o.decode("utf-8")
+            return cls.default(self, o)
+
+    return pyjson.dumps(obj, cls=WithBytes).encode("utf-8")
 
 
 if PY2:

@@ -10,11 +10,12 @@ if __name__ == '__main__':
 
 import sys
 from datetime import datetime, timedelta
+from json import JSONEncoder
 
-from . import _bytesjson as json
+from ._bytesjson import dumps, loads
 
 
-class _JSONEncoder(json.JSONEncoder):
+class _DatetimeJSONEncoder(JSONEncoder):
     """
     JSON encoder that supports L{datetime}.
     """
@@ -22,10 +23,7 @@ class _JSONEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, datetime):
             return o.isoformat()
-        return json.JSONEncoder.default(self, o)
-
-
-_encoder = _JSONEncoder()
+        return JSONEncoder.default(self, o)
 
 
 class EliotFilter(object):
@@ -57,11 +55,11 @@ class EliotFilter(object):
         as JSON and write that to the output file.
         """
         for line in self.incoming:
-            message = json.loads(line)
+            message = loads(line)
             result = self._evaluate(message)
             if result is self._SKIP:
                 continue
-            self.output.write(_encoder.encode(result).encode("utf-8") + b"\n")
+            self.output.write(dumps(result, cls=_DatetimeJSONEncoder) + b"\n")
 
     def _evaluate(self, message):
         """
