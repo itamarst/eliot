@@ -323,8 +323,9 @@ class MemoryLogger(object):
                 bytesjson.dumps(dictionary)
                 pyjson.dumps(dictionary)
             except Exception as e:
-                raise TypeError("Message %s doesn't encode to JSON: %s" % (
-                    dictionary, e))
+                raise TypeError(
+                    "Message %s doesn't encode to JSON: %s" % (dictionary, e)
+                )
 
     def serialize(self):
         """
@@ -414,9 +415,11 @@ def to_file(output_file, encoder=pyjson.JSONEncoder):
 
     @param output_file: A file-like object.
     """
-    Logger._destinations.add(
-        FileDestination(file=output_file, encoder=encoder)
-    )
+    destination = FileDestination(file=output_file, encoder=encoder)
+
+    Logger._destinations.add(destination)
+
+    return destination
 
 
 # The default Logger, used when none is specified:
