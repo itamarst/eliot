@@ -50,4 +50,4 @@ Project Information
 
 Eliot is maintained by Itamar Turner-Trauring, and released under the Apache 2.0 License.
 
-It supports Python 3.6, 3.5, 3.4, 2.7, as we as PyPy.
+It supports Python 3.6, 3.5, 3.4, 2.7, as well as PyPy.
