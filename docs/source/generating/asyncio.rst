@@ -20,7 +20,7 @@ When using coroutines you end up with the same context being used with different
 Calling ``eliot.use_asyncio_context()`` makes sure each coroutine gets its own context, so ``with start_action()`` in one coroutine doesn't interfere with another.
 
 However, Eliot will do the right thing for nested coroutines.
-Specifically, coroutines called via ``await a_coroutine()`` will inherit the logging context from the calling coruotine.
+Specifically, coroutines called via ``await a_coroutine()`` will inherit the logging context from the calling coroutine.
 
 
 Limitations
