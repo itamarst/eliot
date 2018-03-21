@@ -119,19 +119,20 @@ The ``context()`` method returns the ``Action``:
          # do some stuff...
          action.finish()
 
-Keep in mind that code within the context block that is run after the action is finished will still be in that action's context:
+Don't log within an action's context after it has been finished:
 
 .. code-block:: python
 
      from eliot import start_action, Message
 
      with start_action(action_type=u"message_late").context() as action:
-         # do some stuff...
+         Message.log(message_type=u"ok")
+         # finish the action:
          action.finish()
-         # but this message still belongs to that action!
-         Message.log(status=u"late")
+         # BUG: this message is being added to a finished action!
+         Message.log(message_type=u"late")
 
-You can also explicitly run a function within the action context:
+As an alternative to ``with``, you can also explicitly run a function within the action context:
 
 .. code-block:: python
 
