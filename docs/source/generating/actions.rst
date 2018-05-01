@@ -119,7 +119,7 @@ The ``context()`` method returns the ``Action``:
          # do some stuff...
          action.finish()
 
-Don't log within an action's context after it has been finished:
+You shouldn't log within an action's context after it has been finished:
 
 .. code-block:: python
 
@@ -129,7 +129,7 @@ Don't log within an action's context after it has been finished:
          Message.log(message_type=u"ok")
          # finish the action:
          action.finish()
-         # BUG: this message is being added to a finished action!
+         # Don't do this! This message is being added to a finished action!
          Message.log(message_type=u"late")
 
 As an alternative to ``with``, you can also explicitly run a function within the action context:
