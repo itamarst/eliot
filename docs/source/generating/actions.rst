@@ -92,7 +92,6 @@ You can do so with ``Action.context()``.
 You can explicitly finish an action by calling ``eliot.Action.finish``.
 If called with an exception it indicates the action finished unsuccessfully.
 If called with no arguments it indicates that the action finished successfully.
-Keep in mind that code within the context block that is run after the action is finished will still be in that action's context.
 
 .. code-block:: python
 
@@ -120,7 +119,20 @@ The ``context()`` method returns the ``Action``:
          # do some stuff...
          action.finish()
 
-You can also explicitly run a function within the action context:
+You shouldn't log within an action's context after it has been finished:
+
+.. code-block:: python
+
+     from eliot import start_action, Message
+
+     with start_action(action_type=u"message_late").context() as action:
+         Message.log(message_type=u"ok")
+         # finish the action:
+         action.finish()
+         # Don't do this! This message is being added to a finished action!
+         Message.log(message_type=u"late")
+
+As an alternative to ``with``, you can also explicitly run a function within the action context:
 
 .. code-block:: python
 
