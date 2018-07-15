@@ -112,10 +112,16 @@ class Message(object):
             task_uuid = action._identification[TASK_UUID_FIELD]
             task_level = thaw(action._nextTaskLevel().level)
         timestamp = self._timestamp()
-        return self._contents.update({
+        new_values = {
             TIMESTAMP_FIELD: timestamp,
             TASK_UUID_FIELD: task_uuid,
-            TASK_LEVEL_FIELD: task_level, })
+            TASK_LEVEL_FIELD: task_level
+        }
+        if "action_type" not in self._contents and (
+            "message_type" not in self._contents
+        ):
+            new_values["message_type"] = ""
+        return self._contents.update(new_values)
 
     def write(self, logger=None, action=None):
         """
@@ -173,7 +179,8 @@ class WrittenMessage(PClass):
         A C{PMap}, the message contents without Eliot metadata.
         """
         return self._logged_dict.discard(TIMESTAMP_FIELD).discard(
-            TASK_UUID_FIELD).discard(TASK_LEVEL_FIELD)
+            TASK_UUID_FIELD
+        ).discard(TASK_LEVEL_FIELD)
 
     @classmethod
     def from_dict(cls, logged_dictionary):

@@ -9,6 +9,10 @@ Features:
 * Added support for routing standard library logging into Eliot; see :ref:`migrating` for details.
 * Added support for Python 3.7.
 
+Output format changes:
+
+* All messages now have either ``message_type`` or ``action_type`` fields.
+
 Documentation:
 
 * Documented how to add log levels, and how to filter Eliot logs.

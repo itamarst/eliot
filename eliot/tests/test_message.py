@@ -29,7 +29,7 @@ class MessageTests(TestCase):
     def test_new(self):
         """
         L{Message.new} returns a new L{Message} that is initialized with the
-        given keyword arguments as its contents.
+        given keyword arguments as its contents, and a default message type.
         """
         msg = Message.new(key="value", another=2)
         self.assertEqual(msg.contents(), {"key": "value", "another": 2})
@@ -51,9 +51,12 @@ class MessageTests(TestCase):
         another = msg.bind(another=3, more=4)
         self.assertIsInstance(another, Message)
         self.assertEqual(
-            another.contents(), {"key": "value",
-                                 "another": 3,
-                                 "more": 4})
+            another.contents(), {
+                "key": "value",
+                "another": 3,
+                "more": 4
+            }
+        )
 
     def test_bindPreservesOriginal(self):
         """
@@ -135,10 +138,31 @@ class MessageTests(TestCase):
         msg.write(logger)
         self.assertEqual(logger.messages[0]["timestamp"], timestamp)
 
+    def test_write_preserves_message_type(self):
+        """
+        L{Message.write} doesn't add a C{message_type} if one is already set.
+        """
+        logger = MemoryLogger()
+        msg = Message.new(key=4, message_type="isetit")
+        msg.write(logger)
+        self.assertEqual(logger.messages[0]["message_type"], "isetit")
+        self.assertNotIn("action_type", logger.messages[0])
+
+    def test_write_preserves_action_type(self):
+        """
+        L{Message.write} doesn't add a C{message_type} if an action type is set.
+        """
+        logger = MemoryLogger()
+        msg = Message.new(key=4, action_type="isetit")
+        msg.write(logger)
+        self.assertEqual(logger.messages[0]["action_type"], "isetit")
+        self.assertNotIn("message_type", logger.messages[0])
+
     def test_explicitAction(self):
         """
         L{Message.write} adds the identification fields from the given
-        L{Action} to the dictionary written to the logger.
+        L{Action} to the dictionary written to the logger, as well as a
+        message_type if none is set.
         """
         logger = MemoryLogger()
         action = Action(logger, "unique", TaskLevel(level=[]), "sys:thename")
@@ -147,9 +171,13 @@ class MessageTests(TestCase):
         written = logger.messages[0]
         del written["timestamp"]
         self.assertEqual(
-            written, {"task_uuid": "unique",
-                      "task_level": [1],
-                      "key": 2})
+            written, {
+                "task_uuid": "unique",
+                "task_level": [1],
+                "key": 2,
+                "message_type": "",
+            }
+        )
 
     def test_implicitAction(self):
         """
@@ -158,7 +186,8 @@ class MessageTests(TestCase):
         dictionary written to the logger.
         """
         action = Action(
-            MemoryLogger(), "unique", TaskLevel(level=[]), "sys:thename")
+            MemoryLogger(), "unique", TaskLevel(level=[]), "sys:thename"
+        )
         logger = MemoryLogger()
         msg = Message.new(key=2)
         with action:
@@ -166,9 +195,13 @@ class MessageTests(TestCase):
         written = logger.messages[0]
         del written["timestamp"]
         self.assertEqual(
-            written, {"task_uuid": "unique",
-                      "task_level": [1],
-                      "key": 2})
+            written, {
+                "task_uuid": "unique",
+                "task_level": [1],
+                "key": 2,
+                "message_type": "",
+            }
+        )
 
     def test_missingAction(self):
         """
@@ -183,9 +216,12 @@ class MessageTests(TestCase):
         Message.new(key=3).write(logger)
 
         message1, message2 = logger.messages
-        self.assertEqual((
-            UUID(message1["task_uuid"]) != UUID(message2["task_uuid"]),
-            message1["task_level"], message2["task_level"]), (True, [1], [1]))
+        self.assertEqual(
+            (
+                UUID(message1["task_uuid"]) != UUID(message2["task_uuid"]),
+                message1["task_level"], message2["task_level"]
+            ), (True, [1], [1])
+        )
 
     def test_actionCounter(self):
         """
@@ -199,8 +235,10 @@ class MessageTests(TestCase):
                 msg.write(logger)
         # We expect 6 messages: start action, 4 standalone messages, finish
         # action:
-        self.assertEqual([m["task_level"] for m in logger.messages],
-                         [[1], [2], [3], [4], [5], [6]])
+        self.assertEqual(
+            [m["task_level"] for m in logger.messages],
+            [[1], [2], [3], [4], [5], [6]]
+        )
 
     def test_writePassesSerializer(self):
         """
@@ -247,24 +285,31 @@ class WrittenMessageTests(TestCase):
         L{WrittenMessage.as_dict} returns the dictionary that will be serialized
         to the log.
         """
-        log_entry = pmap({
-            'timestamp': 1,
-            'task_uuid': 'unique',
-            'task_level': [1],
-            'foo': 'bar', })
+        log_entry = pmap(
+            {
+                'timestamp': 1,
+                'task_uuid': 'unique',
+                'task_level': [1],
+                'foo': 'bar',
+            }
+        )
         self.assertEqual(
-            WrittenMessage.from_dict(log_entry).as_dict(), log_entry)
+            WrittenMessage.from_dict(log_entry).as_dict(), log_entry
+        )
 
     def test_from_dict(self):
         """
         L{WrittenMessage.from_dict} converts a dictionary that has been
         deserialized from a log into a L{WrittenMessage} object.
         """
-        log_entry = pmap({
-            'timestamp': 1,
-            'task_uuid': 'unique',
-            'task_level': [1],
-            'foo': 'bar', })
+        log_entry = pmap(
+            {
+                'timestamp': 1,
+                'task_uuid': 'unique',
+                'task_level': [1],
+                'foo': 'bar',
+            }
+        )
         parsed = WrittenMessage.from_dict(log_entry)
         self.assertEqual(parsed.timestamp, 1)
         self.assertEqual(parsed.task_uuid, 'unique')
