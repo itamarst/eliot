@@ -2,9 +2,9 @@ Log Levels
 ==========
 
 Eliot does not have a native set of logging levels, as some systems do.
-It does distinguish between normal log messages and errors—failed actions and and tracebacks can both be considered as errors.
+It does distinguish between normal log messages and errors—failed actions and tracebacks can both be considered as errors.
 
-However, you can if you wish include log levels yourself.
+However, you can add log levels yourself.
 
 
 Generating messages with log levels
@@ -24,8 +24,8 @@ All you need to do to add a log level is just add an appropriate field to your l
 Choosing log levels
 -------------------
 
-If you are implementing a service you will be running, consider choosing log levels that are meaningful on an organizational level.
 In an excellent `article by Daniel Lebroro <https://labs.ig.com/logging-level-wrong-abstraction>`_, he explains that he chose the logging levels "for test environment", "for production environment", "investigate tomorrow", and "wake me in the middle of the night".
 These seem rather more informative and useful than "INFO" or "WARN".
 
-Consider emulating this example and choosing actionable levels.
+If you are implementing a service you will be running, consider choosing log levels that are meaningful on an organizational level.
+

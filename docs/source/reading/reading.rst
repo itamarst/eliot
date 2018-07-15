@@ -22,7 +22,7 @@ The third-party `eliot-tree`_ tool renders JSON-formatted Eliot messages into a 
 Filtering logs
 --------------
 
-Eliot logs are structured, and by default stored in one JSON per line.
+Eliot logs are structured, and by default stored in one JSON object per line.
 That means you can filter them in multiple ways:
 
 1. Line-oriented tools like grep.
