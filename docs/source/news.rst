@@ -1,6 +1,14 @@
 What's New
 ==========
 
+1.4.0
+^^^^^
+
+Documentation:
+
+* Documented how to add log levels, and how to filter Eliot logs.
+
+
 1.3.0
 ^^^^^
 
