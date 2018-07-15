@@ -13,7 +13,8 @@ The resulting logs tell you the story of what your software did: what happened, 
 Eliot works well within a single process, but can also be used across multiple processes to trace causality across a distributed system.
 Eliot is only used to generate your logs; you will still need tools like Logstash and ElasticSearch to aggregate and store logs if you are using multiple processes.
 
-Eliot supports Python 2.7, 3.4, 3.5, 3.6 and PyPy. It is maintained by Itamar Turner-Trauring, and released under the Apache 2.0 License.
+Eliot supports Python 2.7, 3.4, 3.5, 3.6, 3.7 and PyPy.
+It is maintained by Itamar Turner-Trauring, and released under the Apache 2.0 License.
 
 * `Read the documentation <https://eliot.readthedocs.io>`_.
 * Download from `PyPI`_.
