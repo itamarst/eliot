@@ -26,5 +26,5 @@ Testimonials
 
     —Jonathan Jacobs
 
-.. _Github: https://github.com/ClusterHQ/eliot
+.. _Github: https://github.com/ScatterHQ/eliot
 .. _PyPI: https://pypi.python.org/pypi/eliot
