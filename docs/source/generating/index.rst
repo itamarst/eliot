@@ -5,6 +5,7 @@ Generating Logs
    messages
    actions
    errors
+   loglevels
    threads
    types
    types-testing
