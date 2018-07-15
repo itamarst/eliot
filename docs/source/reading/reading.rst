@@ -1,5 +1,5 @@
-Reading Eliot Logs
-==================
+Reading and Filtering Eliot Logs
+================================
 
 Eliot includes a command-line tool that makes it easier to read JSON-formatted Eliot messages:
 
@@ -17,6 +17,27 @@ Eliot includes a command-line tool that makes it easier to read JSON-formatted E
      value: goodbye
 
 The third-party `eliot-tree`_ tool renders JSON-formatted Eliot messages into a tree visualizing the tasks' actions.
-Unlike ``eliot-prettyprint`` it may not be able to format all messages if some of a task's messages are missing.
 
-.. _eliot-tree: https://warehouse.python.org/project/eliot-tree/
+
+Filtering logs
+--------------
+
+Eliot logs are structured, and by default stored in one JSON per line.
+That means you can filter them in multiple ways:
+
+1. Line-oriented tools like grep.
+   You can grep for a particular task's UUIDs, or for a particular message type (e.g. tracebacks).
+2. JSON-based filtering tools.
+   `jq`_ allows you to filter a stream of JSON messages.
+3. `eliot-tree`_ has some filtering and searching support built-in.
+
+For example, here's how you'd extract a particular field with `jq`_:
+
+.. code-block:: shell-session
+
+   $ python examples/stdout.py | jq '.value'
+   "hello"
+   "goodbye"
+
+.. _eliot-tree: https://github.com/jonathanj/eliottree
+.. _jq: https://stedolan.github.io/jq/
