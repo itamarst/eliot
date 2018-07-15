@@ -61,8 +61,8 @@ setup(
     keywords="logging",
     license="Apache 2.0",
     packages=["eliot", "eliot.tests"],
-    url="https://github.com/ClusterHQ/eliot/",
+    url="https://github.com/ScatterHQ/eliot/",
     maintainer='Itamar Turner-Trauring',
-    maintainer_email='itamar@clusterhq.com',
+    maintainer_email='itamar@itamarst.org',
     long_description=read('README.rst'),
 )
