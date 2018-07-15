@@ -7,7 +7,7 @@ What's New
 Documentation:
 
 * Documented how to add log levels, and how to filter Eliot logs.
-
+* Logstash configuration is closer to modern version's options, though still untested.
 
 1.3.0
 ^^^^^
