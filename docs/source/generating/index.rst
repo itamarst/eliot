@@ -6,6 +6,7 @@ Generating Logs
    actions
    errors
    loglevels
+   migrating
    threads
    types
    types-testing
