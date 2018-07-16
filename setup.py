@@ -53,7 +53,7 @@ setup(
             # Tasteful testing for Python:
             "testtools",
             "sphinx",
-            "sphinx-rtd-theme",
+            "sphinx_rtd_theme",
             "flake8",
             "yapf"
         ]
