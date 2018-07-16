@@ -52,6 +52,10 @@ setup(
             "hypothesis >= 1.14.0",
             # Tasteful testing for Python:
             "testtools",
+            "sphinx",
+            "sphinx-rtd-theme",
+            "flake8",
+            "yapf"
         ]
     },
     entry_points={
