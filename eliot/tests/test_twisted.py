@@ -28,7 +28,7 @@ from .._output import MemoryLogger, Logger
 from .._message import Message
 from ..testing import assertContainsFields
 from .. import removeDestination, addDestination
-from .._traceback import writeTraceback
+from .._traceback import write_traceback
 from .common import FakeSys
 
 
@@ -630,7 +630,7 @@ class TwistedDestinationTests(TestCase):
         try:
             raiser()
         except Exception:
-            writeTraceback(logger)
+            write_traceback(logger)
         self.assertEqual(
             writtenToTwisted, [("critical", written[0])]
         )

@@ -1,6 +1,17 @@
 What's New
 ==========
 
+1.5.0
+^^^^^
+
+Features:
+
+* You can now pass in an explicit traceback tuple to ``write_traceback``.
+
+Changes:
+
+* The deprecated ``system`` argument to ``write_traceback`` and ``writeFailure`` has been removed.
+
 1.4.0
 ^^^^^
 

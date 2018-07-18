@@ -45,8 +45,8 @@ class ErrorExtraction(object):
                 try:
                     return extractor(exception)
                 except:
-                    from ._traceback import writeTraceback
-                    writeTraceback(logger)
+                    from ._traceback import write_traceback
+                    write_traceback(logger)
                     return {}
         return {}
 

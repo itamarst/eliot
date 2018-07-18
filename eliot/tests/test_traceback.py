@@ -14,25 +14,27 @@ try:
 except ImportError:
     Failure = None
 
-from .._traceback import writeTraceback, writeFailure, _writeTracebackMessage
+from .._traceback import write_traceback, writeFailure, _writeTracebackMessage
 from ..testing import (
     assertContainsFields,
     validateLogging,
     capture_logging,
-    MemoryLogger, )
+    MemoryLogger,
+)
 from .._errors import register_exception_extractor
 from .test_action import make_error_extraction_tests
 
 
 class TracebackLoggingTests(TestCase):
     """
-    Tests for L{writeTraceback} and L{writeFailure}.
+    Tests for L{write_traceback} and L{writeFailure}.
     """
 
     @validateLogging(None)
-    def test_writeTraceback(self, logger):
+    def test_write_traceback_implicit(self, logger):
         """
-        L{writeTraceback} writes the current traceback to the log.
+        L{write_traceback} with no arguments writes the current traceback to
+        the log.
         """
         e = None
 
@@ -42,26 +44,52 @@ class TracebackLoggingTests(TestCase):
         try:
             raiser()
         except Exception as exception:
-            expectedTraceback = traceback.format_exc()
-            writeTraceback(logger)
+            expected_traceback = traceback.format_exc()
+            write_traceback(logger)
             e = exception
-        lines = expectedTraceback.split("\n")
+        self.assert_expected_traceback(logger, e, expected_traceback)
+
+    @validateLogging(None)
+    def test_write_traceback_explicit(self, logger):
+        """
+        L{write_traceback} with explicit arguments writes the given traceback
+        to the log.
+        """
+        e = None
+
+        def raiser():
+            raise RuntimeError("because")
+
+        try:
+            raiser()
+        except Exception as exception:
+            expected_traceback = traceback.format_exc()
+            write_traceback(logger, exc_info=sys.exc_info())
+            e = exception
+        self.assert_expected_traceback(logger, e, expected_traceback)
+
+    def assert_expected_traceback(self, logger, exception, expected_traceback):
+        """Assert we logged the given exception and the expected traceback."""
+        lines = expected_traceback.split("\n")
         # Remove source code lines:
-        expectedTraceback = "\n".join([
-            l for l in lines if not l.startswith("    ")])
+        expected_traceback = "\n".join(
+            [l for l in lines if not l.startswith("    ")]
+        )
         message = logger.messages[0]
         assertContainsFields(
             self, message, {
                 "message_type": "eliot:traceback",
                 "exception": RuntimeError,
-                "reason": e,
-                "traceback": expectedTraceback})
+                "reason": exception,
+                "traceback": expected_traceback
+            }
+        )
         logger.flushTracebacks(RuntimeError)
 
     @capture_logging(None)
     def test_writeTracebackDefaultLogger(self, logger):
         """
-        L{writeTraceback} writes to the default log, if none is
+        L{write_traceback} writes to the default log, if none is
         specified.
         """
 
@@ -71,11 +99,14 @@ class TracebackLoggingTests(TestCase):
         try:
             raiser()
         except Exception:
-            writeTraceback()
+            write_traceback()
 
         message = logger.messages[0]
         assertContainsFields(
-            self, message, {"message_type": "eliot:traceback"})
+            self, message, {
+                "message_type": "eliot:traceback"
+            }
+        )
         logger.flushTracebacks(RuntimeError)
 
     @validateLogging(None)
@@ -98,7 +129,9 @@ class TracebackLoggingTests(TestCase):
                 "message_type": "eliot:traceback",
                 "exception": RuntimeError,
                 "reason": failure.value,
-                "traceback": expectedTraceback})
+                "traceback": expectedTraceback
+            }
+        )
         logger.flushTracebacks(RuntimeError)
 
     @capture_logging(None)
@@ -117,7 +150,10 @@ class TracebackLoggingTests(TestCase):
             writeFailure(failure)
         message = logger.messages[0]
         assertContainsFields(
-            self, message, {"message_type": "eliot:traceback"})
+            self, message, {
+                "message_type": "eliot:traceback"
+            }
+        )
         logger.flushTracebacks(RuntimeError)
 
     @validateLogging(None)
@@ -150,7 +186,9 @@ class TracebackLoggingTests(TestCase):
         assertContainsFields(
             self, serialized, {
                 "exception": "%s.KeyError" % (KeyError.__module__, ),
-                "reason": "123"})
+                "reason": "123"
+            }
+        )
         logger.flushTracebacks(KeyError)
 
     @validateLogging(None)
@@ -170,39 +208,9 @@ class TracebackLoggingTests(TestCase):
         _writeTracebackMessage(logger, *exc_info)
         self.assertEqual(
             logger.serialize()[0]["reason"],
-            "eliot: unknown, unicode() raised exception")
+            "eliot: unknown, unicode() raised exception"
+        )
         logger.flushTracebacks(BadException)
-
-    def test_systemDeprecatedWriteTraceback(self):
-        """
-        L{writeTraceback} warns with C{DeprecationWarning} if a C{system}
-        argument is passed in.
-        """
-        logger = MemoryLogger()
-        with catch_warnings(record=True) as warnings:
-            simplefilter("always")
-            try:
-                raise Exception()
-            except:
-                writeTraceback(logger, "system")
-            self.assertEqual(warnings[-1].category, DeprecationWarning)
-
-    def test_systemDeprecatedWriteFailure(self):
-        """
-        L{writeTraceback} warns with C{DeprecationWarning} if a C{system}
-        argument is passed in.
-        """
-        if Failure is None:
-            raise SkipTest("Twisted unavailable")
-
-        logger = MemoryLogger()
-        with catch_warnings(record=True) as warnings:
-            simplefilter("always")
-            try:
-                raise Exception()
-            except:
-                writeFailure(Failure(), logger, "system")
-            self.assertEqual(warnings[-1].category, DeprecationWarning)
 
 
 def get_traceback_messages(exception):
@@ -213,7 +221,7 @@ def get_traceback_messages(exception):
     try:
         raise exception
     except exception.__class__:
-        writeTraceback(logger)
+        write_traceback(logger)
     # MemoryLogger.validate() mutates messages:
     # https://github.com/ScatterHQ/eliot/issues/243
     messages = [message.copy() for message in logger.messages]
@@ -222,7 +230,8 @@ def get_traceback_messages(exception):
 
 
 class TracebackExtractionTests(
-    make_error_extraction_tests(get_traceback_messages)):
+    make_error_extraction_tests(get_traceback_messages)
+):
     """
     Error extraction tests for tracebacks.
     """
@@ -243,4 +252,6 @@ class TracebackExtractionTests(
             self, messages[0], {
                 "message_type": "eliot:traceback",
                 "reason": exception,
-                "exception": MyException})
+                "exception": MyException
+            }
+        )
