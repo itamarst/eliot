@@ -4,6 +4,10 @@ What's New
 1.5.0
 ^^^^^
 
+Bug fixes:
+
+* Standard library ``logging`` bridge now logs tracebacks, not just messages.
+
 Features:
 
 * You can now pass in an explicit traceback tuple to ``write_traceback``.

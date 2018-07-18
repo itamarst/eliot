@@ -1,7 +1,9 @@
 """Integration with the standard library ``logging`` package."""
 
 from logging import Handler
+
 from ._message import Message
+from ._traceback import write_traceback
 
 
 class EliotHandler(Handler):
@@ -14,6 +16,8 @@ class EliotHandler(Handler):
             logger=record.name,
             message=record.getMessage()
         )
+        if record.exc_info:
+            write_traceback(exc_info=record.exc_info)
 
 
 __all__ = ["EliotHandler"]
