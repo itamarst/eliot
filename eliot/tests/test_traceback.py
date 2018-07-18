@@ -5,7 +5,6 @@ Tests for L{eliot._traceback}.
 from __future__ import unicode_literals
 
 from unittest import TestCase, SkipTest
-from warnings import catch_warnings, simplefilter
 import traceback
 import sys
 

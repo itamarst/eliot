@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 
 import traceback
 import sys
-from warnings import warn
 
 from ._message import EXCEPTION_FIELD, REASON_FIELD
 from ._util import safeunicode, load_module
