@@ -14,7 +14,7 @@ from pyrsistent import PClass, field
 from . import _bytesjson as bytesjson
 from zope.interface import Interface, implementer
 
-from ._traceback import writeTraceback, TRACEBACK_MESSAGE
+from ._traceback import write_traceback, TRACEBACK_MESSAGE
 from ._message import (
     Message,
     EXCEPTION_FIELD,
@@ -186,7 +186,7 @@ class Logger(object):
             if serializer is not None:
                 serializer.serialize(dictionary)
         except:
-            writeTraceback(self)
+            write_traceback(self)
             msg = Message(
                 {
                     MESSAGE_TYPE_FIELD: "eliot:serialization_failure",
@@ -252,7 +252,7 @@ class MemoryLogger(object):
         L{MemoryLogger.messages}. Do not mutate this list.
 
     @ivar tracebackMessages: A C{list} of messages written to this logger for
-        tracebacks using L{eliot.writeTraceback} or L{eliot.writeFailure}. Do
+        tracebacks using L{eliot.write_traceback} or L{eliot.writeFailure}. Do
         not mutate this list.
     """
 

@@ -17,7 +17,7 @@ from ._output import (
     FileDestination,
 )
 from ._validation import Field, fields, MessageType, ActionType
-from ._traceback import writeTraceback, writeFailure
+from ._traceback import write_traceback, writeFailure
 from ._errors import register_exception_extractor
 from ._version import get_versions
 
@@ -37,11 +37,11 @@ def add_destination(destination):
 addDestination = add_destination
 removeDestination = Logger._destinations.remove
 addGlobalFields = Logger._destinations.addGlobalFields
+writeTraceback = write_traceback
 
 # PEP 8 variants:
 start_action = startAction
 start_task = startTask
-write_traceback = writeTraceback
 write_failure = writeFailure
 add_destinations = Logger._destinations.add
 remove_destination = removeDestination

@@ -21,7 +21,7 @@ from .._output import MemoryLogger
 from .._action import startAction
 from .._message import Message
 from .._validation import ActionType, MessageType, ValidationError, Field
-from .._traceback import writeTraceback
+from .._traceback import write_traceback
 from .. import add_destination, remove_destination, _output
 
 
@@ -489,7 +489,7 @@ class ValidateLoggingTestsMixin(object):
                 try:
                     1 / 0
                 except ZeroDivisionError:
-                    writeTraceback(logger)
+                    write_traceback(logger)
 
         test = MyTest()
         self.assertRaises(UnflushedTracebacks, test.debug)
@@ -571,7 +571,7 @@ class ValidateLoggingTestsMixin(object):
                 try:
                     1 / 0
                 except ZeroDivisionError:
-                    writeTraceback(logger)
+                    write_traceback(logger)
 
         test = MyTest()
         test.run()
@@ -696,7 +696,7 @@ class CaptureLoggingTests(ValidateLoggingTestsMixin, TestCase):
                 try:
                     1 / 0
                 except:
-                    writeTraceback(logger)
+                    write_traceback(logger)
                 raise SkipTest("Do not run this test.")
 
         test = MyTest()

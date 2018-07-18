@@ -119,5 +119,6 @@ You can learn more by reading the rest of the documentation, including:
 
 * The :doc:`motivation behind Eliot <introduction>`.
 * How to generate :doc:`actions <generating/actions>`, :doc:`standalone messages <generating/messages>`, and :doc:`handle errors <generating/errors>`.
-* How to integrate with :doc:`asyncio coroutines <generating/asyncio>`, :doc:`threads and processes <generating/threads>`, or :doc:`Twisted <generating/twisted>`.
+* How to integrate or migrate your :doc:`existing stdlib logging messages <generating/migrating>`.
 * How to output logs :doc:`to a file or elsewhere <outputting/output>`.
+* Using :doc:`asyncio coroutines <generating/asyncio>`, :doc:`threads and processes <generating/threads>`, or :doc:`Twisted <generating/twisted>`.

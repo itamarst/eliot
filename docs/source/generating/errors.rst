@@ -22,6 +22,16 @@ If you get a completely unexpected exception you may wish to log a traceback to 
                  write_traceback()
 
 
+You can also pass in the output of ``sys.exc_info()``:
+
+.. code-block:: python
+
+    import sys
+    from eliot import write_traceback
+
+    write_traceback(exc_info=sys.exc_info())
+
+
 .. _extract errors:
 
 Custom Exception Logging

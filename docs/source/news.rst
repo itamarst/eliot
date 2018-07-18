@@ -1,6 +1,21 @@
 What's New
 ==========
 
+1.5.0
+^^^^^
+
+Bug fixes:
+
+* The standard library ``logging`` bridge now logs tracebacks, not just messages.
+
+Features:
+
+* You can now pass in an explicit traceback tuple to ``write_traceback``.
+
+Changes:
+
+* The deprecated ``system`` argument to ``write_traceback`` and ``writeFailure`` has been removed.
+
 1.4.0
 ^^^^^
 

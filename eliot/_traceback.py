@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 
 import traceback
 import sys
-from warnings import warn
 
 from ._message import EXCEPTION_FIELD, REASON_FIELD
 from ._util import safeunicode, load_module
@@ -74,7 +73,7 @@ def _get_traceback_no_io():
 _traceback_no_io = _get_traceback_no_io()
 
 
-def writeTraceback(logger=None, system=None):
+def write_traceback(logger=None, exc_info=None):
     """
     Write the latest traceback to the log.
 
@@ -83,20 +82,19 @@ def writeTraceback(logger=None, system=None):
          try:
              dostuff()
          except:
-             writeTraceback(logger)
-    """
-    if system is not None:
-        warn(
-            "The `system` argument to writeTraceback is no longer used.",
-            DeprecationWarning,
-            stacklevel=2)
+             write_traceback(logger)
 
-    typ, exception, tb = sys.exc_info()
+    Or you can pass the result of C{sys.exc_info()} to the C{exc_info}
+    parameter.
+    """
+    if exc_info is None:
+        exc_info = sys.exc_info()
+    typ, exception, tb = exc_info
     traceback = "".join(_traceback_no_io.format_exception(typ, exception, tb))
     _writeTracebackMessage(logger, typ, exception, traceback)
 
 
-def writeFailure(failure, logger=None, system=None):
+def writeFailure(failure, logger=None):
     """
     Write a L{twisted.python.failure.Failure} to the log.
 
@@ -114,12 +112,6 @@ def writeFailure(failure, logger=None, system=None):
 
     @return: None
     """
-    if system is not None:
-        warn(
-            "The `system` argument to writeFailure is no longer used.",
-            DeprecationWarning,
-            stacklevel=2)
-
     # Failure.getBriefTraceback does not include source code, so does not do
     # I/O.
     _writeTracebackMessage(

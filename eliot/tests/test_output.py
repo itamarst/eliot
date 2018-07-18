@@ -21,7 +21,7 @@ from .._output import (
     MemoryLogger, ILogger, Destinations, Logger, bytesjson as json, to_file,
     FileDestination, _DestinationsSendError)
 from .._validation import ValidationError, Field, _MessageSerializer
-from .._traceback import writeTraceback
+from .._traceback import write_traceback
 from ..testing import assertContainsFields
 
 
@@ -155,14 +155,14 @@ class MemoryLoggerTests(TestCase):
         logger.serialize()
         self.assertEqual(logger.messages[0]["length"], "abc")
 
-    def writeTraceback(self, logger, exception):
+    def write_traceback(self, logger, exception):
         """
         Write an exception as a traceback to the logger.
         """
         try:
             raise exception
         except:
-            writeTraceback(logger)
+            write_traceback(logger)
 
     def test_tracebacksCauseTestFailure(self):
         """
@@ -171,7 +171,7 @@ class MemoryLoggerTests(TestCase):
         """
         logger = MemoryLogger()
         exception = Exception()
-        self.writeTraceback(logger, exception)
+        self.write_traceback(logger, exception)
         self.assertEqual(logger.tracebackMessages[0]["reason"], exception)
 
     def test_flushTracebacksNoTestFailure(self):
@@ -182,7 +182,7 @@ class MemoryLoggerTests(TestCase):
         """
         logger = MemoryLogger()
         exception = RuntimeError()
-        self.writeTraceback(logger, exception)
+        self.write_traceback(logger, exception)
         logger.flushTracebacks(RuntimeError)
         self.assertEqual(logger.tracebackMessages, [])
 
@@ -194,7 +194,7 @@ class MemoryLoggerTests(TestCase):
         logger = MemoryLogger()
         logger.write({"x": 1})
         for exc in exceptions:
-            self.writeTraceback(logger, exc)
+            self.write_traceback(logger, exc)
         logger.write({"x": 1})
         flushed = logger.flushTracebacks(ZeroDivisionError)
         self.assertEqual(flushed, logger.messages[1:3])
@@ -207,7 +207,7 @@ class MemoryLoggerTests(TestCase):
         """
         logger = MemoryLogger()
         exception = RuntimeError()
-        self.writeTraceback(logger, exception)
+        self.write_traceback(logger, exception)
         logger.flushTracebacks(KeyError)
         self.assertEqual(logger.tracebackMessages[0]["reason"], exception)
 
@@ -218,7 +218,7 @@ class MemoryLoggerTests(TestCase):
         """
         logger = MemoryLogger()
         exception = RuntimeError()
-        self.writeTraceback(logger, exception)
+        self.write_traceback(logger, exception)
         self.assertEqual(logger.flushTracebacks(KeyError), [])
 
     def test_reset(self):
