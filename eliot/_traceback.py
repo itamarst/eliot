@@ -84,7 +84,8 @@ def write_traceback(logger=None, exc_info=None):
          except:
              write_traceback(logger)
 
-    Or you can pass the result C{sys.exc_info()} to the C{exc_info} parameter.
+    Or you can pass the result of C{sys.exc_info()} to the C{exc_info}
+    parameter.
     """
     if exc_info is None:
         exc_info = sys.exc_info()
