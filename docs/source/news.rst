@@ -6,7 +6,7 @@ What's New
 
 Bug fixes:
 
-* Standard library ``logging`` bridge now logs tracebacks, not just messages.
+* The standard library ``logging`` bridge now logs tracebacks, not just messages.
 
 Features:
 
