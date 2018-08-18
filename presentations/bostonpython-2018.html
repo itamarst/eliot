@@ -1,0 +1,141 @@
+<html>
+    <head>
+        <title>Boston Python Meetup 2018</title>
+        <meta charset="utf-8">
+        <style>
+         body { font-family: 'Bitstream Charter'; }
+         h1, h2, h3 {
+             font-weight: normal;
+         }
+         .remark-code, .remark-inline-code { font-family: 'Source Code Pro'; }
+        </style>
+    </head>
+    <body>
+        <textarea id="source">
+
+class: center, middle
+
+# Eliot: Logging that tells you _why_ it happened
+
+---
+
+# Why do we want logs?
+# To know:
+
+## 1. **What** happened.
+
+## 2. **Why** it happened.
+
+---
+
+# Traditional logging tells us what happened
+
+```
+2018-08-22T17:23:45 INFO Outside in the cold distance
+2018-08-22T17:23:46 WARN A wildcat did growl
+2018-08-22T17:23:47 INFO Two riders were approaching
+2018-08-22T17:23:48 INFO The wind began to howl
+```
+
+---
+
+# But it doesn't tell us _why_ it happened
+
+## Did the wildcat growl because of the cold or the riders?
+## Were the riders in the cold distance, or merely outside?
+## How was the wind related to any of this?
+
+---
+
+# Eliot gives you causality
+
+```
+$ python watchtower.py > wt.logs
+$ cat wt.logs | eliot-tree
+45112a47-149b-4a48-a50f-a30fdb68a475
+└── outside/1 ⇒ started 2018-08-18 19:15:29 ⧖ 0.001s
+    ├── location: distance
+    ├── weather: cold
+    ├── approach/2/1 ⇒ started 2018-08-18 19:15:29 ⧖ 0.000s
+    │   ├── who:
+    │   │   ├── 0: Alice
+    │   │   └── 1: Bob
+    │   ├── growl/2/2/1 ⇒ started 2018-08-18 19:15:29 ⧖ 0.000s
+    │   │   ├── who: Whiskers the Wildcat
+    │   │   └── growl/2/2/2 ⇒ succeeded 2018-08-18 19:15:29
+    │   └── approach/2/3 ⇒ succeeded 2018-08-18 19:15:29
+    ├── wind:howl/3 2018-08-18 19:15:29
+    └── outside/4 ⇒ succeeded 2018-08-18 19:15:29
+```
+
+---
+
+# Eliot tells us _why_ it happened
+
+## Semantic model is tree of actions
+
+```
+└── outside
+    ├── approach
+    │   └── growl
+    └── wind:howl
+```
+
+---
+
+# Here's the code
+
+```python
+with start_action(action_type="outside",
+                  weather="cold",
+                  location="distance"):
+    with start_action(action_type="approach",
+                      who=[rider1, rider2]):
+        with start_action(action_type="growl",
+                          who=[wildcat]):
+            # ...
+    Message.log(message_type="wind:howl")
+```
+
+---
+
+# Output format is still linear
+
+## De-facto standard of JSON message per line
+## Much easier to parse than text
+
+---
+
+# Use cases
+
+## **Scientific computing (reproducability, debuggability)**
+## Distributed systems
+## Anything hard to understand
+
+---
+
+# Integrations
+
+## asyncio coroutines
+## Twisted
+## Logstash → ElasticSearch
+## journald
+## Dask (work in progress)
+
+---
+
+# Learn more
+
+## https://eliot.readthedocs.io
+## itamar@itamarst.org
+
+        </textarea>
+        <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+        </script>
+        <script>
+         var slideshow = remark.create();
+        </script>
+        <script src="remark-zoom.js">
+        </script>
+    </body>
+</html>
