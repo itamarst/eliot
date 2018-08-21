@@ -2,12 +2,13 @@
     <head>
         <title>Boston Python Meetup 2018</title>
         <meta charset="utf-8">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro|Source+Serif+Pro" rel="stylesheet"> 
         <style>
-         body { font-family: 'Bitstream Charter'; }
-         h1, h2, h3 {
+         body { font-family: 'Source Serif Pro', serif; }
+         h2, h3 {
              font-weight: normal;
          }
-         .remark-code, .remark-inline-code { font-family: 'Source Code Pro'; }
+         .remark-code, .remark-inline-code { font-family: 'Source Code Pro', monospace; }
         </style>
     </head>
     <body>
@@ -22,9 +23,9 @@ class: center, middle
 # Why do we want logs?
 # To know:
 
-## 1. **What** happened.
+## 1. What happened.
 
-## 2. **Why** it happened.
+## 2. Why it happened.
 
 ---
 
@@ -72,14 +73,9 @@ $ cat wt.logs | eliot-tree
 
 # Eliot tells us _why_ it happened
 
-## Semantic model is tree of actions
-
-```
-└── outside
-    ├── approach
-    │   └── growl
-    └── wind:howl
-```
+## Semantic model is tree of actions, which either:
+## 1. Succeed, or
+## 2. Fail (throw an exception, which is logged automatically)
 
 ---
 
@@ -96,21 +92,22 @@ with start_action(action_type="outside",
             # ...
     Message.log(message_type="wind:howl")
 ```
-
----
-
-# Output format is still linear
-
-## De-facto standard of JSON message per line
-## Much easier to parse than text
-
 ---
 
 # Use cases
 
-## **Scientific computing (reproducability, debuggability)**
+## Scientific computing (reproducability, debuggability)
 ## Distributed systems
 ## Anything hard to understand
+
+---
+
+# Other features
+
+## Easy, gradual migration from stdlib `logging`
+## Structured logging, JSON by default
+## Unit test your logging (if you want to)
+## And more!
 
 ---
 
@@ -118,9 +115,9 @@ with start_action(action_type="outside",
 
 ## asyncio coroutines
 ## Twisted
+## Dask (work in progress)
 ## Logstash → ElasticSearch
 ## journald
-## Dask (work in progress)
 
 ---
 
