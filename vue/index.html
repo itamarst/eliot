@@ -1,0 +1,89 @@
+<html>
+    <head>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script>
+// define the item component
+Vue.component('item', {
+  template: '#item-template',
+  props: {
+    model: Object
+  },
+  data: function () {
+    return {
+      open: false
+    }
+  },
+  computed: {
+    isFolder: function () {
+      return this.model.children &&
+        this.model.children.length
+    }
+  },
+  methods: {
+    toggle: function () {
+      if (this.isFolder) {
+        this.open = !this.open
+      }
+    },
+  }
+})
+    </script>
+    <style>
+     .folder {
+         font-weight: bold;
+         cursor: pointer;
+     }
+     ul {
+         padding-left: 1em;
+         line-height: 1.5em;
+         list-style-type: square;
+     }
+    </style>
+    <body>
+<!-- item template -->
+<script type="text/x-template" id="item-template">
+  <li>
+    <div
+      :class="{folder: isFolder}"
+      @click="toggle">
+      {{model.name}}
+      <span v-if="isFolder">[{{open ? '-' : '+'}}]</span>
+    </div>
+    <ul v-show="open" v-if="isFolder">
+      <item
+        class="item"
+        v-for="model in model.children"
+        :model="model">
+      </item>
+    </ul>
+  </li>
+</script>
+
+<!-- the demo root element -->
+<ul id="tree">
+  <item
+    class="item"
+    :model="treeData">
+  </item>
+</ul>
+
+<script>
+var request = new XMLHttpRequest();
+request.open('GET', 'data.json', true);
+
+request.onload = function() {
+    if (this.status >= 200 && this.status < 400) {
+        // Success!
+        var data = JSON.parse(this.response);
+        var demo = new Vue({
+            el: '#tree',
+            data: {
+                treeData: data
+            }
+        })
+  }
+};
+request.send();
+</script>
+    </body>
+</html>
