@@ -49,6 +49,7 @@ Vue.component('item', {
       {{model.name}}
       <span v-if="isFolder">[{{open ? '-' : '+'}}]</span>
     </div>
+    <pre>{{model.body}}</pre>
     <ul v-show="open" v-if="isFolder">
       <item
         class="item"
