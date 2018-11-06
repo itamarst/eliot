@@ -5,7 +5,7 @@ Tests for L{eliot._output}.
 from __future__ import unicode_literals
 
 from sys import stdout
-from unittest import TestCase, skipIf
+from unittest import TestCase, skipIf, skipUnless
 # Make sure to use StringIO that only accepts unicode:
 from io import BytesIO, StringIO
 import json as pyjson
@@ -14,7 +14,10 @@ from time import time
 from uuid import UUID
 
 from six import PY3, PY2
-
+try:
+    import numpy as np
+except ImportError:
+    np = None
 from zope.interface.verify import verifyClass
 
 from .._output import (
@@ -685,6 +688,21 @@ class ToFileTests(TestCase):
         self.assertEqual([
             json.loads(line)
             for line in bytes_f.getvalue().splitlines()], [{"x": "abc"}])
+
+    @skipUnless(np, "NumPy is not installed.")
+    def test_default_encoder_is_EliotJSONEncoder(self):
+        """The default encoder if none are specified is EliotJSONEncoder."""
+        message = {"x": np.int64(3)}
+        f = StringIO()
+        destination = FileDestination(file=f)
+        destination(message)
+        self.assertEqual(
+            [
+                json.loads(line)
+                for line in f.getvalue().splitlines()
+            ],
+            [{"x": 3}]
+        )
 
     def test_filedestination_writes_json_bytes(self):
         """
