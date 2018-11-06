@@ -1,8 +1,7 @@
 """Custom JSON encoding support."""
 
 import json
-
-import numpy
+import sys
 
 
 class EliotJSONEncoder(json.JSONEncoder):
@@ -12,14 +11,16 @@ class EliotJSONEncoder(json.JSONEncoder):
     """
 
     def default(self, o):
-        if isinstance(o, numpy.floating):
-            return float(o)
-        if isinstance(o, numpy.integer):
-            return int(o)
-        if isinstance(o, (numpy.bool, numpy.bool_)):
-            return bool(o)
-        if isinstance(o, numpy.ndarray):
-            return o.tolist()
+        numpy = sys.modules.get("numpy", None)
+        if numpy is not None:
+            if isinstance(o, numpy.floating):
+                return float(o)
+            if isinstance(o, numpy.integer):
+                return int(o)
+            if isinstance(o, (numpy.bool, numpy.bool_)):
+                return bool(o)
+            if isinstance(o, numpy.ndarray):
+                return o.tolist()
         return json.JSONEncoder.default(self, o)
 
 __all__ = ["EliotJSONEncoder"]

@@ -4,8 +4,9 @@ Tests for L{eliot._json}.
 
 from __future__ import unicode_literals, absolute_import
 
-from unittest import TestCase, skipUnless
+from unittest import TestCase, skipUnless, skipIf
 from json import loads, dumps
+import sys
 
 try:
     import numpy as np
@@ -33,3 +34,13 @@ class EliotJSONEncoderTests(TestCase):
         l2 = [l, np.array([1, 2, 3])]
         roundtripped = loads(dumps(l2, cls=EliotJSONEncoder))
         self.assertEqual([l, [1, 2, 3]], roundtripped)
+
+    @skipIf(np, "NumPy is installed.")
+    def test_numpy_not_imported(self):
+        """If NumPy is not available, EliotJSONEncoder continues to work.
+
+        This ensures NumPy isn't a hard dependency.
+        """
+        with self.assertRaises(TypeError):
+            dumps([object()], cls=EliotJSONEncoder)
+        self.assertEqual(dumps(12, cls=EliotJSONEncoder), "12")
