@@ -22,6 +22,7 @@ from ._message import (
     REASON_FIELD,
 )
 from ._util import saferepr, safeunicode
+from ._json import EliotJSONEncoder
 
 
 class _DestinationsSendError(Exception):
@@ -375,7 +376,7 @@ class FileDestination(PClass):
     _dumps = field(mandatory=True)
     _linebreak = field(mandatory=True)
 
-    def __new__(cls, file, encoder=pyjson.JSONEncoder):
+    def __new__(cls, file, encoder=EliotJSONEncoder):
         unicodeFile = False
         if PY3:
             try:
@@ -408,7 +409,7 @@ class FileDestination(PClass):
         self.file.flush()
 
 
-def to_file(output_file, encoder=pyjson.JSONEncoder):
+def to_file(output_file, encoder=EliotJSONEncoder):
     """
     Add a destination that writes a JSON message per line to the given file.
 

@@ -1,6 +1,13 @@
 What's New
 ==========
 
+1.6.0
+^^^^^
+
+Features:
+
+* NumPy integers, floats, bools and arrays are now automatically serialized to JSON.
+
 1.5.0
 ^^^^^
 
