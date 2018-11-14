@@ -4,7 +4,7 @@ from pyrsistent import PClass, field
 
 from dask import compute, optimize
 from dask.core import toposort, get_dependencies
-from .. import start_action, current_action, Action, Message
+from . import start_action, current_action, Action, Message
 
 
 class _RunWithEliotContext(PClass):
@@ -75,7 +75,7 @@ def compute_with_trace(*args):
         return compute(*optimized, optimizations=[_add_logging])
 
 
-def _add_logging(dsk):
+def _add_logging(dsk, ignore=None):
     """
     Add logging to a Dask graph.
 
@@ -128,3 +128,6 @@ def _add_logging(dsk):
 
     assert result.keys() == dsk.keys()
     return result
+
+
+__all__ = ["compute_with_trace"]
