@@ -7,6 +7,14 @@ What's New
 Features:
 
 * NumPy integers, floats, bools and arrays are now automatically serialized to JSON.
+* Dask support: replace ``dask.compute()`` with ``eliot.dask.compute_with_trace()`` to automatically preserve Eliot context for ``Bag`` and ``Delayed`` Dask computations.
+
+Testing features:
+
+* ``eliot.testing.LoggedAction`` has a new method, ``type_tree()``, that returns the tree of action and message types.
+  This allows for easier testing of action structure.
+* ``eliot.testing.LoggedAction.of_type`` now accepts the type as a string, not just an ``eliot.ActionType`` instance.
+  Similarly, ``LoggedMessage.of_type`` also accepts the type as a string.
 
 1.5.0
 ^^^^^

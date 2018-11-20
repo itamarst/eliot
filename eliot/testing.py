@@ -8,6 +8,7 @@ from unittest import SkipTest
 from functools import wraps
 
 from pyrsistent import PClass, field
+from six import text_type
 
 from ._action import (
     ACTION_STATUS_FIELD,
@@ -148,21 +149,23 @@ class LoggedAction(PClass):
     from_messages = fromMessages
 
     @classmethod
-    def ofType(klass, messages, actionType):
+    def of_type(klass, messages, actionType):
         """
         Find all L{LoggedAction} of the specified type.
 
         @param messages: A list of message C{dict}s.
 
         @param actionType: A L{eliot.ActionType}, the type of the actions to
-            find.
+            find, or the type as a C{str}.
 
         @return: A C{list} of L{LoggedAction}.
         """
+        if not isinstance(actionType, text_type):
+            actionType = actionType.action_type
         result = []
         for message in messages:
             if (
-                message.get(ACTION_TYPE_FIELD) == actionType.action_type
+                message.get(ACTION_TYPE_FIELD) == actionType
                 and message[ACTION_STATUS_FIELD] == STARTED_STATUS):
                 result.append(
                     klass.fromMessages(
@@ -170,8 +173,8 @@ class LoggedAction(PClass):
                         messages))
         return result
 
-    # PEP 8 variant:
-    of_type = ofType
+    # Backwards compat:
+    ofType = of_type
 
     def descendants(self):
         """
@@ -195,6 +198,23 @@ class LoggedAction(PClass):
         """
         return self.endMessage[ACTION_STATUS_FIELD] == SUCCEEDED_STATUS
 
+    def type_tree(self):
+        """Return dictionary of all child action and message types.
+
+        Actions become dictionaries that look like
+        C{{<action_type>: [<child_message_type>, <child_action_dict>]}}
+
+        @return: C{dict} where key is action type, and value is list of child
+            types: either strings for messages, or dicts for actions.
+        """
+        children = []
+        for child in self.children:
+            if isinstance(child, LoggedAction):
+                children.append(child.type_tree())
+            else:
+                children.append(child.message[MESSAGE_TYPE_FIELD])
+        return {self.startMessage[ACTION_TYPE_FIELD]: children}
+
 
 class LoggedMessage(PClass):
     """
@@ -208,25 +228,27 @@ class LoggedMessage(PClass):
         return PClass.__new__(cls, message=message)
 
     @classmethod
-    def ofType(klass, messages, messageType):
+    def of_type(klass, messages, messageType):
         """
         Find all L{LoggedMessage} of the specified type.
 
         @param messages: A list of message C{dict}s.
 
         @param messageType: A L{eliot.MessageType}, the type of the messages
-            to find.
+            to find, or the type as a L{str}.
 
         @return: A C{list} of L{LoggedMessage}.
         """
         result = []
+        if not isinstance(messageType, text_type):
+            messageType = messageType.message_type
         for message in messages:
-            if message.get(MESSAGE_TYPE_FIELD) == messageType.message_type:
+            if message.get(MESSAGE_TYPE_FIELD) == messageType:
                 result.append(klass(message))
         return result
 
-    # PEP 8 variant:
-    of_type = ofType
+    # Backwards compat:
+    ofType = of_type
 
 
 class UnflushedTracebacks(Exception):
