@@ -234,13 +234,15 @@ class LoggedMessage(PClass):
         @param messages: A list of message C{dict}s.
 
         @param messageType: A L{eliot.MessageType}, the type of the messages
-            to find.
+            to find, or the type as a L{str}.
 
         @return: A C{list} of L{LoggedMessage}.
         """
         result = []
+        if not isinstance(messageType, str):
+            messageType = messageType.message_type
         for message in messages:
-            if message.get(MESSAGE_TYPE_FIELD) == messageType.message_type:
+            if message.get(MESSAGE_TYPE_FIELD) == messageType:
                 result.append(klass(message))
         return result
 

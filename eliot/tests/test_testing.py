@@ -314,6 +314,10 @@ class LoggedMessageTest(TestCase):
                 LoggedMessage(logger.messages[0]),
                 LoggedMessage(logger.messages[2])])
 
+        # Lookup by string type:
+        logged2 = LoggedMessage.ofType(logger.messages, 'mymessage')
+        self.assertEqual(logged, logged2)
+
     def test_ofTypeNotFound(self):
         """
         L{LoggedMessage.ofType} returns an empty list if messages of the given

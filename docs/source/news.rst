@@ -12,7 +12,8 @@ Testing features:
 
 * ``eliot.testing.LoggedAction`` has a new method, ``type_tree()``, that returns the tree of action and message types.
   This allows for easier testing of action structure.
-* ``eliot.testing.LoggedAction.ofType`` now accepts the type as a string, not just an ``eliot.ActionType`` instance.
+* ``eliot.testing.LoggedAction.of_type`` now accepts the type as a string, not just an ``eliot.ActionType`` instance.
+  Similarly, ``LoggedMessage.of_type`` also accepts the type as a string.
 
 1.5.0
 ^^^^^
