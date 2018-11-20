@@ -38,17 +38,20 @@ class DaskTests(TestCase):
             Message.log(message_type="sum")
             return x + y
 
-        bag = from_sequence([1, 2], partition_size=1)
+        bag = from_sequence([1, 2])
         bag = bag.map(mult).fold(summer)
         with start_action(action_type="act1"):
             compute_with_trace(bag)
-        for message in logger.messages:
-            print(message)
+
         [logged_action] = LoggedAction.ofType(logger.messages, "act1")
         self.assertEqual(
             logged_action.type_tree(),
-            {"act1": {"dask:compute": ""}}
+            {'act1': [{'dask:compute':
+                       [{'eliot:remote_task': ['dask:task', 'mult']},
+                        {'eliot:remote_task': ['dask:task', 'mult']},
+                        {'eliot:remote_task': ['dask:task', 'sum']}]}]}
         )
+
 
 class AddLoggingTests(TestCase):
     """Tests for _add_logging()."""
@@ -62,7 +65,7 @@ class AddLoggingTests(TestCase):
 
         # Add logging:
         with start_action(action_type="bleh"):
-            logging_added = _add_logging(graph, [])
+            logging_added = _add_logging(graph)
 
         # Ensure resulting graph hasn't changed substantively:
         logging_removed = {}
