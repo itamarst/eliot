@@ -148,7 +148,7 @@ class LoggedAction(PClass):
     from_messages = fromMessages
 
     @classmethod
-    def ofType(klass, messages, actionType):
+    def of_type(klass, messages, actionType):
         """
         Find all L{LoggedAction} of the specified type.
 
@@ -172,8 +172,8 @@ class LoggedAction(PClass):
                         messages))
         return result
 
-    # PEP 8 variant:
-    of_type = ofType
+    # Backwards compat:
+    ofType = of_type
 
     def descendants(self):
         """
@@ -227,7 +227,7 @@ class LoggedMessage(PClass):
         return PClass.__new__(cls, message=message)
 
     @classmethod
-    def ofType(klass, messages, messageType):
+    def of_type(klass, messages, messageType):
         """
         Find all L{LoggedMessage} of the specified type.
 
@@ -246,8 +246,8 @@ class LoggedMessage(PClass):
                 result.append(klass(message))
         return result
 
-    # PEP 8 variant:
-    of_type = ofType
+    # Backwards compat:
+    ofType = of_type
 
 
 class UnflushedTracebacks(Exception):
