@@ -206,14 +206,13 @@ class LoggedAction(PClass):
         @return: C{dict} where key is action type, and value is list of child
             types: either strings for messages, or dicts for actions.
         """
-        return {
-            self.startMessage[ACTION_TYPE_FIELD]:
-            [
-                child.type_tree() if isinstance(child, LoggedAction)
-                else child.message[MESSAGE_TYPE_FIELD]
-                for child in self.children
-            ]
-        }
+        children = []
+        for child in self.children:
+            if isinstance(child, LoggedAction):
+                children.append(child.type_tree())
+            else:
+                children.append(child.message[MESSAGE_TYPE_FIELD])
+        return {self.startMessage[ACTION_TYPE_FIELD]: children}
 
 
 class LoggedMessage(PClass):
