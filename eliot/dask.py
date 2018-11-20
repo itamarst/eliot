@@ -112,7 +112,8 @@ def _add_logging(dsk, ignore=None):
 
     # 3. Replace function with wrapper that logs appropriate Action:
     for key in keys:
-        func, *args = dsk[key]
+        func = dsk[key][0]
+        args = dsk[key][1:]
         if not callable(func):
             # This key is just an alias for another key, no need to add
             # logging:
