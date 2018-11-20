@@ -21,7 +21,8 @@ class _RunWithEliotContext(PClass):
     key = field(type=str)
     dependencies = field()
 
-    # Pretend to be func for purposes of equality:
+    # Pretend to be underlying callable for purposes of equality; necessary for
+    # optimizer to be happy:
 
     def __eq__(self, other):
         return self.func == other
@@ -71,8 +72,8 @@ def compute_with_trace(*args):
     with start_action(action_type="dask:compute"):
         # In order to reduce logging verbosity, add logging to the already
         # optimized graph:
-        optimized = optimize(*args)
-        return compute(*optimized, optimizations=[_add_logging])
+        optimized = optimize(*args, optimizations=[_add_logging])
+        return compute(*optimized, optimize_graph=False)
 
 
 def _add_logging(dsk, ignore=None):
@@ -85,6 +86,9 @@ def _add_logging(dsk, ignore=None):
     """
     ctx = current_action()
     result = {}
+
+    # Use topological sort to ensure Eliot actions are in logical order of
+    # execution in Dask:
     keys = toposort(dsk)
 
     # Give each key a string name. Some keys are just aliases to other

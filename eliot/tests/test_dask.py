@@ -2,7 +2,7 @@
 
 from unittest import TestCase, skipUnless
 
-from ..testing import capture_logging, LoggedAction
+from ..testing import capture_logging, LoggedAction, LoggedMessage
 from .. import start_action, Message
 try:
     import dask
@@ -35,7 +35,7 @@ class DaskTests(TestCase):
             return x * 4
 
         def summer(x, y):
-            Message.log(message_type="sum")
+            Message.log(message_type="finally")
             return x + y
 
         bag = from_sequence([1, 2])
@@ -49,8 +49,21 @@ class DaskTests(TestCase):
             {'act1': [{'dask:compute':
                        [{'eliot:remote_task': ['dask:task', 'mult']},
                         {'eliot:remote_task': ['dask:task', 'mult']},
-                        {'eliot:remote_task': ['dask:task', 'sum']}]}]}
+                        {'eliot:remote_task': ['dask:task', 'finally']}]}]}
         )
+
+        # Make sure dependencies are tracked:
+        mult1_msg, mult2_msg, final_msg = LoggedMessage.ofType(
+            logger.messages, "dask:task")
+        self.assertEqual(sorted(final_msg.message["dependencies"]),
+                         sorted([mult1_msg.message["key"],
+                                 mult2_msg.message["key"]]))
+
+        # Make sure dependencies are logically earlier in the logs:
+        self.assertTrue(
+            mult1_msg.message["task_level"] < final_msg.message["task_level"])
+        self.assertTrue(
+            mult2_msg.message["task_level"] < final_msg.message["task_level"])
 
 
 class AddLoggingTests(TestCase):
