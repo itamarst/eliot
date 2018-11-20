@@ -7,6 +7,7 @@ What's New
 Features:
 
 * NumPy integers, floats, bools and arrays are now automatically serialized to JSON.
+* Dask support: replace ``dask.compute()`` with ``eliot.dask.compute_with_trace()`` to automatically preserve Eliot context for ``Bag`` and ``Delayed`` Dask computations.
 
 Testing features:
 
