@@ -179,15 +179,17 @@ class LoggedActionTests(TestCase):
         # index 0
         with startAction(logger, "test"):
             # index 1:
-            with startAction(logger, "test"):
+            with startAction(logger, "test2"):
                 # index 2
-                Message.new(x=2).write(logger)
+                Message.new(message_type="end", x=2).write(logger)
             # index 3 - end action
             # index 4 - end action
         logged = self.fromMessagesIndex(logger.messages, 0)
 
         self.assertEqual(
             logged.children[0], self.fromMessagesIndex(logger.messages, 1))
+        self.assertEqual(logged.type_tree(),
+                         {"test": [{"test2": ["end"]}]})
 
     def test_ofType(self):
         """

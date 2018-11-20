@@ -195,6 +195,24 @@ class LoggedAction(PClass):
         """
         return self.endMessage[ACTION_STATUS_FIELD] == SUCCEEDED_STATUS
 
+    def type_tree(self):
+        """Return dictionary of all child action and message types.
+
+        Actions become dictionaries that look like
+        C{{<action_type>: [<child_message_type>, <child_action_dict>]}}
+
+        @return: C{dict} where key is action type, and value is list of child
+            types: either strings for messages, or dicts for actions.
+        """
+        return {
+            self.startMessage[ACTION_TYPE_FIELD]:
+            [
+                child.type_tree() if isinstance(child, LoggedAction)
+                else child.message[MESSAGE_TYPE_FIELD]
+            ]
+            for child in self.children
+        }
+
 
 class LoggedMessage(PClass):
     """

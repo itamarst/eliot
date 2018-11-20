@@ -7,6 +7,9 @@ What's New
 Features:
 
 * NumPy integers, floats, bools and arrays are now automatically serialized to JSON.
+* ``eliot.testing.LoggedAction`` has a new method, ``type_tree()``, that returns the tree of action and message types.
+  This allows for easier testing of action structure.
+
 
 1.5.0
 ^^^^^
