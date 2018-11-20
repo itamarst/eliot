@@ -50,9 +50,6 @@ class DaskTests(TestCase):
 class AddLoggingTests(TestCase):
     """Tests for _add_logging()."""
 
-    def test_add_logging_no_existing_context(self):
-        """If there's no Eliot context, don't blow up _add_logging()."""
-
     def test_add_logging_to_full_graph(self):
         """_add_logging() recreates Dask graph with wrappers."""
         bag = from_sequence([1, 2, 3])
