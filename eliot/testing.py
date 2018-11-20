@@ -211,8 +211,8 @@ class LoggedAction(PClass):
             [
                 child.type_tree() if isinstance(child, LoggedAction)
                 else child.message[MESSAGE_TYPE_FIELD]
+                for child in self.children
             ]
-            for child in self.children
         }
 
 
