@@ -66,6 +66,7 @@ class DaskTests(TestCase):
             mult2_msg.message["task_level"] < final_msg.message["task_level"])
 
 
+@skipUnless(dask, "Dask not available.")
 class AddLoggingTests(TestCase):
     """Tests for _add_logging()."""
 
