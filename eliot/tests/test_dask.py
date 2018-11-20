@@ -17,6 +17,9 @@ else:
 class DaskTests(TestCase):
     """Tests for end-to-end functionality."""
 
+    def setUp(self):
+        dask.config.set(scheduler="threading")
+
     def test_compute(self):
         """compute_with_trace() runs the same logic as compute()."""
         bag = from_sequence([1, 2, 3])
