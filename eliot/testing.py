@@ -8,6 +8,7 @@ from unittest import SkipTest
 from functools import wraps
 
 from pyrsistent import PClass, field
+from six import text_type
 
 from ._action import (
     ACTION_STATUS_FIELD,
@@ -159,7 +160,7 @@ class LoggedAction(PClass):
 
         @return: A C{list} of L{LoggedAction}.
         """
-        if not isinstance(actionType, str):
+        if not isinstance(actionType, text_type):
             actionType = actionType.action_type
         result = []
         for message in messages:
@@ -239,7 +240,7 @@ class LoggedMessage(PClass):
         @return: A C{list} of L{LoggedMessage}.
         """
         result = []
-        if not isinstance(messageType, str):
+        if not isinstance(messageType, text_type):
             messageType = messageType.message_type
         for message in messages:
             if message.get(MESSAGE_TYPE_FIELD) == messageType:
