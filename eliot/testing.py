@@ -155,14 +155,16 @@ class LoggedAction(PClass):
         @param messages: A list of message C{dict}s.
 
         @param actionType: A L{eliot.ActionType}, the type of the actions to
-            find.
+            find, or the type as a C{str}.
 
         @return: A C{list} of L{LoggedAction}.
         """
+        if not isinstance(actionType, str):
+            actionType = actionType.action_type
         result = []
         for message in messages:
             if (
-                message.get(ACTION_TYPE_FIELD) == actionType.action_type
+                message.get(ACTION_TYPE_FIELD) == actionType
                 and message[ACTION_STATUS_FIELD] == STARTED_STATUS):
                 result.append(
                     klass.fromMessages(

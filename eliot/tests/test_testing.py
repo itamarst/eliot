@@ -216,6 +216,10 @@ class LoggedActionTests(TestCase):
                 self.fromMessagesIndex(logger.messages, 1),
                 self.fromMessagesIndex(logger.messages, 5)])
 
+        # String-variant of ofType:
+        logged2 = LoggedAction.ofType(logger.messages, "myaction")
+        self.assertEqual(logged, logged2)
+
     def test_ofTypeNotFound(self):
         """
         L{LoggedAction.ofType} returns an empty list if actions of the given
