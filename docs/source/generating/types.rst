@@ -50,7 +50,7 @@ Fields
 ------
 
 A ``Field`` instance is used to validate fields of messages, and to serialize rich types to the built-in supported types.
-It is created with the name of the field, a a serialization function that converts the input to an output and a description.
+It is created with the name of the field, a serialization function that converts the input to an output and a description.
 The serialization function must return a result that is JSON-encodable.
 You can also pass in an extra validation function.
 If you pass this function in it will be called with values that are being validated; if it raises ``eliot.ValidationError`` that value will fail validation.
