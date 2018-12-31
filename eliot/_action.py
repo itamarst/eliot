@@ -12,6 +12,7 @@ from uuid import uuid4
 from itertools import count
 from contextlib import contextmanager
 from warnings import warn
+from functools import wraps
 
 from pyrsistent import (
     field,
@@ -873,3 +874,22 @@ def preserve_context(f):
             return f(*args, **kwargs)
 
     return restore_eliot_context
+
+
+def log_call(func):
+    """Decorator/decorator factory that logs inputs and the return result.
+
+    If used with inputs (i.e. as a decorator factory), it accepts the following
+    parameters:
+
+    @param action_type: The action type to use.  If not given the function name
+        will be used.
+    @param include_args: If given, should be a list of strings, the arguments to log.
+    @param include_result: True by default. If False, the return result isn't logged.
+    """
+    @wraps(func)
+    def logging_wrapper(*args, **kwargs):
+        with start_action():
+            result = func(*args, **kwargs)
+        
+    return logging_wrapper

@@ -1642,3 +1642,55 @@ class PreserveContextTests(TestCase):
             wrapped = preserve_context(self.add)
         wrapped(1, 2)
         self.assertRaises(TooManyCalls, wrapped, 3, 4)
+
+
+class LogCallTests(TestCase):
+    """Tests for log_call decorator."""
+
+    def assert_logged(self, logger, action_type, expected_params, expected_result):
+        """Assert that an action of given structure was logged."""
+        [tree] = Parser.parse_stream(logger.messages)
+        root = tree.root()
+        self.assertEqual(root.action_type, action_type)
+        message = root.start_message
+        for field in [ACTION_STATUS_FIELD, ACTION_TYPE_FIELD, TASK_LEVEL_FIELD,
+                      TASK_UUID_FIELD]:
+            message.pop(field)
+        self.assertEqual(message, expected_params)
+        self.assertEqual(root.end_message["result"], expected_result)
+        self.assertTrue(root.succeeded)
+
+    @capture_logging(None)
+    def test_no_args_return(self, logger):
+        """
+        C{@log_call} with no arguments logs return result, arguments, and has
+        action type based on the action name.
+        """
+        @log_call
+        def myfunc(x, y):
+            return 4
+
+        myfunc(2, 3)
+        self.assert_logged(logger, u"eliot.tests.test_action.myfunc",
+                           {u"x": 2, u"y": 3}, 4)
+
+    def test_exception(self):
+        """C{@log_call} with an exception logs a failed action."""
+
+    def test_action_type(self):
+        """C{@log_call} can take an action type."""
+
+    def test_default_argument_given(self):
+        """C{@log_call} logs default arguments that were passed in."""
+
+    def test_default_argument_missing(self):
+        """C{@log_call} logs default arguments that weren't passed in."""
+
+    def test_star_args_kwargs(self):
+        """C{@log_call} logs star args and kwargs."""
+
+    def test_whitelist_args(self):
+        """C{@log_call} only includes whitelisted arguments."""
+
+    def test_no_result(self):
+        """C{@log_call} can omit logging the result."""
