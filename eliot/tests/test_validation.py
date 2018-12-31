@@ -15,7 +15,7 @@ from .._validation import (
     ValidationError,
     fields,
     _MessageSerializer, )
-from .._action import startAction, startTask
+from .._action import start_action, startTask
 from .._output import MemoryLogger
 from ..serializers import identity
 from .. import add_destination, remove_destination
@@ -758,21 +758,21 @@ class ActionTypeTests(TestCase):
     def test_call(self):
         """
         L{ActionType.__call__} returns the result of calling
-        C{self._startAction}.
+        C{self._start_action}.
         """
         actionType = self.actionType()
-        actionType._startAction = lambda *args, **kwargs: 1234
+        actionType._start_action = lambda *args, **kwargs: 1234
         result = actionType(object())
         self.assertEqual(result, 1234)
 
     def test_callArguments(self):
         """
-        L{ActionType.__call__} calls C{self._startAction} with the logger,
+        L{ActionType.__call__} calls C{self._start_action} with the logger,
         action type, serializers and passed in fields.
         """
         called = []
         actionType = self.actionType()
-        actionType._startAction = lambda *args, **kwargs: called.append(
+        actionType._start_action = lambda *args, **kwargs: called.append(
             (args, kwargs))
         logger = object()
         actionType(logger, key=5)
@@ -783,9 +783,9 @@ class ActionTypeTests(TestCase):
 
     def test_defaultStartAction(self):
         """
-        L{ActionType._startAction} is L{eliot.startAction} by default.
+        L{ActionType._start_action} is L{eliot.start_action} by default.
         """
-        self.assertEqual(ActionType._startAction, startAction)
+        self.assertEqual(ActionType._start_action, start_action)
 
     def test_as_task(self):
         """

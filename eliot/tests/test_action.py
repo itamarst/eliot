@@ -26,11 +26,11 @@ import testtools
 from testtools.matchers import MatchesStructure
 
 from .._action import (
-    Action, _ExecutionContext, current_action, startTask, startAction,
+    Action, _ExecutionContext, current_action, startTask, start_action,
     ACTION_STATUS_FIELD, ACTION_TYPE_FIELD, FAILED_STATUS, STARTED_STATUS,
     SUCCEEDED_STATUS, DuplicateChild, InvalidStartMessage, InvalidStatus,
     TaskLevel, WrittenAction, WrongActionType, WrongTask, WrongTaskLevel,
-    TooManyCalls
+    TooManyCalls, log_call
 )
 from .._message import (
     EXCEPTION_FIELD,
@@ -617,7 +617,7 @@ class ActionTests(TestCase):
 
 class StartActionAndTaskTests(TestCase):
     """
-    Tests for L{startAction} and L{startTask}.
+    Tests for L{start_action} and L{startTask}.
     """
 
     def test_startTaskNewAction(self):
@@ -651,14 +651,14 @@ class StartActionAndTaskTests(TestCase):
 
     def test_startActionSerializers(self):
         """
-        If serializers are passed to L{startAction} they are attached to the
+        If serializers are passed to L{start_action} they are attached to the
         resulting L{Action}.
         """
         logger = MemoryLogger()
         serializers = _ActionSerializers(
             start=None, success=None, failure=None
         )
-        action = startAction(logger, "sys:do", serializers)
+        action = start_action(logger, "sys:do", serializers)
         self.assertIs(action._serializers, serializers)
 
     def test_startTaskNewUUID(self):
@@ -694,26 +694,26 @@ class StartActionAndTaskTests(TestCase):
         L{start_action} sets a default C{action_type} if none is set.
         """
         logger = MemoryLogger()
-        startAction(logger)
+        start_action(logger)
         assertContainsFields(self, logger.messages[0], {"action_type": ""})
 
     def test_startActionNoParent(self):
         """
-        L{startAction} when C{current_action()} is C{None} creates a top-level
+        L{start_action} when C{current_action()} is C{None} creates a top-level
         L{Action}.
         """
         logger = MemoryLogger()
-        action = startAction(logger, "sys:do")
+        action = start_action(logger, "sys:do")
         self.assertIsInstance(action, Action)
         self.assertEqual(action._task_level, TaskLevel(level=[]))
 
     def test_startActionNoParentLogStart(self):
         """
-        L{startAction} when C{current_action()} is C{None} logs a start
+        L{start_action} when C{current_action()} is C{None} logs a start
         message.
         """
         logger = MemoryLogger()
-        action = startAction(logger, "sys:do", key="value")
+        action = start_action(logger, "sys:do", key="value")
         assertContainsFields(
             self, logger.messages[0], {
                 "task_uuid": action._identification["task_uuid"],
@@ -726,26 +726,26 @@ class StartActionAndTaskTests(TestCase):
 
     def test_startActionWithParent(self):
         """
-        L{startAction} uses the C{current_action()} as parent for a new
+        L{start_action} uses the C{current_action()} as parent for a new
         L{Action}.
         """
         logger = MemoryLogger()
         parent = Action(logger, "uuid", TaskLevel(level=[2]), "other:thing")
         with parent:
-            action = startAction(logger, "sys:do")
+            action = start_action(logger, "sys:do")
             self.assertIsInstance(action, Action)
             self.assertEqual(action._identification["task_uuid"], "uuid")
             self.assertEqual(action._task_level, TaskLevel(level=[2, 1]))
 
     def test_startActionWithParentLogStart(self):
         """
-        L{startAction} when C{current_action()} is an L{Action} logs a start
+        L{start_action} when C{current_action()} is an L{Action} logs a start
         message.
         """
         logger = MemoryLogger()
         parent = Action(logger, "uuid", TaskLevel(level=[]), "other:thing")
         with parent:
-            startAction(logger, "sys:do", key="value")
+            start_action(logger, "sys:do", key="value")
             assertContainsFields(
                 self, logger.messages[0], {
                     "task_uuid": "uuid",
@@ -776,12 +776,12 @@ class StartActionAndTaskTests(TestCase):
 
     def test_startActionNoLogger(self):
         """
-        When no logger is given L{startAction} logs to the default ``Logger``.
+        When no logger is given L{start_action} logs to the default ``Logger``.
         """
         messages = []
         add_destination(messages.append)
         self.addCleanup(remove_destination, messages.append)
-        action = startAction(action_type="sys:do", key="value")
+        action = start_action(action_type="sys:do", key="value")
         assertContainsFields(
             self, messages[0], {
                 "task_uuid": action._identification["task_uuid"],
@@ -1609,7 +1609,7 @@ class PreserveContextTests(TestCase):
         If run inside an Eliot context, the result of C{preserve_context} is
         the result of calling the underlying function.
         """
-        with startAction(action_type="parent"):
+        with start_action(action_type="parent"):
             wrapped = preserve_context(self.add)
             self.assertEqual(wrapped(3, y=4), 7)
 
@@ -1620,7 +1620,7 @@ class PreserveContextTests(TestCase):
         the wrapped function within a C{eliot:task} which is a child of
         the original action.
         """
-        with startAction(action_type="parent"):
+        with start_action(action_type="parent"):
             wrapped = preserve_context(lambda: self.add(3, 4))
         thread = Thread(target=wrapped)
         thread.start()
@@ -1638,7 +1638,7 @@ class PreserveContextTests(TestCase):
         """
         The result of C{preserve_context} can only be called once.
         """
-        with startAction(action_type="parent"):
+        with start_action(action_type="parent"):
             wrapped = preserve_context(self.add)
         wrapped(1, 2)
         self.assertRaises(TooManyCalls, wrapped, 3, 4)

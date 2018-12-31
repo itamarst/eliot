@@ -17,7 +17,7 @@ except ImportError:
 
 from .._message import WrittenMessage, Message
 from .._output import MemoryLogger
-from .._action import Action, startAction, TaskLevel
+from .._action import Action, start_action, TaskLevel
 from .. import add_destination, remove_destination
 
 
@@ -230,7 +230,7 @@ class MessageTests(TestCase):
         """
         logger = MemoryLogger()
         msg = Message.new(key=2)
-        with startAction(logger, "sys:thename"):
+        with start_action(logger, "sys:thename"):
             for i in range(4):
                 msg.write(logger)
         # We expect 6 messages: start action, 4 standalone messages, finish

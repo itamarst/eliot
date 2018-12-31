@@ -20,7 +20,7 @@ from ._message import (
     TASK_UUID_FIELD,
     TIMESTAMP_FIELD, )
 from ._action import (
-    startAction,
+    start_action,
     startTask,
     ACTION_STATUS_FIELD,
     ACTION_TYPE_FIELD,
@@ -383,7 +383,7 @@ class ActionType(object):
     """
     # Overrideable hook for testing; need staticmethod() so functions don't
     # get turned into methods.
-    _startAction = staticmethod(startAction)
+    _start_action = staticmethod(start_action)
     _startTask = staticmethod(startTask)
 
     def __init__(
@@ -446,7 +446,7 @@ class ActionType(object):
 
         @rtype: L{eliot.Action}
         """
-        return self._startAction(
+        return self._start_action(
             logger, self.action_type, self._serializers, **fields)
 
     def as_task(self, logger=None, **fields):

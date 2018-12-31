@@ -215,7 +215,7 @@ class Action(object):
         """
         Initialize the L{Action} and log the start message.
 
-        You probably do not want to use this API directly: use L{startAction}
+        You probably do not want to use this API directly: use L{start_action}
         or L{startTask} instead.
 
         @param logger: The L{eliot.ILogger} to which to write
@@ -372,7 +372,7 @@ class Action(object):
         """
         Create a child L{Action}.
 
-        Rather than calling this directly, you can use L{startAction} to
+        Rather than calling this directly, you can use L{start_action} to
         create child L{Action} using the execution context.
 
         @param logger: The L{eliot.ILogger} to which to write
@@ -757,7 +757,7 @@ class WrittenAction(PClass):
         return self.set(end_message=end_message)
 
 
-def startAction(logger=None, action_type="", _serializers=None, **fields):
+def start_action(logger=None, action_type="", _serializers=None, **fields):
     """
     Create a child L{Action}, figuring out the parent L{Action} from execution
     context, and log the start message.
@@ -765,7 +765,7 @@ def startAction(logger=None, action_type="", _serializers=None, **fields):
     You can use the result as a Python context manager, or use the
     L{Action.finish} API to explicitly finish it.
 
-         with startAction(logger, "yourapp:subsystem:dosomething",
+         with start_action(logger, "yourapp:subsystem:dosomething",
                           entry=x) as action:
               do(x)
               result = something(x * 2)
@@ -773,7 +773,7 @@ def startAction(logger=None, action_type="", _serializers=None, **fields):
 
     Or alternatively:
 
-         action = startAction(logger, "yourapp:subsystem:dosomething",
+         action = start_action(logger, "yourapp:subsystem:dosomething",
                               entry=x)
          with action.context():
               do(x)

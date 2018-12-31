@@ -23,7 +23,7 @@ else:
         _RedirectLogsForTrial, TwistedDestination
     )
 
-from .._action import startAction, current_action, Action, TaskLevel
+from .._action import start_action, current_action, Action, TaskLevel
 from .._output import MemoryLogger, Logger
 from .._message import Message
 from ..testing import assertContainsFields
@@ -52,7 +52,7 @@ def withActionContext(f):
     @param f: A function.
     """
     logger = MemoryLogger()
-    action = startAction(logger, "test")
+    action = start_action(logger, "test")
 
     @wraps(f)
     def test(self):
@@ -138,8 +138,8 @@ class DeferredContextTests(TestCase):
         action that the L{DeferredContext} was created with.
         """
         logger = MemoryLogger()
-        action1 = startAction(logger, "test")
-        action2 = startAction(logger, "test")
+        action1 = start_action(logger, "test")
+        action2 = start_action(logger, "test")
         context = []
         d = succeed(None)
         with action1.context():
@@ -156,8 +156,8 @@ class DeferredContextTests(TestCase):
         action that the L{DeferredContext} was created with.
         """
         logger = MemoryLogger()
-        action1 = startAction(logger, "test")
-        action2 = startAction(logger, "test")
+        action1 = start_action(logger, "test")
+        action2 = start_action(logger, "test")
         context = []
         d = fail(RuntimeError())
         with action1.context():
