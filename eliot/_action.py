@@ -877,7 +877,10 @@ def preserve_context(f):
     return restore_eliot_context
 
 
-def log_call(wrapped_function=None, action_type=None):
+def log_call(
+        wrapped_function=None, action_type=None, include_args=None,
+        include_result=True
+):
     """Decorator/decorator factory that logs inputs and the return result.
 
     If used with inputs (i.e. as a decorator factory), it accepts the following
@@ -889,7 +892,8 @@ def log_call(wrapped_function=None, action_type=None):
     @param include_result: True by default. If False, the return result isn't logged.
     """
     if wrapped_function is None:
-        return partial(log_call, action_type=action_type)
+        return partial(log_call, action_type=action_type, include_args=include_args,
+                       include_result=include_result)
 
     if action_type is None:
         action_type = wrapped_function.__name__
@@ -897,9 +901,15 @@ def log_call(wrapped_function=None, action_type=None):
     @decorator
     def logging_wrapper(wrapped_function, instance, args, kwargs):
         callargs = getcallargs(wrapped_function, *args, **kwargs)
+
+        # Filter arguments to log, if necessary:
+        if include_args is not None:
+            callargs = {k: callargs[k] for k in include_args}
+
         with start_action(action_type=action_type, **callargs) as ctx:
             result = wrapped_function(*args, **kwargs)
-            ctx.add_success_fields(result=result)
+            if include_result:
+                ctx.add_success_fields(result=result)
             return result
 
     return logging_wrapper(wrapped_function)

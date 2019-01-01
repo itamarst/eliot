@@ -1733,8 +1733,26 @@ class LogCallTests(TestCase):
                            {u"x": 2, u"y": (3, 4), u"z": {u"a": 1, u"b": 2}},
                            6)
 
-    def test_whitelist_args(self):
+    @capture_logging(None)
+    def test_whitelist_args(self, logger):
         """C{@log_call} only includes whitelisted arguments."""
+        @log_call(include_args=("x", "z"))
+        def myfunc(x, y, z):
+            return 6
 
-    def test_no_result(self):
+        myfunc(2, 3, 4)
+        self.assert_logged(logger, u"myfunc", {u"x": 2, u"z": 4}, 6)
+
+    @capture_logging(None)
+    def test_no_result(self, logger):
         """C{@log_call} can omit logging the result."""
+        @log_call(include_result=False)
+        def myfunc(x, y):
+            return 6
+
+        myfunc(2, 3)
+
+        [tree] = Parser.parse_stream(logger.messages)
+        root = tree.root()
+        self.assertNotIn("result", root.end_message.contents)
+        self.assertEqual(root.status, SUCCEEDED_STATUS)
