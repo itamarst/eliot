@@ -7,7 +7,7 @@ from warnings import warn
 from ._message import Message
 from ._action import (
     start_action, startTask, Action, preserve_context, current_action,
-    use_asyncio_context,
+    use_asyncio_context, log_call
 )
 from ._output import (
     ILogger,
@@ -81,6 +81,7 @@ __all__ = [
     "remove_destination",
     "add_global_fields",
     "to_file",
+    "log_call",
     "__version__",
 ]
 
