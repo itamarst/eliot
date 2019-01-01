@@ -3,7 +3,7 @@ Tests for L{eliot.journald}.
 """
 from os import getpid, strerror
 from unittest import skipUnless, TestCase
-from subprocess import check_output, STDOUT
+from subprocess import check_output, CalledProcessError, STDOUT
 from errno import EINVAL
 from sys import argv
 from uuid import uuid4
@@ -29,7 +29,7 @@ def _journald_available():
         return False
     try:
         check_output(["journalctl", "-b", "-n1"], stderr=STDOUT)
-    except OSError:
+    except (OSError, CalledProcessError):
         return False
     return True
 
