@@ -1685,8 +1685,7 @@ class LogCallTests(TestCase):
 
         [tree] = Parser.parse_stream(logger.messages)
         root = tree.root()
-        self.assertEqual(root.end_message.contents["exception"],
-                         "builtins.ZeroDivisionError")
+        self.assertIn("ZeroDivisionError", root.end_message.contents["exception"])
         self.assertEqual(root.status, FAILED_STATUS)
 
     @capture_logging(None)
