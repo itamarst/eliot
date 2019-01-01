@@ -28,5 +28,5 @@ Limitations
 
 * I haven't tested the Python 3.4 ``yield from`` variation.
 * This doesn't support other event loops (Curio, Trio, Tornado, etc.).
-  If you want these supported please file an issue: https://github.com/ScatterHQ/eliot/issues/new
+  If you want these supported please file an issue: https://github.com/itamarst/eliot/issues/new
   There is talk of adding the concept of a coroutine context to Python 3.7 or perhaps 3.8, in which case it will be easier to automatically support all frameworks.

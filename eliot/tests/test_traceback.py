@@ -228,7 +228,7 @@ def get_traceback_messages(exception):
     except exception.__class__:
         write_traceback(logger)
     # MemoryLogger.validate() mutates messages:
-    # https://github.com/ScatterHQ/eliot/issues/243
+    # https://github.com/itamarst/eliot/issues/243
     messages = [message.copy() for message in logger.messages]
     logger.validate()
     return messages
