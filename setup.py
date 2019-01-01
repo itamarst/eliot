@@ -31,7 +31,8 @@ setup(
     name='eliot',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    description="Logging for Complex & Distributed Systems",
+    description="Logging library that tells you why it happened",
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4',
     install_requires=[
         # Python 3 compatibility:
         "six",
