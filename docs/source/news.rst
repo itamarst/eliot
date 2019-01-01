@@ -6,7 +6,7 @@ What's New
 
 Features:
 
-* NumPy integers, floats, bools and arrays are now automatically serialized to JSON.
+* NumPy integers, floats, bools and arrays are now automatically serialized to JSON, via a new default JSON encoder (``eliot.json.EliotJSONEncoder``).
 * Dask support: replace ``dask.compute()`` with ``eliot.dask.compute_with_trace()`` to automatically preserve Eliot context for ``Bag`` and ``Delayed`` Dask computations.
 * New decorator, ``@eliot.log_call``, which automatically creates an action that starts when function is called and ends when it returns. See :ref:`log_call decorator`.
 

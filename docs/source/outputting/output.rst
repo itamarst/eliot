@@ -45,22 +45,26 @@ Customizing JSON Encoding
 -------------------------
 
 If you're using Eliot's JSON output you may wish to customize encoding.
-For example, if you're using ``numpy`` the integer and float types won't serialize to JSON by default.
-You can do so by passing a custom ``json.JSONEncoder`` subclass to either ``eliot.FileDestination`` or ``eliot.to_file``:
+By default Eliot uses ``eliot.json.EliotJSONEncoder`` (a subclass of ``json.JSONEncoder``) to encode objects.
+You can customize encoding by passing a custom subclass to either ``eliot.FileDestination`` or ``eliot.to_file``:
 
 .. code-block:: python
 
-   import json
-   import numpy
+   from eliot.json import EliotJSONEncoder
    from eliot import to_file
 
-   class NumpyEncoder(json.JSONEncoder):
-       def default(self, obj):
-           if isinstance(obj, (numpy.integer, numpy.floating)):
-               return float(obj)
-           return json.JSONEncoder.default(self, obj)
 
-   to_file(open("eliot.log", "ab"), encoder=NumpyEncoder)   
+   class MyClass:
+       def __init__(self, x):
+           self.x = x
+
+   class MyEncoder(EliotJSONEncoder):
+       def default(self, obj):
+           if isinstance(obj, MyClass):
+               return {"x": obj.x}
+           return EliotJSONEncoder.default(self, obj)
+
+   to_file(open("eliot.log", "ab"), encoder=MyEncoder)   
 
 For more details on JSON encoding see the Python `JSON documentation <https://docs.python.org/3/library/json.html>`_.
 
