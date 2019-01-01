@@ -4,6 +4,7 @@ Tests for L{eliot._action}.
 
 from __future__ import unicode_literals
 
+import pickle
 from unittest import TestCase
 from threading import Thread
 from warnings import catch_warnings, simplefilter
@@ -1644,6 +1645,11 @@ class PreserveContextTests(TestCase):
         self.assertRaises(TooManyCalls, wrapped, 3, 4)
 
 
+@log_call
+def for_pickling():
+    pass
+
+
 class LogCallTests(TestCase):
     """Tests for log_call decorator."""
 
@@ -1755,3 +1761,13 @@ class LogCallTests(TestCase):
         root = tree.root()
         self.assertNotIn("result", root.end_message.contents)
         self.assertEqual(root.status, SUCCEEDED_STATUS)
+
+    def test_pickleable(self):
+        """Functions decorated with C{log_call} are pickleable.
+
+        This is necessary for e.g. Dask usage.
+        """
+        self.assertIs(
+            for_pickling,
+            pickle.loads(pickle.dumps(for_pickling))
+        )

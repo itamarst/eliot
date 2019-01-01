@@ -40,7 +40,7 @@ setup(
         # Persistent objects for Python:
         "pyrsistent >= 0.11.8",  # version with multi-type pvector/pmap_field
         # Easy decorators:
-        "wrapt"
+        "boltons"
     ],
     extras_require={
         "journald": [
