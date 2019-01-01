@@ -47,6 +47,9 @@ add_destinations = Logger._destinations.add
 remove_destination = removeDestination
 add_global_fields = addGlobalFields
 
+# Backwards compatibility for old versions of eliot-tree:
+from . import parse as _parse
+
 
 __all__ = [
     "Message",

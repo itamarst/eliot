@@ -10,7 +10,7 @@ from threading import Thread
 from unittest import TestCase
 
 from ..testing import capture_logging
-from .._parse import Parser
+from ..parse import Parser
 from .. import start_action
 from .._action import _ExecutionContext, _context, use_asyncio_context
 from .._asyncio import AsyncioContext

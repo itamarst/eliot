@@ -16,7 +16,7 @@ from pyrsistent import PClass, field, pvector_field
 
 from .. import start_action, Message
 from ..testing import MemoryLogger
-from .._parse import Task, Parser
+from ..parse import Task, Parser
 from .._message import (
     WrittenMessage,
     MESSAGE_TYPE_FIELD,

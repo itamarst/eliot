@@ -44,7 +44,7 @@ from .._message import (
 from .._output import MemoryLogger
 from .._validation import ActionType, Field, _ActionSerializers
 from ..testing import assertContainsFields, capture_logging
-from .._parse import Parser
+from ..parse import Parser
 from .. import (
     _action,
     add_destination,
