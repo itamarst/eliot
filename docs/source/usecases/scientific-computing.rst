@@ -12,6 +12,8 @@ Eliot is an ideal logging library for these cases:
   By default, Eliot will automatically serialize NumPy integers, floats, arrays, and bools to JSON (see :ref:`custom_json` for details).
 
 
+.. _dask_usage:
+
 Using Dask
 ----------
 
