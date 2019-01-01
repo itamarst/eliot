@@ -22,7 +22,7 @@ from pyrsistent import (
     pmap_field,
     pvector_field,
     pvector, )
-from wrapt import decorator
+from boltons.funcutils import wraps
 from six import text_type as unicode, integer_types
 
 from ._message import (
@@ -898,8 +898,8 @@ def log_call(
     if action_type is None:
         action_type = wrapped_function.__name__
 
-    @decorator
-    def logging_wrapper(wrapped_function, instance, args, kwargs):
+    @wraps(wrapped_function)
+    def logging_wrapper(*args, **kwargs):
         callargs = getcallargs(wrapped_function, *args, **kwargs)
 
         # Filter arguments to log, if necessary:
@@ -912,4 +912,4 @@ def log_call(
                 ctx.add_success_fields(result=result)
             return result
 
-    return logging_wrapper(wrapped_function)
+    return logging_wrapper
