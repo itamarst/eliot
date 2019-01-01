@@ -18,7 +18,7 @@ from ..testing import (
     validate_logging,
     capture_logging, )
 from .._output import MemoryLogger
-from .._action import startAction
+from .._action import start_action
 from .._message import Message
 from .._validation import ActionType, MessageType, ValidationError, Field
 from .._traceback import write_traceback
@@ -89,7 +89,7 @@ class LoggedActionTests(TestCase):
         L{LoggedAction.fromMessages} returns a L{LoggedAction}.
         """
         logger = MemoryLogger()
-        with startAction(logger, "test"):
+        with start_action(logger, "test"):
             pass
         logged = self.fromMessagesIndex(logger.messages, 0)
         self.assertIsInstance(logged, LoggedAction)
@@ -101,7 +101,7 @@ class LoggedActionTests(TestCase):
         """
         logger = MemoryLogger()
         Message.new(x=1).write(logger)
-        with startAction(logger, "test"):
+        with start_action(logger, "test"):
             Message.new(x=1).write(logger)
         # Now we should have x message, start action message, another x message
         # and finally finish message.
@@ -116,7 +116,7 @@ class LoggedActionTests(TestCase):
         """
         logger = MemoryLogger()
         try:
-            with startAction(logger, "test"):
+            with start_action(logger, "test"):
                 raise KeyError()
         except KeyError:
             pass
@@ -130,7 +130,7 @@ class LoggedActionTests(TestCase):
         is not found.
         """
         logger = MemoryLogger()
-        with startAction(logger, "test"):
+        with start_action(logger, "test"):
             pass
         self.assertRaises(
             ValueError, self.fromMessagesIndex, logger.messages[1:], 0)
@@ -141,7 +141,7 @@ class LoggedActionTests(TestCase):
         is not found.
         """
         logger = MemoryLogger()
-        with startAction(logger, "test"):
+        with start_action(logger, "test"):
             pass
         self.assertRaises(
             ValueError, self.fromMessagesIndex, logger.messages[:1], 0)
@@ -155,7 +155,7 @@ class LoggedActionTests(TestCase):
         # index 0:
         Message.new(x=1).write(logger)
         # index 1 - start action
-        with startAction(logger, "test"):
+        with start_action(logger, "test"):
             # index 2
             Message.new(x=2).write(logger)
             # index 3
@@ -177,13 +177,13 @@ class LoggedActionTests(TestCase):
         """
         logger = MemoryLogger()
         # index 0
-        with startAction(logger, "test"):
+        with start_action(logger, "test"):
             # index 1:
-            with startAction(logger, "test2"):
+            with start_action(logger, "test2"):
                 # index 2
                 Message.new(message_type="end", x=2).write(logger)
             # index 3 - end action
-            with startAction(logger, "test3"):
+            with start_action(logger, "test3"):
                 # index 4
                 pass
             # index 5 - end action
@@ -203,7 +203,7 @@ class LoggedActionTests(TestCase):
         ACTION = ActionType("myaction", [], [], "An action!")
         logger = MemoryLogger()
         # index 0
-        with startAction(logger, "test"):
+        with start_action(logger, "test"):
             # index 1:
             with ACTION(logger):
                 # index 2
@@ -243,7 +243,7 @@ class LoggedActionTests(TestCase):
         # index 0
         with ACTION(logger):
             # index 1:
-            with startAction(logger, "test"):
+            with start_action(logger, "test"):
                 # index 2
                 Message.new(x=2).write(logger)
             # index 3 - end action
@@ -263,7 +263,7 @@ class LoggedActionTests(TestCase):
         If the action succeeded, L{LoggedAction.succeeded} will be true.
         """
         logger = MemoryLogger()
-        with startAction(logger, "test"):
+        with start_action(logger, "test"):
             pass
         logged = self.fromMessagesIndex(logger.messages, 0)
         self.assertTrue(logged.succeeded)
@@ -274,7 +274,7 @@ class LoggedActionTests(TestCase):
         """
         logger = MemoryLogger()
         try:
-            with startAction(logger, "test"):
+            with start_action(logger, "test"):
                 raise KeyError()
         except KeyError:
             pass

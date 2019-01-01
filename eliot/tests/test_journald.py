@@ -29,7 +29,7 @@ def _journald_available():
         return False
     try:
         check_output(["journalctl", "-b", "-n1"], stderr=STDOUT)
-    except CalledProcessError:
+    except (OSError, CalledProcessError):
         return False
     return True
 

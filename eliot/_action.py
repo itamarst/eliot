@@ -12,6 +12,8 @@ from uuid import uuid4
 from itertools import count
 from contextlib import contextmanager
 from warnings import warn
+from functools import partial
+from inspect import getcallargs
 
 from pyrsistent import (
     field,
@@ -20,7 +22,7 @@ from pyrsistent import (
     pmap_field,
     pvector_field,
     pvector, )
-
+from wrapt import decorator
 from six import text_type as unicode, integer_types
 
 from ._message import (
@@ -215,7 +217,7 @@ class Action(object):
         """
         Initialize the L{Action} and log the start message.
 
-        You probably do not want to use this API directly: use L{startAction}
+        You probably do not want to use this API directly: use L{start_action}
         or L{startTask} instead.
 
         @param logger: The L{eliot.ILogger} to which to write
@@ -372,7 +374,7 @@ class Action(object):
         """
         Create a child L{Action}.
 
-        Rather than calling this directly, you can use L{startAction} to
+        Rather than calling this directly, you can use L{start_action} to
         create child L{Action} using the execution context.
 
         @param logger: The L{eliot.ILogger} to which to write
@@ -757,7 +759,7 @@ class WrittenAction(PClass):
         return self.set(end_message=end_message)
 
 
-def startAction(logger=None, action_type="", _serializers=None, **fields):
+def start_action(logger=None, action_type="", _serializers=None, **fields):
     """
     Create a child L{Action}, figuring out the parent L{Action} from execution
     context, and log the start message.
@@ -765,7 +767,7 @@ def startAction(logger=None, action_type="", _serializers=None, **fields):
     You can use the result as a Python context manager, or use the
     L{Action.finish} API to explicitly finish it.
 
-         with startAction(logger, "yourapp:subsystem:dosomething",
+         with start_action(logger, "yourapp:subsystem:dosomething",
                           entry=x) as action:
               do(x)
               result = something(x * 2)
@@ -773,7 +775,7 @@ def startAction(logger=None, action_type="", _serializers=None, **fields):
 
     Or alternatively:
 
-         action = startAction(logger, "yourapp:subsystem:dosomething",
+         action = start_action(logger, "yourapp:subsystem:dosomething",
                               entry=x)
          with action.context():
               do(x)
@@ -873,3 +875,41 @@ def preserve_context(f):
             return f(*args, **kwargs)
 
     return restore_eliot_context
+
+
+def log_call(
+        wrapped_function=None, action_type=None, include_args=None,
+        include_result=True
+):
+    """Decorator/decorator factory that logs inputs and the return result.
+
+    If used with inputs (i.e. as a decorator factory), it accepts the following
+    parameters:
+
+    @param action_type: The action type to use.  If not given the function name
+        will be used.
+    @param include_args: If given, should be a list of strings, the arguments to log.
+    @param include_result: True by default. If False, the return result isn't logged.
+    """
+    if wrapped_function is None:
+        return partial(log_call, action_type=action_type, include_args=include_args,
+                       include_result=include_result)
+
+    if action_type is None:
+        action_type = wrapped_function.__name__
+
+    @decorator
+    def logging_wrapper(wrapped_function, instance, args, kwargs):
+        callargs = getcallargs(wrapped_function, *args, **kwargs)
+
+        # Filter arguments to log, if necessary:
+        if include_args is not None:
+            callargs = {k: callargs[k] for k in include_args}
+
+        with start_action(action_type=action_type, **callargs) as ctx:
+            result = wrapped_function(*args, **kwargs)
+            if include_result:
+                ctx.add_success_fields(result=result)
+            return result
+
+    return logging_wrapper(wrapped_function)

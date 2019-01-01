@@ -38,6 +38,34 @@ Note that all code called within this block is within the context of this action
 While running the block of code within the ``with`` statement new actions created with ``start_action`` will get the top-level ``start_action`` as their parent.
 
 
+.. _log_call decorator:
+
+Logging Functions
+-----------------
+
+If you want to log the inputs and results of a function, you can use the ``log_call`` decorator:
+
+.. code-block:: python
+
+   from eliot import log_call
+
+   @log_call
+   def calculate(x, y):
+       return x * y
+
+This will log an action of type ``calculate`` with arguments ``x`` and ``y``, as well as logging the result.
+You can also customize the output:
+
+.. code-block:: python
+
+   from eliot import log_call
+
+   @log_call(action_type="CALC", include_args=["x"], include_result=False)
+   def calculate(x, y):
+       return x * y
+
+This changes the action type to ``CALC``, logs only the ``x`` argument, and doesn't log the result.
+
 Tasks: Top-level Actions
 ------------------------
 
@@ -82,6 +110,27 @@ If you sort the resulting messages by their ``task_level`` you will get the tree
         task_level=[3, 2] message_type="info" x=2
         task_level=[3, 3] action_type="child" action_status="succeeded"
     task_level=[4] action_type="parent" action_status="failed" exception="exceptions.RuntimeError" reason="ono"
+
+
+Action Fields
+-------------
+
+You can add fields to both the start message and the success message of an action.
+
+.. code-block:: python
+
+     from eliot import start_action
+
+     with start_action(action_type=u"yourapp:subsystem:frob",
+                      # Fields added to start message only:
+                      key=123, foo=u"bar") as action:
+         x = _beep(123)
+         result = frobinate(x)
+         # Fields added to success message only:
+         action.add_success_fields(result=result)
+
+If you want to include some extra information in case of failures beyond the exception you can always log a regular message with that information.
+Since the message will be recorded inside the context of the action its information will be clearly tied to the result of the action by the person (or code!) reading the logs later on.
 
 
 Non-Finishing Contexts
@@ -142,26 +191,6 @@ As an alternative to ``with``, you can also explicitly run a function within the
      # Call do_something(x=1) in context of action, return its result:
      result = action.run(do_something, x=1)
 
-
-Action Fields
-^^^^^^^^^^^^^
-
-You can add fields to both the start message and the success message of an action.
-
-.. code-block:: python
-
-     from eliot import start_action
-
-     with start_action(action_type=u"yourapp:subsystem:frob",
-                      # Fields added to start message only:
-                      key=123, foo=u"bar") as action:
-         x = _beep(123)
-         result = frobinate(x)
-         # Fields added to success message only:
-         action.add_success_fields(result=result)
-
-If you want to include some extra information in case of failures beyond the exception you can always log a regular message with that information.
-Since the message will be recorded inside the context of the action its information will be clearly tied to the result of the action by the person (or code!) reading the logs later on.
 
 Getting the Current Action
 --------------------------
