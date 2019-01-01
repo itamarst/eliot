@@ -6,6 +6,8 @@ adding isinstance checks in main code path which would slow down Python 2,
 instead we write our encoder that can support those.
 """
 
+from __future__ import absolute_import
+
 import json as pyjson
 import warnings
 

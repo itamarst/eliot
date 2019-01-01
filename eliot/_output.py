@@ -22,7 +22,7 @@ from ._message import (
     REASON_FIELD,
 )
 from ._util import saferepr, safeunicode
-from ._json import EliotJSONEncoder
+from .json import EliotJSONEncoder
 
 
 class _DestinationsSendError(Exception):

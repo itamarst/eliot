@@ -1,5 +1,5 @@
 """
-Tests for L{eliot._json}.
+Tests for L{eliot.json}.
 """
 
 from __future__ import unicode_literals, absolute_import
@@ -12,7 +12,7 @@ try:
 except ImportError:
     np = None
 
-from eliot._json import EliotJSONEncoder
+from eliot.json import EliotJSONEncoder
 
 
 class EliotJSONEncoderTests(TestCase):
