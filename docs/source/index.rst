@@ -42,6 +42,7 @@ Documentation
    generating/index
    outputting/index
    reading/index
+   usecases/index
    development
 
 
