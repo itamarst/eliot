@@ -1,8 +1,8 @@
 Eliot: Logging that tells you *why* it happened
 ================================================
 
-.. image:: https://travis-ci.org/ScatterHQ/eliot.png?branch=master
-           :target: http://travis-ci.org/ScatterHQ/eliot
+.. image:: https://travis-ci.org/itamarst/eliot.png?branch=master
+           :target: http://travis-ci.org/itamarst/eliot
            :alt: Build Status
 
 Most logging systems tell you *what* happened in your application, whereas ``eliot`` also tells you *why* it happened.
@@ -18,7 +18,7 @@ It is maintained by Itamar Turner-Trauring, and released under the Apache 2.0 Li
 
 * `Read the documentation <https://eliot.readthedocs.io>`_.
 * Download from `PyPI`_.
-* Need help or have any questions? `File an issue <https://github.com/ScatterHQ/eliot/issues/new>`_ on GitHub.
+* Need help or have any questions? `File an issue <https://github.com/itamarst/eliot/issues/new>`_ on GitHub.
 
 Testimonials
 ------------
@@ -27,5 +27,5 @@ Testimonials
 
     —Jonathan Jacobs
 
-.. _Github: https://github.com/ScatterHQ/eliot
+.. _Github: https://github.com/itamarst/eliot
 .. _PyPI: https://pypi.python.org/pypi/eliot

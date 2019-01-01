@@ -10,7 +10,7 @@ Eliot works well within a single process, but can also be used across multiple p
 Eliot is only used to generate your logs; you will still need tools like Logstash and ElasticSearch to aggregate and store logs if you are using multiple processes.
 
 * **Start here:** :doc:`Quickstart documentation <quickstart>`
-* Need help or have any questions? `File an issue <https://github.com/ScatterHQ/eliot/issues/new>`_ on GitHub.
+* Need help or have any questions? `File an issue <https://github.com/itamarst/eliot/issues/new>`_ on GitHub.
 * Read on for the full documentation.
 
 Media
