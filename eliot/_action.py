@@ -12,7 +12,7 @@ from uuid import uuid4
 from itertools import count
 from contextlib import contextmanager
 from warnings import warn
-from functools import wraps
+from functools import partial
 from inspect import getcallargs
 
 from pyrsistent import (
@@ -22,7 +22,7 @@ from pyrsistent import (
     pmap_field,
     pvector_field,
     pvector, )
-
+from wrapt import decorator
 from six import text_type as unicode, integer_types
 
 from ._message import (
@@ -877,7 +877,7 @@ def preserve_context(f):
     return restore_eliot_context
 
 
-def log_call(func):
+def log_call(wrapped_function=None, action_type=None):
     """Decorator/decorator factory that logs inputs and the return result.
 
     If used with inputs (i.e. as a decorator factory), it accepts the following
@@ -888,14 +888,18 @@ def log_call(func):
     @param include_args: If given, should be a list of strings, the arguments to log.
     @param include_result: True by default. If False, the return result isn't logged.
     """
-    action_type = func.__name__
+    if wrapped_function is None:
+        return partial(log_call, action_type=action_type)
 
-    @wraps(func)
-    def logging_wrapper(*args, **kwargs):
-        callargs = getcallargs(func, *args, **kwargs)
+    if action_type is None:
+        action_type = wrapped_function.__name__
+
+    @decorator
+    def logging_wrapper(wrapped_function, instance, args, kwargs):
+        callargs = getcallargs(wrapped_function, *args, **kwargs)
         with start_action(action_type=action_type, **callargs) as ctx:
-            result = func(*args, **kwargs)
+            result = wrapped_function(*args, **kwargs)
             ctx.add_success_fields(result=result)
             return result
 
-    return logging_wrapper
+    return logging_wrapper(wrapped_function)

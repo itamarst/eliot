@@ -1673,19 +1673,31 @@ class LogCallTests(TestCase):
         self.assert_logged(logger, u"myfunc",
                            {u"x": 2, u"y": 3}, 4)
 
-    def test_exception(self):
+    @capture_logging(None)
+    def test_exception(self, logger):
         """C{@log_call} with an exception logs a failed action."""
-        1/0
+        @log_call
+        def myfunc(x, y):
+            1/0
+
+        with self.assertRaises(ZeroDivisionError):
+            myfunc(2, 4)
+
+        [tree] = Parser.parse_stream(logger.messages)
+        root = tree.root()
+        self.assertEqual(root.end_message.contents["exception"],
+                         "builtins.ZeroDivisionError")
+        self.assertEqual(root.status, FAILED_STATUS)
 
     @capture_logging(None)
     def test_action_type(self, logger):
         """C{@log_call} can take an action type."""
-        @log_call("myaction")
+        @log_call(action_type="myaction")
         def myfunc(x, y):
             return 4
 
         myfunc(2, 3)
-        self.assert_logged(logger, u"myaction", {}, 4)
+        self.assert_logged(logger, u"myaction", {u"x": 2, u"y": 3}, 4)
 
     @capture_logging(None)
     def test_default_argument_given(self, logger):
