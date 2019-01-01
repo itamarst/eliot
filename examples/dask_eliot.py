@@ -18,24 +18,27 @@ def add(x, y):
 @log_call
 def main_computation():
     bag = from_sequence([1, 2, 3])
-    bag = bag.map(multiply).map(multiply).fold(add)
-    return compute_with_trace(bag)  # instead of dask.compute(bag)
+    bag = bag.map(multiply).fold(add)
+    return compute_with_trace(bag)[0]  # instead of dask.compute(bag)
 
 def _start_logging():
+    # Name log file based on PID, so different processes so stomp on each
+    # others' logfiles:
     to_file(open("{}.log".format(getpid()), "a"))
 
 def main():
     # Setup logging on the main process:
     _start_logging()
 
-    # Setup Distributed scheduler, on local machine:
-    client = Client(n_workers=2, threads_per_worker=1)
+    # Start three worker processes on the local machine:
+    client = Client(n_workers=3, threads_per_worker=1)
 
     # Setup Eliot logging on each worker process:
     client.run(_start_logging)
 
-    # Run the Dask computation:
-    main_computation()
+    # Run the Dask computation in the worker processes:
+    result = main_computation()
+    print("Result:", result)
 
 
 if __name__ == '__main__':
