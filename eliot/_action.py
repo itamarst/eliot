@@ -13,6 +13,7 @@ from itertools import count
 from contextlib import contextmanager
 from warnings import warn
 from functools import wraps
+from inspect import getcallargs
 
 from pyrsistent import (
     field,
@@ -887,9 +888,14 @@ def log_call(func):
     @param include_args: If given, should be a list of strings, the arguments to log.
     @param include_result: True by default. If False, the return result isn't logged.
     """
+    action_type = func.__name__
+
     @wraps(func)
     def logging_wrapper(*args, **kwargs):
-        with start_action():
+        callargs = getcallargs(func, *args, **kwargs)
+        with start_action(action_type=action_type, **callargs) as ctx:
             result = func(*args, **kwargs)
-        
+            ctx.add_success_fields(result=result)
+            return result
+
     return logging_wrapper

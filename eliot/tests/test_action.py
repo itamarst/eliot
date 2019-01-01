@@ -1652,13 +1652,12 @@ class LogCallTests(TestCase):
         [tree] = Parser.parse_stream(logger.messages)
         root = tree.root()
         self.assertEqual(root.action_type, action_type)
-        message = root.start_message
-        for field in [ACTION_STATUS_FIELD, ACTION_TYPE_FIELD, TASK_LEVEL_FIELD,
-                      TASK_UUID_FIELD]:
+        message = dict(root.start_message.contents)
+        for field in [ACTION_STATUS_FIELD, ACTION_TYPE_FIELD]:
             message.pop(field)
         self.assertEqual(message, expected_params)
-        self.assertEqual(root.end_message["result"], expected_result)
-        self.assertTrue(root.succeeded)
+        self.assertEqual(root.end_message.contents["result"], expected_result)
+        self.assertEqual(root.status, SUCCEEDED_STATUS)
 
     @capture_logging(None)
     def test_no_args_return(self, logger):
@@ -1671,23 +1670,56 @@ class LogCallTests(TestCase):
             return 4
 
         myfunc(2, 3)
-        self.assert_logged(logger, u"eliot.tests.test_action.myfunc",
+        self.assert_logged(logger, u"myfunc",
                            {u"x": 2, u"y": 3}, 4)
 
     def test_exception(self):
         """C{@log_call} with an exception logs a failed action."""
+        1/0
 
-    def test_action_type(self):
+    @capture_logging(None)
+    def test_action_type(self, logger):
         """C{@log_call} can take an action type."""
+        @log_call("myaction")
+        def myfunc(x, y):
+            return 4
 
-    def test_default_argument_given(self):
+        myfunc(2, 3)
+        self.assert_logged(logger, u"myaction", {}, 4)
+
+    @capture_logging(None)
+    def test_default_argument_given(self, logger):
         """C{@log_call} logs default arguments that were passed in."""
+        @log_call
+        def myfunc(x, y=1):
+            return 4
 
-    def test_default_argument_missing(self):
+        myfunc(2, y=5)
+        self.assert_logged(logger, u"myfunc",
+                           {u"x": 2, u"y": 5}, 4)
+
+    @capture_logging(None)
+    def test_default_argument_missing(self, logger):
         """C{@log_call} logs default arguments that weren't passed in."""
+        @log_call
+        def myfunc(x, y=1):
+            return 6
 
-    def test_star_args_kwargs(self):
+        myfunc(2)
+        self.assert_logged(logger, u"myfunc",
+                           {u"x": 2, u"y": 1}, 6)
+
+    @capture_logging(None)
+    def test_star_args_kwargs(self, logger):
         """C{@log_call} logs star args and kwargs."""
+        @log_call
+        def myfunc(x, *y, **z):
+            return 6
+
+        myfunc(2, 3, 4, a=1, b=2)
+        self.assert_logged(logger, u"myfunc",
+                           {u"x": 2, u"y": (3, 4), u"z": {u"a": 1, u"b": 2}},
+                           6)
 
     def test_whitelist_args(self):
         """C{@log_call} only includes whitelisted arguments."""
