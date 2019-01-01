@@ -3,7 +3,7 @@ Tests for L{eliot.journald}.
 """
 from os import getpid, strerror
 from unittest import skipUnless, TestCase
-from subprocess import check_output, CalledProcessError, STDOUT
+from subprocess import check_output, STDOUT
 from errno import EINVAL
 from sys import argv
 from uuid import uuid4
