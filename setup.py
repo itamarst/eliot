@@ -48,6 +48,10 @@ setup(
             "cffi >= 1.1.2",  # significant API changes in older releases
         ],
         "dev": [
+            # Ensure we can do python_requires correctly:
+            "setuptools >= 40",
+            # For uploading releases:
+            "twine >= 1.12.1",
             # Allows us to measure code coverage:
             "coverage",
             # Bug-seeking missile:
