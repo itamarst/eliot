@@ -4,10 +4,14 @@ What's New
 1.6.0
 ^^^^^
 
+Deprecation:
+
+* Python 2 is still supported, but will be dropped in one of the next releases. See :ref:`python2`.
+
 Features:
 
-* NumPy integers, floats, bools and arrays are now automatically serialized to JSON.
-* Dask support: replace ``dask.compute()`` with ``eliot.dask.compute_with_trace()`` to automatically preserve Eliot context for ``Bag`` and ``Delayed`` Dask computations.
+* NumPy integers, floats, bools and arrays are now automatically serialized to JSON, via a new default JSON encoder (``eliot.json.EliotJSONEncoder``).
+* Dask support: replace ``dask.compute()`` with ``eliot.dask.compute_with_trace()`` to automatically preserve Eliot context for ``Bag`` and ``Delayed`` Dask computations. See :ref:`dask_usage` for details.
 * New decorator, ``@eliot.log_call``, which automatically creates an action that starts when function is called and ends when it returns. See :ref:`log_call decorator`.
 * A parser library for parsing serialized Eliot JSON messages into a tree of Python objects. See :ref:`parsing_logs` for details.
 
