@@ -47,9 +47,12 @@ add_destinations = Logger._destinations.add
 remove_destination = removeDestination
 add_global_fields = addGlobalFields
 
-# Backwards compatibility for old versions of eliot-tree:
+# Backwards compatibility for old versions of eliot-tree, which rely on
+# eliot._parse:
 def _parse_compat():
+    # Force eliot.parse to be imported in way that works with old Python:
     from .parse import Parser
+    del Parser
     import sys
     sys.modules["eliot._parse"] = sys.modules["eliot.parse"]
     return sys.modules["eliot.parse"]
