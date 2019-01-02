@@ -5,7 +5,7 @@ Tests for L{eliot._action}.
 from __future__ import unicode_literals
 
 import pickle
-from unittest import TestCase
+from unittest import TestCase, skipIf
 from threading import Thread
 from warnings import catch_warnings, simplefilter
 
@@ -1747,6 +1747,14 @@ class LogCallTests(TestCase):
 
         myfunc(2, 3, 4)
         self.assert_logged(logger, u"myfunc", {u"x": 2, u"z": 4}, 6)
+
+    @skipIf(six.PY2, "Didn't bother implementing safety check on Python 2")
+    def test_wrong_whitelist_args(self):
+        """If C{include_args} doesn't match function, raise an exception."""
+        with self.assertRaises(ValueError):
+            @log_call(include_args=["a", "x", "y"])
+            def f(x, y):
+                pass
 
     @capture_logging(None)
     def test_no_result(self, logger):
