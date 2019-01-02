@@ -896,7 +896,11 @@ def log_call(
                        include_result=include_result)
 
     if action_type is None:
-        action_type = wrapped_function.__name__
+        if PY3:
+            action_type = "{}.{}".format(wrapped_function.__module__,
+                                         wrapped_function.__qualname__)
+        else:
+            action_type = wrapped_function.__name__
 
     if PY3 and include_args is not None:
         from inspect import signature
