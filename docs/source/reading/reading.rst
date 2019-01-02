@@ -41,3 +41,24 @@ For example, here's how you'd extract a particular field with `jq`_:
 
 .. _eliot-tree: https://github.com/jonathanj/eliottree
 .. _jq: https://stedolan.github.io/jq/
+
+
+.. _parsing_logs:
+
+Parsing Logs
+------------
+
+Eliot also includes a parser for parsing logs into Python objects:
+
+.. code-block:: python
+
+   import json
+   from eliot.parse import Parser
+
+   def load_messages(logfile_path):
+      for line in open(logfile_path):
+          yield json.loads(line)
+       
+   def parse(logfile_path):
+       for task in Parser.parse_stream(load_messages(logfile_path)):
+           print("Root action type is", task.root().action_type)
