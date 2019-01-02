@@ -5,7 +5,7 @@ Tests for L{eliot._action}.
 from __future__ import unicode_literals
 
 import pickle
-from unittest import TestCase
+from unittest import TestCase, skipIf
 from threading import Thread
 from warnings import catch_warnings, simplefilter
 
@@ -1655,6 +1655,9 @@ class LogCallTests(TestCase):
 
     def assert_logged(self, logger, action_type, expected_params, expected_result):
         """Assert that an action of given structure was logged."""
+        if six.PY2:
+            # On Python 2 we don't include the module or class:
+            action_type = action_type.split(".")[-1]
         [tree] = Parser.parse_stream(logger.messages)
         root = tree.root()
         self.assertEqual(root.action_type, action_type)
@@ -1676,7 +1679,7 @@ class LogCallTests(TestCase):
             return 4
 
         myfunc(2, 3)
-        self.assert_logged(logger, u"myfunc",
+        self.assert_logged(logger, self.id() + ".<locals>.myfunc",
                            {u"x": 2, u"y": 3}, 4)
 
     @capture_logging(None)
@@ -1712,7 +1715,7 @@ class LogCallTests(TestCase):
             return 4
 
         myfunc(2, y=5)
-        self.assert_logged(logger, u"myfunc",
+        self.assert_logged(logger, self.id() + ".<locals>.myfunc",
                            {u"x": 2, u"y": 5}, 4)
 
     @capture_logging(None)
@@ -1723,7 +1726,7 @@ class LogCallTests(TestCase):
             return 6
 
         myfunc(2)
-        self.assert_logged(logger, u"myfunc",
+        self.assert_logged(logger, self.id() + ".<locals>.myfunc",
                            {u"x": 2, u"y": 1}, 6)
 
     @capture_logging(None)
@@ -1734,7 +1737,7 @@ class LogCallTests(TestCase):
             return 6
 
         myfunc(2, 3, 4, a=1, b=2)
-        self.assert_logged(logger, u"myfunc",
+        self.assert_logged(logger, self.id() + ".<locals>.myfunc",
                            {u"x": 2, u"y": (3, 4), u"z": {u"a": 1, u"b": 2}},
                            6)
 
@@ -1746,7 +1749,16 @@ class LogCallTests(TestCase):
             return 6
 
         myfunc(2, 3, 4)
-        self.assert_logged(logger, u"myfunc", {u"x": 2, u"z": 4}, 6)
+        self.assert_logged(logger, self.id() + ".<locals>.myfunc",
+                           {u"x": 2, u"z": 4}, 6)
+
+    @skipIf(six.PY2, "Didn't bother implementing safety check on Python 2")
+    def test_wrong_whitelist_args(self):
+        """If C{include_args} doesn't match function, raise an exception."""
+        with self.assertRaises(ValueError):
+            @log_call(include_args=["a", "x", "y"])
+            def f(x, y):
+                pass
 
     @capture_logging(None)
     def test_no_result(self, logger):
@@ -1771,3 +1783,16 @@ class LogCallTests(TestCase):
             for_pickling,
             pickle.loads(pickle.dumps(for_pickling))
         )
+
+    @capture_logging(None)
+    def test_methods(self, logger):
+        """self is not logged."""
+        class C(object):
+            @log_call
+            def f(self, x):
+                pass
+
+        C().f(2)
+        self.assert_logged(logger, self.id() + u".<locals>.C.f", {u"x": 2}, None)
+
+

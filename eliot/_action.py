@@ -23,7 +23,7 @@ from pyrsistent import (
     pvector_field,
     pvector, )
 from boltons.funcutils import wraps
-from six import text_type as unicode, integer_types
+from six import text_type as unicode, integer_types, PY3
 
 from ._message import (
     Message,
@@ -896,11 +896,28 @@ def log_call(
                        include_result=include_result)
 
     if action_type is None:
-        action_type = wrapped_function.__name__
+        if PY3:
+            action_type = "{}.{}".format(wrapped_function.__module__,
+                                         wrapped_function.__qualname__)
+        else:
+            action_type = wrapped_function.__name__
+
+    if PY3 and include_args is not None:
+        from inspect import signature
+        sig = signature(wrapped_function)
+        if set(include_args) - set(sig.parameters):
+            raise ValueError(
+                ("include_args ({}) lists arguments not in the "
+                 "wrapped function").format(include_args)
+            )
 
     @wraps(wrapped_function)
     def logging_wrapper(*args, **kwargs):
         callargs = getcallargs(wrapped_function, *args, **kwargs)
+
+        # Remove self is it's included:
+        if "self" in callargs:
+            callargs.pop("self")
 
         # Filter arguments to log, if necessary:
         if include_args is not None:
