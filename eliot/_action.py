@@ -911,6 +911,10 @@ def log_call(
     def logging_wrapper(*args, **kwargs):
         callargs = getcallargs(wrapped_function, *args, **kwargs)
 
+        # Remove self is it's included:
+        if "self" in callargs:
+            callargs.pop("self")
+
         # Filter arguments to log, if necessary:
         if include_args is not None:
             callargs = {k: callargs[k] for k in include_args}

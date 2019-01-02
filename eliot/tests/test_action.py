@@ -1779,3 +1779,16 @@ class LogCallTests(TestCase):
             for_pickling,
             pickle.loads(pickle.dumps(for_pickling))
         )
+
+    @capture_logging(None)
+    def test_methods(self, logger):
+        """self is not logged."""
+        class C(object):
+            @log_call
+            def f(self, x):
+                pass
+
+        C().f(2)
+        self.assert_logged(logger, u"f", {u"x": 2}, None)
+
+
