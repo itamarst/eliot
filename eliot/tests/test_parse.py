@@ -295,3 +295,15 @@ class ParserTests(TestCase):
                 if m is not None]))
         assertCountEqual(
             self, all_tasks, [parse_to_task(msgs) for msgs in all_messages])
+
+
+class BackwardsCompatibility(TestCase):
+    """Tests for backwards compatibility."""
+
+    def test_imports(self):
+        """Old ways of importing still work."""
+        import eliot._parse
+        from eliot import _parse
+        import eliot.parse
+        self.assertIs(eliot.parse, eliot._parse)
+        self.assertIs(_parse, eliot.parse)

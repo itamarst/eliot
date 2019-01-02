@@ -48,7 +48,13 @@ remove_destination = removeDestination
 add_global_fields = addGlobalFields
 
 # Backwards compatibility for old versions of eliot-tree:
-from . import parse as _parse
+def _parse_compat():
+    from . import parse
+    import sys
+    sys.modules["eliot._parse"] = parse
+_parse_compat()
+del _parse_compat
+from . import _parse
 
 
 __all__ = [
@@ -87,9 +93,10 @@ __all__ = [
     "log_call",
     "__version__",
 
-    # Backwards compatiblity
+    # Backwards compat for eliot-tree:
     "_parse",
 ]
+
 
 __version__ = get_versions()['version']
 del get_versions
