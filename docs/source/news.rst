@@ -4,6 +4,10 @@ What's New
 1.6.0
 ^^^^^
 
+Deprecation:
+
+* Python 2 is still supported, but will be dropped in one of the next releases. See :ref:`python2`.
+
 Features:
 
 * NumPy integers, floats, bools and arrays are now automatically serialized to JSON, via a new default JSON encoder (``eliot.json.EliotJSONEncoder``).
