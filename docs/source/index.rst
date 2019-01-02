@@ -43,6 +43,7 @@ Documentation
    outputting/index
    reading/index
    usecases/index
+   python2
    development
 
 
@@ -51,4 +52,5 @@ Project Information
 
 Eliot is maintained by `Itamar Turner-Trauring <mailto:itamar@itamarst.org>`_, and released under the Apache 2.0 License.
 
-It supports Python 3.7, 3.6, 3.5, 3.4, 2.7, as well as PyPy.
+It supports Python 3.7, 3.6, 3.5, and 3.4.
+2.7 is currently supported but will be dropped from future releases; see :ref:`python2`.
