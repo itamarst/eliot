@@ -86,6 +86,9 @@ __all__ = [
     "to_file",
     "log_call",
     "__version__",
+
+    # Backwards compatiblity
+    "_parse",
 ]
 
 __version__ = get_versions()['version']
