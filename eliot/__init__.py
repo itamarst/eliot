@@ -49,12 +49,12 @@ add_global_fields = addGlobalFields
 
 # Backwards compatibility for old versions of eliot-tree:
 def _parse_compat():
-    from . import parse
+    from .parse import Parser
     import sys
-    sys.modules["eliot._parse"] = parse
-_parse_compat()
+    sys.modules["eliot._parse"] = sys.modules["eliot.parse"]
+    return sys.modules["eliot.parse"]
+_parse = _parse_compat()
 del _parse_compat
-from . import _parse
 
 
 __all__ = [
