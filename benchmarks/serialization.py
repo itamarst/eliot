@@ -6,37 +6,24 @@ realistic manner. That is, mesages are logged in context of a message with a
 small number of fields.
 """
 
-from __future__ import unicode_literals
-
 import time
 
-from eliot import Logger, MessageType, Field, ActionType
-
-def _ascii(s):
-    return s.decode("ascii")
-
-
-F1 = Field.forTypes("integer", [int], "")
-F2 = Field("string", _ascii, "")
-F3 = Field("string2", _ascii, "")
-F4 = Field.forTypes("list", [list], "list of integers")
-
-M = MessageType("system:message", [F1, F2, F3, F4], "description")
-A = ActionType("action", [], [], [], "desc")
-
-log = Logger()
+from eliot import Message, start_action
 
 N = 100000
 
+
 def run():
     start = time.time()
-    with A(log):
-        for i in xrange(N):
-            m = M(integer=3, string=b"abcdeft", string2="dgsjdlkgjdsl", list=[1, 2, 3, 4])
-            m.write(log)
+    with start_action(action_type="my_action"):
+        for i in range(N):
+            Message.log(
+                action_type="my_action",
+                integer=3, string=b"abcdeft", string2="dgsjdlkgjdsl", list=[1, 2, 3, 4])
     end = time.time()
-    print "%.6f per message" % ((end - start) / N,)
-    print "%s messages/sec" % (int(N / (end-start)),)
+    print("%.6f per message" % ((end - start) / N,))
+    print("%s messages/sec" % (int(N / (end-start)),))
+
 
 if __name__ == '__main__':
     run()

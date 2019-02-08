@@ -16,7 +16,7 @@ MESSAGES = 100000
 
 
 def main(reactor):
-    print "Message size: %d bytes   Num messages: %d" % (LENGTH, MESSAGES)
+    print("Message size: %d bytes   Num messages: %d" % (LENGTH, MESSAGES))
     message = b"a" * LENGTH
     fp = FilePath(tempfile.mktemp())
     writer = ThreadedFileWriter(fp.open("ab"), reactor)
@@ -31,13 +31,13 @@ def main(reactor):
         elapsed = time.time() - start
         kbSec = (LENGTH * MESSAGES) / (elapsed * 1024)
         messagesSec = MESSAGES / elapsed
-        print "messages/sec: %s   KB/sec: %s" % (messagesSec, kbSec)
+        print("messages/sec: %s   KB/sec: %s" % (messagesSec, kbSec))
     d.addCallback(done)
 
     def cleanup(result):
         fp.restat()
-        print
-        print "File size: ", fp.getsize()
+        print()
+        print("File size: ", fp.getsize())
         fp.remove()
     d.addBoth(cleanup)
     return d
@@ -45,4 +45,3 @@ def main(reactor):
 
 if __name__ == '__main__':
     react(main, [])
-
