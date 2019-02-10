@@ -960,6 +960,37 @@ class TaskLevelTests(TestCase):
             )
         )
 
+    def test_equality(self):
+        """
+        L{TaskChild} correctly implements equality and hashing.
+        """
+        a = TaskLevel(level=[1, 2])
+        a2 = TaskLevel(level=[1, 2])
+        b = TaskLevel(level=[2, 999])
+        self.assertTrue(
+            all(
+                [
+                    a == a2,
+                    a2 == a,
+                    a != b,
+                    b != a,
+                    not b == a,
+                    not a == b,
+                    not a == 1,
+                    a != 1,
+                    hash(a) == hash(a2),
+                    hash(b) != hash(a)
+                ]
+            )
+        )
+
+    def test_as_list(self):
+        """
+        L{TaskChild.as_list} returns the level.
+        """
+        self.assertEqual(TaskLevel(level=[1, 2, 3]).as_list(),
+                         [1, 2, 3])
+
     @given(lists(task_level_indexes))
     def test_parent_of_child(self, base_task_level):
         """

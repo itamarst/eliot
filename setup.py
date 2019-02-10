@@ -62,7 +62,8 @@ setup(
             "sphinx",
             "sphinx_rtd_theme",
             "flake8",
-            "yapf"
+            "yapf",
+            "pytest"
         ]
     },
     entry_points={

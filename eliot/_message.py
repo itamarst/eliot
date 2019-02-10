@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from six import text_type as unicode
 
-from pyrsistent import PClass, thaw, pmap_field, pmap
+from pyrsistent import PClass, pmap_field
 
 MESSAGE_TYPE_FIELD = 'message_type'
 TASK_UUID_FIELD = 'task_uuid'
@@ -55,7 +55,7 @@ class Message(object):
 
         The keyword arguments will become contents of the L{Message}.
         """
-        _class.new(**fields).write()
+        _class(fields).write()
 
     def __init__(self, contents, serializer=None):
         """
@@ -70,7 +70,7 @@ class Message(object):
             L{eliot.Logger} may choose to serialize the message. If you're
             using L{eliot.MessageType} this will be populated for you.
         """
-        self._contents = pmap(contents)
+        self._contents = contents.copy()
         self._serializer = serializer
 
     def bind(self, **fields):
@@ -78,13 +78,15 @@ class Message(object):
         Return a new L{Message} with this message's contents plus the
         additional given bindings.
         """
-        return Message(self._contents.update(fields), self._serializer)
+        contents = self._contents.copy()
+        contents.update(fields)
+        return Message(contents, self._serializer)
 
     def contents(self):
         """
         Return a copy of L{Message} contents.
         """
-        return dict(self._contents)
+        return self._contents.copy()
 
     def _timestamp(self):
         """
@@ -110,7 +112,7 @@ class Message(object):
             task_level = [1]
         else:
             task_uuid = action._identification[TASK_UUID_FIELD]
-            task_level = thaw(action._nextTaskLevel().level)
+            task_level = action._nextTaskLevel().as_list()
         timestamp = self._timestamp()
         new_values = {
             TIMESTAMP_FIELD: timestamp,
@@ -121,7 +123,8 @@ class Message(object):
             "message_type" not in self._contents
         ):
             new_values["message_type"] = ""
-        return self._contents.update(new_values)
+        new_values.update(self._contents)
+        return new_values
 
     def write(self, logger=None, action=None):
         """
@@ -141,7 +144,7 @@ class Message(object):
         if logger is None:
             logger = _output._DEFAULT_LOGGER
         logged_dict = self._freeze(action=action)
-        logger.write(dict(logged_dict), self._serializer)
+        logger.write(logged_dict, self._serializer)
 
 
 class WrittenMessage(PClass):

@@ -1,6 +1,13 @@
 What's New
 ==========
 
+1.7.0
+^^^^^
+
+Features:
+
+* Generating messages is much faster.
+
 1.6.0
 ^^^^^
 

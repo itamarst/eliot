@@ -218,7 +218,7 @@ class Logger(object):
                             self._safeUnicodeDictionary(dictionary)
                         }
                     )
-                    self._destinations.send(dict(msg._freeze()))
+                    self._destinations.send(msg._freeze())
                 except:
                     # Nothing we can do here, raising exception to caller will
                     # break business logic, better to have that continue to
