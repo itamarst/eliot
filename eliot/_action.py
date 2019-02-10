@@ -108,7 +108,7 @@ def use_asyncio_context():
     _context.get_sub_context = AsyncioContext().get_stack
 
 
-class TaskLevel(PClass):
+class TaskLevel(object):
     """
     The location of a message within the tree of actions of a task.
 
@@ -117,23 +117,45 @@ class TaskLevel(PClass):
         3]} indicates this is the third message within an action which is
         the second item in the task.
     """
+    def __init__(self, level):
+        self._level = level
 
-    level = pvector_field(integer_types)
+    def as_list(self):
+        """Return the current level.
 
-    # PClass really ought to provide this ordering facility for us:
-    # tobgu/pyrsistent#45.
+        @return: List of integers.
+        """
+        return self._level[:]
+
+    # Backwards compatibility:
+    @property
+    def level(self):
+        return pvector(self._level)
 
     def __lt__(self, other):
-        return self.level < other.level
+        return self._level < other._level
 
     def __le__(self, other):
-        return self.level <= other.level
+        return self._level <= other._level
 
     def __gt__(self, other):
-        return self.level > other.level
+        return self._level > other._level
 
     def __ge__(self, other):
-        return self.level >= other.level
+        return self._level >= other._level
+
+    def __eq__(self, other):
+        if other.__class__ != TaskLevel:
+            return False
+        return self._level == other._level
+
+    def __ne__(self, other):
+        if other.__class__ != TaskLevel:
+            return True
+        return self._level != other._level
+
+    def __hash__(self):
+        return hash(tuple(self._level))
 
     @classmethod
     def fromString(cls, string):
@@ -152,7 +174,7 @@ class TaskLevel(PClass):
 
         @return: L{unicode} representation of the L{TaskLevel}.
         """
-        return "/" + "/".join(map(unicode, self.level))
+        return "/" + "/".join(map(unicode, self._level))
 
     def next_sibling(self):
         """
@@ -161,7 +183,9 @@ class TaskLevel(PClass):
 
         @return: L{TaskLevel} which follows this one.
         """
-        return TaskLevel(level=self.level.set(-1, self.level[-1] + 1))
+        new_level = self._level[:]
+        new_level[-1] += 1
+        return TaskLevel(level=new_level)
 
     def child(self):
         """
@@ -169,7 +193,9 @@ class TaskLevel(PClass):
 
         @return: L{TaskLevel} which is the first child of this one.
         """
-        return TaskLevel(level=self.level.append(1))
+        new_level = self._level[:]
+        new_level.append(1)
+        return TaskLevel(level=new_level)
 
     def parent(self):
         """
@@ -178,9 +204,9 @@ class TaskLevel(PClass):
 
         @return: L{TaskLevel} which is the parent of this one.
         """
-        if not self.level:
+        if not self._level:
             return None
-        return TaskLevel(level=self.level[:-1])
+        return TaskLevel(level=self._level[:-1])
 
     def is_sibling_of(self, task_level):
         """
