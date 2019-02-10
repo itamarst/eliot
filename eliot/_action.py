@@ -20,10 +20,9 @@ from pyrsistent import (
     PClass,
     optional,
     pmap_field,
-    pvector_field,
     pvector, )
 from boltons.funcutils import wraps
-from six import text_type as unicode, integer_types, PY3
+from six import text_type as unicode, PY3
 
 from ._message import (
     Message,
