@@ -40,8 +40,8 @@ setup(
         "zope.interface",
         # Persistent objects for Python:
         "pyrsistent >= 0.11.8",  # version with multi-type pvector/pmap_field
-        # Easy decorators:
-        "boltons"
+        # Better decorators, with version that works better with type annotations:
+        "boltons >= 19.0.1"
     ],
     extras_require={
         "journald": [
