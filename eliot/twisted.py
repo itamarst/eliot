@@ -60,7 +60,7 @@ class DeferredContext(object):
     def addCallbacks(
         self,
         callback,
-        errback,
+        errback=None,
         callbackArgs=None,
         callbackKeywords=None,
         errbackArgs=None,
@@ -78,6 +78,9 @@ class DeferredContext(object):
         """
         if self._finishAdded:
             raise AlreadyFinished()
+
+        if errback is None:
+            errback = _passthrough
 
         def callbackWithContext(*args, **kwargs):
             return self._action.run(callback, *args, **kwargs)
