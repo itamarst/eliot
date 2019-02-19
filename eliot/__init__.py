@@ -16,7 +16,7 @@ from ._output import (
     to_file,
     FileDestination,
 )
-from ._validation import Field, fields, MessageType, ActionType
+from ._validation import Field, fields, MessageType, ActionType, ValidationError
 from ._traceback import write_traceback, writeFailure
 from ._errors import register_exception_extractor
 from ._version import get_versions
@@ -82,6 +82,7 @@ __all__ = [
     "register_exception_extractor",
     "current_action",
     "use_asyncio_context",
+    "ValidationError",
 
     # PEP 8 variants:
     "write_traceback",
