@@ -122,6 +122,23 @@ class DeferredContextTests(TestCase):
         self.assertEqual(called, [(1, 2)])
 
     @withActionContext
+    def test_addCallbacksWithOnlyCallback(self):
+        """
+        L{DeferredContext.addCallbacks} can be called with a single argument, a
+        callback function, and passes it to the wrapped L{Deferred}'s
+        C{addCallbacks}.
+        """
+        called = []
+        def f(value):
+            called.append(value)
+
+        result = Deferred()
+        context = DeferredContext(result)
+        context.addCallbacks(f)
+        result.callback(0)
+        self.assertEqual(called, [0])
+
+    @withActionContext
     def test_addCallbacksReturnSelf(self):
         """
         L{DeferredContext.addCallbacks} returns the L{DeferredContext}.
