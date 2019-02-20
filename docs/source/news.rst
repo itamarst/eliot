@@ -7,6 +7,8 @@ What's New
 Features:
 
 * Generating messages is much faster.
+* ``eliot.ValidationError``, as raised by e.g. ``capture_logging``, is now part of the public API. Fixed issue #146.
+* ``eliot.twisted.DeferredContext.addCallbacks`` now supports omitting the errback, for compatibility with Twisted's ``Deferred``. Thanks to Jean-Paul Calderone for the fix. Fixed issue #366.
 
 1.6.0
 ^^^^^
