@@ -9,6 +9,10 @@ from ._action import (
     start_action, startTask, Action, preserve_context, current_action,
     use_asyncio_context, log_call
 )
+from ._generators import (
+    use_generator_context,
+    eliot_friendly_generator_function,
+)
 from ._output import (
     ILogger,
     Logger,
@@ -83,6 +87,9 @@ __all__ = [
     "current_action",
     "use_asyncio_context",
     "ValidationError",
+
+    "use_generator_context",
+    "eliot_friendly_generator_function",
 
     # PEP 8 variants:
     "write_traceback",
