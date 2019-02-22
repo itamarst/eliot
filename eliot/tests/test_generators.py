@@ -17,8 +17,11 @@ from ..testing import (
 )
 
 from .. import (
+    use_generator_context,
     eliot_friendly_generator_function,
 )
+from .._action import _context
+
 
 def assert_expected_action_tree(testcase, logger, expected_action_type, expected_type_tree):
     """
@@ -78,6 +81,13 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
     """
     # Get our custom assertion failure messages *and* the standard ones.
     longMessage = True
+
+    def setUp(self):
+        use_generator_context()
+
+        def cleanup():
+            _context.get_sub_context = lambda: None
+        self.addCleanup(cleanup)
 
     @capture_logging(None)
     def test_yield_none(self, logger):

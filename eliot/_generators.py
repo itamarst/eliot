@@ -9,6 +9,7 @@ from functools import wraps
 from contextlib import contextmanager
 from weakref import WeakKeyDictionary
 
+from ._action import _context
 
 from . import (
     Message,
@@ -45,13 +46,25 @@ class _GeneratorContext(object):
             self._current_generator = previous_generator
 
 
-from eliot._action import _context
 _the_generator_context = _GeneratorContext(_context)
 
 
 def use_generator_context():
+    """
+    Make L{eliot_friendly_generator_function} work correctly.
+    """
     _context.get_sub_context = _the_generator_context.get_stack
-use_generator_context()
+
+
+def _installed():
+    return _context.get_sub_context == _the_generator_context.get_stack
+
+
+class GeneratorSupportNotEnabled(Exception):
+    """
+    An attempt was made to use a decorated generator without first turning on
+    the generator context manager.
+    """
 
 
 def eliot_friendly_generator_function(original):
@@ -61,6 +74,11 @@ def eliot_friendly_generator_function(original):
     """
     @wraps(original)
     def wrapper(*a, **kw):
+        # This isn't going to work if you don't have the generator context
+        # manager installed.
+        if not _installed():
+            raise GeneratorSupportNotEnabled()
+
         # Keep track of whether the next value to deliver to the generator is
         # a non-exception or an exception.
         ok = True

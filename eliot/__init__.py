@@ -10,6 +10,7 @@ from ._action import (
     use_asyncio_context, log_call
 )
 from ._generators import (
+    GeneratorSupportNotEnabled,
     use_generator_context,
     eliot_friendly_generator_function,
 )
@@ -88,6 +89,7 @@ __all__ = [
     "use_asyncio_context",
     "ValidationError",
 
+    "GeneratorSupportNotEnabled",
     "use_generator_context",
     "eliot_friendly_generator_function",
 
