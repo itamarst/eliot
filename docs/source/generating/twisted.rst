@@ -63,6 +63,40 @@ Logging Failures
             d.addErrback(writeFailure)
 
 
+Actions and inlineCallbacks
+---------------------------
+
+Eliot provides a decorator that is compatible with Twisted's ``inlineCallbacks`` but which also behaves well with actions.
+To understand why, consider the following example:
+
+.. code-block:: python
+
+     from eliot import start_action
+     from twisted.internet.defer import inlineCallbacks
+
+     @inlineCallbacks
+     def go():
+         action = start_action(action_type=u"yourapp:subsystem:frob")
+	 with action:
+	     d = some_deferred_api()
+	     x = yield d
+	     Message.log(message_type=u"some-report", x=x)
+
+The action started by this generator remains active as ``yield d`` gives up control to the ``inlineCallbacks`` controller.
+The next bit of code to run will be considered to be a child of ``action``.
+Since that code may be any arbitrary code that happens to get scheduled,
+this is certainly wrong.
+
+Additionally,
+when the ``inlineCallbacks`` controller resumes the generator,
+it will most likely do so with no active action at all.
+This means that the log message following the yield will be recorded with no parent action,
+also certainly wrong.
+
+These problems are solved by using ``eliot.twisted.inline_callbacks`` instead of ``twisted.internet.defer.inlineCallbacks``.
+The behavior of the two decorators is identical except that Eliot's version will preserve the generator's action context and contain it within the generator.
+This extends the ``inlineCallbacks`` illusion of "synchronous" code to Eliot actions.
+
 Actions and Deferreds
 ---------------------
 
