@@ -26,14 +26,16 @@ else:
 
 from .test_generators import assert_expected_action_tree
 
-from .._action import start_action, current_action, Action, TaskLevel
+from .._action import start_action, current_action, Action, TaskLevel, _context
 from .._output import MemoryLogger, Logger
 from .._message import Message
 from ..testing import assertContainsFields, capture_logging
 from .. import removeDestination, addDestination
 from .._traceback import write_traceback
 from .common import FakeSys
-
+from .. import (
+    use_generator_context,
+)
 
 
 class PassthroughTests(TestCase):
@@ -682,6 +684,13 @@ class TwistedDestinationTests(TestCase):
 class InlineCallbacksTests(TestCase):
     # Get our custom assertion failure messages *and* the standard ones.
     longMessage = True
+
+    def setUp(self):
+        use_generator_context()
+
+        def cleanup():
+            _context.get_sub_context = lambda: None
+        self.addCleanup(cleanup)
 
     def _a_b_test(self, logger, g):
         with start_action(action_type=u"the-action"):
