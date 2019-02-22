@@ -20,16 +20,20 @@ else:
     # logwriter.py causes a failure:
     from ..twisted import (
         DeferredContext, AlreadyFinished, _passthrough, redirectLogsForTrial,
-        _RedirectLogsForTrial, TwistedDestination
+        _RedirectLogsForTrial, TwistedDestination,
+        inline_callbacks,
     )
+
+from .test_generators import assert_expected_action_tree
 
 from .._action import start_action, current_action, Action, TaskLevel
 from .._output import MemoryLogger, Logger
 from .._message import Message
-from ..testing import assertContainsFields
+from ..testing import assertContainsFields, capture_logging
 from .. import removeDestination, addDestination
 from .._traceback import write_traceback
 from .common import FakeSys
+
 
 
 class PassthroughTests(TestCase):
@@ -672,4 +676,73 @@ class TwistedDestinationTests(TestCase):
             write_traceback(logger)
         self.assertEqual(
             writtenToTwisted, [("critical", written[0])]
+        )
+
+
+class InlineCallbacksTests(TestCase):
+    # Get our custom assertion failure messages *and* the standard ones.
+    longMessage = True
+
+    def _a_b_test(self, logger, g):
+        with start_action(action_type=u"the-action"):
+            self.assertIs(
+                None,
+                self.successResultOf(g()),
+            )
+        assert_expected_action_tree(
+            self,
+            logger,
+            u"the-action", [
+                u"a",
+                u"yielded",
+                u"b",
+            ],
+        )
+
+    @capture_logging(None)
+    def test_yield_none(self, logger):
+        @inline_callbacks
+        def g():
+            Message.log(message_type=u"a")
+            yield
+            Message.log(message_type=u"b")
+
+        self._a_b_test(logger, g)
+
+    @capture_logging(None)
+    def test_yield_fired_deferred(self, logger):
+        @inline_callbacks
+        def g():
+            Message.log(message_type=u"a")
+            yield succeed(None)
+            Message.log(message_type=u"b")
+
+        self._a_b_test(logger, g)
+
+    @capture_logging(None)
+    def test_yield_unfired_deferred(self, logger):
+        waiting = Deferred()
+
+        @inline_callbacks
+        def g():
+            Message.log(message_type=u"a")
+            yield waiting
+            Message.log(message_type=u"b")
+
+        with start_action(action_type=u"the-action"):
+            d = g()
+            self.assertNoResult(waiting)
+            waiting.callback(None)
+            self.assertIs(
+                None,
+                self.successResultOf(d),
+            )
+        assert_expected_action_tree(
+            self,
+            logger,
+            u"the-action", [
+                u"a",
+                u"yielded",
+                u"b",
+            ],
         )

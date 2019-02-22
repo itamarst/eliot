@@ -9,11 +9,18 @@ import sys
 
 from twisted.logger import Logger as TwistedLogger
 from twisted.python.failure import Failure
+from twisted.internet.defer import inlineCallbacks
 
 from ._action import current_action
 from . import addDestination
+from ._generators import eliot_friendly_generator_function
 
-__all__ = ["AlreadyFinished", "DeferredContext", "redirectLogsForTrial"]
+__all__ = [
+    "AlreadyFinished",
+    "DeferredContext",
+    "redirectLogsForTrial",
+    "inline_callbacks",
+]
 
 
 def _passthrough(result):
@@ -240,3 +247,15 @@ class _RedirectLogsForTrial(object):
 
 
 redirectLogsForTrial = _RedirectLogsForTrial(sys)
+
+
+def inline_callbacks(original):
+    """
+    Decorate a function like ``inlineCallbacks`` would but in a more
+    Eliot-friendly way.  Use it just like ``inlineCallbacks`` but where you
+    want Eliot action contexts to Do The Right Thing inside the decorated
+    function.
+    """
+    return inlineCallbacks(
+        eliot_friendly_generator_function(original)
+    )
