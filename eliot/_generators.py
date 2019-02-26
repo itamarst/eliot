@@ -103,6 +103,26 @@ def eliot_friendly_generator_function(original):
                 # with the Eliot action context stack we've saved for it.
                 # Then the context manager will re-save it and restore the
                 # "outside" stack for us.
+                #
+                # Regarding the support of Twisted's inlineCallbacks-like
+                # functionality (see eliot.twisted.inline_callbacks):
+                #
+                # The invocation may raise the inlineCallbacks internal
+                # control flow exception _DefGen_Return.  It is not wrong to
+                # just let that propagate upwards here but inlineCallbacks
+                # does think it is wrong.  The behavior triggers a
+                # DeprecationWarning to try to get us to fix our code.  We
+                # could explicitly handle and re-raise the _DefGen_Return but
+                # only at the expense of depending on a private Twisted API.
+                # For now, I'm opting to try to encourage Twisted to fix the
+                # situation (or at least not worsen it):
+                # https://twistedmatrix.com/trac/ticket/9590
+                #
+                # Alternatively, _DefGen_Return is only required on Python 2.
+                # When Python 2 support is dropped, this concern can be
+                # eliminated by always using `return value` instead of
+                # `returnValue(value)` (and adding the necessary logic to the
+                # StopIteration handler below).
                 with _the_generator_context.context(gen):
                     if ok:
                         value_out = gen.send(value_in)
