@@ -99,16 +99,19 @@ def writeFailure(failure, logger=None):
     Write a L{twisted.python.failure.Failure} to the log.
 
     This is for situations where you got an unexpected exception and want to
-    log a traceback. For example:
+    log a traceback. For example, if you have C{Deferred} that might error,
+    you'll want to wrap it with a L{eliot.twisted.DeferredContext} and then add
+    C{writeFailure} as the error handler to get the traceback logged:
 
-        d = dostuff()
+        d = DeferredContext(dostuff())
         d.addCallback(process)
         # Final error handler.
-        d.addErrback(writeFailure, logger, "myapp:subsystem")
+        d.addErrback(writeFailure)
 
     @param failure: L{Failure} to write to the log.
 
-    @type logger: L{eliot.ILogger}
+    @type logger: L{eliot.ILogger}. Will be deprecated at some point, so just
+        ignore it.
 
     @return: None
     """
