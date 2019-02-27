@@ -247,7 +247,12 @@ class MemoryLogger(object):
         not mutate this list.
     """
 
-    def __init__(self):
+    def __init__(self, validate_immediately=False):
+        """
+        @param validate_immediately: C{bool}, if True messages are validated
+            immediately upon writing.
+        """
+        self._validate_immediately = validate_immediately
         self.reset()
 
     def flushTracebacks(self, exceptionType):
@@ -278,10 +283,48 @@ class MemoryLogger(object):
         """
         Add the dictionary to list of messages.
         """
+        if self._validate_immediately:
+            # Validate copy of the dictionary, to ensure what we store isn't
+            # mutated.
+            self._validate_message(dictionary.copy(), serializer)
         self.messages.append(dictionary)
         self.serializers.append(serializer)
         if serializer is TRACEBACK_MESSAGE._serializer:
             self.tracebackMessages.append(dictionary)
+
+    def _validate_message(self, dictionary, serializer):
+        """Validate an individual message.
+
+        @param dictionary: A message C{dict} to be validated.  Might be mutated
+            by the serializer!
+
+        @param serializer: C{None} or a serializer.
+
+        @raises TypeError: If a field name is not unicode, or the dictionary
+            fails to serialize to JSON.
+
+        @raises eliot.ValidationError: If serializer was given and validation
+            failed.
+        """
+        if serializer is not None:
+            serializer.validate(dictionary)
+        for key in dictionary:
+            if not isinstance(key, unicode):
+                if isinstance(key, bytes):
+                    key.decode("utf-8")
+                else:
+                    raise TypeError(
+                        dictionary, "%r is not unicode" % (key, )
+                    )
+        if serializer is not None:
+            serializer.serialize(dictionary)
+
+        try:
+            bytesjson.dumps(dictionary)
+            pyjson.dumps(dictionary)
+        except Exception as e:
+            raise TypeError("Message %s doesn't encode to JSON: %s" % (
+                dictionary, e))
 
     def validate(self):
         """
@@ -297,25 +340,7 @@ class MemoryLogger(object):
             failed.
         """
         for dictionary, serializer in zip(self.messages, self.serializers):
-            if serializer is not None:
-                serializer.validate(dictionary)
-            for key in dictionary:
-                if not isinstance(key, unicode):
-                    if isinstance(key, bytes):
-                        key.decode("utf-8")
-                    else:
-                        raise TypeError(
-                            dictionary, "%r is not unicode" % (key, )
-                        )
-            if serializer is not None:
-                serializer.serialize(dictionary)
-
-            try:
-                bytesjson.dumps(dictionary)
-                pyjson.dumps(dictionary)
-            except Exception as e:
-                raise TypeError("Message %s doesn't encode to JSON: %s" % (
-                    dictionary, e))
+            self._validate_message(dictionary, serializer)
 
     def serialize(self):
         """

@@ -489,8 +489,6 @@ class ValidateLoggingTestsMixin(object):
 
         test = MyTest()
         self.assertRaises(ValidationError, test.debug)
-        self.assertEqual(
-            list(test.logger.messages[0].keys()), ["message_type"])
 
     def test_addCleanupTracebacks(self):
         """
@@ -592,6 +590,26 @@ class ValidateLoggingTestsMixin(object):
         test = MyTest()
         test.run()
         self.assertTrue(test.flushed)
+
+    def test_per_message_immediate_validation(self):
+        """
+        Individual messages are validated immediately upon logging.
+        """
+        test_phase = []
+        not_json_serializable = object()
+
+        class MyTest(TestCase):
+            @self.validate(None)
+            def runTest(self, logger):
+                test_phase.append("started")
+                logger.write(
+                    {"message_type": "test", "bad": not_json_serializable}
+                )
+                test_phase.append("finished")
+
+        test = MyTest()
+        self.assertRaises(TypeError, test.debug)
+        self.assertEqual(test_phase, ["started"])
 
 
 class ValidateLoggingTests(ValidateLoggingTestsMixin, TestCase):
