@@ -226,16 +226,6 @@ class Logger(object):
                     pass
 
 
-class UnflushedTracebacks(Exception):
-    """
-    The L{MemoryLogger} had some tracebacks logged which were not flushed.
-
-    This means either your code has a bug and logged an unexpected traceback.
-    If you expected the traceback then you will need to flush it using
-    L{MemoryLogger.flushTracebacks}.
-    """
-
-
 @implementer(ILogger)
 class MemoryLogger(object):
     """
