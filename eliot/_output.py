@@ -11,7 +11,7 @@ from six import text_type as unicode, PY3
 
 from pyrsistent import PClass, field
 
-from . import _bytesjson as bytesjson
+from . import _bytesjson as bytesjson, _unicodejson as unicodejson
 from zope.interface import Interface, implementer
 
 from ._traceback import write_traceback, TRACEBACK_MESSAGE
@@ -376,7 +376,7 @@ class FileDestination(PClass):
 
         if unicodeFile:
             # On Python 3 native json module outputs unicode:
-            _dumps = pyjson.dumps
+            _dumps = unicodejson.dumps
             _linebreak = u"\n"
         else:
             _dumps = bytesjson.dumps

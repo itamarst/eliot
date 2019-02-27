@@ -8,22 +8,35 @@ instead we write our encoder that can support those.
 
 from __future__ import absolute_import
 
+from functools import partial
 import json as pyjson
 import warnings
 
 from six import PY2
+try:
+    import orjson
+    _standard_loads = orjson.loads
+
+    def _standard_dumps(obj, cls=pyjson.JSONEncoder):
+        return orjson.dumps(obj, default=partial(cls.default, cls()))
+except ImportError:
+    orjson = None
+    _standard_loads = pyjson.loads
+
+    def _standard_dumps(obj, cls=pyjson.JSONEncoder):
+        return pyjson.dumps(obj, cls=cls).encode("utf-8")
 
 
-def _loads(s):
+def _py3_loads(s):
     """
     Support decoding bytes.
     """
     if isinstance(s, bytes):
         s = s.decode("utf-8")
-    return pyjson.loads(s)
+    return _standard_loads(s)
 
 
-def _dumps(obj, cls=pyjson.JSONEncoder):
+def _py3_dumps(obj, cls=pyjson.JSONEncoder):
     """
     Encode to bytes, and presume bytes in inputs are UTF-8 encoded strings.
     """
@@ -42,13 +55,13 @@ def _dumps(obj, cls=pyjson.JSONEncoder):
                 return o.decode("utf-8")
             return cls.default(self, o)
 
-    return pyjson.dumps(obj, cls=WithBytes).encode("utf-8")
+    return _standard_dumps(obj, cls=WithBytes)
 
 
 if PY2:
     # No need for the above on Python 2
     loads, dumps = pyjson.loads, pyjson.dumps
 else:
-    loads, dumps = _loads, _dumps
+    loads, dumps = _py3_loads, _py3_dumps
 
 __all__ = ["loads", "dumps"]
