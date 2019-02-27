@@ -141,8 +141,12 @@ class LoggedAction(PClass):
                 child = klass.fromMessages(
                     uuid, message[TASK_LEVEL_FIELD], messages)
                 children.append(child)
-        if startMessage is None or endMessage is None:
-            raise ValueError(uuid, level)
+        if startMessage is None:
+            raise ValueError("Missing start message")
+        if endMessage is None:
+            raise ValueError(
+                "Missing end message of type " + message.get(
+                    ACTION_TYPE_FIELD, "unknown"))
         return klass(startMessage, endMessage, children)
 
     # PEP 8 variant:
@@ -401,24 +405,24 @@ def assertHasAction(
 
     @param logger: L{eliot.MemoryLogger} whose messages will be checked.
 
-    @param actionType: L{eliot.ActionType} indicating which message we're
-        looking for.
+    @param actionType: L{eliot.ActionType} or C{str} indicating which message
+        we're looking for.
 
     @param succeeded: Expected success status of the action, a C{bool}.
 
     @param startFields: The first action of the given type found must have a
-        superset of the given C{dict} as its start fields. If C{None} then
+        superset of the given C{dict} as its start fields.  If C{None} then
         fields are not checked.
 
     @param endFields: The first action of the given type found must have a
-        superset of the given C{dict} as its end fields. If C{None} then
+        superset of the given C{dict} as its end fields.  If C{None} then
         fields are not checked.
 
     @return: The first found L{LoggedAction} of the given type, if field
         validation succeeded.
 
-    @raises AssertionError: No action was found, or the fields were not superset
-        of given fields.
+    @raises AssertionError: No action was found, or the fields were not
+        superset of given fields.
     """
     if startFields is None:
         startFields = {}

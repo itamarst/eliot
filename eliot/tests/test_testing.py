@@ -130,7 +130,7 @@ class LoggedActionTests(TestCase):
         is not found.
         """
         logger = MemoryLogger()
-        with start_action(logger, "test"):
+        with start_action(logger, action_type="test"):
             pass
         self.assertRaises(
             ValueError, self.fromMessagesIndex, logger.messages[1:], 0)
@@ -141,10 +141,12 @@ class LoggedActionTests(TestCase):
         is not found.
         """
         logger = MemoryLogger()
-        with start_action(logger, "test"):
+        with start_action(logger, action_type="test"):
             pass
-        self.assertRaises(
-            ValueError, self.fromMessagesIndex, logger.messages[:1], 0)
+        with self.assertRaises(ValueError) as cm:
+            self.fromMessagesIndex(logger.messages[:1], 0)
+        self.assertEqual(cm.exception.args[0],
+                         "Missing end message of type test")
 
     def test_fromMessagesAddsChildMessages(self):
         """
