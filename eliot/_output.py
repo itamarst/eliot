@@ -6,6 +6,8 @@ from __future__ import unicode_literals, absolute_import
 
 import sys
 import json as pyjson
+from threading import Lock
+from functools import wraps
 
 from six import text_type as unicode, PY3
 
@@ -226,6 +228,18 @@ class Logger(object):
                     pass
 
 
+def serialized(f):
+    """
+    Decorate a function to make it thread-safe by serializing invocations
+    using a per-instance lock.
+    """
+    @wraps(f)
+    def serialized_f(self, *a, **kw):
+        with self._lock:
+            return f(self, *a, **kw)
+    return serialized_f
+
+
 @implementer(ILogger)
 class MemoryLogger(object):
     """
@@ -248,8 +262,10 @@ class MemoryLogger(object):
     """
 
     def __init__(self):
+        self._lock = Lock()
         self.reset()
 
+    @serialized
     def flushTracebacks(self, exceptionType):
         """
         Flush all logged tracebacks whose exception is of the given type.
@@ -274,6 +290,7 @@ class MemoryLogger(object):
     # PEP 8 variant:
     flush_tracebacks = flushTracebacks
 
+    @serialized
     def write(self, dictionary, serializer=None):
         """
         Add the dictionary to list of messages.
@@ -283,6 +300,7 @@ class MemoryLogger(object):
         if serializer is TRACEBACK_MESSAGE._serializer:
             self.tracebackMessages.append(dictionary)
 
+    @serialized
     def validate(self):
         """
         Validate all written messages.
@@ -317,6 +335,7 @@ class MemoryLogger(object):
                 raise TypeError("Message %s doesn't encode to JSON: %s" % (
                     dictionary, e))
 
+    @serialized
     def serialize(self):
         """
         Serialize all written messages.
@@ -332,6 +351,7 @@ class MemoryLogger(object):
             result.append(dictionary)
         return result
 
+    @serialized
     def reset(self):
         """
         Clear all logged messages.
