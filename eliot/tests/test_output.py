@@ -241,7 +241,7 @@ class MemoryLoggerTests(TestCase):
         L{MemoryLogger.write} can be called from multiple threads concurrently.
         """
         thread_count = 10
-        write_count = 1000
+        write_count = 10000
 
         logger = MemoryLogger()
 
