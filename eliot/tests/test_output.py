@@ -249,7 +249,7 @@ class MemoryLoggerTests(TestCase):
             for i in range(write_count):
                 logger.write(msg, serializer)
 
-        msgs = list({} for i in range(thread_count))
+        msgs = list({u"i": i} for i in range(thread_count))
         serializers = list(object() for i in range(thread_count))
         write_args = zip(msgs, serializers)
         threads = list(Thread(target=write, args=args) for args in write_args)
