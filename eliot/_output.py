@@ -230,16 +230,16 @@ class Logger(object):
                     pass
 
 
-def serialized(f):
+def exclusively(f):
     """
     Decorate a function to make it thread-safe by serializing invocations
     using a per-instance lock.
     """
     @wraps(f)
-    def serialized_f(self, *a, **kw):
+    def exclusively_f(self, *a, **kw):
         with self._lock:
             return f(self, *a, **kw)
-    return serialized_f
+    return exclusively_f
 
 
 @implementer(ILogger)
@@ -267,7 +267,7 @@ class MemoryLogger(object):
         self._lock = Lock()
         self.reset()
 
-    @serialized
+    @exclusively
     def flushTracebacks(self, exceptionType):
         """
         Flush all logged tracebacks whose exception is of the given type.
@@ -292,7 +292,7 @@ class MemoryLogger(object):
     # PEP 8 variant:
     flush_tracebacks = flushTracebacks
 
-    @serialized
+    @exclusively
     def write(self, dictionary, serializer=None):
         """
         Add the dictionary to list of messages.
@@ -302,7 +302,7 @@ class MemoryLogger(object):
         if serializer is TRACEBACK_MESSAGE._serializer:
             self.tracebackMessages.append(dictionary)
 
-    @serialized
+    @exclusively
     def validate(self):
         """
         Validate all written messages.
@@ -337,7 +337,7 @@ class MemoryLogger(object):
                 raise TypeError("Message %s doesn't encode to JSON: %s" % (
                     dictionary, e))
 
-    @serialized
+    @exclusively
     def serialize(self):
         """
         Serialize all written messages.
@@ -353,7 +353,7 @@ class MemoryLogger(object):
             result.append(dictionary)
         return result
 
-    @serialized
+    @exclusively
     def reset(self):
         """
         Clear all logged messages.
