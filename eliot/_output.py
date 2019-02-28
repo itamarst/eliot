@@ -6,6 +6,8 @@ from __future__ import unicode_literals, absolute_import
 
 import sys
 import json as pyjson
+from threading import Lock
+from functools import wraps
 
 from six import text_type as unicode, PY3
 
@@ -135,6 +137,8 @@ class ILogger(Interface):
         """
         Write a dictionary to the appropriate destination.
 
+        @note: This method is thread-safe.
+
         @param serializer: Either C{None}, or a
             L{eliot._validation._MessageSerializer} which can be used to
             validate this message.
@@ -226,6 +230,18 @@ class Logger(object):
                     pass
 
 
+def exclusively(f):
+    """
+    Decorate a function to make it thread-safe by serializing invocations
+    using a per-instance lock.
+    """
+    @wraps(f)
+    def exclusively_f(self, *a, **kw):
+        with self._lock:
+            return f(self, *a, **kw)
+    return exclusively_f
+
+
 @implementer(ILogger)
 class MemoryLogger(object):
     """
@@ -252,9 +268,11 @@ class MemoryLogger(object):
         @param validate_immediately: C{bool}, if True messages are validated
             immediately upon writing.
         """
+        self._lock = Lock()
         self._validate_immediately = validate_immediately
         self.reset()
 
+    @exclusively
     def flushTracebacks(self, exceptionType):
         """
         Flush all logged tracebacks whose exception is of the given type.
@@ -279,6 +297,7 @@ class MemoryLogger(object):
     # PEP 8 variant:
     flush_tracebacks = flushTracebacks
 
+    @exclusively
     def write(self, dictionary, serializer=None):
         """
         Add the dictionary to list of messages.
@@ -342,6 +361,7 @@ class MemoryLogger(object):
         for dictionary, serializer in zip(self.messages, self.serializers):
             self._validate_message(dictionary, serializer)
 
+    @exclusively
     def serialize(self):
         """
         Serialize all written messages.
@@ -357,6 +377,7 @@ class MemoryLogger(object):
             result.append(dictionary)
         return result
 
+    @exclusively
     def reset(self):
         """
         Clear all logged messages.

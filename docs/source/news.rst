@@ -12,6 +12,13 @@ Features:
 * The testing infrastructure now has slightly more informative error messages. Thanks to Jean-Paul Calderone for the bug report. Fixes issue #373.
 * ``@validate_logging`` and ``@capture_logging`` now cause tests to immediately raise an exception on bad messages, which should make debugging failing tests much easier. Thanks to Jean-Paul Calderone for the bug report. Fixes issue #365.
 
+Bug fixes:
+
+* ``ILogger.write`` is now explicitly thread-safe. The ``MemoryLogger`` (as used
+  by tests) implementation of this method which was previously not thread-safe
+  is now thread-safe. Thanks to Jean-Paul Calderone for the patch. Fixes issue
+  #382.
+
 1.6.0
 ^^^^^
 

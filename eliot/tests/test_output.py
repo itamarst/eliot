@@ -12,6 +12,7 @@ import json as pyjson
 from tempfile import mktemp
 from time import time
 from uuid import UUID
+from threading import Thread
 
 from six import PY3, PY2
 try:
@@ -234,6 +235,73 @@ class MemoryLoggerTests(TestCase):
         self.assertEqual(
             (logger.messages, logger.serializers,
              logger.tracebackMessages), ([], [], []))
+
+    def test_threadSafeWrite(self):
+        """
+        L{MemoryLogger.write} can be called from multiple threads concurrently.
+        """
+        # Some threads will log some messages
+        thread_count = 10
+
+        # A lot of messages.  This will keep the threads running long enough
+        # to give them a chance to (try to) interfere with each other.
+        write_count = 10000
+
+        # They'll all use the same MemoryLogger instance.
+        logger = MemoryLogger()
+
+        # Each thread will have its own message and serializer that it writes
+        # to the log over and over again.
+        def write(msg, serializer):
+            for i in range(write_count):
+                logger.write(msg, serializer)
+
+        # Generate a single distinct message for each thread to log.
+        msgs = list({u"i": i} for i in range(thread_count))
+
+        # Generate a single distinct serializer for each thread to log.
+        serializers = list(object() for i in range(thread_count))
+
+        # Pair them all up.  This gives us a simple invariant we can check
+        # later on.
+        write_args = zip(msgs, serializers)
+
+        # Create the threads.
+        threads = list(Thread(target=write, args=args) for args in write_args)
+
+        # Run them all.  Note threads early in this list will start writing to
+        # the log before later threads in the list even get a chance to start.
+        # That's part of why we have each thread write so many messages.
+        for t in threads:
+            t.start()
+        # Wait for them all to finish.
+        for t in threads:
+            t.join()
+
+        # Check that we got the correct number of messages in the log.
+        expected_count = thread_count * write_count
+        self.assertEqual(len(logger.messages), expected_count)
+        self.assertEqual(len(logger.serializers), expected_count)
+
+        # Check the simple invariant we created above.  Every logged message
+        # must be paired with the correct serializer, where "correct" is
+        # defined by ``write_args`` above.
+        for position, (msg, serializer) in enumerate(
+                zip(logger.messages, logger.serializers)
+        ):
+            # The indexes must match because the objects are paired using
+            # zip() above.
+            msg_index = msgs.index(msg)
+            serializer_index = serializers.index(serializer)
+            self.assertEqual(
+                msg_index,
+                serializer_index,
+                "Found message #{} with serializer #{} at position {}".format(
+                    msg_index,
+                    serializer_index,
+                    position,
+                )
+            )
 
 
 class MyException(Exception):
