@@ -137,6 +137,8 @@ class ILogger(Interface):
         """
         Write a dictionary to the appropriate destination.
 
+        @note: This method is thread-safe.
+
         @param serializer: Either C{None}, or a
             L{eliot._validation._MessageSerializer} which can be used to
             validate this message.
