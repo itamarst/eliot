@@ -12,6 +12,7 @@ import json as pyjson
 from tempfile import mktemp
 from time import time
 from uuid import UUID
+from threading import Thread
 
 from six import PY3, PY2
 try:
@@ -234,6 +235,48 @@ class MemoryLoggerTests(TestCase):
         self.assertEqual(
             (logger.messages, logger.serializers,
              logger.tracebackMessages), ([], [], []))
+
+    def test_threadSafeWrite(self):
+        """
+        L{MemoryLogger.write} can be called from multiple threads concurrently.
+        """
+        thread_count = 10
+        write_count = 1000
+
+        logger = MemoryLogger()
+
+        def write(msg, serializer):
+            for i in range(write_count):
+                logger.write(msg, serializer)
+
+        msgs = list({} for i in range(thread_count))
+        serializers = list(object() for i in range(thread_count))
+        write_args = zip(msgs, serializers)
+        threads = list(Thread(target=write, args=args) for args in write_args)
+
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        expected_count = thread_count * write_count
+        self.assertEqual(len(logger.messages), expected_count)
+        self.assertEqual(len(logger.serializers), expected_count)
+
+        for position, (msg, serializer) in enumerate(
+                zip(logger.messages, logger.serializers)
+        ):
+            msg_index = msgs.index(msg)
+            serializer_index = serializers.index(serializer)
+            self.assertEqual(
+                msg_index,
+                serializer_index,
+                "Found message #{} with serializer #{} at position {}".format(
+                    msg_index,
+                    serializer_index,
+                    position,
+                )
+            )
 
 
 class MyException(Exception):
