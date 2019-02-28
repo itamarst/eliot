@@ -345,6 +345,7 @@ class MemoryLogger(object):
             raise TypeError("Message %s doesn't encode to JSON: %s" % (
                 dictionary, e))
 
+    @exclusively
     def validate(self):
         """
         Validate all written messages.
