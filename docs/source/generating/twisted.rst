@@ -66,7 +66,9 @@ Logging Failures
 Actions and inlineCallbacks
 ---------------------------
 
-Eliot provides a decorator that is compatible with Twisted's ``inlineCallbacks`` but which also behaves well with actions.
+Eliot provides a decorator that is compatible with Twisted's ``inlineCallbacks`` but which also behaves well with Eliot's actions.
+Simply substitute ``eliot.twisted.inline_callbacks`` for ``twisted.internet.defer.inlineCallbacks`` in your code.
+
 To understand why, consider the following example:
 
 .. code-block:: python
@@ -74,10 +76,9 @@ To understand why, consider the following example:
      from eliot import start_action
      from twisted.internet.defer import inlineCallbacks
 
-     @inlineCallbacks
+     @inlineCallbacks  # don't use this in real code, use eliot.twisted.inline_callbacks
      def go():
-         action = start_action(action_type=u"yourapp:subsystem:frob")
-	 with action:
+         with start_action(action_type=u"yourapp:subsystem:frob"):
 	     d = some_deferred_api()
 	     x = yield d
 	     Message.log(message_type=u"some-report", x=x)
