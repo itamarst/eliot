@@ -10,7 +10,7 @@ import json as pyjson
 from threading import Lock
 from functools import wraps
 
-from six import text_type as unicode, PY3
+from six import PY3
 
 from pyrsistent import PClass, field
 
@@ -26,6 +26,7 @@ from ._message import (
 )
 from ._util import saferepr, safeunicode
 from .json import EliotJSONEncoder
+from ._validation import ValidationError
 
 
 class _DestinationsSendError(Exception):
@@ -366,7 +367,7 @@ class MemoryLogger(object):
         for dictionary, serializer in zip(self.messages, self.serializers):
             try:
                 self._validate_message(dictionary, serializer)
-            except Exception as e:
+            except (TypeError, ValidationError) as e:
                 # We already figured out which messages failed validation
                 # earlier. This just lets us figure out which exception type to
                 # raise.
