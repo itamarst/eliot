@@ -6,6 +6,8 @@ from __future__ import unicode_literals, absolute_import
 
 import sys
 import json as pyjson
+from threading import Lock
+from functools import wraps
 
 from six import text_type as unicode, PY3
 
@@ -135,6 +137,8 @@ class ILogger(Interface):
         """
         Write a dictionary to the appropriate destination.
 
+        @note: This method is thread-safe.
+
         @param serializer: Either C{None}, or a
             L{eliot._validation._MessageSerializer} which can be used to
             validate this message.
@@ -226,14 +230,16 @@ class Logger(object):
                     pass
 
 
-class UnflushedTracebacks(Exception):
+def exclusively(f):
     """
-    The L{MemoryLogger} had some tracebacks logged which were not flushed.
-
-    This means either your code has a bug and logged an unexpected traceback.
-    If you expected the traceback then you will need to flush it using
-    L{MemoryLogger.flushTracebacks}.
+    Decorate a function to make it thread-safe by serializing invocations
+    using a per-instance lock.
     """
+    @wraps(f)
+    def exclusively_f(self, *a, **kw):
+        with self._lock:
+            return f(self, *a, **kw)
+    return exclusively_f
 
 
 @implementer(ILogger)
@@ -258,8 +264,10 @@ class MemoryLogger(object):
     """
 
     def __init__(self):
+        self._lock = Lock()
         self.reset()
 
+    @exclusively
     def flushTracebacks(self, exceptionType):
         """
         Flush all logged tracebacks whose exception is of the given type.
@@ -284,6 +292,7 @@ class MemoryLogger(object):
     # PEP 8 variant:
     flush_tracebacks = flushTracebacks
 
+    @exclusively
     def write(self, dictionary, serializer=None):
         """
         Add the dictionary to list of messages.
@@ -293,6 +302,7 @@ class MemoryLogger(object):
         if serializer is TRACEBACK_MESSAGE._serializer:
             self.tracebackMessages.append(dictionary)
 
+    @exclusively
     def validate(self):
         """
         Validate all written messages.
@@ -327,6 +337,7 @@ class MemoryLogger(object):
                 raise TypeError("Message %s doesn't encode to JSON: %s" % (
                     dictionary, e))
 
+    @exclusively
     def serialize(self):
         """
         Serialize all written messages.
@@ -342,6 +353,7 @@ class MemoryLogger(object):
             result.append(dictionary)
         return result
 
+    @exclusively
     def reset(self):
         """
         Clear all logged messages.

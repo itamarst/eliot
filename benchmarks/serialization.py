@@ -10,20 +10,28 @@ from __future__ import unicode_literals
 
 import time
 
-from eliot import Message, start_action
+from eliot import Message, start_action, to_file
 
-N = 100000
+# Ensure JSON serialization is part of benchmark:
+to_file(open("/dev/null"))
+
+N = 10000
 
 
 def run():
     start = time.time()
-    with start_action(action_type="my_action"):
-        for i in range(N):
-            Message.log(
-                action_type="my_action",
-                integer=3, string=b"abcdeft", string2="dgsjdlkgjdsl", list=[1, 2, 3, 4])
+    for i in range(N):
+        with start_action(action_type="my_action"):
+            with start_action(action_type="my_action2"):
+                Message.log(
+                    message_type="my_message",
+                    integer=3, string=b"abcdeft", string2="dgsjdlkgjdsl",
+                    list=[1, 2, 3, 4])
     end = time.time()
-    print("%.6f per message" % ((end - start) / N,))
+
+    # Each iteration has 5 messages: start/end of my_action, start/end of
+    # my_action2, and my_message.
+    print("%.6f per message" % ((end - start) / (N * 5),))
     print("%s messages/sec" % (int(N / (end-start)),))
 
 
