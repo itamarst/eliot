@@ -10,7 +10,7 @@ import json as pyjson
 from threading import Lock
 from functools import wraps
 
-from six import PY3
+from six import text_type as unicode, PY3
 
 from pyrsistent import PClass, field
 
