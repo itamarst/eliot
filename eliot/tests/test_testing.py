@@ -488,7 +488,12 @@ class ValidateLoggingTestsMixin(object):
                     "message_type": "wrongmessage"}, MESSAGE._serializer)
 
         test = MyTest()
-        self.assertRaises(ValidationError, test.debug)
+        with self.assertRaises(ValidationError) as context:
+            test.debug()
+        # Some reference to the reason:
+        self.assertIn("wrongmessage", str(context.exception))
+        # Some reference to which file caused the problem:
+        self.assertIn("test_testing.py", str(context.exception))
 
     def test_addCleanupTracebacks(self):
         """
@@ -590,26 +595,6 @@ class ValidateLoggingTestsMixin(object):
         test = MyTest()
         test.run()
         self.assertTrue(test.flushed)
-
-    def test_per_message_immediate_validation(self):
-        """
-        Individual messages are validated immediately upon logging.
-        """
-        test_phase = []
-        not_json_serializable = object()
-
-        class MyTest(TestCase):
-            @self.validate(None)
-            def runTest(self, logger):
-                test_phase.append("started")
-                logger.write(
-                    {"message_type": "test", "bad": not_json_serializable}
-                )
-                test_phase.append("finished")
-
-        test = MyTest()
-        self.assertRaises(TypeError, test.debug)
-        self.assertEqual(test_phase, ["started"])
 
 
 class ValidateLoggingTests(ValidateLoggingTestsMixin, TestCase):

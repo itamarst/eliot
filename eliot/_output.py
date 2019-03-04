@@ -5,6 +5,7 @@ Implementation of hooks and APIs for outputting log messages.
 from __future__ import unicode_literals, absolute_import
 
 import sys
+import traceback
 import json as pyjson
 from threading import Lock
 from functools import wraps
@@ -263,13 +264,8 @@ class MemoryLogger(object):
         not mutate this list.
     """
 
-    def __init__(self, validate_immediately=False):
-        """
-        @param validate_immediately: C{bool}, if True messages are validated
-            immediately upon writing.
-        """
+    def __init__(self):
         self._lock = Lock()
-        self._validate_immediately = validate_immediately
         self.reset()
 
     @exclusively
@@ -302,10 +298,13 @@ class MemoryLogger(object):
         """
         Add the dictionary to list of messages.
         """
-        if self._validate_immediately:
-            # Validate copy of the dictionary, to ensure what we store isn't
-            # mutated.
+        # Validate copy of the dictionary, to ensure what we store isn't
+        # mutated.
+        try:
             self._validate_message(dictionary.copy(), serializer)
+        except Exception as e:
+            self._failed_validations.append(
+                "{}: {}".format(e, "\n".join(traceback.format_stack())))
         self.messages.append(dictionary)
         self.serializers.append(serializer)
         if serializer is TRACEBACK_MESSAGE._serializer:
@@ -313,6 +312,8 @@ class MemoryLogger(object):
 
     def _validate_message(self, dictionary, serializer):
         """Validate an individual message.
+
+        As a side-effect, the message is replaced with its serialized contents.
 
         @param dictionary: A message C{dict} to be validated.  Might be mutated
             by the serializer!
@@ -353,6 +354,9 @@ class MemoryLogger(object):
         Does minimal validation of types, and for messages with corresponding
         serializers use those to do additional validation.
 
+        As a side-effect, the messages are replaced with their serialized
+        contents.
+
         @raises TypeError: If a field name is not unicode, or the dictionary
             fails to serialize to JSON.
 
@@ -360,7 +364,14 @@ class MemoryLogger(object):
             failed.
         """
         for dictionary, serializer in zip(self.messages, self.serializers):
-            self._validate_message(dictionary, serializer)
+            try:
+                self._validate_message(dictionary, serializer)
+            except Exception as e:
+                # We already figured out which messages failed validation
+                # earlier. This just lets us figure out which exception type to
+                # raise.
+                raise e.__class__("\n\n".join(self._failed_validations))
+
 
     @exclusively
     def serialize(self):
@@ -392,7 +403,7 @@ class MemoryLogger(object):
         self.messages = []
         self.serializers = []
         self.tracebackMessages = []
-
+        self._failed_validations = []
 
 class FileDestination(PClass):
     """

@@ -304,7 +304,7 @@ def validateLogging(assertion, *assertionArgs, **assertionKwargs):
         def wrapper(self, *args, **kwargs):
             skipped = False
 
-            kwargs["logger"] = logger = MemoryLogger(validate_immediately=True)
+            kwargs["logger"] = logger = MemoryLogger()
             self.addCleanup(logger.validate)
 
             def checkForUnflushed():
