@@ -13,28 +13,6 @@ import json as pyjson
 import warnings
 
 from six import PY2
-try:
-    import orjson
-    _standard_loads = orjson.loads
-
-    def _standard_dumps(obj, cls=pyjson.JSONEncoder):
-        return orjson.dumps(obj, default=partial(cls.default, cls()))
-except ImportError:
-    orjson = None
-    _standard_loads = pyjson.loads
-
-    def _standard_dumps(obj, cls=pyjson.JSONEncoder):
-        return pyjson.dumps(obj, cls=cls).encode("utf-8")
-
-
-def _py3_loads(s):
-    """
-    Support decoding bytes.
-    """
-    if isinstance(s, bytes):
-        s = s.decode("utf-8")
-    return _standard_loads(s)
-
 
 def _py3_dumps(obj, cls=pyjson.JSONEncoder):
     """
@@ -62,6 +40,9 @@ if PY2:
     # No need for the above on Python 2
     loads, dumps = pyjson.loads, pyjson.dumps
 else:
-    loads, dumps = _py3_loads, _py3_dumps
+    try:
+        from rapidjson import loads, dumps
+    except ImportError:
+        loads, dumps = pyjson.loads, _py3_dumps
 
 __all__ = ["loads", "dumps"]

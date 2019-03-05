@@ -42,8 +42,8 @@ setup(
         "pyrsistent >= 0.11.8",  # version with multi-type pvector/pmap_field
         # Better decorators, with version that works better with type annotations:
         "boltons >= 19.0.1",
-        # Faster JSON serialization; requires CPython 3.6 or later:
-        'orjson;(python_version>="3.6" and platform_python_implementation=="CPython")',
+        # Faster JSON serialization; requires CPython 3.4 or later:
+        'python-rapidjson;(python_version>="3.4" and platform_python_implementation=="CPython")',
     ],
     extras_require={
         "journald": [
