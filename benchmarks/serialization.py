@@ -15,7 +15,7 @@ from eliot import Message, start_action, to_file
 # Ensure JSON serialization is part of benchmark:
 to_file(open("/dev/null"))
 
-N = 10000
+N = 30000
 
 
 def run():
