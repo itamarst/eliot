@@ -230,3 +230,28 @@ Or we can simplify further by using ``assertHasMessage`` and ``assertHasAction``
             self.assertEqual(action.children, messages)
             # Each message had the respective server set.
             self.assertEqual(servers, [msg.message["server"] for msg in messages])
+
+
+Custom testing setup
+--------------------
+
+In some cases ``@capture_logging`` may not do what you want.
+You can achieve the same effect, but with more control, with some lower-level APIs:
+
+.. code-block:: python
+
+   from eliot import MemoryLogger
+   from eliot.testing import swap_logger, check_for_errors
+
+   def custom_capture_logging():
+       # Replace default logging setup with a testing logger:
+       test_logger = MemoryLogger()
+       original_logger = swap_logger(test_logger)
+
+       try:
+           run_some_code()
+       finally:
+           # Validate log messages, check for tracebacks:
+           check_for_errors(logger)
+           # Restore original logging setup:
+           swap_logger(original_logger)
