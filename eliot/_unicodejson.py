@@ -4,6 +4,11 @@ from functools import partial
 from json import dumps, JSONEncoder
 
 try:
-    from rapidjson import dumps
+    import rapidjson
+
+    # Redefine using rapidjson:
+    def dumps(obj, cls=JSONEncoder):
+        return rapidjson.dumps(obj, default=cls().default)
+
 except ImportError:
     pass

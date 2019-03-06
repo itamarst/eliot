@@ -394,7 +394,7 @@ class FileDestination(PClass):
         @param message: A message dictionary.
         """
         self.file.write(
-            self._dumps(message, cls=self.encoder) + self._linebreak
+            self._dumps(message, self.encoder) + self._linebreak
         )
         self.file.flush()
 
