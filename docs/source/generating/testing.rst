@@ -252,6 +252,6 @@ You can achieve the same effect, but with more control, with some lower-level AP
            run_some_code()
        finally:
            # Validate log messages, check for tracebacks:
-           check_for_errors(logger)
+           check_for_errors(test_logger)
            # Restore original logging setup:
            swap_logger(original_logger)
