@@ -16,7 +16,10 @@ from ..testing import (
     assertHasMessage,
     assertHasAction,
     validate_logging,
-    capture_logging, )
+    capture_logging,
+    swap_logger,
+    check_for_errors
+)
 from .._output import MemoryLogger
 from .._action import start_action
 from .._message import Message
@@ -947,3 +950,61 @@ class PEP8Tests(TestCase):
         L{validate_logging} is the same as L{validateLogging}.
         """
         self.assertEqual(validate_logging, validateLogging)
+
+
+class LowLevelTestingHooks(TestCase):
+    """Tests for lower-level APIs for setting up MemoryLogger."""
+
+    @capture_logging(None)
+    def test_swap_logger(self, logger):
+        """C{swap_logger} swaps out the current logger."""
+        new_logger = MemoryLogger()
+        old_logger = swap_logger(new_logger)
+        Message.log(message_type="hello")
+
+        # We swapped out old logger for new:
+        self.assertIs(old_logger, logger)
+        self.assertEqual(new_logger.messages[0]["message_type"], "hello")
+
+        # Now restore old logger:
+        intermediate_logger = swap_logger(old_logger)
+        Message.log(message_type="goodbye")
+        self.assertIs(intermediate_logger, new_logger)
+        self.assertEqual(logger.messages[0]["message_type"], "goodbye")
+
+    def test_check_for_errors_unflushed_tracebacks(self):
+        """C{check_for_errors} raises on unflushed tracebacks."""
+        logger = MemoryLogger()
+
+        # No errors initially:
+        check_for_errors(logger)
+
+        try:
+            1 / 0
+        except ZeroDivisionError:
+            write_traceback(logger)
+        logger.flush_tracebacks(ZeroDivisionError)
+
+        # Flushed tracebacks don't count:
+        check_for_errors(logger)
+
+        # But unflushed tracebacks do:
+        try:
+            raise RuntimeError
+        except RuntimeError:
+            write_traceback(logger)
+        with self.assertRaises(UnflushedTracebacks):
+            check_for_errors(logger)
+
+    def test_check_for_errors_validation(self):
+        """C{check_for_errors} raises on validation errors."""
+        logger = MemoryLogger()
+        logger.write({"x": 1, "message_type": "mem"})
+
+        # No errors:
+        check_for_errors(logger)
+
+        # Now long something unserializable to JSON:
+        logger.write({"message_type": object()})
+        with self.assertRaises(TypeError):
+            check_for_errors(logger)
