@@ -265,6 +265,34 @@ class UnflushedTracebacks(Exception):
     """
 
 
+def check_for_errors(logger):
+    """
+    Raise exception if logger has unflushed tracebacks or validation errors.
+
+    @param logger: A L{MemoryLogger}.
+
+    @raise L{UnflushedTracebacks}: If any tracebacks were unflushed.
+    """
+    # Check for unexpected tracebacks first, since that indicates business
+    # logic errors:
+    if logger.tracebackMessages:
+        raise UnflushedTracebacks(logger.tracebackMessages)
+    # If those are fine, validate the logging:
+    logger.validate()
+
+
+def swap_logger(logger):
+    """Swap out the global logging sink.
+
+    @param logger: An C{ILogger}.
+
+    @return: The current C{ILogger}.
+    """
+    previous_logger = _output._DEFAULT_LOGGER
+    _output._DEFAULT_LOGGER = logger
+    return previous_logger
+
+
 def validateLogging(assertion, *assertionArgs, **assertionKwargs):
     """
     Decorator factory for L{unittest.TestCase} methods to add logging
@@ -305,13 +333,7 @@ def validateLogging(assertion, *assertionArgs, **assertionKwargs):
             skipped = False
 
             kwargs["logger"] = logger = MemoryLogger()
-            self.addCleanup(logger.validate)
-
-            def checkForUnflushed():
-                if not skipped and logger.tracebackMessages:
-                    raise UnflushedTracebacks(logger.tracebackMessages)
-
-            self.addCleanup(checkForUnflushed)
+            self.addCleanup(check_for_errors, logger)
             # TestCase runs cleanups in reverse order, and we want this to
             # run *before* tracebacks are checked:
             if assertion is not None:
@@ -344,11 +366,10 @@ def capture_logging(assertion, *assertionArgs, **assertionKwargs):
         @wraps(function)
         def wrapper(self, *args, **kwargs):
             logger = kwargs["logger"]
-            current_logger = _output._DEFAULT_LOGGER
-            _output._DEFAULT_LOGGER = logger
+            previous_logger = swap_logger(logger)
 
             def cleanup():
-                _output._DEFAULT_LOGGER = current_logger
+                swap_logger(previous_logger)
 
             self.addCleanup(cleanup)
             return function(self, logger)
