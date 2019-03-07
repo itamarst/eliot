@@ -8,8 +8,8 @@ Generating Logs
    loglevels
    migrating
    threads
+   testing
    types
-   types-testing
    asyncio
    twisted
 
