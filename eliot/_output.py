@@ -305,7 +305,7 @@ class MemoryLogger(object):
             self._validate_message(dictionary.copy(), serializer)
         except Exception as e:
             self._failed_validations.append(
-                "{}: {}".format(e, "\n".join(traceback.format_stack())))
+                "{}: {}".format(e, "".join(traceback.format_stack())))
         self.messages.append(dictionary)
         self.serializers.append(serializer)
         if serializer is TRACEBACK_MESSAGE._serializer:
