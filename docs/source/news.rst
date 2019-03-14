@@ -4,6 +4,10 @@ What's New
 1.7.0
 ^^^^^
 
+Documentation:
+
+* Eliot has an API for testing your logs were output correctly. Until now, however, the documentation was overly focused on requiring usage of types, which are optional, so it has been rewritten to be more generic: :doc:`read more about the testing API here<generating/testing>`.
+
 Features:
 
 * Generating messages is much faster.
@@ -11,6 +15,7 @@ Features:
 * ``eliot.twisted.DeferredContext.addCallbacks`` now supports omitting the errback, for compatibility with Twisted's ``Deferred``. Thanks to Jean-Paul Calderone for the fix. Fixed issue #366.
 * New decorator, ``@eliot.twisted.inline_callbacks`` , which is like Twisted's ``inlineCallbacks`` but which also manages the Eliot context. Thanks to Jean-Paul Calderone for the fix. Fixed issue #259.
 * The testing infrastructure now has slightly more informative error messages. Thanks to Jean-Paul Calderone for the bug report. Fixes issue #373.
+* Added lower-level testing infrastructure—``eliot.testing.swap_logger`` and ``eliot.testing.check_for_errors``—which is useful for cases when the ``@capture_logging`` decorator is insufficient. For example, test methods that are async, or return Twisted ``Deferred``. See the :doc:`testing documentation<generating/testing>` for details. Thanks to Jean-Paul Calderone for the feature request. Fixes #364.
 * ILogger.write is now explicitly thread-safe.  The MemoryLogger implementation of this method which was previously not thread-safe is now thread-safe.
 
 1.6.0

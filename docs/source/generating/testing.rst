@@ -1,19 +1,38 @@
-Unit Testing Your Logging
-=========================
-
-Validate Logging in Tests
--------------------------
+Unit Testing Your Logging with Types
+====================================
 
 Now that you've got some code emitting log messages (or even better, before you've written the code) you can write unit tests to verify it.
 Given good test coverage all code branches should already be covered by tests unrelated to logging.
 Logging can be considered just another aspect of testing those code branches.
 Rather than recreating all those tests as separate functions Eliot provides a decorator the allows adding logging assertions to existing tests.
 
-Let's unit test some code that relies on the ``LOG_USER_REGISTRATION`` object we created earlier.
+
+Linting your logs
+-----------------
+
+Decorating a test function with ``eliot.testing.capture_logging`` validation will ensure that:
+
+1. You haven't logged anything that isn't JSON serializable.
+2. There are no unexpected tracebacks, indicating a bug somewhere in your code.
 
 .. code-block:: python
 
-      from myapp.logtypes import LOG_USER_REGISTRATION
+   from eliot.testing import capture_logging
+
+   class MyTest(unittest.TestCase):
+      @capture_logging(None)
+      def test_mytest(self, logger):
+          call_my_function()
+
+
+Making assertions about the logs
+--------------------------------
+
+You can also ensure the correct messages were logged.
+
+.. code-block:: python
+
+      from eliot import Message
 
       class UserRegistration(object):
 
@@ -22,8 +41,9 @@ Let's unit test some code that relies on the ``LOG_USER_REGISTRATION`` object we
 
           def register(self, username, password, age):
               self.db[username] = (password, age)
-              LOG_USER_REGISTRATION(
-                   username=username, password=password, age=age).write()
+              Message.log(message_type="user_registration",
+                          username=username, password=password,
+                          age=age)
 
 
 Here's how we'd test it:
@@ -35,7 +55,6 @@ Here's how we'd test it:
     from eliot.testing import assertContainsFields, capture_logging
 
     from myapp.registration import UserRegistration
-    from myapp.logtypes import LOG_USER_REGISTRATION
 
 
     class LoggingTests(TestCase):
@@ -58,13 +77,6 @@ Here's how we'd test it:
             registry = UserRegistration()
             registry.register(u"john", u"password", 12)
             self.assertEqual(registry.db[u"john"], (u"passsword", 12))
-
-
-Besides calling the given validation function the ``@capture_logging`` decorator will also validate the logged messages after the test is done.
-E.g. it will make sure they are JSON encodable.
-Messages were created using ``ActionType`` and ``MessageType`` will be validated using the applicable ``Field`` definitions.
-You can also call ``MemoryLogger.validate`` yourself to validate written messages.
-If you don't want any additional logging assertions you can decorate your test function using ``@capture_logging(None)``.
 
 
 Testing Tracebacks
@@ -96,14 +108,14 @@ Testing Message and Action Structure
 ------------------------------------
 
 Eliot provides utilities for making assertions about the structure of individual messages and actions.
-The simplest method is using the ``assertHasMessage`` utility function which asserts that a message of a given ``MessageType`` has the given fields:
+The simplest method is using the ``assertHasMessage`` utility function which asserts that a message of a given message type has the given fields:
 
 .. code-block:: python
 
     from eliot.testing import assertHasMessage, capture_logging
 
     class LoggingTests(TestCase):
-        @capture_logging(assertHasMessage, LOG_USER_REGISTRATION,
+        @capture_logging(assertHasMessage, "user_registration",
                          {u"username": u"john",
                           u"password": u"password",
                           u"age": 12})
@@ -119,7 +131,7 @@ The simplest method is using the ``assertHasMessage`` utility function which ass
 ``assertHasMessage`` returns the found message and can therefore be used within more complex assertions. ``assertHasAction`` provides similar functionality for actions (see example below).
 
 More generally, ``eliot.testing.LoggedAction`` and ``eliot.testing.LoggedMessage`` are utility classes to aid such testing.
-``LoggedMessage.of_type`` lets you find all messages of a specific ``MessageType``.
+``LoggedMessage.of_type`` lets you find all messages of a specific message type.
 A ``LoggedMessage`` has an attribute ``message`` which contains the logged message dictionary.
 For example, we could rewrite the registration logging test above like so:
 
@@ -132,7 +144,7 @@ For example, we could rewrite the registration logging test above like so:
             """
             Logging assertions for test_registration.
             """
-            logged = LoggedMessage.of_type(logger.messages, LOG_USER_REGISTRATION)[0]
+            logged = LoggedMessage.of_type(logger.messages, "user_registration")[0]
             assertContainsFields(self, logged.message,
                                  {u"username": u"john",
                                   u"password": u"password",
@@ -148,7 +160,7 @@ For example, we could rewrite the registration logging test above like so:
             self.assertEqual(registry.db[u"john"], (u"passsword", 12))
 
 
-Similarly, ``LoggedAction.of_type`` finds all logged actions of a specific ``ActionType``.
+Similarly, ``LoggedAction.of_type`` finds all logged actions of a specific action type.
 A ``LoggedAction`` instance has ``start_message`` and ``end_message`` containing the respective message dictionaries, and a ``children`` attribute containing a list of child ``LoggedAction`` and ``LoggedMessage``.
 That is, a ``LoggedAction`` knows about the messages logged within its context.
 ``LoggedAction`` also has a utility method ``descendants()`` that returns an iterable of all its descendants.
@@ -158,19 +170,18 @@ For example, let's say we have some code like this:
 
 .. code-block:: python
 
-    LOG_SEARCH = ActionType(...)
-    LOG_CHECK = MessageType(...)
+    from eliot import start_action, Message
 
     class Search:
         def search(self, servers, database, key):
-            with LOG_SEARCH(database=database, key=key):
+            with start_action(action_type="log_search", database=database, key=key):
             for server in servers:
-                LOG_CHECK(server=server).write()
+                Message.log(message_type="log_check", server=server)
                 if server.check(database, key):
                     return True
             return False
 
-We want to assert that the LOG_CHECK message was written in the context of the LOG_SEARCH action.
+We want to assert that the "log_check" message was written in the context of the "log_search" action.
 The test would look like this:
 
 .. code-block:: python
@@ -185,8 +196,8 @@ The test would look like this:
             servers = [buildServer(), buildServer()]
 
             searcher.search(servers, "users", "theuser")
-            action = LoggedAction.of_type(logger.messages, searcher.LOG_SEARCH)[0]
-            messages = LoggedMessage.of_type(logger.messages, searcher.LOG_CHECK)
+            action = LoggedAction.of_type(logger.messages, "log_search")[0]
+            messages = LoggedMessage.of_type(logger.messages, "log_check")
             # The action start message had the appropriate fields:
             assertContainsFields(self, action.start_message,
                                  {"database": "users", "key": "theuser"})
@@ -210,103 +221,38 @@ Or we can simplify further by using ``assertHasMessage`` and ``assertHasAction``
             servers = [buildServer(), buildServer()]
 
             searcher.search(servers, "users", "theuser")
-            action = assertHasAction(self, logger, searcher.LOG_SEARCH, succeeded=True,
+            action = assertHasAction(self, logger, "log_search", succeeded=True,
                                      startFields={"database": "users",
                                                   "key": "theuser"})
 
             # Messages were logged in the context of the action
-            messages = LoggedMessage.of_type(logger.messages, searcher.LOG_CHECK)
+            messages = LoggedMessage.of_type(logger.messages, "log_check")
             self.assertEqual(action.children, messages)
             # Each message had the respective server set.
             self.assertEqual(servers, [msg.message["server"] for msg in messages])
 
 
-Restricting Testing to Specific Messages
-----------------------------------------
+Custom testing setup
+--------------------
 
-If you want to only look at certain messages when testing you can log to a specific ``eliot.Logger`` object.
-The messages will still be logged normally but you will be able to limit tests to only looking at those messages.
-
-You can log messages to a specific ``Logger``:
+In some cases ``@capture_logging`` may not do what you want.
+You can achieve the same effect, but with more control, with some lower-level APIs:
 
 .. code-block:: python
 
-    from eliot import Message, Logger
+   from eliot import MemoryLogger
+   from eliot.testing import swap_logger, check_for_errors
 
-    class YourClass(object):
-        logger = Logger()
+   def custom_capture_logging():
+       # Replace default logging setup with a testing logger:
+       test_logger = MemoryLogger()
+       original_logger = swap_logger(test_logger)
 
-        def run(self):
-            # Create a message with two fields, "key" and "value":
-            msg = Message.new(key=123, value=u"hello")
-            # Write the message:
-            msg.write(self.logger)
-
-As well as actions:
-
-.. code-block:: python
-
-     from eliot import start_action
-
-     logger = Logger()
-
-     with start_action(logger, action_type=u"store_data"):
-         x = get_data()
-         store_data(x)
-
-Or actions created from ``ActionType``:
-
-.. code-block:: python
-
-    from eliot import Logger
-
-      from myapp.logtypes import LOG_USER_REGISTRATION
-
-      class UserRegistration(object):
-
-          logger = Logger()
-
-          def __init__(self):
-              self.db = {}
-
-          def register(self, username, password, age):
-              self.db[username] = (password, age)
-              msg = LOG_USER_REGISTRATION(
-                   username=username, password=password, age=age)
-              # Notice use of specific logger:
-              msg.write(self.logger)
-
-The tests would then need to do two things:
-
-1. Decorate your test with ``validate_logging`` instead of ``capture_logging``.
-2. Override the logger used by the logging code to use the one passed in to the test.
-
-For example:
-
-.. code-block:: python
-
-    from eliot.testing import LoggedMessage, validate_logging
-
-    class LoggingTests(TestCase):
-        def assertRegistrationLogging(self, logger):
-            """
-            Logging assertions for test_registration.
-            """
-            logged = LoggedMessage.of_type(logger.messages, LOG_USER_REGISTRATION)[0]
-            assertContainsFields(self, logged.message,
-                                 {u"username": u"john",
-                                  u"password": u"password",
-                                  u"age": 12}))
-
-        # validate_logging only captures log messages logged to the MemoryLogger
-        # instance it passes to the test:
-        @validate_logging(assertRegistrationLogging)
-        def test_registration(self, logger):
-            """
-            Registration adds entries to the in-memory database.
-            """
-            registry = UserRegistration()
-            # Override logger with one used by test:
-            registry.logger = logger
-            registry.register(u"john", u"password", 12)
-            self.assertEqual(registry.db[u"john"], (u"password", 12))
+       try:
+           run_some_code()
+       finally:
+           # Restore original logging setup:
+           swap_logger(original_logger)
+           # Validate log messages, check for tracebacks:
+           check_for_errors(test_logger)
+           
