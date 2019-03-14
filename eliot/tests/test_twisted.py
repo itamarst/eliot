@@ -8,7 +8,7 @@ import sys
 from functools import wraps
 
 try:
-    from twisted.internet.defer import Deferred, succeed, fail
+    from twisted.internet.defer import Deferred, succeed, fail, returnValue
     from twisted.trial.unittest import TestCase
     from twisted.python.failure import Failure
     from twisted.logger import globalLogPublisher
@@ -20,16 +20,22 @@ else:
     # logwriter.py causes a failure:
     from ..twisted import (
         DeferredContext, AlreadyFinished, _passthrough, redirectLogsForTrial,
-        _RedirectLogsForTrial, TwistedDestination
+        _RedirectLogsForTrial, TwistedDestination,
+        inline_callbacks,
     )
 
-from .._action import start_action, current_action, Action, TaskLevel
+from .test_generators import assert_expected_action_tree
+
+from .._action import start_action, current_action, Action, TaskLevel, _context
 from .._output import MemoryLogger, Logger
 from .._message import Message
-from ..testing import assertContainsFields
+from ..testing import assertContainsFields, capture_logging
 from .. import removeDestination, addDestination
 from .._traceback import write_traceback
 from .common import FakeSys
+from .. import (
+    use_generator_context,
+)
 
 
 class PassthroughTests(TestCase):
@@ -673,3 +679,206 @@ class TwistedDestinationTests(TestCase):
         self.assertEqual(
             writtenToTwisted, [("critical", written[0])]
         )
+
+
+class InlineCallbacksTests(TestCase):
+    # Get our custom assertion failure messages *and* the standard ones.
+    longMessage = True
+
+    def setUp(self):
+        use_generator_context()
+
+        def cleanup():
+            _context.get_sub_context = lambda: None
+        self.addCleanup(cleanup)
+
+    def _a_b_test(self, logger, g):
+        with start_action(action_type=u"the-action"):
+            self.assertIs(
+                None,
+                self.successResultOf(g()),
+            )
+        assert_expected_action_tree(
+            self,
+            logger,
+            u"the-action", [
+                u"a",
+                u"yielded",
+                u"b",
+            ],
+        )
+
+    @capture_logging(None)
+    def test_yield_none(self, logger):
+        @inline_callbacks
+        def g():
+            Message.log(message_type=u"a")
+            yield
+            Message.log(message_type=u"b")
+
+        self._a_b_test(logger, g)
+
+    @capture_logging(None)
+    def test_yield_fired_deferred(self, logger):
+        @inline_callbacks
+        def g():
+            Message.log(message_type=u"a")
+            yield succeed(None)
+            Message.log(message_type=u"b")
+
+        self._a_b_test(logger, g)
+
+    @capture_logging(None)
+    def test_yield_unfired_deferred(self, logger):
+        waiting = Deferred()
+
+        @inline_callbacks
+        def g():
+            Message.log(message_type=u"a")
+            yield waiting
+            Message.log(message_type=u"b")
+
+        with start_action(action_type=u"the-action"):
+            d = g()
+            self.assertNoResult(waiting)
+            waiting.callback(None)
+            self.assertIs(
+                None,
+                self.successResultOf(d),
+            )
+        assert_expected_action_tree(
+            self,
+            logger,
+            u"the-action", [
+                u"a",
+                u"yielded",
+                u"b",
+            ],
+        )
+
+    @capture_logging(None)
+    def test_returnValue(self, logger):
+        result = object()
+
+        @inline_callbacks
+        def g():
+            if False:
+                yield
+            returnValue(result)
+
+        with start_action(action_type=u"the-action"):
+            d = g()
+            self.assertIs(
+                result,
+                self.successResultOf(d),
+            )
+
+        assert_expected_action_tree(
+            self,
+            logger,
+            u"the-action",
+            [],
+        )
+
+    @capture_logging(None)
+    def test_returnValue_in_action(self, logger):
+        result = object()
+
+        @inline_callbacks
+        def g():
+            if False:
+                yield
+            with start_action(action_type=u"g"):
+                returnValue(result)
+
+        with start_action(action_type=u"the-action"):
+            d = g()
+            self.assertIs(
+                result,
+                self.successResultOf(d),
+            )
+
+        assert_expected_action_tree(
+            self,
+            logger,
+            u"the-action", [
+                {u"g": []},
+            ],
+        )
+
+    @capture_logging(None)
+    def test_nested_returnValue(self, logger):
+        result = object()
+        another = object()
+
+        @inline_callbacks
+        def g():
+            d = h()
+            # Run h through to the end but ignore its result.
+            yield d
+            # Give back _our_ result.
+            returnValue(result)
+
+        @inline_callbacks
+        def h():
+            yield
+            returnValue(another)
+
+        with start_action(action_type=u"the-action"):
+            d = g()
+            self.assertIs(
+                result,
+                self.successResultOf(d),
+            )
+
+        assert_expected_action_tree(
+            self,
+            logger,
+            u"the-action", [
+                u"yielded",
+                u"yielded",
+            ],
+        )
+
+    @capture_logging(None)
+    def test_async_returnValue(self, logger):
+        result = object()
+        waiting = Deferred()
+
+        @inline_callbacks
+        def g():
+            yield waiting
+            returnValue(result)
+
+        with start_action(action_type=u"the-action"):
+            d = g()
+            waiting.callback(None)
+            self.assertIs(
+                result,
+                self.successResultOf(d),
+            )
+
+    @capture_logging(None)
+    def test_nested_async_returnValue(self, logger):
+        result = object()
+        another = object()
+
+        waiting = Deferred()
+
+        @inline_callbacks
+        def g():
+            yield h()
+            returnValue(result)
+
+        @inline_callbacks
+        def h():
+            yield waiting
+            returnValue(another)
+
+        with start_action(action_type=u"the-action"):
+            d = g()
+            waiting.callback(None)
+            self.assertIs(
+                result,
+                self.successResultOf(d),
+            )
