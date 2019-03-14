@@ -6,6 +6,7 @@ from __future__ import unicode_literals, absolute_import
 
 import sys
 import traceback
+import inspect
 import json as pyjson
 from threading import Lock
 from functools import wraps
@@ -304,8 +305,18 @@ class MemoryLogger(object):
         try:
             self._validate_message(dictionary.copy(), serializer)
         except Exception as e:
+            # Skip irrelevant frames that don't help pinpoint the problem:
+            from . import _output, _message, _action
+            skip_filenames = [
+                _output.__file__, _message.__file__, _action.__file__
+            ]
+            for frame in inspect.stack():
+                if frame[1] not in skip_filenames:
+                    break
             self._failed_validations.append(
-                "{}: {}".format(e, "".join(traceback.format_stack())))
+                "{}: {}".format(
+                    e, "".join(traceback.format_stack(frame[0])))
+            )
         self.messages.append(dictionary)
         self.serializers.append(serializer)
         if serializer is TRACEBACK_MESSAGE._serializer:
