@@ -491,9 +491,12 @@ class ValidateLoggingTestsMixin(object):
                     "message_type": "wrongmessage"}, MESSAGE._serializer)
 
         test = MyTest()
-        self.assertRaises(ValidationError, test.debug)
-        self.assertEqual(
-            list(test.logger.messages[0].keys()), ["message_type"])
+        with self.assertRaises(ValidationError) as context:
+            test.debug()
+        # Some reference to the reason:
+        self.assertIn("wrongmessage", str(context.exception))
+        # Some reference to which file caused the problem:
+        self.assertIn("test_testing.py", str(context.exception))
 
     def test_addCleanupTracebacks(self):
         """

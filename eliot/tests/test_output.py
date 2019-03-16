@@ -80,7 +80,7 @@ class MemoryLoggerTests(TestCase):
     def test_serializer(self):
         """
         L{MemoryLogger.validate} calls the given serializer's C{validate()}
-        method with the message.
+        method with the message, as does L{MemoryLogger.write}.
         """
 
         class FakeValidator(list):
@@ -94,9 +94,9 @@ class MemoryLoggerTests(TestCase):
         logger = MemoryLogger()
         message = {"message_type": "mymessage", "X": 1}
         logger.write(message, validator)
-        self.assertEqual(validator, [])
-        logger.validate()
         self.assertEqual(validator, [message])
+        logger.validate()
+        self.assertEqual(validator, [message, message])
 
     def test_failedValidation(self):
         """
