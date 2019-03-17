@@ -5,6 +5,8 @@ Implementation of hooks and APIs for outputting log messages.
 from __future__ import unicode_literals, absolute_import
 
 import sys
+import traceback
+import inspect
 import json as pyjson
 from threading import Lock
 from functools import wraps
@@ -25,6 +27,7 @@ from ._message import (
 )
 from ._util import saferepr, safeunicode
 from .json import EliotJSONEncoder
+from ._validation import ValidationError
 
 
 class _DestinationsSendError(Exception):
@@ -297,10 +300,63 @@ class MemoryLogger(object):
         """
         Add the dictionary to list of messages.
         """
+        # Validate copy of the dictionary, to ensure what we store isn't
+        # mutated.
+        try:
+            self._validate_message(dictionary.copy(), serializer)
+        except Exception as e:
+            # Skip irrelevant frames that don't help pinpoint the problem:
+            from . import _output, _message, _action
+            skip_filenames = [
+                _output.__file__, _message.__file__, _action.__file__
+            ]
+            for frame in inspect.stack():
+                if frame[1] not in skip_filenames:
+                    break
+            self._failed_validations.append(
+                "{}: {}".format(
+                    e, "".join(traceback.format_stack(frame[0])))
+            )
         self.messages.append(dictionary)
         self.serializers.append(serializer)
         if serializer is TRACEBACK_MESSAGE._serializer:
             self.tracebackMessages.append(dictionary)
+
+    def _validate_message(self, dictionary, serializer):
+        """Validate an individual message.
+
+        As a side-effect, the message is replaced with its serialized contents.
+
+        @param dictionary: A message C{dict} to be validated.  Might be mutated
+            by the serializer!
+
+        @param serializer: C{None} or a serializer.
+
+        @raises TypeError: If a field name is not unicode, or the dictionary
+            fails to serialize to JSON.
+
+        @raises eliot.ValidationError: If serializer was given and validation
+            failed.
+        """
+        if serializer is not None:
+            serializer.validate(dictionary)
+        for key in dictionary:
+            if not isinstance(key, unicode):
+                if isinstance(key, bytes):
+                    key.decode("utf-8")
+                else:
+                    raise TypeError(
+                        dictionary, "%r is not unicode" % (key, )
+                    )
+        if serializer is not None:
+            serializer.serialize(dictionary)
+
+        try:
+            bytesjson.dumps(dictionary)
+            pyjson.dumps(dictionary)
+        except Exception as e:
+            raise TypeError("Message %s doesn't encode to JSON: %s" % (
+                dictionary, e))
 
     @exclusively
     def validate(self):
@@ -310,6 +366,9 @@ class MemoryLogger(object):
         Does minimal validation of types, and for messages with corresponding
         serializers use those to do additional validation.
 
+        As a side-effect, the messages are replaced with their serialized
+        contents.
+
         @raises TypeError: If a field name is not unicode, or the dictionary
             fails to serialize to JSON.
 
@@ -317,25 +376,14 @@ class MemoryLogger(object):
             failed.
         """
         for dictionary, serializer in zip(self.messages, self.serializers):
-            if serializer is not None:
-                serializer.validate(dictionary)
-            for key in dictionary:
-                if not isinstance(key, unicode):
-                    if isinstance(key, bytes):
-                        key.decode("utf-8")
-                    else:
-                        raise TypeError(
-                            dictionary, "%r is not unicode" % (key, )
-                        )
-            if serializer is not None:
-                serializer.serialize(dictionary)
-
             try:
-                bytesjson.dumps(dictionary)
-                pyjson.dumps(dictionary)
-            except Exception as e:
-                raise TypeError("Message %s doesn't encode to JSON: %s" % (
-                    dictionary, e))
+                self._validate_message(dictionary, serializer)
+            except (TypeError, ValidationError) as e:
+                # We already figured out which messages failed validation
+                # earlier. This just lets us figure out which exception type to
+                # raise.
+                raise e.__class__("\n\n".join(self._failed_validations))
+
 
     @exclusively
     def serialize(self):
@@ -367,7 +415,7 @@ class MemoryLogger(object):
         self.messages = []
         self.serializers = []
         self.tracebackMessages = []
-
+        self._failed_validations = []
 
 class FileDestination(PClass):
     """
