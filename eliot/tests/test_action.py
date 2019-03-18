@@ -178,14 +178,24 @@ class ExecutionContextTests(TestCase):
         self.assertEqual(valuesInThread, [second])
         self.assertIs(ctx.current(), first)
 
-    def test_globalInstance(self):
+
+class GlobalContextTests(TestCase):
+    """Tests for the shared global context."""
+
+    def test_current_action(self):
         """
-        A global L{_ExecutionContext} is exposed in the L{eliot._action}
-        module.
+        L{current_action} returns the current value of the current global
+        context.
         """
-        self.assertIsInstance(_action._context, _ExecutionContext)
-        self.assertEqual(_action.current_action, _action._context.current)
-        self.assertEqual(eliot.current_action, _action._context.current)
+        self.addCleanup(_action._context_owner.reset)
+        _action._context_owner.context.push("A")
+        self.assertEqual(_action.current_action(), "A")
+        _action._context_owner.context.push("B")
+        self.assertEqual(_action.current_action(), "B")
+        _action._context_owner.reset()
+        self.assertEqual(_action.current_action(), None)
+        _action._context_owner.context.push("C")
+        self.assertEqual(_action.current_action(), "C")
 
 
 class ActionTests(TestCase):

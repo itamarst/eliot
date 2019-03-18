@@ -52,6 +52,10 @@ class _ExecutionContext(threading.local):
     """
 
     def __init__(self):
+        """
+        Every time an attribute is looked up from a new thread, this will be
+        called again for that thread.
+        """
         self._main_stack = []
         self.get_sub_context = lambda: None
 
@@ -91,8 +95,37 @@ class _ExecutionContext(threading.local):
         return stack[-1]
 
 
-_context = _ExecutionContext()
-current_action = _context.current
+class _ECOwner(object):
+    """Owner of the global execution context.
+
+    @ivar context: The current global L{_ExecutionContext}.  Don't set it
+        directly, only get it!  You can use C{set} to set it.
+    """
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        """Reset to default context, to be used by tests only."""
+        self.context = _ExecutionContext()
+
+    def set(self, context_class):
+        """Set a new context of the given class.
+
+        @raises C{RuntimeError}: If the context has already been set to a
+            different class.
+        """
+        self.context = context_class()
+
+
+_context_owner = _ECOwner()
+
+
+def current_action():
+    """
+    @return: The current C{Action} in context, or C{None} if none were set.
+    """
+    return _context_owner.context.current()
 
 
 def use_asyncio_context():
@@ -103,8 +136,8 @@ def use_asyncio_context():
 
     Does not currently support event loops other than asyncio.
     """
-    from ._asyncio import AsyncioContext
-    _context.get_sub_context = AsyncioContext().get_stack
+    from ._asyncio import AsyncioExecutionContext
+    _context_owner.set(AsyncioExecutionContext)
 
 
 class TaskLevel(object):
@@ -422,11 +455,11 @@ class Action(object):
         """
         Run the given function with this L{Action} as its execution context.
         """
-        _context.push(self)
+        _context_owner.context.push(self)
         try:
             return f(*args, **kwargs)
         finally:
-            _context.pop()
+            _context_owner.context.pop()
 
     def addSuccessFields(self, **fields):
         """
@@ -447,25 +480,25 @@ class Action(object):
 
         The action does NOT finish when the context is exited.
         """
-        _context.push(self)
+        _context_owner.context.push(self)
         try:
             yield self
         finally:
-            _context.pop()
+            _context_owner.context.pop()
 
     # Python context manager implementation:
     def __enter__(self):
         """
         Push this action onto the execution context.
         """
-        _context.push(self)
+        _context_owner.context.push(self)
         return self
 
     def __exit__(self, type, exception, traceback):
         """
         Pop this action off the execution context, log finish message.
         """
-        _context.pop()
+        _context_owner.context.pop()
         self.finish(exception)
 
 

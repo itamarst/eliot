@@ -5,8 +5,10 @@ Support for asyncio coroutines.
 from asyncio import Task
 from weakref import WeakKeyDictionary
 
+from ._action import _ExecutionContext
 
-class AsyncioContext:
+
+class AsyncioSubContext:
     """
     Per-Task context, allowing different coroutines to have different logging
     context.
@@ -31,3 +33,11 @@ class AsyncioContext:
         if task not in self._per_task:
             self._per_task[task] = []
         return self._per_task[task]
+
+
+class AsyncioExecutionContext(_ExecutionContext):
+    """ExecutionContext that supports asyncio sub-contexts."""
+
+    def __init__(self):
+        _ExecutionContext.__init__(self)
+        self.get_sub_context = AsyncioSubContext().get_stack
