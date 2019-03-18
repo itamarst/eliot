@@ -65,7 +65,6 @@ from .strategies import (
     union,
     written_from_pmap,
 )
-import eliot
 
 
 class ExecutionContextTests(TestCase):
