@@ -108,14 +108,24 @@ class _ECOwner(object):
     def reset(self):
         """Reset to default context, to be used by tests only."""
         self.context = _ExecutionContext()
+        self._set = False
 
     def set(self, context_class):
         """Set a new context of the given class.
 
+        If the same class as current one, no changes are made.
+
         @raises C{RuntimeError}: If the context has already been set to a
             different class.
         """
+        if self.context.__class__ == context_class:
+            return
+        if self._set:
+            raise RuntimeError(
+                "Context class already set to " + str(self.context.__class__)
+            )
         self.context = context_class()
+        self._set = True
 
 
 _context_owner = _ECOwner()

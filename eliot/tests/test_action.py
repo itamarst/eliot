@@ -31,7 +31,7 @@ from .._action import (
     ACTION_STATUS_FIELD, ACTION_TYPE_FIELD, FAILED_STATUS, STARTED_STATUS,
     SUCCEEDED_STATUS, DuplicateChild, InvalidStartMessage, InvalidStatus,
     TaskLevel, WrittenAction, WrongActionType, WrongTask, WrongTaskLevel,
-    TooManyCalls, log_call
+    TooManyCalls, log_call, _context_owner
 )
 from .._message import (
     EXCEPTION_FIELD,
@@ -46,7 +46,6 @@ from .._validation import ActionType, Field, _ActionSerializers
 from ..testing import assertContainsFields, capture_logging
 from ..parse import Parser
 from .. import (
-    _action,
     add_destination,
     remove_destination,
     register_exception_extractor,
@@ -179,23 +178,75 @@ class ExecutionContextTests(TestCase):
         self.assertIs(ctx.current(), first)
 
 
-class GlobalContextTests(TestCase):
+class ContextOwnerTests(TestCase):
     """Tests for the shared global context."""
+
+    def test_reset(self):
+        """
+        Resetting resets to a normal C{_ExecutionContext}.
+        """
+        _context_owner.context = object()
+        _context_owner.reset()
+        self.assertIsInstance(_context_owner.context, _ExecutionContext)
 
     def test_current_action(self):
         """
         L{current_action} returns the current value of the current global
         context.
         """
-        self.addCleanup(_action._context_owner.reset)
-        _action._context_owner.context.push("A")
-        self.assertEqual(_action.current_action(), "A")
-        _action._context_owner.context.push("B")
-        self.assertEqual(_action.current_action(), "B")
-        _action._context_owner.reset()
-        self.assertEqual(_action.current_action(), None)
-        _action._context_owner.context.push("C")
-        self.assertEqual(_action.current_action(), "C")
+        self.addCleanup(_context_owner.reset)
+        _context_owner.context.push("A")
+        self.assertEqual(current_action(), "A")
+        _context_owner.context.push("B")
+        self.assertEqual(current_action(), "B")
+        _context_owner.reset()
+        self.assertEqual(current_action(), None)
+        _context_owner.context.push("C")
+        self.assertEqual(current_action(), "C")
+
+    def test_set(self):
+        """
+        It's possible to set a new C{_ExecutionContext} once.
+        """
+        self.addCleanup(_context_owner.reset)
+
+        class A(_ExecutionContext):
+            pass
+
+        _context_owner.set(A)
+        self.assertIsInstance(_context_owner.context, A)
+
+    def test_set_twice(self):
+        """
+        Setting the same new C{_ExecutionContext} twice is no-op.
+        """
+        self.addCleanup(_context_owner.reset)
+
+        class A(_ExecutionContext):
+            pass
+
+        _context_owner.set(A)
+        a = _context_owner.context
+        _context_owner.set(A)
+        # Same object as before:
+        self.assertIs(_context_owner.context, a)
+
+    def test_set_twice_different_class(self):
+        """
+        Setting twice with different C{_ExecutionContext} classes raises a
+        C{RuntimeError}.
+        """
+        self.addCleanup(_context_owner.reset)
+
+        class A(_ExecutionContext):
+            pass
+
+        class B(_ExecutionContext):
+            pass
+
+        _context_owner.set(A)
+        with self.assertRaises(RuntimeError):
+            _context_owner.set(B)
 
 
 class ActionTests(TestCase):
