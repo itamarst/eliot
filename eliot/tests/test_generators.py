@@ -16,7 +16,7 @@ from ..testing import (
     assertHasAction,
 )
 
-from .. import (
+from .._generators import (
     use_generator_context,
     eliot_friendly_generator_function,
 )

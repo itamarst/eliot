@@ -35,9 +35,6 @@ from ..testing import assertContainsFields, capture_logging
 from .. import removeDestination, addDestination
 from .._traceback import write_traceback
 from .common import FakeSys
-from .. import (
-    use_generator_context,
-)
 
 
 class PassthroughTests(TestCase):
