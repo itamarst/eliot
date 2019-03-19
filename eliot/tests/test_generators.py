@@ -20,7 +20,7 @@ from .. import (
     use_generator_context,
     eliot_friendly_generator_function,
 )
-from .._action import _context
+from .._action import _context_owner
 
 
 def assert_expected_action_tree(testcase, logger, expected_action_type, expected_type_tree):
@@ -84,10 +84,7 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
 
     def setUp(self):
         use_generator_context()
-
-        def cleanup():
-            _context.get_sub_context = lambda: None
-        self.addCleanup(cleanup)
+        self.addCleanup(_context_owner.reset)
 
     @capture_logging(None)
     def test_yield_none(self, logger):
@@ -96,6 +93,7 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
             Message.log(message_type=u"hello")
             yield
             Message.log(message_type=u"goodbye")
+        g.debug = True  # output yielded messages
 
         with start_action(action_type=u"the-action"):
             list(g())
@@ -116,6 +114,7 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
             Message.log(message_type=u"hello")
             yield expected
             Message.log(message_type=u"goodbye")
+        g.debug = True  # output yielded messages
 
         with start_action(action_type=u"the-action"):
             self.assertEqual([expected], list(g()))
@@ -137,6 +136,7 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
                 yield None
                 Message.log(message_type=u"c")
             Message.log(message_type=u"d")
+        g.debug = True  # output yielded messages
 
         with start_action(action_type=u"the-action"):
             list(g())
@@ -164,6 +164,7 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
                     Message.log(message_type=u"c")
                 Message.log(message_type=u"d")
             Message.log(message_type=u"e")
+        g.debug = True  # output yielded messages
 
         with start_action(action_type=u"the-action"):
             list(g())
@@ -199,6 +200,7 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
 
             Message.log(message_type=u"d")
             yield
+        g.debug = True  # output yielded messages
 
         with start_action(action_type=u"the-action"):
             generator = g()
@@ -241,6 +243,7 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
                 yield
                 Message.log(message_type=u"{}-c".format(which))
             Message.log(message_type=u"{}-d".format(which))
+        g.debug = True  # output yielded messages
 
         gens = [g(u"1"), g(u"2")]
         with start_action(action_type=u"the-action"):
@@ -282,7 +285,7 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
                 Message.log(message_type=u"b")
             finally:
                 Message.log(message_type=u"c")
-
+        g.debug = True  # output yielded messages
 
         with start_action(action_type=u"the-action"):
             gen = g()
@@ -309,6 +312,8 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
                     set(g(False))
                 else:
                     yield
+
+        g.debug = True  # output yielded messages
 
         with start_action(action_type=u"the-action"):
             set(g(True))

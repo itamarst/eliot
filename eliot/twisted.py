@@ -249,13 +249,14 @@ class _RedirectLogsForTrial(object):
 redirectLogsForTrial = _RedirectLogsForTrial(sys)
 
 
-def inline_callbacks(original):
+def inline_callbacks(original, debug=False):
     """
     Decorate a function like ``inlineCallbacks`` would but in a more
     Eliot-friendly way.  Use it just like ``inlineCallbacks`` but where you
     want Eliot action contexts to Do The Right Thing inside the decorated
     function.
     """
-    return inlineCallbacks(
-        eliot_friendly_generator_function(original)
-    )
+    f = eliot_friendly_generator_function(original)
+    if debug:
+        f.debug = True
+    return inlineCallbacks(f)

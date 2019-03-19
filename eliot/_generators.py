@@ -9,23 +9,25 @@ from functools import wraps
 from contextlib import contextmanager
 from weakref import WeakKeyDictionary
 
-from ._action import _context
+from ._action import _context_owner, _ExecutionContext
+from . import Message
 
-from . import (
-    Message,
-)
 
 class _GeneratorContext(object):
+    """Generator sub-context for C{_ExecutionContext}."""
+
     def __init__(self, execution_context):
         self._execution_context = execution_context
         self._contexts = WeakKeyDictionary()
         self._current_generator = None
 
     def init_stack(self, generator):
+        """Create a new stack for the given generator."""
         stack = list(self._execution_context._get_stack())
         self._contexts[generator] = stack
 
     def get_stack(self):
+        """Return the sub-stack for the current generator."""
         if self._current_generator is None:
             # If there is no currently active generator then we have no
             # special stack to supply.  Let the execution context figure out a
@@ -37,7 +39,8 @@ class _GeneratorContext(object):
         return self._contexts[self._current_generator]
 
     @contextmanager
-    def context(self, generator):
+    def in_generator(self, generator):
+        """Context manager: set the given generator as the current generator."""
         previous_generator = self._current_generator
         try:
             self._current_generator = generator
@@ -46,18 +49,25 @@ class _GeneratorContext(object):
             self._current_generator = previous_generator
 
 
-_the_generator_context = _GeneratorContext(_context)
+class GeneratorExecutionContext(_ExecutionContext):
+    """Generator-specific C{_ExecutionContext} subclass."""
+
+    def __init__(self):
+        """This will run per-thread!"""
+        _ExecutionContext.__init__(self)
+        self.generator_context = _GeneratorContext(self)
+        self.get_sub_context = self.generator_context.get_stack
 
 
 def use_generator_context():
     """
     Make L{eliot_friendly_generator_function} work correctly.
     """
-    _context.get_sub_context = _the_generator_context.get_stack
+    _context_owner.set(GeneratorExecutionContext)
 
 
 def _installed():
-    return _context.get_sub_context == _the_generator_context.get_stack
+    return isinstance(_context_owner.context, GeneratorExecutionContext)
 
 
 class GeneratorSupportNotEnabled(Exception):
@@ -96,7 +106,8 @@ def eliot_friendly_generator_function(original):
         # current action stack.  This might be the main stack or, if another
         # decorated generator is running, it might be the stack for that
         # generator.  Not our business.
-        _the_generator_context.init_stack(gen)
+        generator_context = _context_owner.context.generator_context
+        generator_context.init_stack(gen)
         while True:
             try:
                 # Whichever way we invoke the generator, we will do it
@@ -123,7 +134,7 @@ def eliot_friendly_generator_function(original):
                 # eliminated by always using `return value` instead of
                 # `returnValue(value)` (and adding the necessary logic to the
                 # StopIteration handler below).
-                with _the_generator_context.context(gen):
+                with generator_context.in_generator(gen):
                     if ok:
                         value_out = gen.send(value_in)
                     else:
@@ -134,9 +145,9 @@ def eliot_friendly_generator_function(original):
                     # generator's action context so that we get a good
                     # indication of where the yield occurred.
                     #
-                    # This might be too noisy, consider dropping it or
-                    # making it optional.
-                    Message.log(message_type=u"yielded")
+                    # This is noisy, enable only for debugging:
+                    if wrapper.debug:
+                        Message.log(message_type=u"yielded")
             except StopIteration:
                 # When the generator raises this, it is signaling
                 # completion.  Leave the loop.
@@ -162,4 +173,5 @@ def eliot_friendly_generator_function(original):
                 else:
                     ok = True
 
+    wrapper.debug = False
     return wrapper

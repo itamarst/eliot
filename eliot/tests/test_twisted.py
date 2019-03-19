@@ -26,7 +26,9 @@ else:
 
 from .test_generators import assert_expected_action_tree
 
-from .._action import start_action, current_action, Action, TaskLevel, _context
+from .._action import (
+    start_action, current_action, Action, TaskLevel, _context_owner
+)
 from .._output import MemoryLogger, Logger
 from .._message import Message
 from ..testing import assertContainsFields, capture_logging
@@ -682,17 +684,17 @@ class TwistedDestinationTests(TestCase):
 
 
 class InlineCallbacksTests(TestCase):
+    """Tests for C{inline_callbacks}."""
+
     # Get our custom assertion failure messages *and* the standard ones.
     longMessage = True
 
     def setUp(self):
         use_generator_context()
-
-        def cleanup():
-            _context.get_sub_context = lambda: None
-        self.addCleanup(cleanup)
+        self.addCleanup(_context_owner.reset)
 
     def _a_b_test(self, logger, g):
+        """A yield was done in between messages a and b inside C{inline_callbacks}."""
         with start_action(action_type=u"the-action"):
             self.assertIs(
                 None,
@@ -710,21 +712,21 @@ class InlineCallbacksTests(TestCase):
 
     @capture_logging(None)
     def test_yield_none(self, logger):
-        @inline_callbacks
         def g():
             Message.log(message_type=u"a")
             yield
             Message.log(message_type=u"b")
+        g = inline_callbacks(g, debug=True)
 
         self._a_b_test(logger, g)
 
     @capture_logging(None)
     def test_yield_fired_deferred(self, logger):
-        @inline_callbacks
         def g():
             Message.log(message_type=u"a")
             yield succeed(None)
             Message.log(message_type=u"b")
+        g = inline_callbacks(g, debug=True)
 
         self._a_b_test(logger, g)
 
@@ -732,11 +734,11 @@ class InlineCallbacksTests(TestCase):
     def test_yield_unfired_deferred(self, logger):
         waiting = Deferred()
 
-        @inline_callbacks
         def g():
             Message.log(message_type=u"a")
             yield waiting
             Message.log(message_type=u"b")
+        g = inline_callbacks(g, debug=True)
 
         with start_action(action_type=u"the-action"):
             d = g()
@@ -811,18 +813,18 @@ class InlineCallbacksTests(TestCase):
         result = object()
         another = object()
 
-        @inline_callbacks
         def g():
             d = h()
             # Run h through to the end but ignore its result.
             yield d
             # Give back _our_ result.
             returnValue(result)
+        g = inline_callbacks(g, debug=True)
 
-        @inline_callbacks
         def h():
             yield
             returnValue(another)
+        h = inline_callbacks(h, debug=True)
 
         with start_action(action_type=u"the-action"):
             d = g()
