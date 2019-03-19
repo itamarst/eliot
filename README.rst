@@ -27,7 +27,7 @@ Eliot supports Python 2.7, 3.4, 3.5, 3.6, 3.7 and PyPy.
 It is maintained by Itamar Turner-Trauring, and released under the Apache 2.0 License.
 
 * `Read the documentation <https://eliot.readthedocs.io>`_.
-* Download from `PyPI`_.
+* Download from `PyPI`_ or `conda-forge <https://anaconda.org/conda-forge/eliot>`_.
 * Need help or have any questions? `File an issue <https://github.com/itamarst/eliot/issues/new>`_ on GitHub.
 * Commercial support is available from `Python⇒Speed <https://pythonspeed.com/services/#eliot>`_.
 

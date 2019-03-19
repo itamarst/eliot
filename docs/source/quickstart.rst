@@ -13,6 +13,12 @@ To install Eliot and the other tools we'll use in this example, run the followin
 
    $ pip install eliot eliot-tree requests
 
+You can also install it using Conda:
+
+.. code-block:: shell-session
+
+   $ conda install -c conda-forge eliot eliot-tree requests
+
 This will install:
 
 1. Eliot itself.
