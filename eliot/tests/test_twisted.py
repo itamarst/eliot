@@ -690,7 +690,8 @@ class InlineCallbacksTests(TestCase):
     longMessage = True
 
     def setUp(self):
-        use_generator_context()
+        # The generator sub-contxt is enabled automatically, so reset back to
+        # normal:
         self.addCleanup(_context_owner.reset)
 
     def _a_b_test(self, logger, g):
