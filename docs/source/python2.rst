@@ -13,7 +13,7 @@ If you are using Eliot with Python 2, keep the following in mind:
 * Make sure you use an up-to-date ``setuptools`` and ``pip``; in theory this should result in only downloading versions of the package that support Python 2.
 * For extra safety, you can pin Eliot in ``setup.py`` or ``requirements.txt`` by setting: ``eliot < 1.8``.
 
-For example, if it turns out 1.18 is the last version that supports Python 2:
+For example, if it turns out 1.8 is the last version that supports Python 2:
 
 * 1.8 will only support Python 3.
 * Critical bug fixes for Python 2 will be released as 1.8.1, 1.8.2, etc..
