@@ -12,6 +12,7 @@ Features:
 
 * Generating messages is much faster.
 * ``eliot.ValidationError``, as raised by e.g. ``capture_logging``, is now part of the public API. Fixed issue #146.
+* Eliot now works with PyInstaller. Thanks to Jean-Paul Calderone for the bug report. Fixes issue #386.
 * ``eliot.twisted.DeferredContext.addCallbacks`` now supports omitting the errback, for compatibility with Twisted's ``Deferred``. Thanks to Jean-Paul Calderone for the fix. Fixed issue #366.
 * The testing infrastructure now has slightly more informative error messages. Thanks to Jean-Paul Calderone for the bug report. Fixes issue #373.
 * ``@validate_logging`` and ``@capture_logging`` now make it clearer what caused validation errors by printing the original traceback. Thanks to Jean-Paul Calderone for the bug report. Fixes issue #365.
