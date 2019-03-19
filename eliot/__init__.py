@@ -7,7 +7,7 @@ from warnings import warn
 from ._message import Message
 from ._action import (
     start_action, startTask, Action, preserve_context, current_action,
-    use_asyncio_context, log_call
+    log_call
 )
 from ._generators import (
     GeneratorSupportNotEnabled,
@@ -25,7 +25,7 @@ from ._validation import Field, fields, MessageType, ActionType, ValidationError
 from ._traceback import write_traceback, writeFailure
 from ._errors import register_exception_extractor
 from ._version import get_versions
-
+from ._asyncio import use_asyncio_context
 
 # Backwards compatibility:
 def add_destination(destination):
