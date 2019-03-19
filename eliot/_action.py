@@ -49,19 +49,23 @@ class _ExecutionContext(threading.local):
 
     The context is thread-specific, but can be made e.g. coroutine-specific by
     overriding C{get_sub_context}.
+
+    If we ever change this again we might want to make a ``threading.local``
+    subclass a sub-object?  Or come up with better API for thread-locals.
     """
 
     def __init__(self):
         """
         Every time an attribute is looked up from a new thread, this will be
-        called again for that thread.
+        called again for that thread, because this is a ``threading.local``
+        subclass.
         """
         self._main_stack = []
         self.get_sub_context = lambda: None
 
     def _get_stack(self):
         """
-        Get the stack for the current asyncio Task.
+        Get the stack for the current context.
         """
         stack = self.get_sub_context()
         if stack is None:
@@ -96,7 +100,11 @@ class _ExecutionContext(threading.local):
 
 
 class _ECOwner(object):
-    """Owner of the global execution context.
+    """Owner of the global execution context singleton.
+
+    It allows setting-once-only a replacement class for the default
+    L{_ExecutionContext}, so different sub-contexts (e.g. asyncio and
+    generators) don't stomp on each other.
 
     @ivar context: The current global L{_ExecutionContext}.  Don't set it
         directly, only get it!  You can use C{set} to set it.
@@ -136,18 +144,6 @@ def current_action():
     @return: The current C{Action} in context, or C{None} if none were set.
     """
     return _context_owner.context.current()
-
-
-def use_asyncio_context():
-    """
-    Use a logging context that is tied to the current asyncio coroutine.
-
-    Call this first thing, before doing any other logging.
-
-    Does not currently support event loops other than asyncio.
-    """
-    from ._asyncio import AsyncioExecutionContext
-    _context_owner.set(AsyncioExecutionContext)
 
 
 class TaskLevel(object):

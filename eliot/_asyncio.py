@@ -2,7 +2,10 @@
 Support for asyncio coroutines.
 """
 
-from asyncio import Task
+try:
+    from asyncio import Task
+except ImportError:
+    Task = None  # Python 2
 from weakref import WeakKeyDictionary
 
 from ._action import _ExecutionContext
@@ -41,3 +44,15 @@ class AsyncioExecutionContext(_ExecutionContext):
     def __init__(self):
         _ExecutionContext.__init__(self)
         self.get_sub_context = AsyncioSubContext().get_stack
+
+
+def use_asyncio_context():
+    """
+    Use a logging context that is tied to the current asyncio coroutine.
+
+    Call this first thing, before doing any other logging.
+
+    Does not currently support event loops other than asyncio.
+    """
+    from ._action import _context_owner
+    _context_owner.set(AsyncioExecutionContext)
