@@ -65,7 +65,8 @@ class _ExecutionContext(threading.local):
 
     def _get_stack(self):
         """
-        Get the stack for the current context.
+        Get the stack for the current thread, or the sub-stack if sub-stacks
+        are enabled.
         """
         stack = self.get_sub_context()
         if stack is None:
