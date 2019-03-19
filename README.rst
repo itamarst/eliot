@@ -5,8 +5,18 @@ Eliot: Logging that tells you *why* it happened
            :target: http://travis-ci.org/itamarst/eliot
            :alt: Build Status
 
-Most logging systems tell you *what* happened in your application, whereas ``eliot`` also tells you *why* it happened.
+Python's built-in ``logging`` and other similar systems output a stream of factoids: they're interesting, but you can't really tell what's going on.
 
+* Why is your application slow?
+* What caused this code path to be chosen?
+* Why did this error happen?
+
+Standard logging can't answer these questions.
+
+But with a better model you could understand what and why things happened in your application.
+You could pinpoint performance bottlenecks, you could understand what happened when, who called what.
+
+That is what Eliot does.
 ``eliot`` is a Python logging system that outputs causal chains of **actions**: actions can spawn other actions, and eventually they either **succeed or fail**.
 The resulting logs tell you the story of what your software did: what happened, and what caused it.
 
@@ -19,6 +29,7 @@ It is maintained by Itamar Turner-Trauring, and released under the Apache 2.0 Li
 * `Read the documentation <https://eliot.readthedocs.io>`_.
 * Download from `PyPI`_.
 * Need help or have any questions? `File an issue <https://github.com/itamarst/eliot/issues/new>`_ on GitHub.
+* Commercial support is available from [Python⇒Speed](https://pythonspeed.com/services/#eliot).
 
 Testimonials
 ------------
