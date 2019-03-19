@@ -7,6 +7,10 @@ from tempfile import mkdtemp, NamedTemporaryFile
 from subprocess import check_call, CalledProcessError
 import os
 
+from six import PY2
+if PY2:
+    FileNotFoundError = OSError
+
 
 class PyInstallerTests(TestCase):
     """Make sure PyInstaller doesn't break Eliot."""
