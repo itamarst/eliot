@@ -29,7 +29,7 @@ It is maintained by Itamar Turner-Trauring, and released under the Apache 2.0 Li
 * `Read the documentation <https://eliot.readthedocs.io>`_.
 * Download from `PyPI`_.
 * Need help or have any questions? `File an issue <https://github.com/itamarst/eliot/issues/new>`_ on GitHub.
-* Commercial support is available from [Python⇒Speed](https://pythonspeed.com/services/#eliot).
+* Commercial support is available from `Python⇒Speed<https://pythonspeed.com/services/#eliot>`_.
 
 Testimonials
 ------------

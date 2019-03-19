@@ -21,7 +21,7 @@ Eliot is only used to generate your logs; you will still need tools like Logstas
 
 * **Start here:** :doc:`Quickstart documentation <quickstart>`
 * Need help or have any questions? `File an issue <https://github.com/itamarst/eliot/issues/new>`_ on GitHub.
-* Commercial support is available from [Python⇒Speed](https://pythonspeed.com/services/#eliot).
+* Commercial support is available from `Python⇒Speed<https://pythonspeed.com/services/#eliot`_.
 * Read on for the full documentation.
 
 Media
