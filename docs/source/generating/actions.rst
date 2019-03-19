@@ -132,6 +132,31 @@ You can add fields to both the start message and the success message of an actio
 If you want to include some extra information in case of failures beyond the exception you can always log a regular message with that information.
 Since the message will be recorded inside the context of the action its information will be clearly tied to the result of the action by the person (or code!) reading the logs later on.
 
+Using Generators
+----------------
+
+Generators (functions with ``yield``) and context managers (``with X:``) don't mix well in Python.
+So if you're going to use ``with start_action()`` in a generator, just make sure it doesn't wrap a ``yield`` and you'll be fine.
+
+Here's what you SHOULD NOT DO:
+
+.. code-block:: python
+
+   def generator():
+       with start_action(action_type="x"):
+           # BAD! DO NOT yield inside a start_action() block:
+           yield make_result()
+
+Here's what can do instead:
+
+.. code-block:: python
+
+   def generator():
+       with start_action(action_type="x"):
+           result = make_result()
+       # This is GOOD, no yield inside the start_action() block:
+       yield result
+
 
 Non-Finishing Contexts
 ----------------------
