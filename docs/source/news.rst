@@ -20,6 +20,7 @@ Features:
 
 Bug fixes:
 
+* Fixed bug in the ``asyncio`` coroutine support where only the thread where ``use_asyncio_context()`` was called supported coroutine-specific contexts. Fixes issue #388.
 * ``ILogger.write`` is now explicitly thread-safe. The ``MemoryLogger`` (as used
   by tests) implementation of this method which was previously not thread-safe
   is now thread-safe. Thanks to Jean-Paul Calderone for the patch. Fixes issue
