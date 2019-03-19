@@ -12,8 +12,8 @@ from unittest import TestCase
 from ..testing import capture_logging
 from ..parse import Parser
 from .. import start_action
-from .._action import _context_owner, use_asyncio_context
-from .._asyncio import AsyncioExecutionContext
+from .._action import _context_owner
+from .._asyncio import AsyncioExecutionContext, use_asyncio_context
 
 
 async def standalone_coro():
