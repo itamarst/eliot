@@ -24,8 +24,9 @@ Eliot works well within a single process, but can also be used across multiple p
 Eliot is only used to generate your logs; you will still need tools like Logstash and ElasticSearch to aggregate and store logs if you are using multiple processes.
 
 Eliot supports Python 3.4, 3.5, 3.6, 3.7 and PyPy.
-2.7 is currently supported but will be dropped from future releases; see `here <https://eliot.readthedocs.io/en/stable/python2.html>`_ for details.
 It is maintained by Itamar Turner-Trauring, and released under the Apache 2.0 License.
+
+Python 2.7 is currently supported but will be dropped from future releases; see `here <https://eliot.readthedocs.io/en/stable/python2.html>`_ for details.
 
 * `Read the documentation <https://eliot.readthedocs.io>`_.
 * Download from `PyPI`_ or `conda-forge <https://anaconda.org/conda-forge/eliot>`_.
