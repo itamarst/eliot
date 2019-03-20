@@ -25,7 +25,7 @@ class PyInstallerTests(TestCase):
         """The Eliot package can be imported inside a PyInstaller packaged binary."""
         output_dir = mkdtemp()
         with NamedTemporaryFile(mode="w") as f:
-            f.write("import eliot\n")
+            f.write("import eliot; import eliot.prettyprint\n")
             f.flush()
             check_call(
                 ["pyinstaller", "--distpath", output_dir,
