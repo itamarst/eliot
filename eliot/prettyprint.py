@@ -33,8 +33,13 @@ if PY2:
         else:
             return original_repr(o)
 
-    pprint = load_module(b"unicode_pprint", pprint)
-    pprint.repr = _nicer_unicode_repr
+    try:
+        pprint = load_module(b"unicode_pprint", pprint)
+        pprint.repr = _nicer_unicode_repr
+    except NotImplementedError:
+        # Oh well won't have nicer output.
+        import pprint
+
 
 # Fields that all Eliot messages are expected to have:
 REQUIRED_FIELDS = {TASK_LEVEL_FIELD, TASK_UUID_FIELD, TIMESTAMP_FIELD}

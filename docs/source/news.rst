@@ -11,6 +11,7 @@ Documentation:
 Features:
 
 * Generating messages is much faster.
+* Eliot now works with PyInstaller. Thanks to Jean-Paul Calderone for the bug report. Fixes issue #386.
 * The testing infrastructure now has slightly more informative error messages. Thanks to Jean-Paul Calderone for the bug report. Fixes issue #373.
 * Added lower-level testing infrastructure—``eliot.testing.swap_logger`` and ``eliot.testing.check_for_errors``—which is useful for cases when the ``@capture_logging`` decorator is insufficient. For example, test methods that are async, or return Twisted ``Deferred``. See the :doc:`testing documentation<generating/testing>` for details. Thanks to Jean-Paul Calderone for the feature request. Fixes #364.
 * ``eliot.ValidationError``, as raised by e.g. ``capture_logging``, is now part of the public API. Fixed issue #146.

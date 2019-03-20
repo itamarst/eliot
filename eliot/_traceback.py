@@ -54,7 +54,11 @@ def _get_traceback_no_io():
     """
     Return a version of L{traceback} that doesn't do I/O.
     """
-    module = load_module(str("_traceback_no_io"), traceback)
+    try:
+        module = load_module(str("_traceback_no_io"), traceback)
+    except NotImplementedError:
+        # Can't fix the I/O problem, oh well:
+        return traceback
 
     class FakeLineCache(object):
         def checkcache(self, *args, **kwargs):

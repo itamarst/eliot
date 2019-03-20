@@ -4,9 +4,10 @@ Utilities that don't go anywhere else.
 
 from __future__ import unicode_literals
 
+import sys
 from types import ModuleType
 
-from six import exec_, text_type as unicode
+from six import exec_, text_type as unicode, PY3
 
 
 def safeunicode(o):
@@ -52,9 +53,17 @@ def load_module(name, original_module):
     @return: A new, distinct module.
     """
     module = ModuleType(name)
-    path = original_module.__file__
-    if path.endswith(".pyc") or path.endswith(".pyo"):
-        path = path[:-1]
-    with open(path) as f:
-        exec_(f.read(), module.__dict__, module.__dict__)
+    if PY3:
+        import importlib.util
+        spec = importlib.util.find_spec(original_module.__name__)
+        source = spec.loader.get_code(original_module.__name__)
+    else:
+        if getattr(sys, "frozen", False):
+            raise NotImplementedError("Can't load modules on Python 2 with PyInstaller")
+        path = original_module.__file__
+        if path.endswith(".pyc") or path.endswith(".pyo"):
+            path = path[:-1]
+        with open(path) as f:
+            source = f.read()
+    exec_(source, module.__dict__, module.__dict__)
     return module
