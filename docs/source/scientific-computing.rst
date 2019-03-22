@@ -29,7 +29,7 @@ In order to do this you will need to:
 In the following example, you can see how this works for a Dask run using ``distributed``, the recommended Dask scheduler.
 We'll be using multiple worker processes, but only use a single machine:
 
-.. literalinclude:: ../../../examples/dask_eliot.py
+.. literalinclude:: ../../examples/dask_eliot.py
 
 In the output you can see how the various Dask tasks depend on each other, and the full trace of the computation:
 

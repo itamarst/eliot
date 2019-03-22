@@ -16,8 +16,14 @@ That is what Eliot does.
 ``eliot`` is a Python logging system that outputs causal chains of **actions**: actions can spawn other actions, and eventually they either **succeed or fail**.
 The resulting logs tell you the story of what your software did: what happened, and what caused it.
 
-Eliot works well within a single process, but can also be used across multiple processes to trace causality across a distributed system.
-Eliot is only used to generate your logs; you will still need tools like Logstash and ElasticSearch to aggregate and store logs if you are using multiple processes.
+Eliot supports a range of use cases and 3rd party libraries:
+
+* Logging within a single process.
+* Causal tracing across a distributed system.
+* Scientific computing, with :doc:`built-in support for NumPy and Dask <scientific-computing>`.
+* :doc:`Asyncio coroutines <generating/asyncio>` and the :doc:`Twisted networking framework <generating/twisted>`.
+
+Eliot is only used to generate your logs; you might still need tools like Logstash and ElasticSearch to aggregate and store logs if you are using multiple processes across multiple machines.
 
 * **Start here:** :doc:`Quickstart documentation <quickstart>`
 * Need help or have any questions? `File an issue <https://github.com/itamarst/eliot/issues/new>`_ on GitHub.
@@ -53,7 +59,7 @@ Documentation
    generating/index
    outputting/index
    reading/index
-   usecases/index
+   scientific-computing
    python2
    development
 
