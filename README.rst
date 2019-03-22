@@ -20,15 +20,14 @@ That is what Eliot does.
 ``eliot`` is a Python logging system that outputs causal chains of **actions**: actions can spawn other actions, and eventually they either **succeed or fail**.
 The resulting logs tell you the story of what your software did: what happened, and what caused it.
 
-Eliot supports a range of use cases and tools:
+Eliot supports a range of use cases and 3rd party libraries:
 
 * Logging within a single process.
 * Causal tracing across a distributed system.
-* Scientific computing, with `support for NumPy and Dask <https://eliot.readthedocs.io/en/stable/usecases/scientific-computing.html>`_.
-* `Asyncio coroutines <https://eliot.readthedocs.io/en/stable/generating/asyncio.html>`_.
-* The `Twisted networking framework <https://eliot.readthedocs.io/en/stable/generating/twisted.html>`_.
+* Scientific computing, with `built-in support for NumPy and Dask <https://eliot.readthedocs.io/en/stable/usecases/scientific-computing.html>`_.
+* `Asyncio coroutines <https://eliot.readthedocs.io/en/stable/generating/asyncio.html>`_ and the `Twisted networking framework <https://eliot.readthedocs.io/en/stable/generating/twisted.html>`_.
 
-Eliot is only used to generate your logs; you will still need tools like Logstash and ElasticSearch to aggregate and store logs if you are using multiple processes.
+Eliot is only used to generate your logs; you will might need tools like Logstash and ElasticSearch to aggregate and store logs if you are using multiple processes across multiple machines.
 
 Eliot supports Python 3.4, 3.5, 3.6, 3.7 and PyPy.
 It is maintained by Itamar Turner-Trauring, and released under the Apache 2.0 License.
