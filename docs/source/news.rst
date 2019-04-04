@@ -1,6 +1,13 @@
 What's New
 ==========
 
+1.8.0
+^^^^^
+
+Changes:
+
+* Python 3.4 is no longer supported, as it is now end-of-lifed.
+
 1.7.0
 ^^^^^
 

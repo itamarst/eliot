@@ -29,7 +29,7 @@ Eliot supports a range of use cases and 3rd party libraries:
 
 Eliot is only used to generate your logs; you will might need tools like Logstash and ElasticSearch to aggregate and store logs if you are using multiple processes across multiple machines.
 
-Eliot supports Python 3.4, 3.5, 3.6, 3.7 and PyPy.
+Eliot supports Python 3.5, 3.6, 3.7 and PyPy.
 It is maintained by Itamar Turner-Trauring, and released under the Apache 2.0 License.
 
 Python 2.7 is currently supported but will be dropped from future releases; see `here <https://eliot.readthedocs.io/en/stable/python2.html>`_ for details.
