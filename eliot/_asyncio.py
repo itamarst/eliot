@@ -54,5 +54,4 @@ def use_asyncio_context():
 
     Does not currently support event loops other than asyncio.
     """
-    from ._action import _context_owner
-    _context_owner.set(AsyncioExecutionContext)
+    # XXX deprecationwarning

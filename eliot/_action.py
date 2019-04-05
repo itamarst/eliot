@@ -14,6 +14,7 @@ from contextlib import contextmanager
 from warnings import warn
 from functools import partial
 from inspect import getcallargs
+from contextvars import ContextVar
 
 from pyrsistent import (
     field,
@@ -43,7 +44,8 @@ FAILED_STATUS = 'failed'
 VALID_STATUSES = (STARTED_STATUS, SUCCEEDED_STATUS, FAILED_STATUS)
 
 
-class _ExecutionContext(threading.local):
+
+class _ExecutionContext(object):
     """
     Call stack-based context, storing the current L{Action}.
 
@@ -60,7 +62,11 @@ class _ExecutionContext(threading.local):
         called again for that thread, because this is a ``threading.local``
         subclass.
         """
-        self._main_stack = []
+        # The documentation for ContextVar suggests not creating them in
+        # closures due to lack of garbage collection. However, in typical usage
+        # this is created by object on module-level, so it seems all the same
+        # to me. And in tests we don't care about minor memory leaks.
+        self._main_context = ContextVar("eliot")
         self.get_sub_context = lambda: None
 
     def _get_stack(self):
@@ -70,7 +76,12 @@ class _ExecutionContext(threading.local):
         """
         stack = self.get_sub_context()
         if stack is None:
-            return self._main_stack
+            try:
+                return self._main_context.get()
+            except LookupError:
+                stack = []
+                self._main_context.set(stack)
+                return stack
         else:
             return stack
 

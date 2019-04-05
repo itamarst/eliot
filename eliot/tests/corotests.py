@@ -13,8 +13,8 @@ from ..testing import capture_logging
 from ..parse import Parser
 from .. import start_action
 from .._action import _context_owner
-from .._asyncio import AsyncioExecutionContext, use_asyncio_context
-
+from .._asyncio import use_asyncio_context
+from .._action import _ExecutionContext as AsyncioExecutionContext
 
 async def standalone_coro():
     """
@@ -53,19 +53,6 @@ class CoroutineTests(TestCase):
     def setUp(self):
         self.addCleanup(_context_owner.reset)
         use_asyncio_context()
-
-    @capture_logging(None)
-    def test_coroutine_vs_main_thread_context(self, logger):
-        """
-        A coroutine has a different Eliot logging context than the thread that
-        runs the event loop.
-        """
-        with start_action(action_type="eventloop"):
-            run_coroutines(standalone_coro)
-        trees = Parser.parse_stream(logger.messages)
-        self.assertEqual(
-            sorted([(t.root().action_type, t.root().children) for t in trees]),
-            [("eventloop", []), ("standalone", [])])
 
     @capture_logging(None)
     def test_multiple_coroutines_contexts(self, logger):
@@ -122,60 +109,6 @@ class ContextTests(TestCase):
         # Neither thread was affected by the other:
         self.assertEqual(valuesInThread, [second])
         self.assertIs(ctx.current(), first)
-
-    def test_coroutine_vs_main_thread_context(self):
-        """
-        A coroutine has a different Eliot context than the thread that runs the
-        event loop.
-        """
-        ctx = AsyncioExecutionContext()
-        current_context = []
-
-        async def coro():
-            current_context.append(("coro", ctx.current()))
-            ctx.push("A")
-            current_context.append(("coro", ctx.current()))
-
-        ctx.push("B")
-        current_context.append(("main", ctx.current()))
-        run_coroutines(coro)
-        current_context.append(("main", ctx.current()))
-        self.assertEqual(
-            current_context,
-            [("main", "B"), ("coro", None), ("coro", "A"), ("main", "B")])
-
-    def test_coroutine_vs_main_thread_context_different_thread(self):
-        """
-        A coroutine has a different Eliot context than the thread that runs the
-        event loop, when run in different thread than the one where the context
-        was created.
-        """
-        # Create context in one thread:
-        ctx = AsyncioExecutionContext()
-        current_context = []
-
-        # Run asyncio event loop and coroutines in a different thread:
-        def run():
-            event_loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(event_loop)
-
-            async def coro():
-                current_context.append(("coro", ctx.current()))
-                ctx.push("A")
-                current_context.append(("coro", ctx.current()))
-
-            ctx.push("B")
-            current_context.append(("main", ctx.current()))
-            run_coroutines(coro)
-            current_context.append(("main", ctx.current()))
-
-        thread = Thread(target=run)
-        thread.start()
-        thread.join()
-
-        self.assertEqual(
-            current_context,
-            [("main", "B"), ("coro", None), ("coro", "A"), ("main", "B")])
 
     def test_multiple_coroutines_contexts(self):
         """
