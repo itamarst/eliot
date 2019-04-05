@@ -2,6 +2,12 @@
 Eliot: Logging for Complex & Distributed Systems.
 """
 from warnings import warn
+from sys import version_info
+
+# Enable asyncio contextvars support in Python 3.5/3.6:
+if version_info < (3, 7):
+    import aiocontextvars
+    del aiocontextvars
 
 # Expose the public API:
 from ._message import Message
