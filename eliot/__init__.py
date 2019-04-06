@@ -26,7 +26,6 @@ from ._validation import Field, fields, MessageType, ActionType, ValidationError
 from ._traceback import write_traceback, writeFailure
 from ._errors import register_exception_extractor
 from ._version import get_versions
-from ._asyncio import use_asyncio_context
 
 # Backwards compatibility:
 def add_destination(destination):
@@ -38,6 +37,10 @@ def add_destination(destination):
     )
     Logger._destinations.add(destination)
 
+# Backwards compatibility:
+def use_asyncio_context():
+    warn("This function is no longer as needed as of Eliot 1.8.0.",
+         DeprecationWarning, stacklevel=2)
 
 # Backwards compatibilty:
 addDestination = add_destination

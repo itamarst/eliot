@@ -14,7 +14,7 @@ from ..parse import Parser
 from .. import start_action
 from .._action import _context_owner
 from .._asyncio import use_asyncio_context
-from .._action import _ExecutionContext as AsyncioExecutionContext
+from .._action import _ExecutionContext
 
 async def standalone_coro():
     """
@@ -92,7 +92,7 @@ class ContextTests(TestCase):
         Each thread gets its own execution context even when using asyncio
         contexts.
         """
-        ctx = AsyncioExecutionContext()
+        ctx = _ExecutionContext()
         first = object()
         ctx.push(first)
 
@@ -114,7 +114,7 @@ class ContextTests(TestCase):
         """
         Each top-level ("Task") coroutine has its own Eliot separate context.
         """
-        ctx = AsyncioExecutionContext()
+        ctx = _ExecutionContext()
         current_context = []
 
         async def coro2():
@@ -141,7 +141,7 @@ class ContextTests(TestCase):
         A sub-coroutine (scheduled with await) inherits the parent coroutine's
         context.
         """
-        ctx = AsyncioExecutionContext()
+        ctx = _ExecutionContext()
         current_context = []
 
         async def coro2():

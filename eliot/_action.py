@@ -49,19 +49,11 @@ class _ExecutionContext(object):
     """
     Call stack-based context, storing the current L{Action}.
 
-    The context is thread-specific, but can be made e.g. coroutine-specific by
-    overriding C{get_sub_context}.
-
-    If we ever change this again we might want to make a ``threading.local``
-    subclass a sub-object?  Or come up with better API for thread-locals.
+    The context is thread-specific and coroutine-specific by utilizing
+    C{ContextVars}.
     """
 
     def __init__(self):
-        """
-        Every time an attribute is looked up from a new thread, this will be
-        called again for that thread, because this is a ``threading.local``
-        subclass.
-        """
         # The documentation for ContextVar suggests not creating them in
         # closures due to lack of garbage collection. However, in typical usage
         # this is created by object on module-level, so it seems all the same
