@@ -15,7 +15,10 @@ Deprecation:
 
 Changes:
 
-* Python 3.4 is no longer supported, as it is now end-of-lifed.
+* Python 2.7 is now in legacy support mode; the last major release supporting it is 1.7.0.
+  See :ref:`python2` for details.
+
+* Python 3.4 is no longer supported.
 
 1.7.0
 ^^^^^
