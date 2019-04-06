@@ -7,6 +7,7 @@ from sys import version_info
 # Enable asyncio contextvars support in Python 3.5/3.6:
 if version_info < (3, 7):
     import aiocontextvars
+    dir(aiocontextvars)  # pacify pyflakes
     del aiocontextvars
 
 # Expose the public API:
