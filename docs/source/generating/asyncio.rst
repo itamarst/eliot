@@ -7,3 +7,39 @@ As of Eliot 1.8, ``asyncio`` and ``trio`` coroutines have appropriate context pr
 
 On Python 3.7 or later, no particular care is needed.
 For Python 3.5 and 3.6 you will need to import either ``eliot`` (or the backport package ``aiocontextvars``) before you create your first event loop.
+
+
+Asyncio Example
+---------------
+
+Here's an example using ``aiohttp``:
+
+.. literalinclude:: ../../examples/asyncio_linkcheck.py
+
+And the resulting logs:
+
+.. code-block:: shell-session
+
+  $ eliot-tree linkcheck.log
+  0a9a5e1b-330c-4251-b7db-fd3161403443
+  └── check_links/1 ⇒ started 2019-04-06 19:49:16 ⧖ 0.535s
+      ├── urls: 
+      │   ├── 0: http://eliot.readthedocs.io
+      │   └── 1: http://nosuchurl
+      ├── download/2/1 ⇒ started 2019-04-06 19:49:16 ⧖ 0.527s
+      │   ├── url: http://eliot.readthedocs.io
+      │   └── download/2/2 ⇒ succeeded 2019-04-06 19:49:16
+      ├── download/3/1 ⇒ started 2019-04-06 19:49:16 ⧖ 0.007s
+      │   ├── url: http://nosuchurl
+      │   └── download/3/2 ⇒ failed 2019-04-06 19:49:16
+      │       ├── errno: -2
+      │       ├── exception: aiohttp.client_exceptions.ClientConnectorError
+      │       └── reason: Cannot connect to host nosuchurl:80 ssl:None [Name or service not known]                                                                                           
+      └── check_links/4 ⇒ failed 2019-04-06 19:49:16
+          ├── exception: builtins.ValueError
+          └── reason: Cannot connect to host nosuchurl:80 ssl:None [Name or service not known]
+
+
+Trio example
+------------
+
