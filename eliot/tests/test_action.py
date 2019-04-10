@@ -5,6 +5,7 @@ Tests for L{eliot._action}.
 from __future__ import unicode_literals
 
 import pickle
+import time
 from unittest import TestCase, skipIf
 from threading import Thread
 from warnings import catch_warnings, simplefilter
@@ -186,6 +187,22 @@ class ActionTests(TestCase):
         action = Action(None, "", TaskLevel(level=[]), "")
         action.run(lambda: result.append(current_action()))
         self.assertEqual(result, [action])
+
+    def test_per_thread_context(self):
+        """Different threads have different contexts."""
+        in_thread = []
+
+        def run_in_thread():
+            with start_action(action_type="thread"):
+                time.sleep(0.5)
+                in_thread.append(current_action())
+
+        thread = Thread(target=run_in_thread)
+        thread.start()
+        time.sleep(0.2)
+        self.assertEqual(current_action(), None)
+        thread.join()
+        self.assertIsInstance(in_thread[0], Action)
 
     def test_runContextUnsetOnReturn(self):
         """
