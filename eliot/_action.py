@@ -404,7 +404,7 @@ class Action(object):
         """
         Push this action onto the execution context.
         """
-        self._parent_token =  _ACTION_CONTEXT.set(self)
+        self._parent_token = _ACTION_CONTEXT.set(self)
         return self
 
     def __exit__(self, type, exception, traceback):
@@ -412,6 +412,7 @@ class Action(object):
         Pop this action off the execution context, log finish message.
         """
         _ACTION_CONTEXT.reset(self._parent_token)
+        self._parent_token = None
         self.finish(exception)
 
 

@@ -27,7 +27,7 @@ else:
 from .test_generators import assert_expected_action_tree
 
 from .._action import (
-    start_action, current_action, Action, TaskLevel, _context_owner
+    start_action, current_action, Action, TaskLevel
 )
 from .._output import MemoryLogger, Logger
 from .._message import Message

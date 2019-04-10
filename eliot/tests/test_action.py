@@ -193,7 +193,8 @@ class ActionTests(TestCase):
         in_thread = []
 
         def run_in_thread():
-            with start_action(action_type="thread"):
+            action = Action(None, "", TaskLevel(level=[]), "")
+            with action.context():
                 time.sleep(0.5)
                 in_thread.append(current_action())
 

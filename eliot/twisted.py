@@ -13,7 +13,7 @@ from twisted.internet.defer import inlineCallbacks
 
 from ._action import current_action
 from . import addDestination
-from ._generators import eliot_friendly_generator_function, use_generator_context
+from ._generators import eliot_friendly_generator_function
 
 __all__ = [
     "AlreadyFinished",
@@ -256,7 +256,6 @@ def inline_callbacks(original, debug=False):
     want Eliot action contexts to Do The Right Thing inside the decorated
     function.
     """
-    use_generator_context()
     f = eliot_friendly_generator_function(original)
     if debug:
         f.debug = True
