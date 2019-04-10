@@ -14,7 +14,7 @@ Asyncio Example
 
 Here's an example using ``aiohttp``:
 
-.. literalinclude:: ../../examples/asyncio_linkcheck.py
+.. literalinclude:: ../../../examples/asyncio_linkcheck.py
 
 And the resulting logs:
 
@@ -43,3 +43,21 @@ And the resulting logs:
 Trio example
 ------------
 
+Here's an example of using Trio—we put the action outside the nursery so that it finishes only when the nursery shuts down.
+
+.. literalinclude:: ../../../examples/trio_say.py
+
+And the resulting logs:
+
+.. code-block:: shell-session
+
+  $ eliot-tree trio.log
+  93a4de27-8c95-498b-a188-f0e91482ad10
+  └── main/1 ⇒ started 2019-04-10 21:07:20 ⧖ 2.003s                                            
+      ├── say/2/1 ⇒ started 2019-04-10 21:07:20 ⧖ 2.002s                                       
+      │   ├── message: world
+      │   └── say/2/2 ⇒ succeeded 2019-04-10 21:07:22                                          
+      ├── say/3/1 ⇒ started 2019-04-10 21:07:20 ⧖ 1.001s                                       
+      │   ├── message: hello
+      │   └── say/3/2 ⇒ succeeded 2019-04-10 21:07:21                                          
+      └── main/4 ⇒ succeeded 2019-04-10 21:07:22
