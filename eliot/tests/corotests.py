@@ -13,7 +13,6 @@ from ..testing import capture_logging
 from ..parse import Parser
 from .. import start_action
 from .._action import _context_owner
-from .._asyncio import use_asyncio_context
 from .._action import _ExecutionContext
 
 async def standalone_coro():
@@ -50,10 +49,6 @@ class CoroutineTests(TestCase):
     """
     Tests for coroutines.
     """
-    def setUp(self):
-        self.addCleanup(_context_owner.reset)
-        use_asyncio_context()
-
     @capture_logging(None)
     def test_multiple_coroutines_contexts(self, logger):
         """
@@ -82,10 +77,33 @@ class CoroutineTests(TestCase):
             (root.action_type, child.action_type, child.children),
             ("calling", "standalone", []))
 
+    @capture_logging(None)
+    def test_interleaved_coroutines(self, logger):
+        """
+        start_action() started in one coroutine doesn't impact another in a
+        different coroutine.
+        """
+        async def coro_sleep(delay, action_type):
+            with start_action(action_type=action_type):
+                await asyncio.sleep(delay)
+
+        async def main():
+            with start_action(action_type="main"):
+                f1 = asyncio.ensure_future(coro_sleep(1, "a"))
+                f2 = asyncio.ensure_future(coro_sleep(0.5, "b"))
+                await f1
+                await f2
+
+        run_coroutines(main)
+        [tree] = list(Parser.parse_stream(logger.messages))
+        root = tree.root()
+        self.assertEqual(root.action_type, "main")
+        self.assertEqual(sorted([c.action_type for c in root.children]), ["a", "b"])
+
 
 class ContextTests(TestCase):
     """
-    Tests for coroutine support in ``eliot._action.ExecutionContext``.
+    Tests for coroutine support in ``eliot._action._ExecutionContext``.
     """
     def test_threadSafety(self):
         """
