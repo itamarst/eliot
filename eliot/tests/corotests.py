@@ -12,8 +12,7 @@ from unittest import TestCase
 from ..testing import capture_logging
 from ..parse import Parser
 from .. import start_action
-from .._action import _context_owner
-from .._action import _ExecutionContext
+
 
 async def standalone_coro():
     """

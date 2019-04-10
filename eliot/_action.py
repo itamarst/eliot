@@ -43,111 +43,14 @@ FAILED_STATUS = 'failed'
 
 VALID_STATUSES = (STARTED_STATUS, SUCCEEDED_STATUS, FAILED_STATUS)
 
-
-
-class _ExecutionContext(object):
-    """
-    Call stack-based context, storing the current L{Action}.
-
-    The context is thread-specific and coroutine-specific by utilizing
-    C{ContextVars}.
-    """
-
-    def __init__(self):
-        # The documentation for ContextVar suggests not creating them in
-        # closures due to lack of garbage collection. However, in typical usage
-        # this is created by object on module-level, so it seems all the same
-        # to me. And in tests we don't care about minor memory leaks.
-        self._main_context = ContextVar("eliot")
-        self.get_sub_context = lambda: None
-
-    def _get_stack(self):
-        """
-        Get the stack for the current thread, or the sub-stack if sub-stacks
-        are enabled.
-        """
-        stack = self.get_sub_context()
-        if stack is None:
-            try:
-                return self._main_context.get()
-            except LookupError:
-                stack = []
-                self._main_context.set(stack)
-                return stack
-        else:
-            return stack
-
-    def push(self, action):
-        """
-        Push the given L{Action} to the front of the stack.
-
-        @param action: L{Action} that will be used for log messages and as
-            parent of newly created L{Action} instances.
-        """
-        self._get_stack().append(action)
-
-    def pop(self):
-        """
-        Pop the front L{Action} on the stack.
-        """
-        self._get_stack().pop(-1)
-
-    def current(self):
-        """
-        @return: The current front L{Action}, or C{None} if there is no
-            L{Action} set.
-        """
-        stack = self._get_stack()
-        if not stack:
-            return None
-        return stack[-1]
-
-
-class _ECOwner(object):
-    """Owner of the global execution context singleton.
-
-    It allows setting-once-only a replacement class for the default
-    L{_ExecutionContext}, so different sub-contexts (e.g. asyncio and
-    generators) don't stomp on each other.
-
-    @ivar context: The current global L{_ExecutionContext}.  Don't set it
-        directly, only get it!  You can use C{set} to set it.
-    """
-
-    def __init__(self):
-        self.reset()
-
-    def reset(self):
-        """Reset to default context, to be used by tests only."""
-        self.context = _ExecutionContext()
-        self._set = False
-
-    def set(self, context_class):
-        """Set a new context of the given class.
-
-        If the same class as current one, no changes are made.
-
-        @raises C{RuntimeError}: If the context has already been set to a
-            different class.
-        """
-        if self.context.__class__ == context_class:
-            return
-        if self._set:
-            raise RuntimeError(
-                "Context class already set to " + str(self.context.__class__)
-            )
-        self.context = context_class()
-        self._set = True
-
-
-_context_owner = _ECOwner()
+_ACTION_CONTEXT = ContextVar("eliot.action")
 
 
 def current_action():
     """
     @return: The current C{Action} in context, or C{None} if none were set.
     """
-    return _context_owner.context.current()
+    return _ACTION_CONTEXT.get(None)
 
 
 class TaskLevel(object):
@@ -465,11 +368,11 @@ class Action(object):
         """
         Run the given function with this L{Action} as its execution context.
         """
-        _context_owner.context.push(self)
+        parent = _ACTION_CONTEXT.set(self)
         try:
             return f(*args, **kwargs)
         finally:
-            _context_owner.context.pop()
+            _ACTION_CONTEXT.reset(parent)
 
     def addSuccessFields(self, **fields):
         """
@@ -490,25 +393,25 @@ class Action(object):
 
         The action does NOT finish when the context is exited.
         """
-        _context_owner.context.push(self)
+        parent = _ACTION_CONTEXT.set(self)
         try:
             yield self
         finally:
-            _context_owner.context.pop()
+            _ACTION_CONTEXT.reset(parent)
 
     # Python context manager implementation:
     def __enter__(self):
         """
         Push this action onto the execution context.
         """
-        _context_owner.context.push(self)
+        self._parent_token =  _ACTION_CONTEXT.set(self)
         return self
 
     def __exit__(self, type, exception, traceback):
         """
         Pop this action off the execution context, log finish message.
         """
-        _context_owner.context.pop()
+        _ACTION_CONTEXT.reset(self._parent_token)
         self.finish(exception)
 
 
