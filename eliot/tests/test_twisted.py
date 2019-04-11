@@ -686,11 +686,6 @@ class InlineCallbacksTests(TestCase):
     # Get our custom assertion failure messages *and* the standard ones.
     longMessage = True
 
-    def setUp(self):
-        # The generator sub-contxt is enabled automatically, so reset back to
-        # normal:
-        self.addCleanup(_context_owner.reset)
-
     def _a_b_test(self, logger, g):
         """A yield was done in between messages a and b inside C{inline_callbacks}."""
         with start_action(action_type=u"the-action"):

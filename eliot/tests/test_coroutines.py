@@ -6,7 +6,6 @@ in earlier versions of Python this code is a syntax error.
 """
 
 import asyncio
-from threading import Thread
 from unittest import TestCase
 
 from ..testing import capture_logging
