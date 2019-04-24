@@ -194,19 +194,19 @@ def main():
 ```
 $ python slow.py
 $ eliot-tree out.log | grep -A1 double.*started
-    ├── __main__.double/2/1 ⇒ started ⧖ 0.0s
+    ├── double ⇒ started ⧖ 0.0s
     │   ├── a: 13
 --
-    ├── __main__.double/3/1 ⇒ started ⧖ 10.0s
+    ├── double ⇒ started ⧖ 10.0s
     │   ├── a: 0
 --
-    ├── __main__.double/4/1 ⇒ started ⧖ 0.0s
+    ├── double ⇒ started ⧖ 0.0s
     │   ├── a: 4
 ```
 
 ---
 
-class: center
+class: middle
 
 # Problem #3
 # Can you trust your code?
@@ -239,24 +239,24 @@ class: center
 
 ---
 
-# Jupyter as tool for explanation
+# Explanations with Jupyter
 
 * Pros: Wonderful at interleaving execution and visual and prose explanations.
 * Cons: Not great from software engineering perspective (tests, modularity, etc.).
 
 ---
 
-# Eliot as tool for explanation
+# Explanations with Eliot
 
-* Shows calculation's intermediate results.
+* Logs show causal trace of calculation, with intermediate results.
 * Pros: Integrates with standard software execution structure.
 * Cons: No visualization capability, no ability to add prose.
 
 ---
 
-# A vision for the future: Eliot + Jupyter?
+# The future: Eliot + Jupyter?
 
-* What if you could take Eliot's output and load it into something like Jupyter?
+* In theory we could take Eliot's output and load it into Jupyter.
 * The best of both worlds: software engineering best practices, with Jupyter's ability to easily visualize and explain.
 * If you're interested I'd love to talk to you.
 
