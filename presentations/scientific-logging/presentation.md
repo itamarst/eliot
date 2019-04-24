@@ -19,7 +19,7 @@ class: middle
 
 * **Logic:** Complex calculations
 * **Structure:** Long-running batch processes
-* **Goal:** a claim about reality
+* **Goal:** A claim about reality
 
 ???
 
@@ -29,7 +29,22 @@ learned what makes it different than other forms of software
 
 ---
 
-# Problem #1: Calculations gone wrong
+# Three problems in scientific computing
+
+* **Logic:** Why is your calculation wrong?
+* **Structure:** Why is your code slow?
+* **Goal:** Can you trust the result?
+
+---
+
+class: middle
+
+# Problem #1:
+# Why is your calculation wrong?
+
+---
+
+# Scientific computing's slow feedback loop
 
 ## Your batch process is finally done...
 
@@ -48,15 +63,7 @@ learned what makes it different than other forms of software
 
 ## Can't use debugger with a 12 hour process
 
-## You need—logging!
-
----
-
-# Log intermediate steps of calculations
-
-* Parameters
-* Inputs
-* Outputs
+## You need logging!
 
 ---
 
@@ -65,6 +72,13 @@ learned what makes it different than other forms of software
 * Structured, causal logging
 * Built-in support for scientific computing (NumPy, Dask)
 * https://eliot.readthedocs.io
+
+---
+
+# Logging can help you debug your code
+
+* Which functions called which other functions
+* What were the functions' inputs and outputs
 
 ---
 
@@ -78,9 +92,9 @@ def multiply(a, b):
     # ... implementation ...
 
 def multiplysum(a, b, c):
-    return -multiply(add(a, b), c)
+    return multiply(add(a, b), c)
 
-print(multiplysum(1, 2, 4)) # -(1 + 2)*4⇒-12
+print(multiplysum(1, 2, 4)) # (1 + 2)*4⇒12
 ```
 
 ---
@@ -138,9 +152,10 @@ $ eliot-tree out.log
 
 ---
 
-# Problem #2: Your code is slow
+class: middle
 
-* The calculation takes 12 hours—why?
+# Problem #2:
+# Why is your code slow?
 
 ---
 
@@ -188,3 +203,77 @@ $ eliot-tree out.log | grep -A1 double.*started
     ├── __main__.double/4/1 ⇒ started ⧖ 0.0s
     │   ├── a: 4
 ```
+
+---
+
+class: center
+
+# Problem #3
+# Can you trust your code?
+
+---
+
+# Scientific code is an argument about reality
+
+* This cell culture has these genes
+* This behavior is correlated with this outcome
+* This causes that
+
+---
+
+# Reproducability is necessary but insufficient
+
+* If I run your code and get different results I won't trust it
+* But even with consistent results—
+* —opaque black-box results are hard to trust
+
+---
+
+# Trust comes from a coherent explanation
+
+1. We did A—
+2. —here is a graph of intermediate results.
+3. And then did B—
+4. —here is a table showing why it makes sense.
+5. Therefore, we can conclude C.
+
+---
+
+# Jupyter as tool for explanation
+
+* Pros: Wonderful at interleaving execution and visual and prose explinations.
+* Cons: Not great from software engineering perspective (tests, modularity, etc.).
+
+---
+
+# Eliot as tool for explanation
+
+* Shows calculation's intermediate results.
+* Pros: Integrates with standard software execution structure.
+* Cons: No visualization capability, no ability to add prose.
+
+---
+
+# A vision for the future: Eliot + Jupyter?
+
+* What if you could take Eliot's output and load it into something like Jupyter?
+* The best of of both worlds: software engineering best practices, with Jupyter's ability to easily visualize and explain.
+* If you're interested I'd love to talk to you.
+
+---
+
+# Logging will help you:
+
+* Debug your code.
+* Speed up your code
+* Understand and trust the results.
+
+# Go add it to your project!
+
+---
+
+# Further information
+
+* Eliot documentation: https://eliot.readthedocs.io
+* Contact: itamar@pythonspeed.com / @itamarst
+* Consulting services: https://pythonspeed.com
