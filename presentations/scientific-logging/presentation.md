@@ -241,7 +241,7 @@ class: center
 
 # Jupyter as tool for explanation
 
-* Pros: Wonderful at interleaving execution and visual and prose explinations.
+* Pros: Wonderful at interleaving execution and visual and prose explanations.
 * Cons: Not great from software engineering perspective (tests, modularity, etc.).
 
 ---
@@ -257,7 +257,7 @@ class: center
 # A vision for the future: Eliot + Jupyter?
 
 * What if you could take Eliot's output and load it into something like Jupyter?
-* The best of of both worlds: software engineering best practices, with Jupyter's ability to easily visualize and explain.
+* The best of both worlds: software engineering best practices, with Jupyter's ability to easily visualize and explain.
 * If you're interested I'd love to talk to you.
 
 ---
@@ -275,5 +275,7 @@ class: center
 # Further information
 
 * Eliot documentation: https://eliot.readthedocs.io
-* Contact: itamar@pythonspeed.com / @itamarst
 * Consulting services: https://pythonspeed.com
+* Email: itamar@pythonspeed.com
+* Twitter: @itamarst
+
