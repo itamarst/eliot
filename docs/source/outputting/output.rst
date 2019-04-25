@@ -21,7 +21,7 @@ This ensures that no messages will be lost if logging happens during configurati
 
 
 Outputting JSON to a file
---------------------
+-------------------------
 
 Since JSON is a common output format, Eliot provides a utility class that logs to a file, ``eliot.FileDestination(file=yourfile)``.
 Each Eliot message will be encoded in JSON and written on a new line.
