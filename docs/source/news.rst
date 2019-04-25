@@ -1,6 +1,24 @@
 What's New
 ==========
 
+1.8.0
+^^^^^
+
+Features:
+
+* Eliot now supports Trio coroutines, as well as other frameworks that utilize Python 3.7's ``contextvars`` (Python 3.5 and 3.6 are also supported, using backport packages).
+
+Deprecation:
+
+* ``eliot.use_asyncio_context()`` is no longer necessary.
+  On Python 3.5 and 3.6, however, you should make sure to import ``eliot`` (or ``aiocontextvars``) before you start your first event loop.
+
+Changes:
+
+* Python 2.7 is now in legacy support mode; the last major Eliot release supporting it is 1.7.0.
+  See :ref:`python2` for details.
+* Python 3.4 is no longer supported.
+
 1.7.0
 ^^^^^
 

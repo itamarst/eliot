@@ -17,10 +17,7 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
@@ -32,7 +29,7 @@ setup(
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description="Logging library that tells you why it happened",
-    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
+    python_requires='>=3.5.*',
     install_requires=[
         # Python 3 compatibility:
         "six",
@@ -41,7 +38,9 @@ setup(
         # Persistent objects for Python:
         "pyrsistent >= 0.11.8",  # version with multi-type pvector/pmap_field
         # Better decorators, with version that works better with type annotations:
-        "boltons >= 19.0.1"
+        "boltons >= 19.0.1",
+        # Backwards compatibility for Python 3.5 and 3.6:
+        'aiocontextvars;python_version<"3.7" and python_version>"2.7"'
     ],
     extras_require={
         "journald": [

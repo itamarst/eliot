@@ -1,32 +1,63 @@
 .. _asyncio_coroutine:
 
-Asyncio Coroutine Support
-=========================
+Asyncio/Trio Coroutine Support
+==============================
 
-If you're using ``asyncio`` coroutines in Python 3.5 or later (``async def yourcoro()`` and ``await yourcoro()``) together with Eliot, you need to run the following before doing any logging:
+As of Eliot 1.8, ``asyncio`` and ``trio`` coroutines have appropriate context propogation for Eliot, automatically.
 
-.. code-block:: python
-
-   import eliot
-   eliot.use_asyncio_context()
+On Python 3.7 or later, no particular care is needed.
+For Python 3.5 and 3.6 you will need to import either ``eliot`` (or the backport package ``aiocontextvars``) before you create your first event loop.
 
 
-Why you need to do this
------------------------
-By default Eliot provides a different "context" for each thread.
-That is how ``with start_action(action_type='my_action'):`` works: it records the current action on this context.
+Asyncio Example
+---------------
 
-When using coroutines you end up with the same context being used with different coroutines, since they share the same thread.
-Calling ``eliot.use_asyncio_context()`` makes sure each coroutine gets its own context, so ``with start_action()`` in one coroutine doesn't interfere with another.
+Here's an example using ``aiohttp``:
 
-However, Eliot will do the right thing for nested coroutines.
-Specifically, coroutines called via ``await a_coroutine()`` will inherit the logging context from the calling coroutine.
+.. literalinclude:: ../../../examples/asyncio_linkcheck.py
+
+And the resulting logs:
+
+.. code-block:: shell-session
+
+  $ eliot-tree linkcheck.log
+  0a9a5e1b-330c-4251-b7db-fd3161403443
+  └── check_links/1 ⇒ started 2019-04-06 19:49:16 ⧖ 0.535s
+      ├── urls: 
+      │   ├── 0: http://eliot.readthedocs.io
+      │   └── 1: http://nosuchurl
+      ├── download/2/1 ⇒ started 2019-04-06 19:49:16 ⧖ 0.527s
+      │   ├── url: http://eliot.readthedocs.io
+      │   └── download/2/2 ⇒ succeeded 2019-04-06 19:49:16
+      ├── download/3/1 ⇒ started 2019-04-06 19:49:16 ⧖ 0.007s
+      │   ├── url: http://nosuchurl
+      │   └── download/3/2 ⇒ failed 2019-04-06 19:49:16
+      │       ├── errno: -2
+      │       ├── exception: aiohttp.client_exceptions.ClientConnectorError
+      │       └── reason: Cannot connect to host nosuchurl:80 ssl:None [Name or service not known]                                                                                           
+      └── check_links/4 ⇒ failed 2019-04-06 19:49:16
+          ├── exception: builtins.ValueError
+          └── reason: Cannot connect to host nosuchurl:80 ssl:None [Name or service not known]
 
 
-Limitations
------------
+Trio example
+------------
 
-* I haven't tested the Python 3.4 ``yield from`` variation.
-* This doesn't support other event loops (Curio, Trio, Tornado, etc.).
-  If you want these supported please file an issue: https://github.com/itamarst/eliot/issues/new
-  There is talk of adding the concept of a coroutine context to Python 3.7 or perhaps 3.8, in which case it will be easier to automatically support all frameworks.
+Here's an example of using Trio—we put the action outside the nursery so that it finishes only when the nursery shuts down.
+
+.. literalinclude:: ../../../examples/trio_say.py
+
+And the resulting logs:
+
+.. code-block:: shell-session
+
+  $ eliot-tree trio.log
+  93a4de27-8c95-498b-a188-f0e91482ad10
+  └── main/1 ⇒ started 2019-04-10 21:07:20 ⧖ 2.003s                                            
+      ├── say/2/1 ⇒ started 2019-04-10 21:07:20 ⧖ 2.002s                                       
+      │   ├── message: world
+      │   └── say/2/2 ⇒ succeeded 2019-04-10 21:07:22                                          
+      ├── say/3/1 ⇒ started 2019-04-10 21:07:20 ⧖ 1.001s                                       
+      │   ├── message: hello
+      │   └── say/3/2 ⇒ succeeded 2019-04-10 21:07:21                                          
+      └── main/4 ⇒ succeeded 2019-04-10 21:07:22
