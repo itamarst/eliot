@@ -70,4 +70,4 @@ Project Information
 Eliot is maintained by `Itamar Turner-Trauring <mailto:itamar@itamarst.org>`_, and released under the Apache 2.0 License.
 
 It supports Python 3.7, 3.6, and 3.5.
-Python 2.7 is in legacy support mode, with the last release supporting being 1.7; see :ref:`python2` for details.
+Python 2.7 is in legacy support mode, with the last release supported being 1.7; see :ref:`python2` for details.
