@@ -21,7 +21,7 @@ Eliot supports a range of use cases and 3rd party libraries:
 * Logging within a single process.
 * Causal tracing across a distributed system.
 * Scientific computing, with :doc:`built-in support for NumPy and Dask <scientific-computing>`.
-* :doc:`Asyncio coroutines <generating/asyncio>` and the :doc:`Twisted networking framework <generating/twisted>`.
+* :doc:`Asyncio and Trio coroutines <generating/asyncio>` and the :doc:`Twisted networking framework <generating/twisted>`.
 
 Eliot is only used to generate your logs; you might still need tools like Logstash and ElasticSearch to aggregate and store logs if you are using multiple processes across multiple machines.
 

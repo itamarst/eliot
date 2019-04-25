@@ -127,4 +127,5 @@ You can learn more by reading the rest of the documentation, including:
 * How to generate :doc:`actions <generating/actions>`, :doc:`standalone messages <generating/messages>`, and :doc:`handle errors <generating/errors>`.
 * How to integrate or migrate your :doc:`existing stdlib logging messages <generating/migrating>`.
 * How to output logs :doc:`to a file or elsewhere <outputting/output>`.
-* Using :doc:`asyncio coroutines <generating/asyncio>`, :doc:`threads and processes <generating/threads>`, or :doc:`Twisted <generating/twisted>`.
+* Using :doc:`asyncio or Trio coroutines <generating/asyncio>`, :doc:`threads and processes <generating/threads>`, or :doc:`Twisted <generating/twisted>`.
+* Using Eliot for :doc:`scientific computing <scientific-computing>`.
