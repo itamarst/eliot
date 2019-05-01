@@ -17,23 +17,37 @@ class: middle
 
 # The nature of scientific computing
 
-* **Logic:** Complex calculations
-* **Structure:** Long-running batch processes
-* **Goal:** A claim about reality
+## **Logic:** Complex calculations
+
+## **Structure:** Long-running batch processes
+
+## **Goal:** A inference about reality
 
 ???
 
-I'm a software engineer
+I'm just a humble software engineer
 but recently spent 1.5 years doing scientific computing
 learned what makes it different than other forms of software
+
+complex math
+read in inputs, eventually get output: batch job
+an inference about reality: it's going to rain on tuesday, or, this cell culture has these particular genes.
 
 ---
 
 # Three problems in scientific computing
 
-* **Logic:** Why is your calculation wrong?
-* **Structure:** Why is your code slow?
-* **Goal:** Can you trust the result?
+## **Logic:** Why is your calculation wrong?
+
+## **Structure:** Why is your code slow?
+
+## **Goal:** Can you trust the result?
+
+???
+
+each characteristic has corresponding problems
+
+these three problems, and how logging can help address them, are what I'll be talking about for the rest of the talk
 
 ---
 
@@ -63,22 +77,26 @@ class: middle
 
 ## Can't use debugger with a 12 hour process
 
-## You need logging!
+## You need a record of what the batch process actually did
 
 ---
 
-# Introducing Eliot
+# You need logging!
 
-* Structured, causal logging
-* Built-in support for scientific computing (NumPy, Dask)
-* https://eliot.readthedocs.io
+## Which functions called which other functions
+
+## What were the functions' inputs and outputs
+
+## Intermediate values as well
 
 ---
+# The Eliot logging library
 
-# Logging can help you debug your code
+## Project started in 2014
 
-* Which functions called which other functions
-* What were the functions' inputs and outputs
+## Structured, trace-based logging, with built-in support for scientific computing (NumPy, Dask)
+
+## https://eliot.readthedocs.io
 
 ---
 
@@ -102,7 +120,7 @@ print(multiplysum(1, 2, 4)) # (1 + 2)*4⇒12
 # Example: we run it
 
 ```shell-session
-$ python mathishard.py
+$ python badmath.py
 0
 ```
 
@@ -130,14 +148,23 @@ def multiply(a, b):
 
 Just add decorator to each function.
 
-You also need to tell Eliot where to send logs, but omitted for brevity.
+There are more sophisticated APIs for usage inside functions.
+
+---
+
+# Example: also need to configure log output
+
+```python
+from eliot import to_file
+to_file(open("out.log", "w"))
+```
 
 ---
 
 # Example: look at logs
 
 ```
-$ python mathishard.py
+$ python badmath.py
 0
 $ eliot-tree out.log
 ─── multiplysum (inputs a=1 b=2 c=4)
@@ -229,7 +256,7 @@ class: middle
 
 ---
 
-# Trust comes from a coherent explanation
+# Trust also requires a coherent explanation
 
 1. We did A—
 2. —here is a graph of intermediate results.
@@ -241,34 +268,42 @@ class: middle
 
 # Explanations with Jupyter
 
-* Pros: Wonderful at interleaving execution and visual and prose explanations.
-* Cons: Not great from software engineering perspective (tests, modularity, etc.).
+## **Pros:** Wonderful at interleaving execution and visual and textual explanations.
+
+## **Cons:** Not great from software engineering perspective (tests, modularity, etc.).
 
 ---
 
 # Explanations with Eliot
 
-* Logs show causal trace of calculation, with intermediate results.
-* Pros: Integrates with standard software execution structure.
-* Cons: No visualization capability, no ability to add prose.
+##  Logs show causal trace of calculation, with intermediate results.
+
+## **Pros:** Integrates with standard software execution structure.
+
+## **Cons:** No visualization capability, no ability to add text.
+
+???
+
+logs are a bit opaque, help you author as gain trust
+but not something you can give someone else
 
 ---
 
 # The future: Eliot + Jupyter?
 
-* In theory we could take Eliot's output and load it into Jupyter.
-* The best of both worlds: software engineering best practices, with Jupyter's ability to easily visualize and explain.
-* If you're interested I'd love to talk to you.
+## We could take Eliot's output and load it into Jupyter.
+## The best of both worlds: software engineering best practices, with Jupyter's ability to easily visualize and explain.
+## Interested? Talk to me!
 
 ---
 
 # Logging will help you:
 
-* Debug your code.
-* Speed up your code
-* Understand and trust the results.
+## 1. Debug your code.
+## 2. Speed up your code
+## 3. Understand and trust the results.
 
-# Go add it to your project!
+# Go add logging to your project!
 
 ---
 
