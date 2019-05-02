@@ -25,13 +25,13 @@ class: middle
 
 ???
 
-I'm just a humble software engineer
+I’m just a humble software engineer
 but recently spent 1.5 years doing scientific computing
 learned what makes it different than other forms of software
 
 complex math
 read in inputs, eventually get output: batch job
-an inference about reality: it's going to rain on tuesday, or, this cell culture has these particular genes.
+an inference about reality: it’s going to rain on tuesday, or, this cell culture has these particular genes.
 
 ---
 
@@ -47,7 +47,7 @@ an inference about reality: it's going to rain on tuesday, or, this cell culture
 
 each characteristic has corresponding problems
 
-these three problems, and how logging can help address them, are what I'll be talking about for the rest of the talk
+these three problems, and how logging can help address them, are what I’ll be talking about for the rest of the talk
 
 ---
 
@@ -58,7 +58,7 @@ class: middle
 
 ---
 
-# Scientific computing's slow feedback loop
+# Scientific computing’s slow feedback loop
 
 ## Your batch process is finally done...
 
@@ -75,7 +75,7 @@ class: middle
 
 ## Often only happens with real data
 
-## Can't use debugger with a 12 hour process
+## Can’t use debugger with a 12 hour process
 
 ## You need a record of what the batch process actually did
 
@@ -85,7 +85,7 @@ class: middle
 
 ## Which functions called which other functions
 
-## What were the functions' inputs and outputs
+## What were the functions’ inputs and outputs
 
 ## Intermediate values as well
 
@@ -189,7 +189,7 @@ class: middle
 # Profilers are insufficient
 
 * Only support single process, not distributed systems
-* Can't tell you which inputs are slow:
+* Can’t tell you which inputs are slow:
     * `f()` may be fast on some inputs, but very slow on others
     * Profiler just tells you "`f()` is slowish"
 
@@ -250,7 +250,7 @@ class: middle
 
 # Reproducability is necessary but insufficient
 
-* If I run your code and get different results I won't trust it
+* If I run your code and get different results I won’t trust it
 * But even with consistent results—
 * —opaque black-box results are hard to trust
 
@@ -291,8 +291,8 @@ but not something you can give someone else
 
 # The future: Eliot + Jupyter?
 
-## We could take Eliot's output and load it into Jupyter.
-## The best of both worlds: software engineering best practices, with Jupyter's ability to easily visualize and explain.
+## We could take Eliot’s output and load it into Jupyter.
+## The best of both worlds: software engineering best practices, with Jupyter’s ability to easily visualize and explain.
 ## Interested? Talk to me!
 
 ---
