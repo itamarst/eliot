@@ -21,7 +21,7 @@ Eliot supports a range of use cases and 3rd party libraries:
 * Logging within a single process.
 * Causal tracing across a distributed system.
 * Scientific computing, with :doc:`built-in support for NumPy and Dask <scientific-computing>`.
-* :doc:`Asyncio coroutines <generating/asyncio>` and the :doc:`Twisted networking framework <generating/twisted>`.
+* :doc:`Asyncio and Trio coroutines <generating/asyncio>` and the :doc:`Twisted networking framework <generating/twisted>`.
 
 Eliot is only used to generate your logs; you might still need tools like Logstash and ElasticSearch to aggregate and store logs if you are using multiple processes across multiple machines.
 
@@ -69,5 +69,5 @@ Project Information
 
 Eliot is maintained by `Itamar Turner-Trauring <mailto:itamar@itamarst.org>`_, and released under the Apache 2.0 License.
 
-It supports Python 3.7, 3.6, 3.5, and 3.4.
-2.7 is currently supported but will be dropped from future releases; see :ref:`python2`.
+It supports Python 3.7, 3.6, and 3.5.
+Python 2.7 is in legacy support mode, with the last release supported being 1.7; see :ref:`python2` for details.

@@ -7,9 +7,9 @@ from __future__ import unicode_literals, absolute_import
 from sys import exc_info
 from functools import wraps
 from contextlib import contextmanager
+from contextvars import copy_context
 from weakref import WeakKeyDictionary
 
-from ._action import _context_owner, _ExecutionContext
 from . import Message
 
 
@@ -23,20 +23,7 @@ class _GeneratorContext(object):
 
     def init_stack(self, generator):
         """Create a new stack for the given generator."""
-        stack = list(self._execution_context._get_stack())
-        self._contexts[generator] = stack
-
-    def get_stack(self):
-        """Return the sub-stack for the current generator."""
-        if self._current_generator is None:
-            # If there is no currently active generator then we have no
-            # special stack to supply.  Let the execution context figure out a
-            # different answer on its own.
-            return None
-        # Otherwise, give back the action context stack we've been tracking
-        # for the currently active generator.  It must have been previously
-        # initialized (it's too late to do it now)!
-        return self._contexts[self._current_generator]
+        self._contexts[generator] = copy_context()
 
     @contextmanager
     def in_generator(self, generator):
@@ -47,27 +34,6 @@ class _GeneratorContext(object):
             yield
         finally:
             self._current_generator = previous_generator
-
-
-class GeneratorExecutionContext(_ExecutionContext):
-    """Generator-specific C{_ExecutionContext} subclass."""
-
-    def __init__(self):
-        """This will run per-thread!"""
-        _ExecutionContext.__init__(self)
-        self.generator_context = _GeneratorContext(self)
-        self.get_sub_context = self.generator_context.get_stack
-
-
-def use_generator_context():
-    """
-    Make L{eliot_friendly_generator_function} work correctly.
-    """
-    _context_owner.set(GeneratorExecutionContext)
-
-
-def _installed():
-    return isinstance(_context_owner.context, GeneratorExecutionContext)
 
 
 class GeneratorSupportNotEnabled(Exception):
@@ -84,11 +50,6 @@ def eliot_friendly_generator_function(original):
     """
     @wraps(original)
     def wrapper(*a, **kw):
-        # This isn't going to work if you don't have the generator context
-        # manager installed.
-        if not _installed():
-            raise GeneratorSupportNotEnabled()
-
         # Keep track of whether the next value to deliver to the generator is
         # a non-exception or an exception.
         ok = True
@@ -102,12 +63,8 @@ def eliot_friendly_generator_function(original):
         # generator function can run until we call send or throw on it.
         gen = original(*a, **kw)
 
-        # Initialize the per-generator Eliot action context stack to the
-        # current action stack.  This might be the main stack or, if another
-        # decorated generator is running, it might be the stack for that
-        # generator.  Not our business.
-        generator_context = _context_owner.context.generator_context
-        generator_context.init_stack(gen)
+        # Initialize the per-generator context to a copy of the current context.
+        context = copy_context()
         while True:
             try:
                 # Whichever way we invoke the generator, we will do it
@@ -134,7 +91,7 @@ def eliot_friendly_generator_function(original):
                 # eliminated by always using `return value` instead of
                 # `returnValue(value)` (and adding the necessary logic to the
                 # StopIteration handler below).
-                with generator_context.in_generator(gen):
+                def go():
                     if ok:
                         value_out = gen.send(value_in)
                     else:
@@ -148,6 +105,9 @@ def eliot_friendly_generator_function(original):
                     # This is noisy, enable only for debugging:
                     if wrapper.debug:
                         Message.log(message_type=u"yielded")
+                    return value_out
+
+                value_out = context.run(go)
             except StopIteration:
                 # When the generator raises this, it is signaling
                 # completion.  Leave the loop.
