@@ -19,12 +19,7 @@ from . import _bytesjson as bytesjson
 from zope.interface import Interface, implementer
 
 from ._traceback import write_traceback, TRACEBACK_MESSAGE
-from ._message import (
-    Message,
-    EXCEPTION_FIELD,
-    MESSAGE_TYPE_FIELD,
-    REASON_FIELD,
-)
+from ._message import Message, EXCEPTION_FIELD, MESSAGE_TYPE_FIELD, REASON_FIELD
 from ._util import saferepr, safeunicode
 from .json import EliotJSONEncoder
 from ._validation import ValidationError
@@ -161,6 +156,7 @@ class Logger(object):
     whose messages you want to unit test in isolation, e.g. a class. The tests
     can then replace a specific L{Logger} with a L{MemoryLogger}.
     """
+
     _destinations = Destinations()
 
     def _safeUnicodeDictionary(self, dictionary):
@@ -198,7 +194,7 @@ class Logger(object):
             msg = Message(
                 {
                     MESSAGE_TYPE_FIELD: "eliot:serialization_failure",
-                    "message": self._safeUnicodeDictionary(dictionary)
+                    "message": self._safeUnicodeDictionary(dictionary),
                 }
             )
             msg.write(self)
@@ -215,14 +211,12 @@ class Logger(object):
                     # construct a message.
                     msg = Message(
                         {
-                            MESSAGE_TYPE_FIELD:
-                            "eliot:destination_failure",
-                            REASON_FIELD:
-                            safeunicode(exception),
-                            EXCEPTION_FIELD:
-                            exc_type.__module__ + "." + exc_type.__name__,
-                            "message":
-                            self._safeUnicodeDictionary(dictionary)
+                            MESSAGE_TYPE_FIELD: "eliot:destination_failure",
+                            REASON_FIELD: safeunicode(exception),
+                            EXCEPTION_FIELD: exc_type.__module__
+                            + "."
+                            + exc_type.__name__,
+                            "message": self._safeUnicodeDictionary(dictionary),
                         }
                     )
                     self._destinations.send(msg._freeze())
@@ -238,10 +232,12 @@ def exclusively(f):
     Decorate a function to make it thread-safe by serializing invocations
     using a per-instance lock.
     """
+
     @wraps(f)
     def exclusively_f(self, *a, **kw):
         with self._lock:
             return f(self, *a, **kw)
+
     return exclusively_f
 
 
@@ -307,15 +303,13 @@ class MemoryLogger(object):
         except Exception as e:
             # Skip irrelevant frames that don't help pinpoint the problem:
             from . import _output, _message, _action
-            skip_filenames = [
-                _output.__file__, _message.__file__, _action.__file__
-            ]
+
+            skip_filenames = [_output.__file__, _message.__file__, _action.__file__]
             for frame in inspect.stack():
                 if frame[1] not in skip_filenames:
                     break
             self._failed_validations.append(
-                "{}: {}".format(
-                    e, "".join(traceback.format_stack(frame[0])))
+                "{}: {}".format(e, "".join(traceback.format_stack(frame[0])))
             )
         self.messages.append(dictionary)
         self.serializers.append(serializer)
@@ -345,9 +339,7 @@ class MemoryLogger(object):
                 if isinstance(key, bytes):
                     key.decode("utf-8")
                 else:
-                    raise TypeError(
-                        dictionary, "%r is not unicode" % (key, )
-                    )
+                    raise TypeError(dictionary, "%r is not unicode" % (key,))
         if serializer is not None:
             serializer.serialize(dictionary)
 
@@ -355,8 +347,7 @@ class MemoryLogger(object):
             bytesjson.dumps(dictionary)
             pyjson.dumps(dictionary)
         except Exception as e:
-            raise TypeError("Message %s doesn't encode to JSON: %s" % (
-                dictionary, e))
+            raise TypeError("Message %s doesn't encode to JSON: %s" % (dictionary, e))
 
     @exclusively
     def validate(self):
@@ -383,7 +374,6 @@ class MemoryLogger(object):
                 # earlier. This just lets us figure out which exception type to
                 # raise.
                 raise e.__class__("\n\n".join(self._failed_validations))
-
 
     @exclusively
     def serialize(self):
@@ -417,6 +407,7 @@ class MemoryLogger(object):
         self.tracebackMessages = []
         self._failed_validations = []
 
+
 class FileDestination(PClass):
     """
     Callable that writes JSON messages to a file.
@@ -431,6 +422,7 @@ class FileDestination(PClass):
 
     @ivar _linebreak: C{"\n"} as either bytes or unicode.
     """
+
     file = field(mandatory=True)
     encoder = field(mandatory=True)
     _dumps = field(mandatory=True)
@@ -447,25 +439,19 @@ class FileDestination(PClass):
         if unicodeFile:
             # On Python 3 native json module outputs unicode:
             _dumps = pyjson.dumps
-            _linebreak = u"\n"
+            _linebreak = "\n"
         else:
             _dumps = bytesjson.dumps
             _linebreak = b"\n"
         return PClass.__new__(
-            cls,
-            file=file,
-            _dumps=_dumps,
-            _linebreak=_linebreak,
-            encoder=encoder
+            cls, file=file, _dumps=_dumps, _linebreak=_linebreak, encoder=encoder
         )
 
     def __call__(self, message):
         """
         @param message: A message dictionary.
         """
-        self.file.write(
-            self._dumps(message, cls=self.encoder) + self._linebreak
-        )
+        self.file.write(self._dumps(message, cls=self.encoder) + self._linebreak)
         self.file.flush()
 
 
@@ -475,9 +461,7 @@ def to_file(output_file, encoder=EliotJSONEncoder):
 
     @param output_file: A file-like object.
     """
-    Logger._destinations.add(
-        FileDestination(file=output_file, encoder=encoder)
-    )
+    Logger._destinations.add(FileDestination(file=output_file, encoder=encoder))
 
 
 # The default Logger, used when none is specified:

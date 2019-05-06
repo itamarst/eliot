@@ -40,6 +40,7 @@ def run_coroutines(*async_functions):
     async def wait_for_futures():
         for future in futures:
             await future
+
     loop.run_until_complete(wait_for_futures())
 
 
@@ -47,11 +48,13 @@ class CoroutineTests(TestCase):
     """
     Tests for coroutines.
     """
+
     @capture_logging(None)
     def test_multiple_coroutines_contexts(self, logger):
         """
         Each top-level coroutine has its own Eliot logging context.
         """
+
         async def waiting_coro():
             with start_action(action_type="waiting"):
                 await asyncio.sleep(0.5)
@@ -60,7 +63,8 @@ class CoroutineTests(TestCase):
         trees = Parser.parse_stream(logger.messages)
         self.assertEqual(
             sorted([(t.root().action_type, t.root().children) for t in trees]),
-            [("standalone", []), ("waiting", [])])
+            [("standalone", []), ("waiting", [])],
+        )
 
     @capture_logging(None)
     def test_await_inherits_coroutine_contexts(self, logger):
@@ -73,7 +77,8 @@ class CoroutineTests(TestCase):
         [child] = root.children
         self.assertEqual(
             (root.action_type, child.action_type, child.children),
-            ("calling", "standalone", []))
+            ("calling", "standalone", []),
+        )
 
     @capture_logging(None)
     def test_interleaved_coroutines(self, logger):
@@ -81,6 +86,7 @@ class CoroutineTests(TestCase):
         start_action() started in one coroutine doesn't impact another in a
         different coroutine.
         """
+
         async def coro_sleep(delay, action_type):
             with start_action(action_type=action_type):
                 await asyncio.sleep(delay)

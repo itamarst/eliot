@@ -55,6 +55,7 @@ def load_module(name, original_module):
     module = ModuleType(name)
     if PY3:
         import importlib.util
+
         spec = importlib.util.find_spec(original_module.__name__)
         source = spec.loader.get_code(original_module.__name__)
     else:

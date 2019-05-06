@@ -48,6 +48,7 @@ def eliot_friendly_generator_function(original):
     Decorate a generator function so that the Eliot action context is
     preserved across ``yield`` expressions.
     """
+
     @wraps(original)
     def wrapper(*a, **kw):
         # Keep track of whether the next value to deliver to the generator is
@@ -104,7 +105,7 @@ def eliot_friendly_generator_function(original):
                     #
                     # This is noisy, enable only for debugging:
                     if wrapper.debug:
-                        Message.log(message_type=u"yielded")
+                        Message.log(message_type="yielded")
                     return value_out
 
                 value_out = context.run(go)

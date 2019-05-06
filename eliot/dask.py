@@ -16,6 +16,7 @@ class _RunWithEliotContext(PClass):
     @ivar key: The key in the Dask graph.
     @ivar dependencies: The keys in the Dask graph this depends on.
     """
+
     task_id = field(type=str)
     func = field()  # callable
     key = field(type=str)
@@ -36,9 +37,7 @@ class _RunWithEliotContext(PClass):
     def __call__(self, *args, **kwargs):
         with Action.continue_task(task_id=self.task_id):
             Message.log(
-                message_type="dask:task",
-                key=self.key,
-                dependencies=self.dependencies
+                message_type="dask:task", key=self.key, dependencies=self.dependencies
             )
             return self.func(*args, **kwargs)
 
@@ -109,10 +108,7 @@ def _add_logging(dsk, ignore=None):
             key_names[key] = simplify(key)
 
     # 2. Create Eliot child Actions for each key, in topological order:
-    key_to_action_id = {
-        key: str(ctx.serialize_task_id(), "utf-8")
-        for key in keys
-    }
+    key_to_action_id = {key: str(ctx.serialize_task_id(), "utf-8") for key in keys}
 
     # 3. Replace function with wrapper that logs appropriate Action:
     for key in keys:
@@ -129,7 +125,7 @@ def _add_logging(dsk, ignore=None):
             key=key_names[key],
             dependencies=[key_names[k] for k in get_dependencies(dsk, key)],
         )
-        result[key] = (wrapped_func, ) + tuple(args)
+        result[key] = (wrapped_func,) + tuple(args)
 
     assert result.keys() == dsk.keys()
     return result

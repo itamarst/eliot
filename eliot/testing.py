@@ -15,7 +15,8 @@ from ._action import (
     ACTION_TYPE_FIELD,
     STARTED_STATUS,
     FAILED_STATUS,
-    SUCCEEDED_STATUS, )
+    SUCCEEDED_STATUS,
+)
 from ._message import MESSAGE_TYPE_FIELD, TASK_LEVEL_FIELD, TASK_UUID_FIELD
 from ._output import MemoryLogger
 from . import _output
@@ -50,8 +51,9 @@ def assertContainsFields(test, message, fields):
 
     @raises AssertionError: If the message doesn't contain the fields.
     """
-    messageSubset = dict([(key, value) for key, value in message.items()
-                          if key in fields])
+    messageSubset = dict(
+        [(key, value) for key, value in message.items() if key in fields]
+    )
     test.assertEqual(messageSubset, fields)
 
 
@@ -68,16 +70,15 @@ class LoggedAction(PClass):
     @ivar children: A C{list} of direct child L{LoggedMessage} and
         L{LoggedAction} instances.
     """
+
     startMessage = field(mandatory=True)
     endMessage = field(mandatory=True)
     children = field(mandatory=True)
 
     def __new__(cls, startMessage, endMessage, children):
         return PClass.__new__(
-            cls,
-            startMessage=startMessage,
-            endMessage=endMessage,
-            children=children)
+            cls, startMessage=startMessage, endMessage=endMessage, children=children
+        )
 
     @property
     def start_message(self):
@@ -135,18 +136,19 @@ class LoggedAction(PClass):
             elif (
                 len(messageLevel) == len(levelPrefix) + 2
                 and messageLevel[:-2] == levelPrefix
-                and messageLevel[-1] == 1):
+                and messageLevel[-1] == 1
+            ):
                 # If start message level is [1], [1, 2, 1] implies first
                 # message of a direct child.
-                child = klass.fromMessages(
-                    uuid, message[TASK_LEVEL_FIELD], messages)
+                child = klass.fromMessages(uuid, message[TASK_LEVEL_FIELD], messages)
                 children.append(child)
         if startMessage is None:
             raise ValueError("Missing start message")
         if endMessage is None:
             raise ValueError(
-                "Missing end message of type " + message.get(
-                    ACTION_TYPE_FIELD, "unknown"))
+                "Missing end message of type "
+                + message.get(ACTION_TYPE_FIELD, "unknown")
+            )
         return klass(startMessage, endMessage, children)
 
     # PEP 8 variant:
@@ -170,11 +172,13 @@ class LoggedAction(PClass):
         for message in messages:
             if (
                 message.get(ACTION_TYPE_FIELD) == actionType
-                and message[ACTION_STATUS_FIELD] == STARTED_STATUS):
+                and message[ACTION_STATUS_FIELD] == STARTED_STATUS
+            ):
                 result.append(
                     klass.fromMessages(
-                        message[TASK_UUID_FIELD], message[TASK_LEVEL_FIELD],
-                        messages))
+                        message[TASK_UUID_FIELD], message[TASK_LEVEL_FIELD], messages
+                    )
+                )
         return result
 
     # Backwards compat:
@@ -226,6 +230,7 @@ class LoggedMessage(PClass):
 
     @ivar message: A C{dict}, the message contents.
     """
+
     message = field(mandatory=True)
 
     def __new__(cls, message):
@@ -337,8 +342,10 @@ def validateLogging(assertion, *assertionArgs, **assertionKwargs):
             # TestCase runs cleanups in reverse order, and we want this to
             # run *before* tracebacks are checked:
             if assertion is not None:
-                self.addCleanup(lambda: skipped or assertion(
-                    self, logger, *assertionArgs, **assertionKwargs))
+                self.addCleanup(
+                    lambda: skipped
+                    or assertion(self, logger, *assertionArgs, **assertionKwargs)
+                )
             try:
                 return function(self, *args, **kwargs)
             except SkipTest:
@@ -407,14 +414,15 @@ def assertHasMessage(testCase, logger, messageType, fields=None):
     if fields is None:
         fields = {}
     messages = LoggedMessage.ofType(logger.messages, messageType)
-    testCase.assertTrue(messages, "No messages of type %s" % (messageType, ))
+    testCase.assertTrue(messages, "No messages of type %s" % (messageType,))
     loggedMessage = messages[0]
     assertContainsFields(testCase, loggedMessage.message, fields)
     return loggedMessage
 
 
 def assertHasAction(
-    testCase, logger, actionType, succeeded, startFields=None, endFields=None):
+    testCase, logger, actionType, succeeded, startFields=None, endFields=None
+):
     """
     Assert that the given logger has an action of the given type, and the first
     action found of this type has the given fields and success status.
@@ -450,7 +458,7 @@ def assertHasAction(
     if endFields is None:
         endFields = {}
     actions = LoggedAction.ofType(logger.messages, actionType)
-    testCase.assertTrue(actions, "No actions of type %s" % (actionType, ))
+    testCase.assertTrue(actions, "No actions of type %s" % (actionType,))
     action = actions[0]
     testCase.assertEqual(action.succeeded, succeeded)
     assertContainsFields(testCase, action.startMessage, startFields)

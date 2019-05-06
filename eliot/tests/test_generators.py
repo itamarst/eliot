@@ -7,32 +7,21 @@ from __future__ import unicode_literals, absolute_import
 from pprint import pformat
 from unittest import TestCase
 
-from eliot import (
-    Message,
-    start_action,
-)
-from ..testing import (
-    capture_logging,
-    assertHasAction,
-)
+from eliot import Message, start_action
+from ..testing import capture_logging, assertHasAction
 
-from .._generators import (
-    eliot_friendly_generator_function,
-)
+from .._generators import eliot_friendly_generator_function
 
 
-def assert_expected_action_tree(testcase, logger, expected_action_type, expected_type_tree):
+def assert_expected_action_tree(
+    testcase, logger, expected_action_type, expected_type_tree
+):
     """
     Assert that a logger has a certain logged action with certain children.
 
     @see: L{assert_generator_logs_action_tree}
     """
-    logged_action = assertHasAction(
-        testcase,
-        logger,
-        expected_action_type,
-        True,
-    )
+    logged_action = assertHasAction(testcase, logger, expected_action_type, True)
     type_tree = logged_action.type_tree()
     testcase.assertEqual(
         {expected_action_type: expected_type_tree},
@@ -41,7 +30,9 @@ def assert_expected_action_tree(testcase, logger, expected_action_type, expected
     )
 
 
-def assert_generator_logs_action_tree(testcase, generator_function, logger, expected_action_type, expected_type_tree):
+def assert_generator_logs_action_tree(
+    testcase, generator_function, logger, expected_action_type, expected_type_tree
+):
     """
     Assert that exhausting a generator from the given function logs an action
     of the given type with children matching the given type tree.
@@ -66,10 +57,7 @@ def assert_generator_logs_action_tree(testcase, generator_function, logger, expe
     """
     list(eliot_friendly_generator_function(generator_function)())
     assert_expected_action_tree(
-        testcase,
-        logger,
-        expected_action_type,
-        expected_type_tree,
+        testcase, logger, expected_action_type, expected_type_tree
     )
 
 
@@ -77,6 +65,7 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
     """
     Tests for L{eliot_friendly_generator_function}.
     """
+
     # Get our custom assertion failure messages *and* the standard ones.
     longMessage = True
 
@@ -84,19 +73,17 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
     def test_yield_none(self, logger):
         @eliot_friendly_generator_function
         def g():
-            Message.log(message_type=u"hello")
+            Message.log(message_type="hello")
             yield
-            Message.log(message_type=u"goodbye")
+            Message.log(message_type="goodbye")
+
         g.debug = True  # output yielded messages
 
-        with start_action(action_type=u"the-action"):
+        with start_action(action_type="the-action"):
             list(g())
 
         assert_expected_action_tree(
-            self,
-            logger,
-            u"the-action",
-            [u"hello", u"yielded", u"goodbye"],
+            self, logger, "the-action", ["hello", "yielded", "goodbye"]
         )
 
     @capture_logging(None)
@@ -105,79 +92,76 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
 
         @eliot_friendly_generator_function
         def g():
-            Message.log(message_type=u"hello")
+            Message.log(message_type="hello")
             yield expected
-            Message.log(message_type=u"goodbye")
+            Message.log(message_type="goodbye")
+
         g.debug = True  # output yielded messages
 
-        with start_action(action_type=u"the-action"):
+        with start_action(action_type="the-action"):
             self.assertEqual([expected], list(g()))
 
         assert_expected_action_tree(
-            self,
-            logger,
-            u"the-action",
-            [u"hello", u"yielded", u"goodbye"],
+            self, logger, "the-action", ["hello", "yielded", "goodbye"]
         )
 
     @capture_logging(None)
     def test_yield_inside_another_action(self, logger):
         @eliot_friendly_generator_function
         def g():
-            Message.log(message_type=u"a")
-            with start_action(action_type=u"confounding-factor"):
-                Message.log(message_type=u"b")
+            Message.log(message_type="a")
+            with start_action(action_type="confounding-factor"):
+                Message.log(message_type="b")
                 yield None
-                Message.log(message_type=u"c")
-            Message.log(message_type=u"d")
+                Message.log(message_type="c")
+            Message.log(message_type="d")
+
         g.debug = True  # output yielded messages
 
-        with start_action(action_type=u"the-action"):
+        with start_action(action_type="the-action"):
             list(g())
 
         assert_expected_action_tree(
             self,
             logger,
-            u"the-action",
-            [u"a",
-             {u"confounding-factor": [u"b", u"yielded", u"c"]},
-             u"d",
-            ],
+            "the-action",
+            ["a", {"confounding-factor": ["b", "yielded", "c"]}, "d"],
         )
 
     @capture_logging(None)
     def test_yield_inside_nested_actions(self, logger):
         @eliot_friendly_generator_function
         def g():
-            Message.log(message_type=u"a")
-            with start_action(action_type=u"confounding-factor"):
-                Message.log(message_type=u"b")
+            Message.log(message_type="a")
+            with start_action(action_type="confounding-factor"):
+                Message.log(message_type="b")
                 yield None
-                with start_action(action_type=u"double-confounding-factor"):
+                with start_action(action_type="double-confounding-factor"):
                     yield None
-                    Message.log(message_type=u"c")
-                Message.log(message_type=u"d")
-            Message.log(message_type=u"e")
+                    Message.log(message_type="c")
+                Message.log(message_type="d")
+            Message.log(message_type="e")
+
         g.debug = True  # output yielded messages
 
-        with start_action(action_type=u"the-action"):
+        with start_action(action_type="the-action"):
             list(g())
 
         assert_expected_action_tree(
             self,
             logger,
-            u"the-action", [
-                u"a",
-                {u"confounding-factor": [
-                    u"b",
-                    u"yielded",
-                    {u"double-confounding-factor": [
-                        u"yielded",
-                        u"c",
-                    ]},
-                    u"d",
-                ]},
-                u"e",
+            "the-action",
+            [
+                "a",
+                {
+                    "confounding-factor": [
+                        "b",
+                        "yielded",
+                        {"double-confounding-factor": ["yielded", "c"]},
+                        "d",
+                    ]
+                },
+                "e",
             ],
         )
 
@@ -185,45 +169,41 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
     def test_generator_and_non_generator(self, logger):
         @eliot_friendly_generator_function
         def g():
-            Message.log(message_type=u"a")
+            Message.log(message_type="a")
             yield
-            with start_action(action_type=u"action-a"):
-                Message.log(message_type=u"b")
+            with start_action(action_type="action-a"):
+                Message.log(message_type="b")
                 yield
-                Message.log(message_type=u"c")
+                Message.log(message_type="c")
 
-            Message.log(message_type=u"d")
+            Message.log(message_type="d")
             yield
+
         g.debug = True  # output yielded messages
 
-        with start_action(action_type=u"the-action"):
+        with start_action(action_type="the-action"):
             generator = g()
             next(generator)
-            Message.log(message_type=u"0")
+            Message.log(message_type="0")
             next(generator)
-            Message.log(message_type=u"1")
+            Message.log(message_type="1")
             next(generator)
-            Message.log(message_type=u"2")
+            Message.log(message_type="2")
             self.assertRaises(StopIteration, lambda: next(generator))
 
         assert_expected_action_tree(
             self,
             logger,
-            u"the-action", [
-                u"a",
-                u"yielded",
-                u"0",
-                {
-                    u"action-a": [
-                        u"b",
-                        u"yielded",
-                        u"c",
-                    ],
-                },
-                u"1",
-                u"d",
-                u"yielded",
-                u"2",
+            "the-action",
+            [
+                "a",
+                "yielded",
+                "0",
+                {"action-a": ["b", "yielded", "c"]},
+                "1",
+                "d",
+                "yielded",
+                "2",
             ],
         )
 
@@ -231,16 +211,17 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
     def test_concurrent_generators(self, logger):
         @eliot_friendly_generator_function
         def g(which):
-            Message.log(message_type=u"{}-a".format(which))
+            Message.log(message_type="{}-a".format(which))
             with start_action(action_type=which):
-                Message.log(message_type=u"{}-b".format(which))
+                Message.log(message_type="{}-b".format(which))
                 yield
-                Message.log(message_type=u"{}-c".format(which))
-            Message.log(message_type=u"{}-d".format(which))
+                Message.log(message_type="{}-c".format(which))
+            Message.log(message_type="{}-d".format(which))
+
         g.debug = True  # output yielded messages
 
-        gens = [g(u"1"), g(u"2")]
-        with start_action(action_type=u"the-action"):
+        gens = [g("1"), g("2")]
+        with start_action(action_type="the-action"):
             while gens:
                 for g in gens[:]:
                     try:
@@ -251,21 +232,14 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
         assert_expected_action_tree(
             self,
             logger,
-            u"the-action", [
-                u"1-a",
-                {u"1": [
-                    u"1-b",
-                    u"yielded",
-                    u"1-c",
-                ]},
-                u"2-a",
-                {u"2": [
-                    u"2-b",
-                    u"yielded",
-                    u"2-c",
-                ]},
-                u"1-d",
-                u"2-d",
+            "the-action",
+            [
+                "1-a",
+                {"1": ["1-b", "yielded", "1-c"]},
+                "2-a",
+                {"2": ["2-b", "yielded", "2-c"]},
+                "1-d",
+                "2-d",
             ],
         )
 
@@ -273,35 +247,28 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
     def test_close_generator(self, logger):
         @eliot_friendly_generator_function
         def g():
-            Message.log(message_type=u"a")
+            Message.log(message_type="a")
             try:
                 yield
-                Message.log(message_type=u"b")
+                Message.log(message_type="b")
             finally:
-                Message.log(message_type=u"c")
+                Message.log(message_type="c")
+
         g.debug = True  # output yielded messages
 
-        with start_action(action_type=u"the-action"):
+        with start_action(action_type="the-action"):
             gen = g()
             next(gen)
             gen.close()
 
-        assert_expected_action_tree(
-            self,
-            logger,
-            u"the-action", [
-                u"a",
-                u"yielded",
-                u"c",
-            ],
-        )
+        assert_expected_action_tree(self, logger, "the-action", ["a", "yielded", "c"])
 
     @capture_logging(None)
     def test_nested_generators(self, logger):
         @eliot_friendly_generator_function
         def g(recurse):
-            with start_action(action_type=u"a-recurse={}".format(recurse)):
-                Message.log(message_type=u"m-recurse={}".format(recurse))
+            with start_action(action_type="a-recurse={}".format(recurse)):
+                Message.log(message_type="m-recurse={}".format(recurse))
                 if recurse:
                     set(g(False))
                 else:
@@ -309,20 +276,19 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
 
         g.debug = True  # output yielded messages
 
-        with start_action(action_type=u"the-action"):
+        with start_action(action_type="the-action"):
             set(g(True))
 
         assert_expected_action_tree(
             self,
             logger,
-            u"the-action", [{
-                u"a-recurse=True": [
-                    u"m-recurse=True", {
-                        u"a-recurse=False": [
-                            u"m-recurse=False",
-                            u"yielded",
-                        ],
-                    },
-                ],
-            }],
+            "the-action",
+            [
+                {
+                    "a-recurse=True": [
+                        "m-recurse=True",
+                        {"a-recurse=False": ["m-recurse=False", "yielded"]},
+                    ]
+                }
+            ],
         )

@@ -4,6 +4,7 @@ from unittest import TestCase, skipUnless
 
 from ..testing import capture_logging, LoggedAction, LoggedMessage
 from .. import start_action, Message
+
 try:
     import dask
     from dask.bag import from_sequence
@@ -30,6 +31,7 @@ class DaskTests(TestCase):
     @capture_logging(None)
     def test_logging(self, logger):
         """compute_with_trace() preserves Eliot context."""
+
         def mult(x):
             Message.log(message_type="mult")
             return x * 4
@@ -46,24 +48,35 @@ class DaskTests(TestCase):
         [logged_action] = LoggedAction.ofType(logger.messages, "act1")
         self.assertEqual(
             logged_action.type_tree(),
-            {'act1': [{'dask:compute':
-                       [{'eliot:remote_task': ['dask:task', 'mult']},
-                        {'eliot:remote_task': ['dask:task', 'mult']},
-                        {'eliot:remote_task': ['dask:task', 'finally']}]}]}
+            {
+                "act1": [
+                    {
+                        "dask:compute": [
+                            {"eliot:remote_task": ["dask:task", "mult"]},
+                            {"eliot:remote_task": ["dask:task", "mult"]},
+                            {"eliot:remote_task": ["dask:task", "finally"]},
+                        ]
+                    }
+                ]
+            },
         )
 
         # Make sure dependencies are tracked:
         mult1_msg, mult2_msg, final_msg = LoggedMessage.ofType(
-            logger.messages, "dask:task")
-        self.assertEqual(sorted(final_msg.message["dependencies"]),
-                         sorted([mult1_msg.message["key"],
-                                 mult2_msg.message["key"]]))
+            logger.messages, "dask:task"
+        )
+        self.assertEqual(
+            sorted(final_msg.message["dependencies"]),
+            sorted([mult1_msg.message["key"], mult2_msg.message["key"]]),
+        )
 
         # Make sure dependencies are logically earlier in the logs:
         self.assertTrue(
-            mult1_msg.message["task_level"] < final_msg.message["task_level"])
+            mult1_msg.message["task_level"] < final_msg.message["task_level"]
+        )
         self.assertTrue(
-            mult2_msg.message["task_level"] < final_msg.message["task_level"])
+            mult2_msg.message["task_level"] < final_msg.message["task_level"]
+        )
 
 
 @skipUnless(dask, "Dask not available.")

@@ -24,22 +24,20 @@ from .._errors import register_exception_extractor
 from .test_action import make_error_extraction_tests
 
 
-def assert_expected_traceback(
-    test, logger, message, exception, expected_traceback
-):
+def assert_expected_traceback(test, logger, message, exception, expected_traceback):
     """Assert we logged the given exception and the expected traceback."""
     lines = expected_traceback.split("\n")
     # Remove source code lines:
-    expected_traceback = "\n".join(
-        [l for l in lines if not l.startswith("    ")]
-    )
+    expected_traceback = "\n".join([l for l in lines if not l.startswith("    ")])
     assertContainsFields(
-        test, message, {
+        test,
+        message,
+        {
             "message_type": "eliot:traceback",
             "exception": RuntimeError,
             "reason": exception,
-            "traceback": expected_traceback
-        }
+            "traceback": expected_traceback,
+        },
     )
     logger.flushTracebacks(RuntimeError)
 
@@ -107,11 +105,7 @@ class TracebackLoggingTests(TestCase):
             write_traceback()
 
         message = logger.messages[0]
-        assertContainsFields(
-            self, message, {
-                "message_type": "eliot:traceback"
-            }
-        )
+        assertContainsFields(self, message, {"message_type": "eliot:traceback"})
         logger.flushTracebacks(RuntimeError)
 
     @validateLogging(None)
@@ -130,12 +124,14 @@ class TracebackLoggingTests(TestCase):
             writeFailure(failure, logger)
         message = logger.messages[0]
         assertContainsFields(
-            self, message, {
+            self,
+            message,
+            {
                 "message_type": "eliot:traceback",
                 "exception": RuntimeError,
                 "reason": failure.value,
-                "traceback": expectedTraceback
-            }
+                "traceback": expectedTraceback,
+            },
         )
         logger.flushTracebacks(RuntimeError)
 
@@ -154,11 +150,7 @@ class TracebackLoggingTests(TestCase):
             failure = Failure()
             writeFailure(failure)
         message = logger.messages[0]
-        assertContainsFields(
-            self, message, {
-                "message_type": "eliot:traceback"
-            }
-        )
+        assertContainsFields(self, message, {"message_type": "eliot:traceback"})
         logger.flushTracebacks(RuntimeError)
 
     @validateLogging(None)
@@ -189,10 +181,9 @@ class TracebackLoggingTests(TestCase):
         _writeTracebackMessage(logger, *exc_info)
         serialized = logger.serialize()[0]
         assertContainsFields(
-            self, serialized, {
-                "exception": "%s.KeyError" % (KeyError.__module__, ),
-                "reason": "123"
-            }
+            self,
+            serialized,
+            {"exception": "%s.KeyError" % (KeyError.__module__,), "reason": "123"},
         )
         logger.flushTracebacks(KeyError)
 
@@ -213,7 +204,7 @@ class TracebackLoggingTests(TestCase):
         _writeTracebackMessage(logger, *exc_info)
         self.assertEqual(
             logger.serialize()[0]["reason"],
-            "eliot: unknown, unicode() raised exception"
+            "eliot: unknown, unicode() raised exception",
         )
         logger.flushTracebacks(BadException)
 
@@ -234,9 +225,7 @@ def get_traceback_messages(exception):
     return messages
 
 
-class TracebackExtractionTests(
-    make_error_extraction_tests(get_traceback_messages)
-):
+class TracebackExtractionTests(make_error_extraction_tests(get_traceback_messages)):
     """
     Error extraction tests for tracebacks.
     """
@@ -254,9 +243,11 @@ class TracebackExtractionTests(
         exception = MyException("because")
         messages = get_traceback_messages(exception)
         assertContainsFields(
-            self, messages[0], {
+            self,
+            messages[0],
+            {
                 "message_type": "eliot:traceback",
                 "reason": exception,
-                "exception": MyException
-            }
+                "exception": MyException,
+            },
         )

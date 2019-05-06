@@ -32,6 +32,7 @@ def main(reactor):
         kbSec = (LENGTH * MESSAGES) / (elapsed * 1024)
         messagesSec = MESSAGES / elapsed
         print("messages/sec: %s   KB/sec: %s" % (messagesSec, kbSec))
+
     d.addCallback(done)
 
     def cleanup(result):
@@ -39,9 +40,10 @@ def main(reactor):
         print()
         print("File size: ", fp.getsize())
         fp.remove()
+
     d.addBoth(cleanup)
     return d
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     react(main, [])

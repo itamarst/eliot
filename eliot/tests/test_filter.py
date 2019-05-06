@@ -33,11 +33,11 @@ class EliotFilterTests(TestCase):
         efilter.run()
         self.assertEqual(
             f.getvalue(),
-            json.dumps({
-                "x": 4,
-                "orig": "abcd"}) + b"\n" + json.dumps({
-                    "x": 2,
-                    "orig": [1, 2]}) + b'\n')
+            json.dumps({"x": 4, "orig": "abcd"})
+            + b"\n"
+            + json.dumps({"x": 2, "orig": [1, 2]})
+            + b"\n",
+        )
 
     def evaluateExpression(self, expr, message):
         """
@@ -61,7 +61,8 @@ class EliotFilterTests(TestCase):
         built-ins.
         """
         result = self.evaluateExpression(
-            "isinstance(datetime.utcnow() - datetime.utcnow(), timedelta)", {})
+            "isinstance(datetime.utcnow() - datetime.utcnow(), timedelta)", {}
+        )
         self.assertEqual(result, True)
 
     def test_datetimeSerialization(self):
@@ -92,7 +93,7 @@ class MainTests(TestCase):
         """
         By default L{main} uses information from L{sys}.
         """
-        self.assertEqual(inspect.getargspec(main).defaults, (sys, ))
+        self.assertEqual(inspect.getargspec(main).defaults, (sys,))
 
     def test_stdinOut(self):
         """

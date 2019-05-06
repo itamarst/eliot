@@ -14,7 +14,8 @@ from .._validation import (
     ActionType,
     ValidationError,
     fields,
-    _MessageSerializer, )
+    _MessageSerializer,
+)
 from .._action import start_action, startTask
 from .._output import MemoryLogger
 from ..serializers import identity
@@ -31,7 +32,7 @@ class TypedFieldTests(TestCase):
         L{Field.validate} will not raise an exception if the given value is in
         the list of supported classes.
         """
-        field = Field.forTypes("path", [unicode, int], u"A path!")
+        field = Field.forTypes("path", [unicode, int], "A path!")
         field.validate(123)
         field.validate("hello")
 
@@ -40,7 +41,7 @@ class TypedFieldTests(TestCase):
         When given a "class" of C{None}, L{Field.validate} will support
         validating C{None}.
         """
-        field = Field.forTypes("None", [None], u"Nothing!")
+        field = Field.forTypes("None", [None], "Nothing!")
         field.validate(None)
 
     def test_validateWrongType(self):
@@ -48,7 +49,7 @@ class TypedFieldTests(TestCase):
         L{Field.validate} will raise a L{ValidationError} exception if the
         given value's type is not in the list of supported classes.
         """
-        field = Field.forTypes("key", [int], u"An integer key")
+        field = Field.forTypes("key", [int], "An integer key")
         self.assertRaises(ValidationError, field.validate, "lala")
         self.assertRaises(ValidationError, field.validate, None)
         self.assertRaises(ValidationError, field.validate, object())
@@ -65,7 +66,7 @@ class TypedFieldTests(TestCase):
             else:
                 raise ValidationError("too small")
 
-        field = Field.forTypes("key", [int], u"An integer key", validate)
+        field = Field.forTypes("key", [int], "An integer key", validate)
         field.validate(11)
 
     def test_extraValidatorFails(self):
@@ -80,7 +81,7 @@ class TypedFieldTests(TestCase):
             else:
                 raise ValidationError("too small")
 
-        field = Field.forTypes("key", [int], u"An int", validate)
+        field = Field.forTypes("key", [int], "An int", validate)
         self.assertRaises(ValidationError, field.validate, 10)
 
     def test_onlyValidTypes(self):
@@ -111,8 +112,8 @@ class FieldTests(TestCase):
         """
         L{Field.description} stores the passed in description.
         """
-        field = Field("path", identity, u"A path!")
-        self.assertEqual(field.description, u"A path!")
+        field = Field("path", identity, "A path!")
+        self.assertEqual(field.description, "A path!")
 
     def test_optionalDescription(self):
         """
@@ -125,22 +126,22 @@ class FieldTests(TestCase):
         """
         L{Field.key} stores the passed in field key.
         """
-        field = Field("path", identity, u"A path!")
-        self.assertEqual(field.key, u"path")
+        field = Field("path", identity, "A path!")
+        self.assertEqual(field.key, "path")
 
     def test_serialize(self):
         """
         L{Field.serialize} calls the given serializer function.
         """
         result = []
-        Field("key", result.append, u"field").serialize(123)
+        Field("key", result.append, "field").serialize(123)
         self.assertEqual(result, [123])
 
     def test_serializeResult(self):
         """
         L{Field.serialize} returns the result of the given serializer function.
         """
-        result = Field("key", lambda obj: 456, u"field").serialize(None)
+        result = Field("key", lambda obj: 456, "field").serialize(None)
         self.assertEqual(result, 456)
 
     def test_serializeCallsValidate(self):
@@ -155,14 +156,14 @@ class FieldTests(TestCase):
         def serialize(obj):
             raise MyException()
 
-        field = Field("key", serialize, u"")
+        field = Field("key", serialize, "")
         self.assertRaises(MyException, field.validate, 123)
 
     def test_noExtraValidator(self):
         """
         L{Field.validate} doesn't break if there is no extra validator.
         """
-        field = Field("key", identity, u"")
+        field = Field("key", identity, "")
         field.validate(123)
 
     def test_extraValidatorPasses(self):
@@ -177,7 +178,7 @@ class FieldTests(TestCase):
             else:
                 raise ValidationError("too small")
 
-        field = Field("path", identity, u"A path!", validate)
+        field = Field("path", identity, "A path!", validate)
         field.validate(11)
 
     def test_extraValidatorFails(self):
@@ -192,7 +193,7 @@ class FieldTests(TestCase):
             else:
                 raise ValidationError("too small")
 
-        field = Field("path", identity, u"A path!", validate)
+        field = Field("path", identity, "A path!", validate)
         self.assertRaises(ValidationError, field.validate, 10)
 
 
@@ -248,20 +249,23 @@ class FieldsTests(TestCase):
         L{fields} accepts positional arguments of L{Field} instances and
         combines them with fields specied as keyword arguments.
         """
-        a_field = Field(u'akey', identity)
+        a_field = Field("akey", identity)
         l = fields(a_field, another=str)
         self.assertIn(a_field, l)
-        self.assertEqual({(type(field), field.key)
-                          for field in l}, {(Field, 'akey'),
-                                            (Field, 'another')})
+        self.assertEqual(
+            {(type(field), field.key) for field in l},
+            {(Field, "akey"), (Field, "another")},
+        )
 
     def test_keys(self):
         """
         L{fields} creates L{Field} instances with the given keys.
         """
         l = fields(key=int, status=str)
-        self.assertEqual({(type(field), field.key)
-                          for field in l}, {(Field, "key"), (Field, "status")})
+        self.assertEqual(
+            {(type(field), field.key) for field in l},
+            {(Field, "key"), (Field, "status")},
+        )
 
     def test_validTypes(self):
         """
@@ -291,10 +295,14 @@ class MessageSerializerTests(TestCase):
         constructed with more than object per field name.
         """
         self.assertRaises(
-            ValueError, _MessageSerializer, [
+            ValueError,
+            _MessageSerializer,
+            [
                 Field("akey", identity, ""),
                 Field("akey", identity, ""),
-                Field("message_type", identity, "")])
+                Field("message_type", identity, ""),
+            ],
+        )
 
     def test_noBothTypeFields(self):
         """
@@ -302,9 +310,10 @@ class MessageSerializerTests(TestCase):
         constructed with both a C{"message_type"} and C{"action_type"} field.
         """
         self.assertRaises(
-            ValueError, _MessageSerializer, [
-                Field("message_type", identity, ""),
-                Field("action_type", identity, "")])
+            ValueError,
+            _MessageSerializer,
+            [Field("message_type", identity, ""), Field("action_type", identity, "")],
+        )
 
     def test_missingTypeField(self):
         """
@@ -319,9 +328,10 @@ class MessageSerializerTests(TestCase):
         a C{"task_level"} field included.
         """
         self.assertRaises(
-            ValueError, _MessageSerializer, [
-                Field("message_type", identity, ""),
-                Field("task_level", identity, "")])
+            ValueError,
+            _MessageSerializer,
+            [Field("message_type", identity, ""), Field("task_level", identity, "")],
+        )
 
     def test_noTaskUuid(self):
         """
@@ -329,9 +339,10 @@ class MessageSerializerTests(TestCase):
         a C{"task_uuid"} field included.
         """
         self.assertRaises(
-            ValueError, _MessageSerializer, [
-                Field("message_type", identity, ""),
-                Field("task_uuid", identity, "")])
+            ValueError,
+            _MessageSerializer,
+            [Field("message_type", identity, ""), Field("task_uuid", identity, "")],
+        )
 
     def test_noTimestamp(self):
         """
@@ -339,9 +350,10 @@ class MessageSerializerTests(TestCase):
         a C{"timestamp"} field included.
         """
         self.assertRaises(
-            ValueError, _MessageSerializer, [
-                Field("message_type", identity, ""),
-                Field("timestamp", identity, "")])
+            ValueError,
+            _MessageSerializer,
+            [Field("message_type", identity, ""), Field("timestamp", identity, "")],
+        )
 
     def test_noUnderscoreStart(self):
         """
@@ -349,18 +361,22 @@ class MessageSerializerTests(TestCase):
         a field included whose name starts with C{"_"}.
         """
         self.assertRaises(
-            ValueError, _MessageSerializer, [
-                Field("message_type", identity, ""),
-                Field("_key", identity, "")])
+            ValueError,
+            _MessageSerializer,
+            [Field("message_type", identity, ""), Field("_key", identity, "")],
+        )
 
     def test_serialize(self):
         """
         L{_MessageSerializer.serialize} will serialize all values in the given
         dictionary using the respective L{Field}.
         """
-        serializer = _MessageSerializer([
-            Field.forValue("message_type", "mymessage", u"The type"),
-            Field("length", len, "The length of a thing"), ])
+        serializer = _MessageSerializer(
+            [
+                Field.forValue("message_type", "mymessage", "The type"),
+                Field("length", len, "The length of a thing"),
+            ]
+        )
         message = {"message_type": "mymessage", "length": "thething"}
         serializer.serialize(message)
         self.assertEqual(message, {"message_type": "mymessage", "length": 8})
@@ -373,30 +389,28 @@ class MessageSerializerTests(TestCase):
         Logging attempts to capture everything, with minimal work; with any
         luck this value is JSON-encodable. Unit tests should catch such bugs, in any case.
         """
-        serializer = _MessageSerializer([
-            Field.forValue("message_type", "mymessage", u"The type"),
-            Field("length", len, "The length of a thing"), ])
-        message = {
-            "message_type": "mymessage",
-            "length": "thething",
-            "extra": 123}
+        serializer = _MessageSerializer(
+            [
+                Field.forValue("message_type", "mymessage", "The type"),
+                Field("length", len, "The length of a thing"),
+            ]
+        )
+        message = {"message_type": "mymessage", "length": "thething", "extra": 123}
         serializer.serialize(message)
         self.assertEqual(
-            message, {"message_type": "mymessage",
-                      "length": 8,
-                      "extra": 123})
+            message, {"message_type": "mymessage", "length": 8, "extra": 123}
+        )
 
     def test_fieldInstances(self):
         """
         Fields to L{_MessageSerializer.__init__} should be instances of
         L{Field}.
         """
-        a_field = Field('a_key', identity)
+        a_field = Field("a_key", identity)
         arg = object()
         with self.assertRaises(TypeError) as cm:
             _MessageSerializer([a_field, arg])
-        self.assertEqual((u'Expected a Field instance but got', arg),
-                         cm.exception.args)
+        self.assertEqual(("Expected a Field instance but got", arg), cm.exception.args)
 
 
 class MessageTypeTests(TestCase):
@@ -409,9 +423,10 @@ class MessageTypeTests(TestCase):
         Return a L{MessageType} suitable for unit tests.
         """
         return MessageType(
-            u"myapp:mysystem", [
-                Field.forTypes(u"key", [int], u""),
-                Field.forTypes(u"value", [int], u"")], u"A message type")
+            "myapp:mysystem",
+            [Field.forTypes("key", [int], ""), Field.forTypes("value", [int], "")],
+            "A message type",
+        )
 
     def test_validateMissingType(self):
         """
@@ -420,9 +435,8 @@ class MessageTypeTests(TestCase):
         """
         messageType = self.messageType()
         self.assertRaises(
-            ValidationError, messageType._serializer.validate, {
-                "key": 1,
-                "value": 2})
+            ValidationError, messageType._serializer.validate, {"key": 1, "value": 2}
+        )
 
     def test_validateWrongType(self):
         """
@@ -432,10 +446,10 @@ class MessageTypeTests(TestCase):
         """
         messageType = self.messageType()
         self.assertRaises(
-            ValidationError, messageType._serializer.validate, {
-                "key": 1,
-                "value": 2,
-                "message_type": "wrong"})
+            ValidationError,
+            messageType._serializer.validate,
+            {"key": 1, "value": 2, "message_type": "wrong"},
+        )
 
     def test_validateExtraField(self):
         """
@@ -444,11 +458,10 @@ class MessageTypeTests(TestCase):
         """
         messageType = self.messageType()
         self.assertRaises(
-            ValidationError, messageType._serializer.validate, {
-                "key": 1,
-                "value": 2,
-                "message_type": "myapp:mysystem",
-                "extra": "hello"})
+            ValidationError,
+            messageType._serializer.validate,
+            {"key": 1, "value": 2, "message_type": "myapp:mysystem", "extra": "hello"},
+        )
 
     def test_validateMissingField(self):
         """
@@ -457,9 +470,10 @@ class MessageTypeTests(TestCase):
         """
         messageType = self.messageType()
         self.assertRaises(
-            ValidationError, messageType._serializer.validate, {
-                "key": 1,
-                "message_type": "myapp:mysystem"})
+            ValidationError,
+            messageType._serializer.validate,
+            {"key": 1, "message_type": "myapp:mysystem"},
+        )
 
     def test_validateFieldValidation(self):
         """
@@ -469,10 +483,10 @@ class MessageTypeTests(TestCase):
         """
         messageType = self.messageType()
         self.assertRaises(
-            ValidationError, messageType._serializer.validate, {
-                "key": 1,
-                "value": None,
-                "message_type": "myapp:mysystem"})
+            ValidationError,
+            messageType._serializer.validate,
+            {"key": 1, "value": None, "message_type": "myapp:mysystem"},
+        )
 
     def test_validateStandardFields(self):
         """
@@ -480,13 +494,16 @@ class MessageTypeTests(TestCase):
         dictionary has the standard fields that are added to all messages.
         """
         messageType = self.messageType()
-        messageType._serializer.validate({
-            "key": 1,
-            "value": 2,
-            "message_type": "myapp:mysystem",
-            "task_level": "/",
-            "task_uuid": "123",
-            "timestamp": "xxx"})
+        messageType._serializer.validate(
+            {
+                "key": 1,
+                "value": 2,
+                "message_type": "myapp:mysystem",
+                "task_level": "/",
+                "task_uuid": "123",
+                "timestamp": "xxx",
+            }
+        )
 
     def test_call(self):
         """
@@ -495,8 +512,7 @@ class MessageTypeTests(TestCase):
         """
         messageType = self.messageType()
         message = messageType()
-        self.assertEqual(
-            message._contents, {"message_type": messageType.message_type})
+        self.assertEqual(message._contents, {"message_type": messageType.message_type})
 
     def test_callSerializer(self):
         """
@@ -515,10 +531,9 @@ class MessageTypeTests(TestCase):
         messageType = self.messageType()
         message = messageType(key=2, value=3)
         self.assertEqual(
-            message._contents, {
-                "message_type": messageType.message_type,
-                "key": 2,
-                "value": 3})
+            message._contents,
+            {"message_type": messageType.message_type, "key": 2, "value": 3},
+        )
 
     def test_logCallsDefaultLoggerWrite(self):
         """
@@ -530,17 +545,16 @@ class MessageTypeTests(TestCase):
         self.addCleanup(remove_destination, messages.append)
         message_type = self.messageType()
         message_type.log(key=1234, value=3)
-        self.assertEqual(messages[0][u"key"], 1234)
-        self.assertEqual(messages[0][u"value"], 3)
-        self.assertEqual(
-            messages[0][u"message_type"], message_type.message_type)
+        self.assertEqual(messages[0]["key"], 1234)
+        self.assertEqual(messages[0]["value"], 3)
+        self.assertEqual(messages[0]["message_type"], message_type.message_type)
 
     def test_description(self):
         """
         L{MessageType.description} stores the passed in description.
         """
         messageType = self.messageType()
-        self.assertEqual(messageType.description, u"A message type")
+        self.assertEqual(messageType.description, "A message type")
 
     def test_optionalDescription(self):
         """
@@ -577,7 +591,8 @@ class ActionTypeTestsMixin(object):
             "myapp:mysystem:myaction",
             [Field.forTypes("key", [int], "")],  # start fields
             [Field.forTypes("value", [int], "")],  # success fields
-            "A action type")
+            "A action type",
+        )
 
     def test_validateMissingType(self):
         """
@@ -588,7 +603,8 @@ class ActionTypeTestsMixin(object):
         message = self.getValidMessage()
         del message["action_type"]
         self.assertRaises(
-            ValidationError, self.getSerializer(actionType).validate, message)
+            ValidationError, self.getSerializer(actionType).validate, message
+        )
 
     def test_validateWrongType(self):
         """
@@ -599,7 +615,8 @@ class ActionTypeTestsMixin(object):
         message = self.getValidMessage()
         message["action_type"] = "xxx"
         self.assertRaises(
-            ValidationError, self.getSerializer(actionType).validate, message)
+            ValidationError, self.getSerializer(actionType).validate, message
+        )
 
     def test_validateExtraField(self):
         """
@@ -610,7 +627,8 @@ class ActionTypeTestsMixin(object):
         message = self.getValidMessage()
         message["extra"] = "ono"
         self.assertRaises(
-            ValidationError, self.getSerializer(actionType).validate, message)
+            ValidationError, self.getSerializer(actionType).validate, message
+        )
 
     def test_validateMissingField(self):
         """
@@ -624,7 +642,8 @@ class ActionTypeTestsMixin(object):
                 del message[key]
                 break
         self.assertRaises(
-            ValidationError, self.getSerializer(actionType).validate, message)
+            ValidationError, self.getSerializer(actionType).validate, message
+        )
 
     def test_validateFieldValidation(self):
         """
@@ -638,7 +657,8 @@ class ActionTypeTestsMixin(object):
                 message[key] = object()
                 break
         self.assertRaises(
-            ValidationError, self.getSerializer(actionType).validate, message)
+            ValidationError, self.getSerializer(actionType).validate, message
+        )
 
     def test_validateStandardFields(self):
         """
@@ -647,10 +667,7 @@ class ActionTypeTestsMixin(object):
         """
         actionType = self.actionType()
         message = self.getValidMessage()
-        message.update({
-            "task_level": "/",
-            "task_uuid": "123",
-            "timestamp": "xxx"})
+        message.update({"task_level": "/", "task_uuid": "123", "timestamp": "xxx"})
         self.getSerializer(actionType).validate(message)
 
 
@@ -666,7 +683,8 @@ class ActionTypeStartMessage(TestCase, ActionTypeTestsMixin):
         return {
             "action_type": "myapp:mysystem:myaction",
             "action_status": "started",
-            "key": 1}
+            "key": 1,
+        }
 
     def getSerializer(self, actionType):
         return actionType._serializers.start
@@ -684,7 +702,8 @@ class ActionTypeSuccessMessage(TestCase, ActionTypeTestsMixin):
         return {
             "action_type": "myapp:mysystem:myaction",
             "action_status": "succeeded",
-            "value": 2}
+            "value": 2,
+        }
 
     def getSerializer(self, actionType):
         return actionType._serializers.success
@@ -703,7 +722,8 @@ class ActionTypeFailureMessage(TestCase, ActionTypeTestsMixin):
             "action_type": "myapp:mysystem:myaction",
             "action_status": "failed",
             "exception": "exceptions.RuntimeError",
-            "reason": "because", }
+            "reason": "because",
+        }
 
     def getSerializer(self, actionType):
         return actionType._serializers.failure
@@ -715,10 +735,7 @@ class ActionTypeFailureMessage(TestCase, ActionTypeTestsMixin):
         """
         actionType = self.actionType()
         message = self.getValidMessage()
-        message.update({
-            "task_level": "/",
-            "task_uuid": "123",
-            "timestamp": "xxx"})
+        message.update({"task_level": "/", "task_uuid": "123", "timestamp": "xxx"})
         message.update({"extra_field": "hello"})
         self.getSerializer(actionType).validate(message)
 
@@ -772,14 +789,18 @@ class ActionTypeTests(TestCase):
         """
         called = []
         actionType = self.actionType()
-        actionType._start_action = lambda *args, **kwargs: called.append(
-            (args, kwargs))
+        actionType._start_action = lambda *args, **kwargs: called.append((args, kwargs))
         logger = object()
         actionType(logger, key=5)
         self.assertEqual(
             called,
-            [((logger, "myapp:mysystem:myaction", actionType._serializers), {
-                "key": 5})])
+            [
+                (
+                    (logger, "myapp:mysystem:myaction", actionType._serializers),
+                    {"key": 5},
+                )
+            ],
+        )
 
     def test_defaultStartAction(self):
         """
@@ -803,14 +824,18 @@ class ActionTypeTests(TestCase):
         """
         called = []
         actionType = self.actionType()
-        actionType._startTask = lambda *args, **kwargs: called.append(
-            (args, kwargs))
+        actionType._startTask = lambda *args, **kwargs: called.append((args, kwargs))
         logger = object()
         actionType.as_task(logger, key=5)
         self.assertEqual(
             called,
-            [((logger, "myapp:mysystem:myaction", actionType._serializers), {
-                "key": 5})])
+            [
+                (
+                    (logger, "myapp:mysystem:myaction", actionType._serializers),
+                    {"key": 5},
+                )
+            ],
+        )
 
     def test_defaultStartTask(self):
         """
@@ -845,13 +870,18 @@ class EndToEndValidationTests(TestCase):
     Test validation of messages created using L{MessageType} and
     L{ActionType}.
     """
+
     MESSAGE = MessageType(
-        "myapp:mymessage", [Field.forTypes("key", [int], "The key")],
-        "A message for testing.")
+        "myapp:mymessage",
+        [Field.forTypes("key", [int], "The key")],
+        "A message for testing.",
+    )
     ACTION = ActionType(
-        "myapp:myaction", [Field.forTypes("key", [int], "The key")], [
-            Field.forTypes("result", [unicode], "The result")],
-        "An action for testing.")
+        "myapp:myaction",
+        [Field.forTypes("key", [int], "The key")],
+        [Field.forTypes("result", [unicode], "The result")],
+        "An action for testing.",
+    )
 
     def test_correctFromMessageType(self):
         """

@@ -37,8 +37,7 @@ class PublicAPITests(TestCase):
         L{eliot.addGlobalFields} calls the corresponding method on the
         L{Destinations} attached to L{Logger}.
         """
-        self.assertEqual(
-            eliot.addGlobalFields, Logger._destinations.addGlobalFields)
+        self.assertEqual(eliot.addGlobalFields, Logger._destinations.addGlobalFields)
 
 
 class PEP8Tests(TestCase):

@@ -16,12 +16,7 @@ from functools import partial
 from inspect import getcallargs
 from contextvars import ContextVar
 
-from pyrsistent import (
-    field,
-    PClass,
-    optional,
-    pmap_field,
-    pvector, )
+from pyrsistent import field, PClass, optional, pmap_field, pvector
 from boltons.funcutils import wraps
 from six import text_type as unicode, PY3
 
@@ -30,16 +25,17 @@ from ._message import (
     WrittenMessage,
     EXCEPTION_FIELD,
     REASON_FIELD,
-    TASK_UUID_FIELD, )
+    TASK_UUID_FIELD,
+)
 from ._util import safeunicode
 from ._errors import _error_extraction
 
-ACTION_STATUS_FIELD = 'action_status'
-ACTION_TYPE_FIELD = 'action_type'
+ACTION_STATUS_FIELD = "action_status"
+ACTION_TYPE_FIELD = "action_type"
 
-STARTED_STATUS = 'started'
-SUCCEEDED_STATUS = 'succeeded'
-FAILED_STATUS = 'failed'
+STARTED_STATUS = "started"
+SUCCEEDED_STATUS = "succeeded"
+FAILED_STATUS = "failed"
 
 VALID_STATUSES = (STARTED_STATUS, SUCCEEDED_STATUS, FAILED_STATUS)
 
@@ -62,6 +58,7 @@ class TaskLevel(object):
         3]} indicates this is the third message within an action which is
         the second item in the task.
     """
+
     def __init__(self, level):
         self._level = level
 
@@ -183,8 +180,7 @@ class Action(object):
     @ivar _finished: L{True} if the L{Action} has finished, otherwise L{False}.
     """
 
-    def __init__(
-        self, logger, task_uuid, task_level, action_type, serializers=None):
+    def __init__(self, logger, task_uuid, task_level, action_type, serializers=None):
         """
         Initialize the L{Action} and log the start message.
 
@@ -214,13 +210,15 @@ class Action(object):
             warn(
                 "Action should be initialized with a TaskLevel",
                 DeprecationWarning,
-                stacklevel=2)
+                stacklevel=2,
+            )
             task_level = TaskLevel.fromString(task_level)
         self._task_level = task_level
         self._last_child = None
         self._identification = {
             TASK_UUID_FIELD: task_uuid,
-            ACTION_TYPE_FIELD: action_type, }
+            ACTION_TYPE_FIELD: action_type,
+        }
         self._serializers = serializers
         self._finished = False
 
@@ -240,8 +238,8 @@ class Action(object):
         @return: L{bytes} encoding the current location within the task.
         """
         return "{}@{}".format(
-            self._identification[TASK_UUID_FIELD],
-            self._nextTaskLevel().toString()).encode("ascii")
+            self._identification[TASK_UUID_FIELD], self._nextTaskLevel().toString()
+        ).encode("ascii")
 
     @classmethod
     def continue_task(cls, logger=None, task_id=_TASK_ID_NOT_SUPPLIED):
@@ -263,8 +261,8 @@ class Action(object):
             task_id = task_id.decode("ascii")
         uuid, task_level = task_id.split("@")
         action = cls(
-            logger, uuid, TaskLevel.fromString(task_level),
-            "eliot:remote_task")
+            logger, uuid, TaskLevel.fromString(task_level), "eliot:remote_task"
+        )
         action._start({})
         return action
 
@@ -329,10 +327,11 @@ class Action(object):
             if self._serializers is not None:
                 serializer = self._serializers.success
         else:
-            fields = _error_extraction.get_fields_for_exception(
-                self._logger, exception)
+            fields = _error_extraction.get_fields_for_exception(self._logger, exception)
             fields[EXCEPTION_FIELD] = "%s.%s" % (
-                exception.__class__.__module__, exception.__class__.__name__)
+                exception.__class__.__module__,
+                exception.__class__.__name__,
+            )
             fields[REASON_FIELD] = safeunicode(exception)
             fields[ACTION_STATUS_FIELD] = FAILED_STATUS
             if self._serializers is not None:
@@ -361,8 +360,12 @@ class Action(object):
         """
         newLevel = self._nextTaskLevel()
         return self.__class__(
-            logger, self._identification[TASK_UUID_FIELD], newLevel,
-            action_type, serializers)
+            logger,
+            self._identification[TASK_UUID_FIELD],
+            newLevel,
+            action_type,
+            serializers,
+        )
 
     def run(self, f, *args, **kwargs):
         """
@@ -425,8 +428,10 @@ class WrongTask(Exception):
     def __init__(self, action, message):
         Exception.__init__(
             self,
-            'Tried to add {} to {}. Expected task_uuid = {}, got {}'.format(
-                message, action, action.task_uuid, message.task_uuid))
+            "Tried to add {} to {}. Expected task_uuid = {}, got {}".format(
+                message, action, action.task_uuid, message.task_uuid
+            ),
+        )
 
 
 class WrongTaskLevel(Exception):
@@ -438,8 +443,10 @@ class WrongTaskLevel(Exception):
     def __init__(self, action, message):
         Exception.__init__(
             self,
-            'Tried to add {} to {}, but {} is not a sibling of {}'.format(
-                message, action, message.task_level, action.task_level))
+            "Tried to add {} to {}, but {} is not a sibling of {}".format(
+                message, action, message.task_level, action.task_level
+            ),
+        )
 
 
 class WrongActionType(Exception):
@@ -448,12 +455,16 @@ class WrongActionType(Exception):
     """
 
     def __init__(self, action, message):
-        error_msg = 'Tried to end {} with {}. Expected action_type = {}, got {}'
+        error_msg = "Tried to end {} with {}. Expected action_type = {}, got {}"
         Exception.__init__(
             self,
             error_msg.format(
-                action, message, action.action_type,
-                message.contents.get(ACTION_TYPE_FIELD, '<undefined>')))
+                action,
+                message,
+                action.action_type,
+                message.contents.get(ACTION_TYPE_FIELD, "<undefined>"),
+            ),
+        )
 
 
 class InvalidStatus(Exception):
@@ -462,12 +473,17 @@ class InvalidStatus(Exception):
     """
 
     def __init__(self, action, message):
-        error_msg = 'Tried to end {} with {}. Expected status {} or {}, got {}'
+        error_msg = "Tried to end {} with {}. Expected status {} or {}, got {}"
         Exception.__init__(
             self,
             error_msg.format(
-                action, message, SUCCEEDED_STATUS, FAILED_STATUS,
-                message.contents.get(ACTION_STATUS_FIELD, '<undefined>')))
+                action,
+                message,
+                SUCCEEDED_STATUS,
+                FAILED_STATUS,
+                message.contents.get(ACTION_STATUS_FIELD, "<undefined>"),
+            ),
+        )
 
 
 class DuplicateChild(Exception):
@@ -478,8 +494,11 @@ class DuplicateChild(Exception):
 
     def __init__(self, action, message):
         Exception.__init__(
-            self, 'Tried to add {} to {}, but already had child at {}'.format(
-                message, action, message.task_level))
+            self,
+            "Tried to add {} to {}, but already had child at {}".format(
+                message, action, message.task_level
+            ),
+        )
 
 
 class InvalidStartMessage(Exception):
@@ -488,8 +507,7 @@ class InvalidStartMessage(Exception):
     """
 
     def __init__(self, message, reason):
-        Exception.__init__(
-            self, 'Invalid start message {}: {}'.format(message, reason))
+        Exception.__init__(self, "Invalid start message {}: {}".format(message, reason))
 
     @classmethod
     def wrong_status(cls, message):
@@ -497,7 +515,7 @@ class InvalidStartMessage(Exception):
 
     @classmethod
     def wrong_task_level(cls, message):
-        return cls(message, 'first message must have task level ending in 1')
+        return cls(message, "first message must have task level ending in 1")
 
 
 class WrittenAction(PClass):
@@ -522,18 +540,15 @@ class WrittenAction(PClass):
         L{WrittenMessage} objects that make up this action.
     """
 
-    start_message = field(
-        type=optional(WrittenMessage), mandatory=True, initial=None)
-    end_message = field(
-        type=optional(WrittenMessage), mandatory=True, initial=None)
+    start_message = field(type=optional(WrittenMessage), mandatory=True, initial=None)
+    end_message = field(type=optional(WrittenMessage), mandatory=True, initial=None)
     task_level = field(type=TaskLevel, mandatory=True)
     task_uuid = field(type=unicode, mandatory=True, factory=unicode)
     # Pyrsistent doesn't support pmap_field with recursive types.
     _children = pmap_field(TaskLevel, object)
 
     @classmethod
-    def from_messages(
-        cls, start_message=None, children=pvector(), end_message=None):
+    def from_messages(cls, start_message=None, children=pvector(), end_message=None):
         """
         Create a C{WrittenAction} from C{WrittenMessage}s and other
         C{WrittenAction}s.
@@ -564,10 +579,12 @@ class WrittenAction(PClass):
         actual_message = [
             message
             for message in [start_message, end_message] + list(children)
-            if message][0]
+            if message
+        ][0]
         action = cls(
             task_level=actual_message.task_level.parent(),
-            task_uuid=actual_message.task_uuid, )
+            task_uuid=actual_message.task_uuid,
+        )
         if start_message:
             action = action._start(start_message)
         for child in children:
@@ -645,8 +662,7 @@ class WrittenAction(PClass):
         The list of child messages and actions sorted by task level, excluding the
         start and end messages.
         """
-        return pvector(
-            sorted(self._children.values(), key=lambda m: m.task_level))
+        return pvector(sorted(self._children.values(), key=lambda m: m.task_level))
 
     def _validate_message(self, message):
         """
@@ -681,7 +697,7 @@ class WrittenAction(PClass):
         """
         self._validate_message(message)
         level = message.task_level
-        return self.transform(('_children', level), message)
+        return self.transform(("_children", level), message)
 
     def _start(self, start_message):
         """
@@ -695,8 +711,7 @@ class WrittenAction(PClass):
             C{task_level} indicating that it is not the first message of an
             action.
         """
-        if start_message.contents.get(
-            ACTION_STATUS_FIELD, None) != STARTED_STATUS:
+        if start_message.contents.get(ACTION_STATUS_FIELD, None) != STARTED_STATUS:
             raise InvalidStartMessage.wrong_status(start_message)
         if start_message.task_level.level[-1] != 1:
             raise InvalidStartMessage.wrong_task_level(start_message)
@@ -778,7 +793,7 @@ def start_action(logger=None, action_type="", _serializers=None, **fields):
         return action
 
 
-def startTask(logger=None, action_type=u"", _serializers=None, **fields):
+def startTask(logger=None, action_type="", _serializers=None, **fields):
     """
     Like L{action}, but creates a new top-level L{Action} with no parent.
 
@@ -797,11 +812,8 @@ def startTask(logger=None, action_type=u"", _serializers=None, **fields):
     @return: A new L{Action}.
     """
     action = Action(
-        logger,
-        unicode(uuid4()),
-        TaskLevel(level=[]),
-        action_type,
-        _serializers)
+        logger, unicode(uuid4()), TaskLevel(level=[]), action_type, _serializers
+    )
     action._start(fields)
     return action
 
@@ -850,8 +862,7 @@ def preserve_context(f):
 
 
 def log_call(
-        wrapped_function=None, action_type=None, include_args=None,
-        include_result=True
+    wrapped_function=None, action_type=None, include_args=None, include_result=True
 ):
     """Decorator/decorator factory that logs inputs and the return result.
 
@@ -864,23 +875,30 @@ def log_call(
     @param include_result: True by default. If False, the return result isn't logged.
     """
     if wrapped_function is None:
-        return partial(log_call, action_type=action_type, include_args=include_args,
-                       include_result=include_result)
+        return partial(
+            log_call,
+            action_type=action_type,
+            include_args=include_args,
+            include_result=include_result,
+        )
 
     if action_type is None:
         if PY3:
-            action_type = "{}.{}".format(wrapped_function.__module__,
-                                         wrapped_function.__qualname__)
+            action_type = "{}.{}".format(
+                wrapped_function.__module__, wrapped_function.__qualname__
+            )
         else:
             action_type = wrapped_function.__name__
 
     if PY3 and include_args is not None:
         from inspect import signature
+
         sig = signature(wrapped_function)
         if set(include_args) - set(sig.parameters):
             raise ValueError(
-                ("include_args ({}) lists arguments not in the "
-                 "wrapped function").format(include_args)
+                (
+                    "include_args ({}) lists arguments not in the " "wrapped function"
+                ).format(include_args)
             )
 
     @wraps(wrapped_function)

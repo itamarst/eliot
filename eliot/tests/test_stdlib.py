@@ -23,21 +23,25 @@ class StdlibTests(TestCase):
         stdlib_logger.warning("ono")
         message = logger.messages[0]
         assertContainsFields(
-            self, message, {
+            self,
+            message,
+            {
                 "message_type": "eliot:stdlib",
                 "log_level": "INFO",
                 "message": "hello",
-                "logger": "eliot-test"
-            }
+                "logger": "eliot-test",
+            },
         )
         message = logger.messages[1]
         assertContainsFields(
-            self, message, {
+            self,
+            message,
+            {
                 "message_type": "eliot:stdlib",
                 "log_level": "WARNING",
                 "message": "ono",
-                "logger": "eliot-test"
-            }
+                "logger": "eliot-test",
+            },
         )
 
     @capture_logging(None)
@@ -55,12 +59,14 @@ class StdlibTests(TestCase):
             stdlib_logger.exception("ono")
         message = logger.messages[0]
         assertContainsFields(
-            self, message, {
+            self,
+            message,
+            {
                 "message_type": "eliot:stdlib",
                 "log_level": "ERROR",
                 "message": "ono",
-                "logger": "eliot-test2"
-            }
+                "logger": "eliot-test2",
+            },
         )
         assert_expected_traceback(
             self, logger, logger.messages[1], exception, expected_traceback

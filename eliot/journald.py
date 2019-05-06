@@ -12,9 +12,11 @@ from ._message import TASK_UUID_FIELD, MESSAGE_TYPE_FIELD
 from ._action import ACTION_TYPE_FIELD, ACTION_STATUS_FIELD, FAILED_STATUS
 
 _ffi = FFI()
-_ffi.cdef("""
+_ffi.cdef(
+    """
 int sd_journal_send(const char *format, ...);
-""")
+"""
+)
 try:
     try:
         _journald = _ffi.dlopen("libsystemd.so.0")
@@ -36,9 +38,9 @@ def sd_journal_send(**kwargs):
     # The function uses printf formatting, so we need to quote
     # percentages.
     fields = [
-        _ffi.new(
-            "char[]", key.encode("ascii") + b'=' + value.replace(b"%", b"%%"))
-        for key, value in kwargs.items()]
+        _ffi.new("char[]", key.encode("ascii") + b"=" + value.replace(b"%", b"%%"))
+        for key, value in kwargs.items()
+    ]
     fields.append(_ffi.NULL)
     result = _journald.sd_journal_send(*fields)
     if result != 0:
@@ -67,7 +69,7 @@ class JournaldDestination(object):
 
         @param message: Dictionary passed from a C{Logger}.
         """
-        eliot_type = u""
+        eliot_type = ""
         priority = b"6"
         if ACTION_TYPE_FIELD in message:
             eliot_type = message[ACTION_TYPE_FIELD]
@@ -75,11 +77,12 @@ class JournaldDestination(object):
                 priority = b"3"
         elif MESSAGE_TYPE_FIELD in message:
             eliot_type = message[MESSAGE_TYPE_FIELD]
-            if eliot_type == u"eliot:traceback":
+            if eliot_type == "eliot:traceback":
                 priority = b"2"
         sd_journal_send(
             MESSAGE=dumps(message),
             ELIOT_TASK=message[TASK_UUID_FIELD].encode("utf-8"),
             ELIOT_TYPE=eliot_type.encode("utf-8"),
             SYSLOG_IDENTIFIER=self._identifier,
-            PRIORITY=priority)
+            PRIORITY=priority,
+        )

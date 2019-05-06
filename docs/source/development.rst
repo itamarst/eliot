@@ -8,4 +8,4 @@ All modules should have the ``from __future__ import unicode_literals`` statemen
 Coding standard is PEP8, with the only exception being camel case methods for the Twisted-related modules.
 Some camel case methods remain for backwards compatibility reasons with the old coding standard.
 
-You should use ``yapf`` to format code.
+You should use ``black`` to format the code.

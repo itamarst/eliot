@@ -43,10 +43,12 @@ class FunctionalTests(TestCase):
         by L{encode}.
         """
         try:
-            process = subprocess.Popen(["tai64nlocal"],
-                                       bufsize=4096,
-                                       stdin=subprocess.PIPE,
-                                       stdout=subprocess.PIPE)
+            process = subprocess.Popen(
+                ["tai64nlocal"],
+                bufsize=4096,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+            )
         except OSError as e:
             if e.errno == errno.ENOENT:
                 raise SkipTest("This test requires the daemontools package")
@@ -59,7 +61,8 @@ class FunctionalTests(TestCase):
         process.stdin.close()
         decodedToLocalTime = process.stdout.read().strip()
         self.assertEqual(
-            time.strftime(
-                "%Y-%m-%d %H:%M:%S.12345",
-                time.localtime(timestamp)).encode("ascii"),
-            decodedToLocalTime[:25])
+            time.strftime("%Y-%m-%d %H:%M:%S.12345", time.localtime(timestamp)).encode(
+                "ascii"
+            ),
+            decodedToLocalTime[:25],
+        )

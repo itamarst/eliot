@@ -11,13 +11,13 @@ from six import text_type as unicode
 
 from pyrsistent import PClass, pmap_field
 
-MESSAGE_TYPE_FIELD = 'message_type'
-TASK_UUID_FIELD = 'task_uuid'
-TASK_LEVEL_FIELD = 'task_level'
-TIMESTAMP_FIELD = 'timestamp'
+MESSAGE_TYPE_FIELD = "message_type"
+TASK_UUID_FIELD = "task_uuid"
+TASK_LEVEL_FIELD = "task_level"
+TIMESTAMP_FIELD = "timestamp"
 
-EXCEPTION_FIELD = 'exception'
-REASON_FIELD = 'reason'
+EXCEPTION_FIELD = "exception"
+REASON_FIELD = "reason"
 
 
 class Message(object):
@@ -29,6 +29,7 @@ class Message(object):
     (e.g. C{"_id"} is used by Elasticsearch for unique message identifiers and
     may be auto-populated by logstash).
     """
+
     # Overrideable for testing purposes:
     _time = time.time
 
@@ -117,7 +118,7 @@ class Message(object):
         new_values = {
             TIMESTAMP_FIELD: timestamp,
             TASK_UUID_FIELD: task_uuid,
-            TASK_LEVEL_FIELD: task_level
+            TASK_LEVEL_FIELD: task_level,
         }
         if "action_type" not in self._contents and (
             "message_type" not in self._contents
@@ -153,6 +154,7 @@ class WrittenMessage(PClass):
 
     @ivar _logged_dict: The originally logged dictionary.
     """
+
     _logged_dict = pmap_field((str, unicode), object)
 
     @property
@@ -181,9 +183,11 @@ class WrittenMessage(PClass):
         """
         A C{PMap}, the message contents without Eliot metadata.
         """
-        return self._logged_dict.discard(TIMESTAMP_FIELD).discard(
-            TASK_UUID_FIELD
-        ).discard(TASK_LEVEL_FIELD)
+        return (
+            self._logged_dict.discard(TIMESTAMP_FIELD)
+            .discard(TASK_UUID_FIELD)
+            .discard(TASK_LEVEL_FIELD)
+        )
 
     @classmethod
     def from_dict(cls, logged_dictionary):
