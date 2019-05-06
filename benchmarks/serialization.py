@@ -22,8 +22,8 @@ def run():
     start = time.time()
     for i in range(N):
         with start_action(action_type="my_action"):
-            with start_action(action_type="my_action2"):
-                Message.log(
+            with start_action(action_type="my_action2") as ctx:
+                ctx.log(
                     message_type="my_message",
                     integer=3,
                     string=b"abcdeft",

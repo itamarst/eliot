@@ -41,6 +41,8 @@ VALID_STATUSES = (STARTED_STATUS, SUCCEEDED_STATUS, FAILED_STATUS)
 
 _ACTION_CONTEXT = ContextVar("eliot.action")
 
+from ._message import TIMESTAMP_FIELD, TASK_LEVEL_FIELD
+
 
 def current_action():
     """
@@ -162,6 +164,8 @@ class TaskLevel(object):
 
 
 _TASK_ID_NOT_SUPPLIED = object()
+
+import time
 
 
 class Action(object):
@@ -295,12 +299,13 @@ class Action(object):
         block or L{Action.finish}.
         """
         fields[ACTION_STATUS_FIELD] = STARTED_STATUS
+        fields[TIMESTAMP_FIELD] = time.time()
         fields.update(self._identification)
         if self._serializers is None:
             serializer = None
         else:
             serializer = self._serializers.start
-        Message(fields, serializer).write(self._logger, self)
+        _output._DEFAULT_LOGGER.write(fields, serializer)
 
     def finish(self, exception=None):
         """
@@ -337,8 +342,9 @@ class Action(object):
             if self._serializers is not None:
                 serializer = self._serializers.failure
 
+        fields[TIMESTAMP_FIELD] = time.time()
         fields.update(self._identification)
-        Message(fields, serializer).write(self._logger, self)
+        _output._DEFAULT_LOGGER.write(fields, serializer)
 
     def child(self, logger, action_type, serializers=None):
         """
@@ -417,6 +423,14 @@ class Action(object):
         _ACTION_CONTEXT.reset(self._parent_token)
         self._parent_token = None
         self.finish(exception)
+
+    ## Message logging
+    def log(self, message_type, **fields):
+        """Log individual message."""
+        fields[TIMESTAMP_FIELD] = time.time()
+        fields[TASK_UUID_FIELD] = self._identification[TASK_UUID_FIELD]
+        fields[TASK_LEVEL_FIELD] = self._nextTaskLevel().as_list()
+        _output._DEFAULT_LOGGER.write(fields, None)
 
 
 class WrongTask(Exception):
@@ -920,3 +934,6 @@ def log_call(
             return result
 
     return logging_wrapper
+
+
+from . import _output
