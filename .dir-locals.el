@@ -1,0 +1,1 @@
+((python-mode . ((blacken-mode))))
