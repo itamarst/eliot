@@ -61,7 +61,7 @@ setup(
             "sphinx",
             "sphinx_rtd_theme",
             "flake8",
-            "yapf",
+            "black",
             "pytest"
         ]
     },
