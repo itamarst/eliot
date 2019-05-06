@@ -25,15 +25,18 @@ def run():
             with start_action(action_type="my_action2"):
                 Message.log(
                     message_type="my_message",
-                    integer=3, string=b"abcdeft", string2="dgsjdlkgjdsl",
-                    list=[1, 2, 3, 4])
+                    integer=3,
+                    string=b"abcdeft",
+                    string2="dgsjdlkgjdsl",
+                    list=[1, 2, 3, 4],
+                )
     end = time.time()
 
     # Each iteration has 5 messages: start/end of my_action, start/end of
     # my_action2, and my_message.
     print("%.6f per message" % ((end - start) / (N * 5),))
-    print("%s messages/sec" % (int(N / (end-start)),))
+    print("%s messages/sec" % (int(N / (end - start)),))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()
