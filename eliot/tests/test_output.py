@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from sys import stdout
 from unittest import TestCase, skipIf, skipUnless
+
 # Make sure to use StringIO that only accepts unicode:
 from io import BytesIO, StringIO
 import json as pyjson
@@ -15,6 +16,7 @@ from uuid import UUID
 from threading import Thread
 
 from six import PY3, PY2
+
 try:
     import numpy as np
 except ImportError:
@@ -22,8 +24,15 @@ except ImportError:
 from zope.interface.verify import verifyClass
 
 from .._output import (
-    MemoryLogger, ILogger, Destinations, Logger, bytesjson as json, to_file,
-    FileDestination, _DestinationsSendError)
+    MemoryLogger,
+    ILogger,
+    Destinations,
+    Logger,
+    bytesjson as json,
+    to_file,
+    FileDestination,
+    _DestinationsSendError,
+)
 from .._validation import ValidationError, Field, _MessageSerializer
 from .._traceback import write_traceback
 from ..testing import assertContainsFields
@@ -45,9 +54,9 @@ class MemoryLoggerTests(TestCase):
         Dictionaries written with L{MemoryLogger.write} are stored on a list.
         """
         logger = MemoryLogger()
-        logger.write({'a': 'b'})
-        logger.write({'c': 1})
-        self.assertEqual(logger.messages, [{'a': 'b'}, {'c': 1}])
+        logger.write({"a": "b"})
+        logger.write({"c": 1})
+        self.assertEqual(logger.messages, [{"a": "b"}, {"c": 1}])
         logger.validate()
 
     def test_notStringFieldKeys(self):
@@ -56,17 +65,16 @@ class MemoryLoggerTests(TestCase):
         raises a C{TypeError}.
         """
         logger = MemoryLogger()
-        logger.write({123: 'b'})
+        logger.write({123: "b"})
         self.assertRaises(TypeError, logger.validate)
 
-    @skipIf(
-        PY3, "Python 3 json module makes it impossible to use bytes as keys")
+    @skipIf(PY3, "Python 3 json module makes it impossible to use bytes as keys")
     def test_bytesFieldKeys(self):
         """
         Field keys can be bytes containing utf-8 encoded Unicode.
         """
         logger = MemoryLogger()
-        logger.write({u'\u1234'.encode("utf-8"): 'b'})
+        logger.write({"\u1234".encode("utf-8"): "b"})
         logger.validate()
 
     def test_bytesMustBeUTF8(self):
@@ -74,7 +82,7 @@ class MemoryLoggerTests(TestCase):
         Field keys can be bytes, but only if they're UTF-8 encoded Unicode.
         """
         logger = MemoryLogger()
-        logger.write({'\u1234'.encode("utf-16"): 'b'})
+        logger.write({"\u1234".encode("utf-16"): "b"})
         self.assertRaises(UnicodeDecodeError, logger.validate)
 
     def test_serializer(self):
@@ -103,8 +111,9 @@ class MemoryLoggerTests(TestCase):
         L{MemoryLogger.validate} will allow exceptions raised by the serializer
         to pass through.
         """
-        serializer = _MessageSerializer([
-            Field.forValue("message_type", "mymessage", u"The type")])
+        serializer = _MessageSerializer(
+            [Field.forValue("message_type", "mymessage", "The type")]
+        )
         logger = MemoryLogger()
         logger.write({"message_type": "wrongtype"}, serializer)
         self.assertRaises(ValidationError, logger.validate)
@@ -114,13 +123,16 @@ class MemoryLoggerTests(TestCase):
         L{MemoryLogger.validate} will encode the output of serialization to
         JSON.
         """
-        serializer = _MessageSerializer([
-            Field.forValue("message_type", "type", u"The type"),
-            Field("foo", lambda value: object(), u"The type")])
+        serializer = _MessageSerializer(
+            [
+                Field.forValue("message_type", "type", "The type"),
+                Field("foo", lambda value: object(), "The type"),
+            ]
+        )
         logger = MemoryLogger()
-        logger.write({
-            "message_type": "type",
-            "foo": "will become object()"}, serializer)
+        logger.write(
+            {"message_type": "type", "foo": "will become object()"}, serializer
+        )
         self.assertRaises(TypeError, logger.validate)
 
     def test_serialize(self):
@@ -128,31 +140,37 @@ class MemoryLoggerTests(TestCase):
         L{MemoryLogger.serialize} returns a list of serialized versions of the
         logged messages.
         """
-        serializer = _MessageSerializer([
-            Field.forValue("message_type", "mymessage", "The type"),
-            Field("length", len, "The length")])
-        messages = [{
-            "message_type": "mymessage",
-            "length": "abc"}, {
-                "message_type": "mymessage",
-                "length": "abcd"}]
+        serializer = _MessageSerializer(
+            [
+                Field.forValue("message_type", "mymessage", "The type"),
+                Field("length", len, "The length"),
+            ]
+        )
+        messages = [
+            {"message_type": "mymessage", "length": "abc"},
+            {"message_type": "mymessage", "length": "abcd"},
+        ]
         logger = MemoryLogger()
         for message in messages:
             logger.write(message, serializer)
         self.assertEqual(
-            logger.serialize(), [{
-                "message_type": "mymessage",
-                "length": 3}, {
-                    "message_type": "mymessage",
-                    "length": 4}])
+            logger.serialize(),
+            [
+                {"message_type": "mymessage", "length": 3},
+                {"message_type": "mymessage", "length": 4},
+            ],
+        )
 
     def test_serializeCopies(self):
         """
         L{MemoryLogger.serialize} does not mutate the original logged messages.
         """
-        serializer = _MessageSerializer([
-            Field.forValue("message_type", "mymessage", "The type"),
-            Field("length", len, "The length")])
+        serializer = _MessageSerializer(
+            [
+                Field.forValue("message_type", "mymessage", "The type"),
+                Field("length", len, "The length"),
+            ]
+        )
         message = {"message_type": "mymessage", "length": "abc"}
         logger = MemoryLogger()
         logger.write(message, serializer)
@@ -233,8 +251,9 @@ class MemoryLoggerTests(TestCase):
         logger.write({"key": "value"}, None)
         logger.reset()
         self.assertEqual(
-            (logger.messages, logger.serializers,
-             logger.tracebackMessages), ([], [], []))
+            (logger.messages, logger.serializers, logger.tracebackMessages),
+            ([], [], []),
+        )
 
     def test_threadSafeWrite(self):
         """
@@ -257,7 +276,7 @@ class MemoryLoggerTests(TestCase):
                 logger.write(msg, serializer)
 
         # Generate a single distinct message for each thread to log.
-        msgs = list({u"i": i} for i in range(thread_count))
+        msgs = list({"i": i} for i in range(thread_count))
 
         # Generate a single distinct serializer for each thread to log.
         serializers = list(object() for i in range(thread_count))
@@ -287,7 +306,7 @@ class MemoryLoggerTests(TestCase):
         # must be paired with the correct serializer, where "correct" is
         # defined by ``write_args`` above.
         for position, (msg, serializer) in enumerate(
-                zip(logger.messages, logger.serializers)
+            zip(logger.messages, logger.serializers)
         ):
             # The indexes must match because the objects are paired using
             # zip() above.
@@ -297,10 +316,8 @@ class MemoryLoggerTests(TestCase):
                 msg_index,
                 serializer_index,
                 "Found message #{} with serializer #{} at position {}".format(
-                    msg_index,
-                    serializer_index,
-                    position,
-                )
+                    msg_index, serializer_index, position
+                ),
             )
 
 
@@ -314,6 +331,7 @@ class BadDestination(list):
     """
     A destination that throws an exception the first time it is called.
     """
+
     called = 0
 
     def __call__(self, msg):
@@ -358,9 +376,8 @@ class DestinationsTests(TestCase):
         destinations.add(dest2)
         destinations.add(dest3.append)
 
-        message = {u"hello": 123}
-        self.assertRaises(
-            _DestinationsSendError, destinations.send, {u"hello": 123})
+        message = {"hello": 123}
+        self.assertRaises(_DestinationsSendError, destinations.send, {"hello": 123})
         self.assertEqual((dest, dest3), ([message], [message]))
 
     def test_destinationExceptionContinue(self):
@@ -372,10 +389,9 @@ class DestinationsTests(TestCase):
         dest = BadDestination()
         destinations.add(dest)
 
-        self.assertRaises(
-            _DestinationsSendError, destinations.send, {u"hello": 123})
-        destinations.send({u"hello": 200})
-        self.assertEqual(dest, [{u"hello": 200}])
+        self.assertRaises(_DestinationsSendError, destinations.send, {"hello": 123})
+        destinations.send({"hello": 200})
+        self.assertEqual(dest, [{"hello": 200}])
 
     def test_remove(self):
         """
@@ -383,7 +399,7 @@ class DestinationsTests(TestCase):
         receive messages from L{Destionations.add} calls.
         """
         destinations = Destinations()
-        message = {u"hello": 123}
+        message = {"hello": 123}
         dest = []
         destinations.add(dest.append)
         destinations.remove(dest.append)
@@ -421,12 +437,7 @@ class DestinationsTests(TestCase):
         destinations.addGlobalFields(x=123, y="hello")
         destinations.addGlobalFields(x=456, z=456)
         destinations.send({"msg": "X"})
-        self.assertEqual(
-            dest, [{
-                "x": 456,
-                "y": "hello",
-                "z": 456,
-                "msg": "X"}])
+        self.assertEqual(dest, [{"x": 456, "y": "hello", "z": 456, "msg": "X"}])
 
     def test_buffering(self):
         """
@@ -439,8 +450,7 @@ class DestinationsTests(TestCase):
             destinations.send(m)
         dest, dest2 = [], []
         destinations.add(dest.append, dest2.append)
-        self.assertEqual(
-            (dest, dest2), (messages[-1000:], messages[-1000:]))
+        self.assertEqual((dest, dest2), (messages[-1000:], messages[-1000:]))
 
     def test_buffering_second_batch(self):
         """
@@ -455,8 +465,7 @@ class DestinationsTests(TestCase):
         destinations.add(dest.append)
         destinations.add(dest2.append)
         destinations.send(message2)
-        self.assertEqual((dest, dest2),
-                         ([message, message2], [message2]))
+        self.assertEqual((dest, dest2), ([message, message2], [message2]))
 
     def test_global_fields_buffering(self):
         """
@@ -516,12 +525,13 @@ class LoggerTests(TestCase):
         """
         logger, written = makeLogger()
 
-        serializer = _MessageSerializer([
-            Field.forValue("message_type", "mymessage", u"The type"),
-            Field("length", len, "The length of a thing"), ])
-        logger.write({
-            "message_type": "mymessage",
-            "length": "thething"}, serializer)
+        serializer = _MessageSerializer(
+            [
+                Field.forValue("message_type", "mymessage", "The type"),
+                Field("length", len, "The length of a thing"),
+            ]
+        )
+        logger.write({"message_type": "mymessage", "length": "thething"}, serializer)
         self.assertEqual(written, [{"message_type": "mymessage", "length": 8}])
 
     def test_passedInDictionaryUnmodified(self):
@@ -530,9 +540,12 @@ class LoggerTests(TestCase):
         """
         logger, written = makeLogger()
 
-        serializer = _MessageSerializer([
-            Field.forValue("message_type", "mymessage", u"The type"),
-            Field("length", len, "The length of a thing"), ])
+        serializer = _MessageSerializer(
+            [
+                Field.forValue("message_type", "mymessage", "The type"),
+                Field("length", len, "The length of a thing"),
+            ]
+        )
         d = {"message_type": "mymessage", "length": "thething"}
         original = d.copy()
         logger.write(d, serializer)
@@ -551,9 +564,9 @@ class LoggerTests(TestCase):
         dictionary = {badobject(): 123, 123: badobject()}
         badMessage = "eliot: unknown, unicode() raised exception"
         self.assertEqual(
-            eval(Logger()._safeUnicodeDictionary(dictionary)), {
-                badMessage: "123",
-                "123": badMessage})
+            eval(Logger()._safeUnicodeDictionary(dictionary)),
+            {badMessage: "123", "123": badMessage},
+        )
 
     def test_safeUnicodeDictionaryFallback(self):
         """
@@ -573,7 +586,8 @@ class LoggerTests(TestCase):
 
         self.assertEqual(
             Logger()._safeUnicodeDictionary(badobject()),
-            "eliot: unknown, unicode() raised exception")
+            "eliot: unknown, unicode() raised exception",
+        )
 
     def test_serializationErrorTraceback(self):
         """
@@ -586,25 +600,34 @@ class LoggerTests(TestCase):
         def raiser(i):
             raise RuntimeError("oops")
 
-        serializer = _MessageSerializer([
-            Field.forValue("message_type", "mymessage", u"The type"),
-            Field("fail", raiser, "Serialization fail"), ])
+        serializer = _MessageSerializer(
+            [
+                Field.forValue("message_type", "mymessage", "The type"),
+                Field("fail", raiser, "Serialization fail"),
+            ]
+        )
         message = {"message_type": "mymessage", "fail": "will"}
         logger.write(message, serializer)
         self.assertEqual(len(written), 2)
         tracebackMessage = written[0]
         assertContainsFields(
-            self, tracebackMessage, {
-                'exception': '%s.RuntimeError' % (RuntimeError.__module__, ),
-                'message_type': 'eliot:traceback'})
-        self.assertIn("RuntimeError: oops", tracebackMessage['traceback'])
+            self,
+            tracebackMessage,
+            {
+                "exception": "%s.RuntimeError" % (RuntimeError.__module__,),
+                "message_type": "eliot:traceback",
+            },
+        )
+        self.assertIn("RuntimeError: oops", tracebackMessage["traceback"])
         # Calling _safeUnicodeDictionary multiple times leads to
         # inconsistent results due to hash ordering, so compare contents:
         assertContainsFields(
-            self, written[1], {"message_type": "eliot:serialization_failure"})
+            self, written[1], {"message_type": "eliot:serialization_failure"}
+        )
         self.assertEqual(
             eval(written[1]["message"]),
-            dict((repr(key), repr(value)) for (key, value) in message.items()))
+            dict((repr(key), repr(value)) for (key, value) in message.items()),
+        )
 
     def test_destinationExceptionCaught(self):
         """
@@ -619,11 +642,15 @@ class LoggerTests(TestCase):
         message = {"hello": 123}
         logger.write({"hello": 123})
         assertContainsFields(
-            self, dest[0], {
+            self,
+            dest[0],
+            {
                 "message_type": "eliot:destination_failure",
                 "message": logger._safeUnicodeDictionary(message),
                 "reason": "ono",
-                "exception": "eliot.tests.test_output.MyException"})
+                "exception": "eliot.tests.test_output.MyException",
+            },
+        )
 
     def test_destinationMultipleExceptionsCaught(self):
         """
@@ -650,24 +677,38 @@ class LoggerTests(TestCase):
             return [message.pop(key) for message in messages[1:]]
 
         # Make sure we have task_level & task_uuid in exception messages.
-        task_levels = remove(u"task_level")
-        task_uuids = remove(u"task_uuid")
-        timestamps = remove(u"timestamp")
+        task_levels = remove("task_level")
+        task_uuids = remove("task_uuid")
+        timestamps = remove("timestamp")
 
-        self.assertEqual((
-            abs(timestamps[0] + timestamps[1] - 2 * time()) < 1,
-            task_levels == [[1], [1]],
-            len([UUID(uuid) for uuid in task_uuids]) == 2, messages), (
-                True, True, True, [
-                    message, {
+        self.assertEqual(
+            (
+                abs(timestamps[0] + timestamps[1] - 2 * time()) < 1,
+                task_levels == [[1], [1]],
+                len([UUID(uuid) for uuid in task_uuids]) == 2,
+                messages,
+            ),
+            (
+                True,
+                True,
+                True,
+                [
+                    message,
+                    {
                         "message_type": "eliot:destination_failure",
                         "message": logger._safeUnicodeDictionary(message),
                         "reason": "ono",
-                        "exception": "eliot.tests.test_output.MyException"}, {
-                            "message_type": "eliot:destination_failure",
-                            "message": logger._safeUnicodeDictionary(message),
-                            "reason": zero_divide,
-                            "exception": zero_type}]))
+                        "exception": "eliot.tests.test_output.MyException",
+                    },
+                    {
+                        "message_type": "eliot:destination_failure",
+                        "message": logger._safeUnicodeDictionary(message),
+                        "reason": zero_divide,
+                        "exception": zero_type,
+                    },
+                ],
+            ),
+        )
 
     def test_destinationExceptionCaughtTwice(self):
         """
@@ -714,14 +755,14 @@ class PEP8Tests(TestCase):
         L{MemoryLogger.flush_tracebacks} is the same as
         L{MemoryLogger.flushTracebacks}
         """
-        self.assertEqual(
-            MemoryLogger.flush_tracebacks, MemoryLogger.flushTracebacks)
+        self.assertEqual(MemoryLogger.flush_tracebacks, MemoryLogger.flushTracebacks)
 
 
 class ToFileTests(TestCase):
     """
     Tests for L{to_file}.
     """
+
     def test_to_file_adds_destination(self):
         """
         L{to_file} adds a L{FileDestination} destination with the given file.
@@ -753,9 +794,10 @@ class ToFileTests(TestCase):
         bytes_f = BytesIO()
         destination = FileDestination(file=bytes_f)
         destination(message)
-        self.assertEqual([
-            json.loads(line)
-            for line in bytes_f.getvalue().splitlines()], [{"x": "abc"}])
+        self.assertEqual(
+            [json.loads(line) for line in bytes_f.getvalue().splitlines()],
+            [{"x": "abc"}],
+        )
 
     @skipUnless(np, "NumPy is not installed.")
     def test_default_encoder_is_EliotJSONEncoder(self):
@@ -765,11 +807,7 @@ class ToFileTests(TestCase):
         destination = FileDestination(file=f)
         destination(message)
         self.assertEqual(
-            [
-                json.loads(line)
-                for line in f.getvalue().splitlines()
-            ],
-            [{"x": 3}]
+            [json.loads(line) for line in f.getvalue().splitlines()], [{"x": 3}]
         )
 
     def test_filedestination_writes_json_bytes(self):
@@ -783,9 +821,10 @@ class ToFileTests(TestCase):
         destination = FileDestination(file=bytes_f)
         destination(message1)
         destination(message2)
-        self.assertEqual([
-            json.loads(line)
-            for line in bytes_f.getvalue().splitlines()], [message1, message2])
+        self.assertEqual(
+            [json.loads(line) for line in bytes_f.getvalue().splitlines()],
+            [message1, message2],
+        )
 
     def test_filedestination_custom_encoder(self):
         """
@@ -805,8 +844,8 @@ class ToFileTests(TestCase):
         destination = FileDestination(file=f, encoder=CustomEncoder)
         destination(message)
         self.assertEqual(
-            json.loads(f.getvalue().splitlines()[0]),
-            {"x": 123, "z": "CUSTOM!"})
+            json.loads(f.getvalue().splitlines()[0]), {"x": 123, "z": "CUSTOM!"}
+        )
 
     def test_filedestination_flushes(self):
         """
@@ -823,9 +862,10 @@ class ToFileTests(TestCase):
         destination(message1)
 
         # Message got written even though buffer wasn't filled:
-        self.assertEqual([
-            json.loads(line)
-            for line in open(path, "rb").read().splitlines()], [message1])
+        self.assertEqual(
+            [json.loads(line) for line in open(path, "rb").read().splitlines()],
+            [message1],
+        )
 
     @skipIf(PY2, "Python 2 files always accept bytes")
     def test_filedestination_writes_json_unicode(self):

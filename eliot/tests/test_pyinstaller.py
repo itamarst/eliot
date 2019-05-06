@@ -8,6 +8,7 @@ from subprocess import check_call, CalledProcessError
 import os
 
 from six import PY2
+
 if PY2:
     FileNotFoundError = OSError
 
@@ -28,7 +29,14 @@ class PyInstallerTests(TestCase):
             f.write("import eliot; import eliot.prettyprint\n")
             f.flush()
             check_call(
-                ["pyinstaller", "--distpath", output_dir,
-                 "-F", "-n", "importeliot", f.name]
+                [
+                    "pyinstaller",
+                    "--distpath",
+                    output_dir,
+                    "-F",
+                    "-n",
+                    "importeliot",
+                    f.name,
+                ]
             )
         check_call([os.path.join(output_dir, "importeliot")])

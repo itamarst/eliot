@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import time
 import threading
+
 # Make sure to use StringIO that only accepts unicode:
 from io import BytesIO, StringIO
 from unittest import skipIf
@@ -93,7 +94,7 @@ class ThreadedWriterTests(TestCase):
         """
         L{ThreadedWriter} has a name.
         """
-        self.assertEqual(ThreadedWriter.name, u"Eliot Log Writer")
+        self.assertEqual(ThreadedWriter.name, "Eliot Log Writer")
 
     def test_startServiceRunning(self):
         """
@@ -150,13 +151,15 @@ class ThreadedWriterTests(TestCase):
         writer.startService()
         start = time.time()
         while set(threading.enumerate()) == previousThreads and (
-            time.time() - start < 5):
+            time.time() - start < 5
+        ):
             time.sleep(0.0001)
         # If not true the next assertion might pass by mistake:
         self.assertNotEqual(set(threading.enumerate()), previousThreads)
         writer.stopService()
         while set(threading.enumerate()) != previousThreads and (
-            time.time() - start < 5):
+            time.time() - start < 5
+        ):
             time.sleep(0.0001)
         self.assertEqual(set(threading.enumerate()), previousThreads)
 
@@ -170,7 +173,7 @@ class ThreadedWriterTests(TestCase):
         f.block()
         writer.startService()
         for i in range(100):
-            writer({u"write": 123})
+            writer({"write": 123})
         threads = threading.enumerate()
         writer.stopService()
         # Make sure writes didn't happen before the stopService, thus making the
@@ -216,8 +219,11 @@ class ThreadedWriterTests(TestCase):
         # thread or the I/O thread was never set. Either may happen depending on
         # how and whether the reactor has been started by the unittesting
         # framework.
-        d.addCallback(lambda _: self.assertIn(
-            threadable.ioThread, (None, threading.currentThread().ident)))
+        d.addCallback(
+            lambda _: self.assertIn(
+                threadable.ioThread, (None, threading.currentThread().ident)
+            )
+        )
         return d
 
     def test_startServiceRegistersDestination(self):
@@ -260,8 +266,7 @@ class ThreadedWriterTests(TestCase):
         msg = {"key": 123}
         writer(msg)
         d = writer.stopService()
-        d.addCallback(
-            lambda _: self.assertEqual(result, [(msg, thread_ident)]))
+        d.addCallback(lambda _: self.assertEqual(result, [(msg, thread_ident)]))
         return d
 
 

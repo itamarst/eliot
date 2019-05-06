@@ -21,7 +21,8 @@ from .._message import (
     WrittenMessage,
     MESSAGE_TYPE_FIELD,
     TASK_LEVEL_FIELD,
-    TASK_UUID_FIELD, )
+    TASK_UUID_FIELD,
+)
 from .._action import FAILED_STATUS, ACTION_STATUS_FIELD, WrittenAction
 from .strategies import labels
 
@@ -33,6 +34,7 @@ class ActionStructure(PClass):
     Individual messages are encoded as a unicode string; actions are
     encoded as a L{ActionStructure} instance.
     """
+
     type = field(type=(unicode, None.__class__))
     children = pvector_field(object)  # XXX ("StubAction", unicode))
     failed = field(type=bool)
@@ -51,9 +53,10 @@ class ActionStructure(PClass):
             return cls(
                 type=written.action_type,
                 failed=(
-                    written.end_message.contents[ACTION_STATUS_FIELD] ==
-                    FAILED_STATUS),
-                children=[cls.from_written(o) for o in written.children])
+                    written.end_message.contents[ACTION_STATUS_FIELD] == FAILED_STATUS
+                ),
+                children=[cls.from_written(o) for o in written.children],
+            )
 
     @classmethod
     def to_eliot(cls, structure_or_message, logger):
@@ -89,7 +92,8 @@ def action_structures(draw):
             return ActionStructure(
                 type=draw(labels),
                 failed=draw(st.booleans()),
-                children=[to_structure(o) for o in tree_or_message])
+                children=[to_structure(o) for o in tree_or_message],
+            )
         else:
             return tree_or_message
 
@@ -98,8 +102,7 @@ def action_structures(draw):
 
 def _structure_and_messages(structure):
     messages = ActionStructure.to_eliot(structure, MemoryLogger())
-    return st.permutations(messages).map(
-        lambda permuted: (structure, permuted))
+    return st.permutations(messages).map(lambda permuted: (structure, permuted))
 
 
 # Hypothesis strategy that creates a tuple of ActionStructure/unicode and
@@ -198,9 +201,10 @@ class TaskTests(TestCase):
             ctx.add_success_fields(foo=[1, 2])
         messages = logger.messages
         expected = WrittenAction.from_messages(
-            WrittenMessage.from_dict(messages[0]), [
-                WrittenMessage.from_dict(messages[1])],
-            WrittenMessage.from_dict(messages[2]))
+            WrittenMessage.from_dict(messages[0]),
+            [WrittenMessage.from_dict(messages[1])],
+            WrittenMessage.from_dict(messages[2]),
+        )
 
         task = parse_to_task(messages)
         self.assertEqual(task.root(), expected)
@@ -214,10 +218,11 @@ class ParserTests(TestCase):
     @given(
         structure_and_messages1=STRUCTURES_WITH_MESSAGES,
         structure_and_messages2=STRUCTURES_WITH_MESSAGES,
-        structure_and_messages3=STRUCTURES_WITH_MESSAGES)
+        structure_and_messages3=STRUCTURES_WITH_MESSAGES,
+    )
     def test_parse_into_tasks(
-        self, structure_and_messages1, structure_and_messages2,
-        structure_and_messages3):
+        self, structure_and_messages1, structure_and_messages2, structure_and_messages3
+    ):
         """
         Adding messages to a L{Parser} parses them into a L{Task} instances.
         """
@@ -236,7 +241,8 @@ class ParserTests(TestCase):
                 all_tasks.extend(completed_tasks)
 
         assertCountEqual(
-            self, all_tasks, [parse_to_task(msgs) for msgs in all_messages])
+            self, all_tasks, [parse_to_task(msgs) for msgs in all_messages]
+        )
 
     @given(structure_and_messages=STRUCTURES_WITH_MESSAGES)
     def test_incomplete_tasks(self, structure_and_messages):
@@ -258,18 +264,19 @@ class ParserTests(TestCase):
         self.assertEqual(
             dict(
                 incomplete_matches=incomplete_matches,
-                final_incompleted=parser.incomplete_tasks()),
-            dict(
-                incomplete_matches=[True] * (len(messages) - 1),
-                final_incompleted=[]))
+                final_incompleted=parser.incomplete_tasks(),
+            ),
+            dict(incomplete_matches=[True] * (len(messages) - 1), final_incompleted=[]),
+        )
 
     @given(
         structure_and_messages1=STRUCTURES_WITH_MESSAGES,
         structure_and_messages2=STRUCTURES_WITH_MESSAGES,
-        structure_and_messages3=STRUCTURES_WITH_MESSAGES)
+        structure_and_messages3=STRUCTURES_WITH_MESSAGES,
+    )
     def test_parse_stream(
-        self, structure_and_messages1, structure_and_messages2,
-        structure_and_messages3):
+        self, structure_and_messages1, structure_and_messages2, structure_and_messages3
+    ):
         """
         L{Parser.parse_stream} returns an iterable of completed and then
         incompleted tasks.
@@ -281,20 +288,21 @@ class ParserTests(TestCase):
         assume(len(messages3) > 1)
         # Need unique UUIDs per task:
         assume(
-            len(
-                set(
-                    m[0][TASK_UUID_FIELD]
-                    for m in (messages1, messages2, messages3))) == 3)
+            len(set(m[0][TASK_UUID_FIELD] for m in (messages1, messages2, messages3)))
+            == 3
+        )
 
         # Two complete tasks, one incomplete task:
         all_messages = (messages1, messages2, messages3[:-1])
 
         all_tasks = list(
-            Parser.parse_stream([
-                m for m in chain(*zip_longest(*all_messages))
-                if m is not None]))
+            Parser.parse_stream(
+                [m for m in chain(*zip_longest(*all_messages)) if m is not None]
+            )
+        )
         assertCountEqual(
-            self, all_tasks, [parse_to_task(msgs) for msgs in all_messages])
+            self, all_tasks, [parse_to_task(msgs) for msgs in all_messages]
+        )
 
 
 class BackwardsCompatibility(TestCase):
@@ -305,5 +313,6 @@ class BackwardsCompatibility(TestCase):
         import eliot._parse
         from eliot import _parse
         import eliot.parse
+
         self.assertIs(eliot.parse, eliot._parse)
         self.assertIs(_parse, eliot.parse)

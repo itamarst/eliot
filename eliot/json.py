@@ -25,5 +25,5 @@ class EliotJSONEncoder(json.JSONEncoder):
                 return o.tolist()
         return json.JSONEncoder.default(self, o)
 
-__all__ = ["EliotJSONEncoder"]
 
+__all__ = ["EliotJSONEncoder"]

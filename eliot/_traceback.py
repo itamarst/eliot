@@ -14,14 +14,18 @@ from ._validation import MessageType, Field
 from ._errors import _error_extraction
 
 TRACEBACK_MESSAGE = MessageType(
-    "eliot:traceback", [
+    "eliot:traceback",
+    [
         Field(REASON_FIELD, safeunicode, "The exception's value."),
         Field("traceback", safeunicode, "The traceback."),
         Field(
             EXCEPTION_FIELD,
             lambda typ: "%s.%s" % (typ.__module__, typ.__name__),
-            "The exception type's FQPN.")],
-    "An unexpected exception indicating a bug.")
+            "The exception type's FQPN.",
+        ),
+    ],
+    "An unexpected exception indicating a bug.",
+)
 # The fields here are actually subset of what you might get in practice,
 # due to exception extraction, so we hackily modify the serializer:
 TRACEBACK_MESSAGE._serializer.allow_additional_fields = True
@@ -37,10 +41,8 @@ def _writeTracebackMessage(logger, typ, exception, traceback):
 
     @param traceback: The traceback, a C{str}.
     """
-    msg = TRACEBACK_MESSAGE(
-        reason=exception, traceback=traceback, exception=typ)
-    msg = msg.bind(
-        **_error_extraction.get_fields_for_exception(logger, exception))
+    msg = TRACEBACK_MESSAGE(reason=exception, traceback=traceback, exception=typ)
+    msg = msg.bind(**_error_extraction.get_fields_for_exception(logger, exception))
     msg.write(logger)
 
 
@@ -122,5 +124,5 @@ def writeFailure(failure, logger=None):
     # Failure.getBriefTraceback does not include source code, so does not do
     # I/O.
     _writeTracebackMessage(
-        logger, failure.value.__class__, failure.value,
-        failure.getBriefTraceback())
+        logger, failure.value.__class__, failure.value, failure.getBriefTraceback()
+    )

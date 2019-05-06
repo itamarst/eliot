@@ -18,7 +18,7 @@ from ..testing import (
     validate_logging,
     capture_logging,
     swap_logger,
-    check_for_errors
+    check_for_errors,
 )
 from .._output import MemoryLogger
 from .._action import start_action
@@ -67,8 +67,8 @@ class LoggedActionTests(TestCase):
         """
         The values given to the L{LoggedAction} constructor are stored on it.
         """
-        d1 = {'x': 1}
-        d2 = {'y': 2}
+        d1 = {"x": 1}
+        d2 = {"y": 2}
         root = LoggedAction(d1, d2, [])
         self.assertEqual((root.startMessage, root.endMessage), (d1, d2))
 
@@ -109,8 +109,10 @@ class LoggedActionTests(TestCase):
         # Now we should have x message, start action message, another x message
         # and finally finish message.
         logged = self.fromMessagesIndex(logger.messages, 1)
-        self.assertEqual((logged.startMessage, logged.endMessage),
-                         (logger.messages[1], logger.messages[3]))
+        self.assertEqual(
+            (logged.startMessage, logged.endMessage),
+            (logger.messages[1], logger.messages[3]),
+        )
 
     def test_fromMessagesStartAndErrorFinish(self):
         """
@@ -124,8 +126,10 @@ class LoggedActionTests(TestCase):
         except KeyError:
             pass
         logged = self.fromMessagesIndex(logger.messages, 0)
-        self.assertEqual((logged.startMessage, logged.endMessage),
-                         (logger.messages[0], logger.messages[1]))
+        self.assertEqual(
+            (logged.startMessage, logged.endMessage),
+            (logger.messages[0], logger.messages[1]),
+        )
 
     def test_fromMessagesStartNotFound(self):
         """
@@ -135,8 +139,7 @@ class LoggedActionTests(TestCase):
         logger = MemoryLogger()
         with start_action(logger, action_type="test"):
             pass
-        self.assertRaises(
-            ValueError, self.fromMessagesIndex, logger.messages[1:], 0)
+        self.assertRaises(ValueError, self.fromMessagesIndex, logger.messages[1:], 0)
 
     def test_fromMessagesFinishNotFound(self):
         """
@@ -148,8 +151,7 @@ class LoggedActionTests(TestCase):
             pass
         with self.assertRaises(ValueError) as cm:
             self.fromMessagesIndex(logger.messages[:1], 0)
-        self.assertEqual(cm.exception.args[0],
-                         "Missing end message of type test")
+        self.assertEqual(cm.exception.args[0], "Missing end message of type test")
 
     def test_fromMessagesAddsChildMessages(self):
         """
@@ -172,7 +174,8 @@ class LoggedActionTests(TestCase):
 
         expectedChildren = [
             LoggedMessage(logger.messages[2]),
-            LoggedMessage(logger.messages[3])]
+            LoggedMessage(logger.messages[3]),
+        ]
         self.assertEqual(logged.children, expectedChildren)
 
     def test_fromMessagesAddsChildActions(self):
@@ -195,10 +198,10 @@ class LoggedActionTests(TestCase):
         # index 6 - end action
         logged = self.fromMessagesIndex(logger.messages, 0)
 
+        self.assertEqual(logged.children[0], self.fromMessagesIndex(logger.messages, 1))
         self.assertEqual(
-            logged.children[0], self.fromMessagesIndex(logger.messages, 1))
-        self.assertEqual(logged.type_tree(),
-                         {"test": [{"test2": ["end"]}, {"test3": []}]})
+            logged.type_tree(), {"test": [{"test2": ["end"]}, {"test3": []}]}
+        )
 
     def test_ofType(self):
         """
@@ -221,9 +224,12 @@ class LoggedActionTests(TestCase):
         # index 6 - end action
         logged = LoggedAction.ofType(logger.messages, ACTION)
         self.assertEqual(
-            logged, [
+            logged,
+            [
                 self.fromMessagesIndex(logger.messages, 1),
-                self.fromMessagesIndex(logger.messages, 5)])
+                self.fromMessagesIndex(logger.messages, 5),
+            ],
+        )
 
         # String-variant of ofType:
         logged2 = LoggedAction.ofType(logger.messages, "myaction")
@@ -258,10 +264,13 @@ class LoggedActionTests(TestCase):
 
         loggedAction = LoggedAction.ofType(logger.messages, ACTION)[0]
         self.assertEqual(
-            list(loggedAction.descendants()), [
+            list(loggedAction.descendants()),
+            [
                 self.fromMessagesIndex(logger.messages, 1),
                 LoggedMessage(logger.messages[2]),
-                LoggedMessage(logger.messages[4])])
+                LoggedMessage(logger.messages[4]),
+            ],
+        )
 
     def test_succeeded(self):
         """
@@ -296,7 +305,7 @@ class LoggedMessageTest(TestCase):
         """
         The values given to the L{LoggedMessage} constructor are stored on it.
         """
-        message = {'x': 1}
+        message = {"x": 1}
         logged = LoggedMessage(message)
         self.assertEqual(logged.message, message)
 
@@ -315,12 +324,12 @@ class LoggedMessageTest(TestCase):
         MESSAGE().write(logger)
         logged = LoggedMessage.ofType(logger.messages, MESSAGE)
         self.assertEqual(
-            logged, [
-                LoggedMessage(logger.messages[0]),
-                LoggedMessage(logger.messages[2])])
+            logged,
+            [LoggedMessage(logger.messages[0]), LoggedMessage(logger.messages[2])],
+        )
 
         # Lookup by string type:
-        logged2 = LoggedMessage.ofType(logger.messages, 'mymessage')
+        logged2 = LoggedMessage.ofType(logger.messages, "mymessage")
         self.assertEqual(logged, logged2)
 
     def test_ofTypeNotFound(self):
@@ -397,6 +406,7 @@ class ValidateLoggingTestsMixin(object):
     """
     Tests for L{validateLogging} and L{capture_logging}.
     """
+
     validate = None
 
     def test_decoratedFunctionCalledWithMemoryLogger(self):
@@ -487,8 +497,7 @@ class ValidateLoggingTestsMixin(object):
             @self.validate(None)
             def runTest(self, logger):
                 self.logger = logger
-                logger.write({
-                    "message_type": "wrongmessage"}, MESSAGE._serializer)
+                logger.write({"message_type": "wrongmessage"}, MESSAGE._serializer)
 
         test = MyTest()
         with self.assertRaises(ValidationError) as context:
@@ -604,6 +613,7 @@ class ValidateLoggingTests(ValidateLoggingTestsMixin, TestCase):
     """
     Tests for L{validate_logging}.
     """
+
     validate = staticmethod(validate_logging)
 
 
@@ -611,6 +621,7 @@ class CaptureLoggingTests(ValidateLoggingTestsMixin, TestCase):
     """
     Tests for L{capture_logging}.
     """
+
     validate = staticmethod(capture_logging)
 
     def setUp(self):
@@ -640,7 +651,7 @@ class CaptureLoggingTests(ValidateLoggingTestsMixin, TestCase):
 
         test = MyTest()
         test.run()
-        self.assertEqual(test.logger.messages[0][u"some_key"], 1234)
+        self.assertEqual(test.logger.messages[0]["some_key"], 1234)
 
     def test_global_cleanup(self):
         """
@@ -659,7 +670,7 @@ class CaptureLoggingTests(ValidateLoggingTestsMixin, TestCase):
         add_destination(messages.append)
         self.addCleanup(remove_destination, messages.append)
         Message.log(some_key=1234)
-        self.assertEqual(messages[0][u"some_key"], 1234)
+        self.assertEqual(messages[0]["some_key"], 1234)
 
     def test_global_cleanup_exception(self):
         """
@@ -678,7 +689,7 @@ class CaptureLoggingTests(ValidateLoggingTestsMixin, TestCase):
         add_destination(messages.append)
         self.addCleanup(remove_destination, messages.append)
         Message.log(some_key=1234)
-        self.assertEqual(messages[0][u"some_key"], 1234)
+        self.assertEqual(messages[0]["some_key"], 1234)
 
     def test_validationNotRunForSkip(self):
         """
@@ -704,12 +715,13 @@ class CaptureLoggingTests(ValidateLoggingTestsMixin, TestCase):
         # nevertheless marked as a skip with the correct reason.
         self.assertEqual(
             (test.recorded, result.skipped, result.errors, result.failures),
-            (False, [(test, "Do not run this test.")], [], []))
+            (False, [(test, "Do not run this test.")], [], []),
+        )
 
 
 MESSAGE1 = MessageType(
-    "message1", [Field.forTypes("x", [int], "A number")],
-    "A message for testing.")
+    "message1", [Field.forTypes("x", [int], "A number")], "A message for testing."
+)
 MESSAGE2 = MessageType("message2", [], "A message for testing.")
 
 
@@ -734,8 +746,7 @@ class AssertHasMessageTests(TestCase):
         test = self.UnitTest()
         logger = MemoryLogger()
         MESSAGE1(x=123).write(logger)
-        self.assertRaises(
-            AssertionError, assertHasMessage, test, logger, MESSAGE2)
+        self.assertRaises(AssertionError, assertHasMessage, test, logger, MESSAGE2)
 
     def test_returnsIfMessagesOfType(self):
         """
@@ -746,7 +757,8 @@ class AssertHasMessageTests(TestCase):
         MESSAGE1(x=123).write(logger)
         self.assertEqual(
             assertHasMessage(test, logger, MESSAGE1),
-            LoggedMessage.ofType(logger.messages, MESSAGE1)[0])
+            LoggedMessage.ofType(logger.messages, MESSAGE1)[0],
+        )
 
     def test_failIfNotSubset(self):
         """
@@ -757,8 +769,8 @@ class AssertHasMessageTests(TestCase):
         logger = MemoryLogger()
         MESSAGE1(x=123).write(logger)
         self.assertRaises(
-            AssertionError, assertHasMessage, test, logger, MESSAGE1, {
-                "x": 24})
+            AssertionError, assertHasMessage, test, logger, MESSAGE1, {"x": 24}
+        )
 
     def test_returnsIfSubset(self):
         """
@@ -770,12 +782,16 @@ class AssertHasMessageTests(TestCase):
         MESSAGE1(x=123).write(logger)
         self.assertEqual(
             assertHasMessage(test, logger, MESSAGE1, {"x": 123}),
-            LoggedMessage.ofType(logger.messages, MESSAGE1)[0])
+            LoggedMessage.ofType(logger.messages, MESSAGE1)[0],
+        )
 
 
 ACTION1 = ActionType(
-    "action1", [Field.forTypes("x", [int], "A number")], [
-        Field.forTypes("result", [int], "A number")], "A action for testing.")
+    "action1",
+    [Field.forTypes("x", [int], "A number")],
+    [Field.forTypes("result", [int], "A number")],
+    "A action for testing.",
+)
 ACTION2 = ActionType("action2", [], [], "A action for testing.")
 
 
@@ -801,8 +817,7 @@ class AssertHasActionTests(TestCase):
         logger = MemoryLogger()
         with ACTION1(logger, x=123):
             pass
-        self.assertRaises(
-            AssertionError, assertHasAction, test, logger, ACTION2, True)
+        self.assertRaises(AssertionError, assertHasAction, test, logger, ACTION2, True)
 
     def test_failIfWrongSuccessStatus(self):
         """
@@ -818,10 +833,8 @@ class AssertHasActionTests(TestCase):
                 1 / 0
         except ZeroDivisionError:
             pass
-        self.assertRaises(
-            AssertionError, assertHasAction, test, logger, ACTION1, False)
-        self.assertRaises(
-            AssertionError, assertHasAction, test, logger, ACTION2, True)
+        self.assertRaises(AssertionError, assertHasAction, test, logger, ACTION1, False)
+        self.assertRaises(AssertionError, assertHasAction, test, logger, ACTION2, True)
 
     def test_returnsIfMessagesOfType(self):
         """
@@ -834,7 +847,8 @@ class AssertHasActionTests(TestCase):
             pass
         self.assertEqual(
             assertHasAction(test, logger, ACTION1, True),
-            LoggedAction.ofType(logger.messages, ACTION1)[0])
+            LoggedAction.ofType(logger.messages, ACTION1)[0],
+        )
 
     def test_failIfNotStartSubset(self):
         """
@@ -846,8 +860,8 @@ class AssertHasActionTests(TestCase):
         with ACTION1(logger, x=123):
             pass
         self.assertRaises(
-            AssertionError, assertHasAction, test, logger, ACTION1, True, {
-                "x": 24})
+            AssertionError, assertHasAction, test, logger, ACTION1, True, {"x": 24}
+        )
 
     def test_failIfNotEndSubset(self):
         """
@@ -866,7 +880,8 @@ class AssertHasActionTests(TestCase):
             ACTION1,
             True,
             startFields={"x": 123},
-            endFields={"result": 24})
+            endFields={"result": 24},
+        )
 
     def test_returns(self):
         """
@@ -878,9 +893,9 @@ class AssertHasActionTests(TestCase):
         with ACTION1(logger, x=123) as act:
             act.addSuccessFields(result=5)
         self.assertEqual(
-            assertHasAction(
-                test, logger, ACTION1, True, {"x": 123}, {"result": 5}),
-            LoggedAction.ofType(logger.messages, ACTION1)[0])
+            assertHasAction(test, logger, ACTION1, True, {"x": 123}, {"result": 5}),
+            LoggedAction.ofType(logger.messages, ACTION1)[0],
+        )
 
 
 class PEP8Tests(TestCase):

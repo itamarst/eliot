@@ -4,8 +4,9 @@ Command line program for filtering line-based Eliot logs.
 
 from __future__ import unicode_literals, absolute_import
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import eliot.filter
+
     eliot.filter.main()
 
 import sys
@@ -32,6 +33,7 @@ class EliotFilter(object):
 
     @ivar code: A Python code object, the compiled filter expression.
     """
+
     _SKIP = object()
 
     def __init__(self, expr, incoming, output):
@@ -71,11 +73,14 @@ class EliotFilter(object):
         """
         return eval(
             self.code,
-            globals(), {
+            globals(),
+            {
                 "J": message,
                 "timedelta": timedelta,
                 "datetime": datetime,
-                "SKIP": self._SKIP})
+                "SKIP": self._SKIP,
+            },
+        )
 
 
 USAGE = b"""\

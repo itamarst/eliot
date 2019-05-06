@@ -62,7 +62,8 @@ class DeferredContext(object):
         if self._action is None:
             raise RuntimeError(
                 "DeferredContext() should only be created in the context of "
-                "an eliot.Action.")
+                "an eliot.Action."
+            )
 
     def addCallbacks(
         self,
@@ -71,7 +72,7 @@ class DeferredContext(object):
         callbackArgs=None,
         callbackKeywords=None,
         errbackArgs=None,
-        errbackKeywords=None
+        errbackKeywords=None,
     ):
         """
         Add a pair of callbacks that will be run in the context of an eliot
@@ -96,8 +97,13 @@ class DeferredContext(object):
             return self._action.run(errback, *args, **kwargs)
 
         self.result.addCallbacks(
-            callbackWithContext, errbackWithContext, callbackArgs,
-            callbackKeywords, errbackArgs, errbackKeywords)
+            callbackWithContext,
+            errbackWithContext,
+            callbackArgs,
+            callbackKeywords,
+            errbackArgs,
+            errbackKeywords,
+        )
         return self
 
     def addCallback(self, callback, *args, **kw):
@@ -112,7 +118,8 @@ class DeferredContext(object):
             called. This indicates a programmer error.
         """
         return self.addCallbacks(
-            callback, _passthrough, callbackArgs=args, callbackKeywords=kw)
+            callback, _passthrough, callbackArgs=args, callbackKeywords=kw
+        )
 
     def addErrback(self, errback, *args, **kw):
         """
@@ -126,7 +133,8 @@ class DeferredContext(object):
             called. This indicates a programmer error.
         """
         return self.addCallbacks(
-            _passthrough, errback, errbackArgs=args, errbackKeywords=kw)
+            _passthrough, errback, errbackArgs=args, errbackKeywords=kw
+        )
 
     def addBoth(self, callback, *args, **kw):
         """
@@ -236,10 +244,7 @@ class _RedirectLogsForTrial(object):
 
         @return: The destination added to Eliot if any, otherwise L{None}.
         """
-        if (
-            os.path.basename(self._sys.argv[0]) == 'trial'
-            and not self._redirected
-        ):
+        if os.path.basename(self._sys.argv[0]) == "trial" and not self._redirected:
             self._redirected = True
             destination = TwistedDestination()
             addDestination(destination)

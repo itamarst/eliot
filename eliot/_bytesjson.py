@@ -37,7 +37,8 @@ def _dumps(obj, cls=pyjson.JSONEncoder):
             if isinstance(o, bytes):
                 warnings.warn(
                     "Eliot will soon stop supporting encoding bytes in JSON"
-                    " on Python 3", DeprecationWarning
+                    " on Python 3",
+                    DeprecationWarning,
                 )
                 return o.decode("utf-8")
             return cls.default(self, o)

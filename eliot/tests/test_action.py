@@ -11,16 +11,12 @@ from threading import Thread
 from warnings import catch_warnings, simplefilter
 
 import six
+
 if six.PY3:
     unicode = six.text_type
 
 from hypothesis import assume, given, settings, HealthCheck
-from hypothesis.strategies import (
-    integers,
-    lists,
-    just,
-    text,
-)
+from hypothesis.strategies import integers, lists, just, text
 
 from pyrsistent import pvector, v
 
@@ -28,11 +24,25 @@ import testtools
 from testtools.matchers import MatchesStructure
 
 from .._action import (
-    Action, current_action, startTask, start_action,
-    ACTION_STATUS_FIELD, ACTION_TYPE_FIELD, FAILED_STATUS, STARTED_STATUS,
-    SUCCEEDED_STATUS, DuplicateChild, InvalidStartMessage, InvalidStatus,
-    TaskLevel, WrittenAction, WrongActionType, WrongTask, WrongTaskLevel,
-    TooManyCalls, log_call
+    Action,
+    current_action,
+    startTask,
+    start_action,
+    ACTION_STATUS_FIELD,
+    ACTION_TYPE_FIELD,
+    FAILED_STATUS,
+    STARTED_STATUS,
+    SUCCEEDED_STATUS,
+    DuplicateChild,
+    InvalidStartMessage,
+    InvalidStatus,
+    TaskLevel,
+    WrittenAction,
+    WrongActionType,
+    WrongTask,
+    WrongTaskLevel,
+    TooManyCalls,
+    log_call,
 )
 from .._message import (
     EXCEPTION_FIELD,
@@ -81,13 +91,15 @@ class ActionTests(TestCase):
         action = Action(logger, "unique", TaskLevel(level=[]), "sys:thename")
         action._start({"key": "value"})
         assertContainsFields(
-            self, logger.messages[0], {
+            self,
+            logger.messages[0],
+            {
                 "task_uuid": "unique",
                 "task_level": [1],
                 "action_type": "sys:thename",
                 "action_status": "started",
-                "key": "value"
-            }
+                "key": "value",
+            },
         )
 
     def test_task_uuid(self):
@@ -128,13 +140,12 @@ class ActionTests(TestCase):
         logger2 = MemoryLogger()
         child = action.child(logger2, "newsystem:newname")
         self.assertEqual(
-            [child._logger, child._identification, child._task_level], [
-                logger2, {
-                    "task_uuid": "unique",
-                    "action_type": "newsystem:newname"
-                },
-                TaskLevel(level=[1])
-            ]
+            [child._logger, child._identification, child._task_level],
+            [
+                logger2,
+                {"task_uuid": "unique", "action_type": "newsystem:newname"},
+                TaskLevel(level=[1]),
+            ],
         )
 
     def test_childLevel(self):
@@ -313,12 +324,14 @@ class ActionTests(TestCase):
         action = Action(logger, "unique", TaskLevel(level=[]), "sys:thename")
         action.finish()
         assertContainsFields(
-            self, logger.messages[0], {
+            self,
+            logger.messages[0],
+            {
                 "task_uuid": "unique",
                 "task_level": [1],
                 "action_type": "sys:thename",
-                "action_status": "succeeded"
-            }
+                "action_status": "succeeded",
+            },
         )
 
     def test_successfulFinishSerializer(self):
@@ -386,8 +399,7 @@ class ActionTests(TestCase):
 
         action.finish(BadException())
         self.assertEqual(
-            logger.messages[0]["reason"],
-            "eliot: unknown, unicode() raised exception"
+            logger.messages[0]["reason"], "eliot: unknown, unicode() raised exception"
         )
 
     def test_withLogsSuccessfulFinishMessage(self):
@@ -403,12 +415,14 @@ class ActionTests(TestCase):
         # functions, the intended public APIs.
         self.assertEqual(len(logger.messages), 1)
         assertContainsFields(
-            self, logger.messages[0], {
+            self,
+            logger.messages[0],
+            {
                 "task_uuid": "uuid",
                 "task_level": [1, 1],
                 "action_type": "sys:me",
-                "action_status": "succeeded"
-            }
+                "action_status": "succeeded",
+            },
         )
 
     def test_withLogsExceptionMessage(self):
@@ -430,14 +444,16 @@ class ActionTests(TestCase):
 
         self.assertEqual(len(logger.messages), 1)
         assertContainsFields(
-            self, logger.messages[0], {
+            self,
+            logger.messages[0],
+            {
                 "task_uuid": "uuid",
                 "task_level": [1, 1],
                 "action_type": "sys:me",
                 "action_status": "failed",
                 "reason": "because",
-                "exception": "%s.RuntimeError" % (RuntimeError.__module__, )
-            }
+                "exception": "%s.RuntimeError" % (RuntimeError.__module__,),
+            },
         )
 
     def test_withReturnValue(self):
@@ -459,13 +475,7 @@ class ActionTests(TestCase):
         with action as act:
             act.addSuccessFields(x=1, y=2)
             act.addSuccessFields(z=3)
-        assertContainsFields(
-            self, logger.messages[0], {
-                "x": 1,
-                "y": 2,
-                "z": 3
-            }
-        )
+        assertContainsFields(self, logger.messages[0], {"x": 1, "y": 2, "z": 3})
 
     def test_nextTaskLevel(self):
         """
@@ -473,10 +483,11 @@ class ActionTests(TestCase):
         """
         action = Action(MemoryLogger(), "uuid", TaskLevel(level=[1]), "sys:me")
         self.assertEqual(
-            [action._nextTaskLevel() for i in range(5)], [
+            [action._nextTaskLevel() for i in range(5)],
+            [
                 TaskLevel(level=level)
                 for level in ([1, 1], [1, 2], [1, 3], [1, 4], [1, 5])
-            ]
+            ],
         )
 
     def test_multipleFinishCalls(self):
@@ -541,9 +552,7 @@ class StartActionAndTaskTests(TestCase):
         resulting L{Action}.
         """
         logger = MemoryLogger()
-        serializers = _ActionSerializers(
-            start=None, success=None, failure=None
-        )
+        serializers = _ActionSerializers(start=None, success=None, failure=None)
         action = startTask(logger, "sys:do", serializers)
         self.assertIs(action._serializers, serializers)
 
@@ -553,9 +562,7 @@ class StartActionAndTaskTests(TestCase):
         resulting L{Action}.
         """
         logger = MemoryLogger()
-        serializers = _ActionSerializers(
-            start=None, success=None, failure=None
-        )
+        serializers = _ActionSerializers(start=None, success=None, failure=None)
         action = start_action(logger, "sys:do", serializers)
         self.assertIs(action._serializers, serializers)
 
@@ -567,8 +574,7 @@ class StartActionAndTaskTests(TestCase):
         action = startTask(logger, "sys:do")
         action2 = startTask(logger, "sys:do")
         self.assertNotEqual(
-            action._identification["task_uuid"],
-            action2._identification["task_uuid"]
+            action._identification["task_uuid"], action2._identification["task_uuid"]
         )
 
     def test_startTaskLogsStart(self):
@@ -578,13 +584,15 @@ class StartActionAndTaskTests(TestCase):
         logger = MemoryLogger()
         action = startTask(logger, "sys:do", key="value")
         assertContainsFields(
-            self, logger.messages[0], {
+            self,
+            logger.messages[0],
+            {
                 "task_uuid": action._identification["task_uuid"],
                 "task_level": [1],
                 "action_type": "sys:do",
                 "action_status": "started",
-                "key": "value"
-            }
+                "key": "value",
+            },
         )
 
     def test_start_action_default_action_type(self):
@@ -613,13 +621,15 @@ class StartActionAndTaskTests(TestCase):
         logger = MemoryLogger()
         action = start_action(logger, "sys:do", key="value")
         assertContainsFields(
-            self, logger.messages[0], {
+            self,
+            logger.messages[0],
+            {
                 "task_uuid": action._identification["task_uuid"],
                 "task_level": [1],
                 "action_type": "sys:do",
                 "action_status": "started",
-                "key": "value"
-            }
+                "key": "value",
+            },
         )
 
     def test_startActionWithParent(self):
@@ -645,13 +655,15 @@ class StartActionAndTaskTests(TestCase):
         with parent:
             start_action(logger, "sys:do", key="value")
             assertContainsFields(
-                self, logger.messages[0], {
+                self,
+                logger.messages[0],
+                {
                     "task_uuid": "uuid",
                     "task_level": [1, 1],
                     "action_type": "sys:do",
                     "action_status": "started",
-                    "key": "value"
-                }
+                    "key": "value",
+                },
             )
 
     def test_startTaskNoLogger(self):
@@ -663,13 +675,15 @@ class StartActionAndTaskTests(TestCase):
         self.addCleanup(remove_destination, messages.append)
         action = startTask(action_type="sys:do", key="value")
         assertContainsFields(
-            self, messages[0], {
+            self,
+            messages[0],
+            {
                 "task_uuid": action._identification["task_uuid"],
                 "task_level": [1],
                 "action_type": "sys:do",
                 "action_status": "started",
-                "key": "value"
-            }
+                "key": "value",
+            },
         )
 
     def test_startActionNoLogger(self):
@@ -681,13 +695,15 @@ class StartActionAndTaskTests(TestCase):
         self.addCleanup(remove_destination, messages.append)
         action = start_action(action_type="sys:do", key="value")
         assertContainsFields(
-            self, messages[0], {
+            self,
+            messages[0],
+            {
                 "task_uuid": action._identification["task_uuid"],
                 "task_level": [1],
                 "action_type": "sys:do",
                 "action_status": "started",
-                "key": "value"
-            }
+                "key": "value",
+            },
         )
 
 
@@ -730,11 +746,9 @@ class SerializationTests(TestCase):
             [
                 action._nextTaskLevel(),
                 action.serialize_task_id(),
-                action._nextTaskLevel()
-            ], [
-                TaskLevel(level=[1, 2, 1]), b"uniq123@/1/2/2",
-                TaskLevel(level=[1, 2, 3])
-            ]
+                action._nextTaskLevel(),
+            ],
+            [TaskLevel(level=[1, 2, 1]), b"uniq123@/1/2/2", TaskLevel(level=[1, 2, 3])],
         )
 
     def test_continueTaskReturnsAction(self):
@@ -743,32 +757,24 @@ class SerializationTests(TestCase):
         C{task_uuid} are derived from those in the given serialized task
         identifier.
         """
-        originalAction = Action(
-            None, "uniq456", TaskLevel(level=[3, 4]), "mytype"
-        )
+        originalAction = Action(None, "uniq456", TaskLevel(level=[3, 4]), "mytype")
         taskId = originalAction.serializeTaskId()
 
         newAction = Action.continue_task(MemoryLogger(), taskId)
         self.assertEqual(
+            [newAction.__class__, newAction._identification, newAction._task_level],
             [
-                newAction.__class__, newAction._identification,
-                newAction._task_level
-            ], [
-                Action, {
-                    "task_uuid": "uniq456",
-                    "action_type": "eliot:remote_task"
-                },
-                TaskLevel(level=[3, 4, 1])
-            ]
+                Action,
+                {"task_uuid": "uniq456", "action_type": "eliot:remote_task"},
+                TaskLevel(level=[3, 4, 1]),
+            ],
         )
 
     def test_continueTaskUnicode(self):
         """
         L{Action.continue_task} can take a Unicode task identifier.
         """
-        original_action = Action(
-            None, "uniq790", TaskLevel(level=[3, 4]), "mytype"
-        )
+        original_action = Action(None, "uniq790", TaskLevel(level=[3, 4]), "mytype")
         task_id = unicode(original_action.serialize_task_id(), "utf-8")
 
         new_action = Action.continue_task(MemoryLogger(), task_id)
@@ -778,29 +784,27 @@ class SerializationTests(TestCase):
         """
         L{Action.continue_task} starts the L{Action} it creates.
         """
-        originalAction = Action(
-            None, "uniq456", TaskLevel(level=[3, 4]), "mytype"
-        )
+        originalAction = Action(None, "uniq456", TaskLevel(level=[3, 4]), "mytype")
         taskId = originalAction.serializeTaskId()
         logger = MemoryLogger()
 
         Action.continue_task(logger, taskId)
         assertContainsFields(
-            self, logger.messages[0], {
+            self,
+            logger.messages[0],
+            {
                 "task_uuid": "uniq456",
                 "task_level": [3, 4, 1, 1],
                 "action_type": "eliot:remote_task",
-                "action_status": "started"
-            }
+                "action_status": "started",
+            },
         )
 
     def test_continueTaskNoLogger(self):
         """
         L{Action.continue_task} can be called without a logger.
         """
-        originalAction = Action(
-            None, "uniq456", TaskLevel(level=[3, 4]), "mytype"
-        )
+        originalAction = Action(None, "uniq456", TaskLevel(level=[3, 4]), "mytype")
         taskId = originalAction.serializeTaskId()
 
         messages = []
@@ -808,12 +812,14 @@ class SerializationTests(TestCase):
         self.addCleanup(remove_destination, messages.append)
         Action.continue_task(task_id=taskId)
         assertContainsFields(
-            self, messages[-1], {
+            self,
+            messages[-1],
+            {
                 "task_uuid": "uniq456",
                 "task_level": [3, 4, 1, 1],
                 "action_type": "eliot:remote_task",
-                "action_status": "started"
-            }
+                "action_status": "started",
+            },
         )
 
     def test_continueTaskRequiredTaskId(self):
@@ -876,7 +882,7 @@ class TaskLevelTests(TestCase):
                     not a == 1,
                     a != 1,
                     hash(a) == hash(a2),
-                    hash(b) != hash(a)
+                    hash(b) != hash(a),
                 ]
             )
         )
@@ -885,8 +891,7 @@ class TaskLevelTests(TestCase):
         """
         L{TaskChild.as_list} returns the level.
         """
-        self.assertEqual(TaskLevel(level=[1, 2, 3]).as_list(),
-                         [1, 2, 3])
+        self.assertEqual(TaskLevel(level=[1, 2, 3]).as_list(), [1, 2, 3])
 
     @given(lists(task_level_indexes))
     def test_parent_of_child(self, base_task_level):
@@ -944,9 +949,8 @@ class TaskLevelTests(TestCase):
         L{TaskLevel.toString}.
         """
         self.assertEqual(
-            [TaskLevel.fromString("/"),
-             TaskLevel.fromString("/2/1")],
-            [TaskLevel(level=[]), TaskLevel(level=[2, 1])]
+            [TaskLevel.fromString("/"), TaskLevel.fromString("/2/1")],
+            [TaskLevel(level=[]), TaskLevel(level=[2, 1])],
         )
 
     def test_from_string(self):
@@ -987,7 +991,7 @@ class WrittenActionTests(testtools.TestCase):
                 end_time=None,
                 reason=None,
                 exception=None,
-            )
+            ),
         )
 
     @given(start_action_messages, message_dicts, integers(min_value=2))
@@ -1000,13 +1004,13 @@ class WrittenActionTests(testtools.TestCase):
         """
         end_message = written_from_pmap(
             union(
-                end_message_dict, {
+                end_message_dict,
+                {
                     ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
-                    ACTION_TYPE_FIELD:
-                    start_message.contents[ACTION_TYPE_FIELD],
+                    ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
                     TASK_UUID_FIELD: start_message.task_uuid,
                     TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
-                }
+                },
             )
         )
         action = WrittenAction.from_messages(end_message=end_message)
@@ -1022,7 +1026,7 @@ class WrittenActionTests(testtools.TestCase):
                 end_time=end_message.timestamp,
                 reason=None,
                 exception=None,
-            )
+            ),
         )
 
     @given(message_dicts)
@@ -1046,7 +1050,7 @@ class WrittenActionTests(testtools.TestCase):
                 end_time=None,
                 reason=None,
                 exception=None,
-            )
+            ),
         )
 
     @given(start_action_messages, message_dicts, integers(min_value=2))
@@ -1056,21 +1060,22 @@ class WrittenActionTests(testtools.TestCase):
         within such a task. If we try to assemble actions from messages with
         differing task UUIDs, we raise an error.
         """
-        assume(start_message.task_uuid != end_message_dict['task_uuid'])
+        assume(start_message.task_uuid != end_message_dict["task_uuid"])
         action_type = start_message.as_dict()[ACTION_TYPE_FIELD]
         end_message = written_from_pmap(
             union(
-                end_message_dict.set(ACTION_TYPE_FIELD, action_type), {
+                end_message_dict.set(ACTION_TYPE_FIELD, action_type),
+                {
                     ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
                     TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
-                }
+                },
             )
         )
         self.assertRaises(
             WrongTask,
             WrittenAction.from_messages,
             start_message,
-            end_message=end_message
+            end_message=end_message,
         )
 
     @given(message_dicts)
@@ -1084,13 +1089,11 @@ class WrittenActionTests(testtools.TestCase):
         """
         assume(ACTION_STATUS_FIELD not in message_dict)
         message = written_from_pmap(message_dict)
-        self.assertRaises(
-            InvalidStartMessage, WrittenAction.from_messages, message
-        )
+        self.assertRaises(InvalidStartMessage, WrittenAction.from_messages, message)
 
     @given(
         message_dict=start_action_message_dicts,
-        status=(just(FAILED_STATUS) | just(SUCCEEDED_STATUS) | text())
+        status=(just(FAILED_STATUS) | just(SUCCEEDED_STATUS) | text()),
     )
     def test_invalid_start_message_wrong_status(self, message_dict, status):
         """
@@ -1101,14 +1104,8 @@ class WrittenActionTests(testtools.TestCase):
         This test handles the case where the status field is present, but is
         not C{STARTED_STATUS}.
         """
-        message = written_from_pmap(
-            message_dict.update({
-                ACTION_STATUS_FIELD: status
-            })
-        )
-        self.assertRaises(
-            InvalidStartMessage, WrittenAction.from_messages, message
-        )
+        message = written_from_pmap(message_dict.update({ACTION_STATUS_FIELD: status}))
+        self.assertRaises(InvalidStartMessage, WrittenAction.from_messages, message)
 
     @given(start_action_message_dicts, integers(min_value=2))
     def test_invalid_task_level_in_start_message(self, start_message_dict, i):
@@ -1123,14 +1120,10 @@ class WrittenActionTests(testtools.TestCase):
         new_level = start_message_dict[TASK_LEVEL_FIELD].append(i)
         message_dict = start_message_dict.set(TASK_LEVEL_FIELD, new_level)
         message = written_from_pmap(message_dict)
-        self.assertRaises(
-            InvalidStartMessage, WrittenAction.from_messages, message
-        )
+        self.assertRaises(InvalidStartMessage, WrittenAction.from_messages, message)
 
     @given(start_action_messages, message_dicts, text(), integers(min_value=1))
-    def test_action_type_mismatch(
-        self, start_message, end_message_dict, end_type, n
-    ):
+    def test_action_type_mismatch(self, start_message, end_message_dict, end_type, n):
         """
         The end message of an action must have the same C{ACTION_TYPE_FIELD} as
         the start message of an action. If we try to end an action with a
@@ -1139,19 +1132,20 @@ class WrittenActionTests(testtools.TestCase):
         assume(end_type != start_message.contents[ACTION_TYPE_FIELD])
         end_message = written_from_pmap(
             union(
-                end_message_dict, {
+                end_message_dict,
+                {
                     ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
                     ACTION_TYPE_FIELD: end_type,
                     TASK_UUID_FIELD: start_message.task_uuid,
                     TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
-                }
+                },
             )
         )
         self.assertRaises(
             WrongActionType,
             WrittenAction.from_messages,
             start_message,
-            end_message=end_message
+            end_message=end_message,
         )
 
     @given(start_action_messages, message_dicts, integers(min_value=2))
@@ -1166,18 +1160,16 @@ class WrittenActionTests(testtools.TestCase):
         """
         end_message = written_from_pmap(
             union(
-                end_message_dict, {
+                end_message_dict,
+                {
                     ACTION_STATUS_FIELD: SUCCEEDED_STATUS,
-                    ACTION_TYPE_FIELD:
-                    start_message.contents[ACTION_TYPE_FIELD],
+                    ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
                     TASK_UUID_FIELD: start_message.task_uuid,
                     TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
-                }
+                },
             )
         )
-        action = WrittenAction.from_messages(
-            start_message, end_message=end_message
-        )
+        action = WrittenAction.from_messages(start_message, end_message=end_message)
         self.assertThat(
             action,
             MatchesStructure.byEquality(
@@ -1190,19 +1182,11 @@ class WrittenActionTests(testtools.TestCase):
                 end_time=end_message.timestamp,
                 reason=None,
                 exception=None,
-            )
+            ),
         )
 
-    @given(
-        start_action_messages,
-        message_dicts,
-        text(),
-        text(),
-        integers(min_value=2)
-    )
-    def test_failed_end(
-        self, start_message, end_message_dict, exception, reason, n
-    ):
+    @given(start_action_messages, message_dicts, text(), text(), integers(min_value=2))
+    def test_failed_end(self, start_message, end_message_dict, exception, reason, n):
         """
         A L{WrittenAction} can be constructed with just a start message and an
         end message: in this case, an end message that indicates that the
@@ -1214,20 +1198,18 @@ class WrittenActionTests(testtools.TestCase):
         """
         end_message = written_from_pmap(
             union(
-                end_message_dict, {
+                end_message_dict,
+                {
                     ACTION_STATUS_FIELD: FAILED_STATUS,
-                    ACTION_TYPE_FIELD:
-                    start_message.contents[ACTION_TYPE_FIELD],
+                    ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
                     TASK_UUID_FIELD: start_message.task_uuid,
                     TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
                     EXCEPTION_FIELD: exception,
                     REASON_FIELD: reason,
-                }
+                },
             )
         )
-        action = WrittenAction.from_messages(
-            start_message, end_message=end_message
-        )
+        action = WrittenAction.from_messages(start_message, end_message=end_message)
         self.assertThat(
             action,
             MatchesStructure.byEquality(
@@ -1240,7 +1222,7 @@ class WrittenActionTests(testtools.TestCase):
                 end_time=end_message.timestamp,
                 reason=reason,
                 exception=exception,
-            )
+            ),
         )
 
     @given(start_action_messages, message_dicts, integers(min_value=2))
@@ -1253,19 +1235,19 @@ class WrittenActionTests(testtools.TestCase):
         assume(ACTION_STATUS_FIELD not in end_message_dict)
         end_message = written_from_pmap(
             union(
-                end_message_dict, {
-                    ACTION_TYPE_FIELD:
-                    start_message.contents[ACTION_TYPE_FIELD],
+                end_message_dict,
+                {
+                    ACTION_TYPE_FIELD: start_message.contents[ACTION_TYPE_FIELD],
                     TASK_UUID_FIELD: start_message.task_uuid,
                     TASK_LEVEL_FIELD: sibling_task_level(start_message, n),
-                }
+                },
             )
         )
         self.assertRaises(
             InvalidStatus,
             WrittenAction.from_messages,
             start_message,
-            end_message=end_message
+            end_message=end_message,
         )
 
     # This test is slow, and when run under coverage on pypy on Travis won't
@@ -1282,8 +1264,9 @@ class WrittenActionTests(testtools.TestCase):
             reparent_action(
                 start_message.task_uuid,
                 TaskLevel(level=sibling_task_level(start_message, i)),
-                message
-            ) for (i, message) in enumerate(child_messages, 2)
+                message,
+            )
+            for (i, message) in enumerate(child_messages, 2)
         ]
         action = WrittenAction.from_messages(start_message, messages)
 
@@ -1311,25 +1294,18 @@ class WrittenActionTests(testtools.TestCase):
         child of the action's task level.
         """
         assume(
-            not start_message.task_level.
-            is_sibling_of(TaskLevel(level=child_message[TASK_LEVEL_FIELD]))
+            not start_message.task_level.is_sibling_of(
+                TaskLevel(level=child_message[TASK_LEVEL_FIELD])
+            )
         )
         message = written_from_pmap(
-            child_message.update({
-                TASK_UUID_FIELD: start_message.task_uuid
-            })
+            child_message.update({TASK_UUID_FIELD: start_message.task_uuid})
         )
         self.assertRaises(
-            WrongTaskLevel, WrittenAction.from_messages, start_message,
-            v(message)
+            WrongTaskLevel, WrittenAction.from_messages, start_message, v(message)
         )
 
-    @given(
-        start_action_messages,
-        message_dicts,
-        message_dicts,
-        integers(min_value=2)
-    )
+    @given(start_action_messages, message_dicts, message_dicts, integers(min_value=2))
     def test_duplicate_task_level(self, start_message, child1, child2, index):
         """
         If we try to add a child to an action that has a task level that's the
@@ -1339,17 +1315,18 @@ class WrittenActionTests(testtools.TestCase):
         messages = [
             written_from_pmap(
                 union(
-                    child_message, {
+                    child_message,
+                    {
                         TASK_UUID_FIELD: start_message.task_uuid,
                         TASK_LEVEL_FIELD: parent_level.append(index),
-                    }
+                    },
                 )
-            ) for child_message in [child1, child2]
+            )
+            for child_message in [child1, child2]
         ]
         assume(messages[0] != messages[1])
         self.assertRaises(
-            DuplicateChild, WrittenAction.from_messages, start_message,
-            messages
+            DuplicateChild, WrittenAction.from_messages, start_message, messages
         )
 
 
@@ -1377,9 +1354,7 @@ def make_error_extraction_tests(get_messages):
             class MyException(Exception):
                 pass
 
-            register_exception_extractor(
-                MyException, lambda e: {"key": e.args[0]}
-            )
+            register_exception_extractor(MyException, lambda e: {"key": e.args[0]})
             exception = MyException("a value")
             [message] = get_messages(exception)
             assertContainsFields(self, message, {"key": "a value"})
@@ -1397,9 +1372,7 @@ def make_error_extraction_tests(get_messages):
             class SubException(MyException):
                 pass
 
-            register_exception_extractor(
-                MyException, lambda e: {"key": e.args[0]}
-            )
+            register_exception_extractor(MyException, lambda e: {"key": e.args[0]})
             [message] = get_messages(SubException("the value"))
             assertContainsFields(self, message, {"key": "the value"})
 
@@ -1418,12 +1391,8 @@ def make_error_extraction_tests(get_messages):
             class SubSubException(SubException):
                 pass
 
-            register_exception_extractor(
-                MyException, lambda e: {"parent": e.args[0]}
-            )
-            register_exception_extractor(
-                SubException, lambda e: {"child": e.args[0]}
-            )
+            register_exception_extractor(MyException, lambda e: {"parent": e.args[0]})
+            register_exception_extractor(SubException, lambda e: {"child": e.args[0]})
             [message] = get_messages(SubSubException("the value"))
             assertContainsFields(self, message, {"child": "the value"})
 
@@ -1443,14 +1412,9 @@ def make_error_extraction_tests(get_messages):
 
             messages = get_failed_action_messages(MyException())
             assertContainsFields(
-                self, messages[1], {
-                    "action_type": "sys:me",
-                    "action_status": "failed"
-                }
+                self, messages[1], {"action_type": "sys:me", "action_status": "failed"}
             )
-            assertContainsFields(
-                self, messages[0], {"message_type": "eliot:traceback"}
-            )
+            assertContainsFields(self, messages[0], {"message_type": "eliot:traceback"})
             self.assertIn("nosuchattribute", str(messages[0]["reason"]))
 
         def test_environmenterror(self):
@@ -1503,13 +1467,15 @@ class FailedActionExtractionTests(
         exception = MyException("because")
         messages = get_failed_action_messages(exception)
         assertContainsFields(
-            self, messages[0], {
+            self,
+            messages[0],
+            {
                 "task_level": [2],
                 "action_type": "sys:me",
                 "action_status": "failed",
                 "reason": "because",
-                "exception": "eliot.tests.test_action.MyException"
-            }
+                "exception": "eliot.tests.test_action.MyException",
+            },
         )
 
 
@@ -1558,9 +1524,11 @@ class PreserveContextTests(TestCase):
         root = tree.root()
         self.assertEqual(
             (
-                root.action_type, root.children[0].action_type,
-                root.children[0].children[0].contents[MESSAGE_TYPE_FIELD]
-            ), ("parent", "eliot:remote_task", "child")
+                root.action_type,
+                root.children[0].action_type,
+                root.children[0].children[0].contents[MESSAGE_TYPE_FIELD],
+            ),
+            ("parent", "eliot:remote_task", "child"),
         )
 
     def test_callable_only_once(self):
@@ -1602,20 +1570,21 @@ class LogCallTests(TestCase):
         C{@log_call} with no arguments logs return result, arguments, and has
         action type based on the action name.
         """
+
         @log_call
         def myfunc(x, y):
             return 4
 
         myfunc(2, 3)
-        self.assert_logged(logger, self.id() + ".<locals>.myfunc",
-                           {u"x": 2, u"y": 3}, 4)
+        self.assert_logged(logger, self.id() + ".<locals>.myfunc", {"x": 2, "y": 3}, 4)
 
     @capture_logging(None)
     def test_exception(self, logger):
         """C{@log_call} with an exception logs a failed action."""
+
         @log_call
         def myfunc(x, y):
-            1/0
+            1 / 0
 
         with self.assertRaises(ZeroDivisionError):
             myfunc(2, 4)
@@ -1628,62 +1597,68 @@ class LogCallTests(TestCase):
     @capture_logging(None)
     def test_action_type(self, logger):
         """C{@log_call} can take an action type."""
+
         @log_call(action_type="myaction")
         def myfunc(x, y):
             return 4
 
         myfunc(2, 3)
-        self.assert_logged(logger, u"myaction", {u"x": 2, u"y": 3}, 4)
+        self.assert_logged(logger, "myaction", {"x": 2, "y": 3}, 4)
 
     @capture_logging(None)
     def test_default_argument_given(self, logger):
         """C{@log_call} logs default arguments that were passed in."""
+
         @log_call
         def myfunc(x, y=1):
             return 4
 
         myfunc(2, y=5)
-        self.assert_logged(logger, self.id() + ".<locals>.myfunc",
-                           {u"x": 2, u"y": 5}, 4)
+        self.assert_logged(logger, self.id() + ".<locals>.myfunc", {"x": 2, "y": 5}, 4)
 
     @capture_logging(None)
     def test_default_argument_missing(self, logger):
         """C{@log_call} logs default arguments that weren't passed in."""
+
         @log_call
         def myfunc(x, y=1):
             return 6
 
         myfunc(2)
-        self.assert_logged(logger, self.id() + ".<locals>.myfunc",
-                           {u"x": 2, u"y": 1}, 6)
+        self.assert_logged(logger, self.id() + ".<locals>.myfunc", {"x": 2, "y": 1}, 6)
 
     @capture_logging(None)
     def test_star_args_kwargs(self, logger):
         """C{@log_call} logs star args and kwargs."""
+
         @log_call
         def myfunc(x, *y, **z):
             return 6
 
         myfunc(2, 3, 4, a=1, b=2)
-        self.assert_logged(logger, self.id() + ".<locals>.myfunc",
-                           {u"x": 2, u"y": (3, 4), u"z": {u"a": 1, u"b": 2}},
-                           6)
+        self.assert_logged(
+            logger,
+            self.id() + ".<locals>.myfunc",
+            {"x": 2, "y": (3, 4), "z": {"a": 1, "b": 2}},
+            6,
+        )
 
     @capture_logging(None)
     def test_whitelist_args(self, logger):
         """C{@log_call} only includes whitelisted arguments."""
+
         @log_call(include_args=("x", "z"))
         def myfunc(x, y, z):
             return 6
 
         myfunc(2, 3, 4)
-        self.assert_logged(logger, self.id() + ".<locals>.myfunc",
-                           {u"x": 2, u"z": 4}, 6)
+        self.assert_logged(logger, self.id() + ".<locals>.myfunc", {"x": 2, "z": 4}, 6)
 
     @skipIf(six.PY2, "Didn't bother implementing safety check on Python 2")
     def test_wrong_whitelist_args(self):
         """If C{include_args} doesn't match function, raise an exception."""
         with self.assertRaises(ValueError):
+
             @log_call(include_args=["a", "x", "y"])
             def f(x, y):
                 pass
@@ -1691,6 +1666,7 @@ class LogCallTests(TestCase):
     @capture_logging(None)
     def test_no_result(self, logger):
         """C{@log_call} can omit logging the result."""
+
         @log_call(include_result=False)
         def myfunc(x, y):
             return 6
@@ -1707,20 +1683,16 @@ class LogCallTests(TestCase):
 
         This is necessary for e.g. Dask usage.
         """
-        self.assertIs(
-            for_pickling,
-            pickle.loads(pickle.dumps(for_pickling))
-        )
+        self.assertIs(for_pickling, pickle.loads(pickle.dumps(for_pickling)))
 
     @capture_logging(None)
     def test_methods(self, logger):
         """self is not logged."""
+
         class C(object):
             @log_call
             def f(self, x):
                 pass
 
         C().f(2)
-        self.assert_logged(logger, self.id() + u".<locals>.C.f", {u"x": 2}, None)
-
-
+        self.assert_logged(logger, self.id() + ".<locals>.C.f", {"x": 2}, None)

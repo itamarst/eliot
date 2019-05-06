@@ -14,7 +14,7 @@ class EliotHandler(Handler):
             message_type="eliot:stdlib",
             log_level=record.levelname,
             logger=record.name,
-            message=record.getMessage()
+            message=record.getMessage(),
         )
         if record.exc_info:
             write_traceback(exc_info=record.exc_info)

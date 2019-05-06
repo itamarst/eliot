@@ -50,13 +50,7 @@ class MessageTests(TestCase):
         msg = Message.new(key="value", another=2)
         another = msg.bind(another=3, more=4)
         self.assertIsInstance(another, Message)
-        self.assertEqual(
-            another.contents(), {
-                "key": "value",
-                "another": 3,
-                "more": 4
-            }
-        )
+        self.assertEqual(another.contents(), {"key": "value", "another": 3, "more": 4})
 
     def test_bindPreservesOriginal(self):
         """
@@ -85,7 +79,7 @@ class MessageTests(TestCase):
         add_destination(messages.append)
         self.addCleanup(remove_destination, messages.append)
         Message.new(some_key=1234).write()
-        self.assertEqual(messages[0][u"some_key"], 1234)
+        self.assertEqual(messages[0]["some_key"], 1234)
 
     def test_writeCreatesNewDictionary(self):
         """
@@ -117,7 +111,7 @@ class MessageTests(TestCase):
         add_destination(messages.append)
         self.addCleanup(remove_destination, messages.append)
         Message.log(some_key=1234)
-        self.assertEqual(messages[0][u"some_key"], 1234)
+        self.assertEqual(messages[0]["some_key"], 1234)
 
     def test_defaultTime(self):
         """
@@ -171,12 +165,8 @@ class MessageTests(TestCase):
         written = logger.messages[0]
         del written["timestamp"]
         self.assertEqual(
-            written, {
-                "task_uuid": "unique",
-                "task_level": [1],
-                "key": 2,
-                "message_type": "",
-            }
+            written,
+            {"task_uuid": "unique", "task_level": [1], "key": 2, "message_type": ""},
         )
 
     def test_implicitAction(self):
@@ -185,9 +175,7 @@ class MessageTests(TestCase):
         fields from the current execution context's L{Action} to the
         dictionary written to the logger.
         """
-        action = Action(
-            MemoryLogger(), "unique", TaskLevel(level=[]), "sys:thename"
-        )
+        action = Action(MemoryLogger(), "unique", TaskLevel(level=[]), "sys:thename")
         logger = MemoryLogger()
         msg = Message.new(key=2)
         with action:
@@ -195,12 +183,8 @@ class MessageTests(TestCase):
         written = logger.messages[0]
         del written["timestamp"]
         self.assertEqual(
-            written, {
-                "task_uuid": "unique",
-                "task_level": [1],
-                "key": 2,
-                "message_type": "",
-            }
+            written,
+            {"task_uuid": "unique", "task_level": [1], "key": 2, "message_type": ""},
         )
 
     def test_missingAction(self):
@@ -219,8 +203,10 @@ class MessageTests(TestCase):
         self.assertEqual(
             (
                 UUID(message1["task_uuid"]) != UUID(message2["task_uuid"]),
-                message1["task_level"], message2["task_level"]
-            ), (True, [1], [1])
+                message1["task_level"],
+                message2["task_level"],
+            ),
+            (True, [1], [1]),
         )
 
     def test_actionCounter(self):
@@ -236,8 +222,7 @@ class MessageTests(TestCase):
         # We expect 6 messages: start action, 4 standalone messages, finish
         # action:
         self.assertEqual(
-            [m["task_level"] for m in logger.messages],
-            [[1], [2], [3], [4], [5], [6]]
+            [m["task_level"] for m in logger.messages], [[1], [2], [3], [4], [5], [6]]
         )
 
     def test_writePassesSerializer(self):
@@ -286,16 +271,9 @@ class WrittenMessageTests(TestCase):
         to the log.
         """
         log_entry = pmap(
-            {
-                'timestamp': 1,
-                'task_uuid': 'unique',
-                'task_level': [1],
-                'foo': 'bar',
-            }
+            {"timestamp": 1, "task_uuid": "unique", "task_level": [1], "foo": "bar"}
         )
-        self.assertEqual(
-            WrittenMessage.from_dict(log_entry).as_dict(), log_entry
-        )
+        self.assertEqual(WrittenMessage.from_dict(log_entry).as_dict(), log_entry)
 
     def test_from_dict(self):
         """
@@ -303,15 +281,10 @@ class WrittenMessageTests(TestCase):
         deserialized from a log into a L{WrittenMessage} object.
         """
         log_entry = pmap(
-            {
-                'timestamp': 1,
-                'task_uuid': 'unique',
-                'task_level': [1],
-                'foo': 'bar',
-            }
+            {"timestamp": 1, "task_uuid": "unique", "task_level": [1], "foo": "bar"}
         )
         parsed = WrittenMessage.from_dict(log_entry)
         self.assertEqual(parsed.timestamp, 1)
-        self.assertEqual(parsed.task_uuid, 'unique')
+        self.assertEqual(parsed.task_uuid, "unique")
         self.assertEqual(parsed.task_level, TaskLevel(level=[1]))
-        self.assertEqual(parsed.contents, pmap({'foo': 'bar'}))
+        self.assertEqual(parsed.contents, pmap({"foo": "bar"}))

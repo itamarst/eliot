@@ -12,6 +12,7 @@ from warnings import warn
 
 from twisted.application.service import Service
 from twisted.internet.threads import deferToThreadPool
+
 if getattr(select, "poll", None):
     from twisted.internet.pollreactor import PollReactor as Reactor
 else:
@@ -38,7 +39,8 @@ class ThreadedWriter(Service):
     @ivar _thread: C{None}, or a L{threading.Thread} running the private
         reactor.
     """
-    name = u"Eliot Log Writer"
+
+    name = "Eliot Log Writer"
 
     def __init__(self, destination, reactor):
         """
@@ -71,8 +73,8 @@ class ThreadedWriter(Service):
         removeDestination(self)
         self._reactor.callFromThread(self._reactor.stop)
         return deferToThreadPool(
-            self._mainReactor,
-            self._mainReactor.getThreadPool(), self._thread.join)
+            self._mainReactor, self._mainReactor.getThreadPool(), self._thread.join
+        )
 
     def __call__(self, data):
         """
@@ -114,7 +116,8 @@ class ThreadedFileWriter(ThreadedWriter):
             "ThreadedFileWriter is deprecated since 0.9.0. "
             "Use ThreadedWriter instead.",
             DeprecationWarning,
-            stacklevel=2)
+            stacklevel=2,
+        )
         self._logFile = logFile
         ThreadedWriter.__init__(self, FileDestination(file=logFile), reactor)
 
