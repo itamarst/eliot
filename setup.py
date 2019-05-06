@@ -47,6 +47,13 @@ setup(
             # We use cffi to talk to the journald API:
             "cffi >= 1.1.2"  # significant API changes in older releases
         ],
+        "test": [
+            # Bug-seeking missile:
+            "hypothesis >= 1.14.0",
+            # Tasteful testing for Python:
+            "testtools",
+            "pytest",
+        ],
         "dev": [
             # Ensure we can do python_requires correctly:
             "setuptools >= 40",
@@ -54,15 +61,10 @@ setup(
             "twine >= 1.12.1",
             # Allows us to measure code coverage:
             "coverage",
-            # Bug-seeking missile:
-            "hypothesis >= 1.14.0",
-            # Tasteful testing for Python:
-            "testtools",
             "sphinx",
             "sphinx_rtd_theme",
             "flake8",
             "black",
-            "pytest",
         ],
     },
     entry_points={"console_scripts": ["eliot-prettyprint = eliot.prettyprint:_main"]},
