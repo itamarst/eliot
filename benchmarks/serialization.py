@@ -26,7 +26,7 @@ def run():
                 ctx.log(
                     message_type="my_message",
                     integer=3,
-                    string=b"abcdeft",
+                    string="abcdeft",
                     string2="dgsjdlkgjdsl",
                     list=[1, 2, 3, 4],
                 )
