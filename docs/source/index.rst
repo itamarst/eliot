@@ -33,6 +33,8 @@ Eliot is only used to generate your logs; you might still need tools like Logsta
 Media
 -----
 
+`PyCon 2019 talk: Logging for Scientific Computing <https://pyvideo.org/pycon-us-2019/logging-for-scientific-computing-reproducibility-debugging-optimization.html>`_ (also available in a `prose version <https://pythonspeed.com/articles/logging-for-scientific-computing/>`_).
+
 `Podcast.__init__ episode 133 <https://www.podcastinit.com/eliot-logging-with-itamar-turner-trauring-episode-133/>`_ covers Eliot:
 
 .. raw:: html
