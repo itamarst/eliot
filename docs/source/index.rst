@@ -26,7 +26,10 @@ Eliot supports a range of use cases and 3rd party libraries:
 Eliot is only used to generate your logs; you might still need tools like Logstash and ElasticSearch to aggregate and store logs if you are using multiple processes across multiple machines.
 
 * **Start here:** :doc:`Quickstart documentation <quickstart>`
-* Need help or have any questions? `File an issue <https://github.com/itamarst/eliot/issues/new>`_ on GitHub.
+* Need help or have any questions? `File an issue <https://github.com/itamarst/eliot/issues/new>`_.
+* Eliot is licensed under the `Apache 2.0 license <https://github.com/itamarst/eliot/blob/master/LICENSE>`_, and the source code is `available on GitHub <https://github.com/itamarst/eliot>`_.
+* Eliot supports Python 3.7, 3.6, and 3.5.
+  Python 2.7 is in legacy support mode (see :ref:`python2` for details).
 * **Commercial support** is available from `Python⇒Speed <https://pythonspeed.com/services/#eliot>`_.
 * Read on for the full documentation.
 
@@ -64,12 +67,3 @@ Documentation
    scientific-computing
    python2
    development
-
-
-Project Information
--------------------
-
-Eliot is maintained by `Itamar Turner-Trauring <mailto:itamar@itamarst.org>`_, and released under the Apache 2.0 License.
-
-It supports Python 3.7, 3.6, and 3.5.
-Python 2.7 is in legacy support mode, with the last release supported being 1.7; see :ref:`python2` for details.
