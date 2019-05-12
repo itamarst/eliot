@@ -98,6 +98,11 @@ class: middle
 
 ## https://eliot.readthedocs.io
 
+
+???
+
+Very different than normal logging libraries
+
 ---
 
 # Example: original code
@@ -186,20 +191,25 @@ class: middle
 
 ---
 
-# Profilers are insufficient
+# Profilers are insufficient, 1
 
-* Only support single process, not distributed systems
-* Can’t tell you which inputs are slow:
-    * `f()` may be fast on some inputs, but very slow on others
-    * Profiler just tells you "`f()` is slowish"
+## Only support single process, not distributed systems
+## Eliot supports multiple processes, as well as Dask
+
+---
+
+# Profilers are insufficient, 2
+
+## Profilers can’t tell you which inputs are slow:
+## `f()` may be fast on some inputs, but slow on others
+## Profiler just tells you "`f()` is slowish"
 
 ---
 
 # Eliot to the rescue
 
-* Supports multiple processes
-* Supports Dask
-* Tells you elapsed time _and_ inputs to function
+## A trace of execution, so you can find slow actions
+## But also logs inputs to functions
 
 ---
 
@@ -242,27 +252,54 @@ class: middle
 
 # Scientific code is an argument about reality
 
-* This cell culture has these genes
-* This behavior is correlated with this outcome
-* This causes that
+## This cell culture has these genes
+## This behavior is correlated with this outcome
+## This causes that
 
 ---
 
-# Reproducability is necessary but insufficient
+# The need for trust
 
-* If I run your code and get different results I won’t trust it
-* But even with consistent results—
-* —opaque black-box results are hard to trust
+## First, you need to trust the code or results yourself before you share them
+
+## Then, you need to gain other peoples’ trust in what you’ve built
+
+---
+
+# Ways to gain trust
+
+## **Reproducability:** Same results when run elsewhere
+
+## **Automated testing:** Unit tests, metamorphic tests
+
+## **Validation:** Run on past data, compare to known results, compare to other models
+
+---
+
+# Logging can help with reproducability
+
+## Show you’re not just getting the same end result
+
+## But also the intermediate results are the same
+
+---
+
+# All the above are not enough
+
+## Even with consistent results and tests—
+
+--
+
+## —opaque black-box results are hard to trust!
 
 ---
 
 # Trust also requires a coherent explanation
 
-1. We did A—
-2. —here is a graph of intermediate results.
-3. And then did B—
-4. —here is a table showing why it makes sense.
-5. Therefore, we can conclude C.
+## 1. We did A—
+## 2. —here is a graph of intermediate results.
+## 3. And then we did B—here is a table showing why it makes sense.
+
 
 ---
 
@@ -309,8 +346,12 @@ but not something you can give someone else
 
 # Further information
 
-* Eliot documentation: https://eliot.readthedocs.io
-* Consulting services: https://pythonspeed.com
-* Email: itamar@pythonspeed.com
-* Twitter: @itamarst
+## https://eliot.readthedocs.io
+## Consulting services: https://pythonspeed.com
+## Email: itamar@pythonspeed.com
+## Twitter: @itamarst
 
+???
+
+Python performance 
+Bridging the gap between scientific computing and software engineering

@@ -11,6 +11,7 @@ Eliot is an ideal logging library for these cases:
 * It supports scientific libraries: NumPy and Dask.
   By default, Eliot will automatically serialize NumPy integers, floats, arrays, and bools to JSON (see :ref:`custom_json` for details).
 
+At PyCon 2019 Itamar Turner-Trauring gave talk about logging for scientific computing, in part using Eliot—you can `watch the video <https://pyvideo.org/pycon-us-2019/logging-for-scientific-computing-reproducibility-debugging-optimization.html>`_ or `read a prose version <https://pythonspeed.com/articles/logging-for-scientific-computing/>`_.
 
 .. _dask_usage:
 
