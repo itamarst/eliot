@@ -28,7 +28,7 @@ Eliot is only used to generate your logs; you might still need tools like Logsta
 * **Start here:** :doc:`Quickstart documentation <quickstart>`
 * Need help or have any questions? `File an issue <https://github.com/itamarst/eliot/issues/new>`_.
 * Eliot is licensed under the `Apache 2.0 license <https://github.com/itamarst/eliot/blob/master/LICENSE>`_, and the source code is `available on GitHub <https://github.com/itamarst/eliot>`_.
-* Eliot supports Python 3.7, 3.6, and 3.5.
+* Eliot supports Python 3.7, 3.6, and 3.5, as well as PyPy3.
   Python 2.7 is in legacy support mode (see :ref:`python2` for details).
 * **Commercial support** is available from `Python⇒Speed <https://pythonspeed.com/services/#eliot>`_.
 * Read on for the full documentation.
