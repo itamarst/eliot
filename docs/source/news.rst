@@ -9,6 +9,7 @@ Features:
 * If you call ``to_file()/FileDestination()`` with a non-writable file, an
   exception will be raised. This prevents logging from being silently swallowed
   when the program runs. Fixes #403.
+* PyPy3 is now officially supported.
 
 1.8.0
 ^^^^^
