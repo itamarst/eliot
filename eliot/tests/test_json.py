@@ -6,6 +6,7 @@ from __future__ import unicode_literals, absolute_import
 
 from unittest import TestCase, skipUnless, skipIf
 from json import loads, dumps
+from math import isnan
 
 try:
     import numpy as np
@@ -17,6 +18,13 @@ from eliot.json import EliotJSONEncoder
 
 class EliotJSONEncoderTests(TestCase):
     """Tests for L{EliotJSONEncoder}."""
+
+    def test_nan_inf(self):
+        """NaN, inf and -inf are round-tripped."""
+        l = [float("nan"), float("inf"), float("-inf")]
+        roundtripped = loads(dumps(l, cls=EliotJSONEncoder))
+        self.assertEqual(l[1:], roundtripped[1:])
+        self.assertTrue(isnan(roundtripped[0]))
 
     @skipUnless(np, "NumPy not installed.")
     def test_numpy(self):
