@@ -2,10 +2,8 @@
 Tests for L{eliot._output}.
 """
 
-from __future__ import unicode_literals
-
 from sys import stdout
-from unittest import TestCase, skipIf, skipUnless
+from unittest import TestCase, skipUnless
 
 # Make sure to use StringIO that only accepts unicode:
 from io import BytesIO, StringIO
@@ -14,8 +12,6 @@ from tempfile import mktemp
 from time import time
 from uuid import UUID
 from threading import Thread
-
-from six import PY3
 
 try:
     import numpy as np

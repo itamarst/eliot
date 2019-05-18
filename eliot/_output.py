@@ -2,8 +2,6 @@
 Implementation of hooks and APIs for outputting log messages.
 """
 
-from __future__ import unicode_literals, absolute_import
-
 import sys
 import traceback
 import inspect
