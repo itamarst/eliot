@@ -10,8 +10,7 @@ import inspect
 import json as pyjson
 from threading import Lock
 from functools import wraps
-
-from six import text_type as unicode, PY3
+from io import IOBase
 
 from pyrsistent import PClass, field
 
@@ -172,7 +171,7 @@ class Logger(object):
             faithfully as can be done without putting in too much effort.
         """
         try:
-            return unicode(
+            return str(
                 dict(
                     (saferepr(key), saferepr(value))
                     for (key, value) in dictionary.items()
@@ -335,7 +334,7 @@ class MemoryLogger(object):
         if serializer is not None:
             serializer.validate(dictionary)
         for key in dictionary:
-            if not isinstance(key, unicode):
+            if not isinstance(key, str):
                 if isinstance(key, bytes):
                     key.decode("utf-8")
                 else:
@@ -429,12 +428,14 @@ class FileDestination(PClass):
     _linebreak = field(mandatory=True)
 
     def __new__(cls, file, encoder=EliotJSONEncoder):
+        if isinstance(file, IOBase) and not file.writable():
+            raise RuntimeError("Given file {} is not writeable.")
+
         unicodeFile = False
-        if PY3:
-            try:
-                file.write(b"")
-            except TypeError:
-                unicodeFile = True
+        try:
+            file.write(b"")
+        except TypeError:
+            unicodeFile = True
 
         if unicodeFile:
             # On Python 3 native json module outputs unicode:

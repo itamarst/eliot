@@ -15,7 +15,7 @@ from time import time
 from uuid import UUID
 from threading import Thread
 
-from six import PY3, PY2
+from six import PY3
 
 try:
     import numpy as np
@@ -67,15 +67,6 @@ class MemoryLoggerTests(TestCase):
         logger = MemoryLogger()
         logger.write({123: "b"})
         self.assertRaises(TypeError, logger.validate)
-
-    @skipIf(PY3, "Python 3 json module makes it impossible to use bytes as keys")
-    def test_bytesFieldKeys(self):
-        """
-        Field keys can be bytes containing utf-8 encoded Unicode.
-        """
-        logger = MemoryLogger()
-        logger.write({"\u1234".encode("utf-8"): "b"})
-        logger.validate()
 
     def test_bytesMustBeUTF8(self):
         """
@@ -729,22 +720,6 @@ class LoggerTests(TestCase):
         logger.write({"hello": 123})
 
 
-class JSONTests(TestCase):
-    """
-    Tests for the L{json} object exposed by L{eliot._output}.
-    """
-
-    @skipIf(PY3, "Python 3 json does not support bytes as keys")
-    def test_bytes(self):
-        """
-        L{json.dumps} uses a JSON encoder that assumes any C{bytes} are
-        UTF-8 encoded Unicode.
-        """
-        d = {"hello \u1234".encode("utf-8"): "\u5678".encode("utf-8")}
-        result = json.dumps(d)
-        self.assertEqual(json.loads(result), {"hello \u1234": "\u5678"})
-
-
 class PEP8Tests(TestCase):
     """
     Tests for PEP 8 method compatibility.
@@ -867,7 +842,6 @@ class ToFileTests(TestCase):
             [message1],
         )
 
-    @skipIf(PY2, "Python 2 files always accept bytes")
     def test_filedestination_writes_json_unicode(self):
         """
         L{FileDestination} writes JSON-encoded messages to file that only
@@ -878,3 +852,13 @@ class ToFileTests(TestCase):
         destination = FileDestination(file=unicode_f)
         destination(message)
         self.assertEqual(pyjson.loads(unicode_f.getvalue()), message)
+
+    def test_filedestination_unwriteable_file(self):
+        """
+        L{FileDestination} raises a runtime error if the given file isn't writeable.
+        """
+        path = mktemp()
+        open(path, "w").close()
+        f = open(path, "r")
+        with self.assertRaises(RuntimeError):
+            FileDestination(f)
