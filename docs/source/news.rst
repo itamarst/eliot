@@ -11,6 +11,10 @@ Features:
   when the program runs. Fixes #403.
 * PyPy3 is now officially supported.
 
+Changes:
+
+* If you log a NumPy array whose size > 10000, only a subset will logged. This is to ensure logging giant arrays by mistake doesn't impact your software's performance. If you want to customize logging of large arrays, see :ref:`large_numpy_arrays`. Fixes #410.
+
 1.8.0
 ^^^^^
 
