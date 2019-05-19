@@ -77,13 +77,13 @@ class EliotJSONEncoderTests(TestCase):
         Large NumPy arrays are not serialized completely, since this is (A) a
         performance hit (B) probably a mistake on the user's part.
         """
-        a1000 = np.array([0] * 1000)
+        a1000 = np.array([0] * 10000)
         self.assertEqual(loads(dumps(a1000, cls=EliotJSONEncoder)), a1000.tolist())
-        a1002 = np.zeros((2, 501))
+        a1002 = np.zeros((2, 5001))
         a1002[0][0] = 12
         a1002[0][1] = 13
         a1002[1][1] = 500
         self.assertEqual(
             loads(dumps(a1002, cls=EliotJSONEncoder)),
-            {"array_start": a1002.flat[:1000].tolist(), "original_shape": [2, 501]},
+            {"array_start": a1002.flat[:10000].tolist(), "original_shape": [2, 5001]},
         )
