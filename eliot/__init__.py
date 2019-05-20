@@ -7,14 +7,13 @@ from sys import version_info
 # Enable asyncio contextvars support in Python 3.5/3.6:
 if version_info < (3, 7):
     # On Python 3.5.2 and earlier, some of the necessary attributes aren't exposed:
-    import asyncio
-    if getattr(asyncio, "_get_running_loop", None) is None:
-        from asyncio import events
-        asyncio._get_running_loop = events._get_running_loop
-        asyncio._set_running_loop = events._set_running_loop
-        del events
-    del asyncio
-
+    if version_info < (3, 5, 3):
+        raise RuntimeError(
+            "This version of Eliot doesn't work on Python 3.5.2 or earlier. "
+            "Either upgrade to a newer version of Python (e.g. on Ubuntu 16.04 "
+            "you can use the deadsnakes PPA to get Python 3.6), or pin Eliot "
+            "to version 1.7."
+        )
     import aiocontextvars
 
     dir(aiocontextvars)  # pacify pyflakes

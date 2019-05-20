@@ -4,9 +4,9 @@ What's New
 1.9.0
 ^^^^^
 
-Bug fixes:
+Deprecation:
 
-* Older versions of Python 3.5, e.g. the 3.5.2 on Ubuntu Xenial, should work again. Fixes #418.
+* Python versions older than 3.5.3, e.g. the 3.5.2 on Ubuntu Xenial, don't work with Eliot, so added a more informative error message explaining that. Fixes #418.
 
 Features:
 
