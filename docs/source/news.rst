@@ -4,6 +4,10 @@ What's New
 1.9.0
 ^^^^^
 
+Deprecation:
+
+* Python versions older than 3.5.3, e.g. the 3.5.2 on Ubuntu Xenial, don't work with Eliot, so added a more informative error message explaining that. Fixes #418.
+
 Features:
 
 * If you call ``to_file()/FileDestination()`` with a non-writable file, an
