@@ -4,6 +4,10 @@ What's New
 1.9.0
 ^^^^^
 
+Bug fixes:
+
+* Older versions of Python 3.5, e.g. the 3.5.2 on Ubuntu Xenial, should work again. Fixes #418.
+
 Features:
 
 * If you call ``to_file()/FileDestination()`` with a non-writable file, an
