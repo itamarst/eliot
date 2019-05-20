@@ -10,9 +10,9 @@ if version_info < (3, 7):
     if version_info < (3, 5, 3):
         raise RuntimeError(
             "This version of Eliot doesn't work on Python 3.5.2 or earlier. "
-            "Either upgrade to a newer version of Python (e.g. on Ubuntu 16.04 "
-            "you can use the deadsnakes PPA to get Python 3.6), or pin Eliot "
-            "to version 1.7."
+            "Either upgrade to Python 3.5.3 or later (on Ubuntu 16.04 "
+            "you can use https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa "
+            "to get Python 3.6), or pin Eliot to version 1.7."
         )
     import aiocontextvars
 

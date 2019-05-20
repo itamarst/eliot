@@ -2,7 +2,6 @@ language: python
 dist: xenial
 python:
   - "3.5"
-  - "3.5.2"
   - "3.6"
   - "3.7"
   - "pypy3"
