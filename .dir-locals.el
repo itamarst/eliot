@@ -1,1 +1,2 @@
-((python-mode . ((blacken-mode))))
+((python-mode . ((eval . (blacken-mode 1)))))
+
