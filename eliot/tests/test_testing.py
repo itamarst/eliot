@@ -412,8 +412,7 @@ class ValidateLoggingTestsMixin(object):
     def test_decoratedFunctionCalledWithMemoryLogger(self):
         """
         The underlying function decorated with L{validateLogging} is called with
-        a L{MemoryLogger} instance in addition to any other arguments if the
-        wrapper is called.
+        a L{MemoryLogger} instance.
         """
         result = []
 
@@ -425,6 +424,27 @@ class ValidateLoggingTestsMixin(object):
         theTest = MyTest("test_foo")
         theTest.run()
         self.assertEqual(result, [(theTest, MemoryLogger)])
+
+    def test_decorated_function_passthrough(self):
+        """
+        Additional arguments are passed to the underlying function.
+        """
+        result = []
+
+        def another_wrapper(f):
+            def g(this):
+                f(this, 1, 2, c=3)
+            return g
+
+        class MyTest(TestCase):
+            @another_wrapper
+            @self.validate(None)
+            def test_foo(this, a, b, logger, c=None):
+                result.append((a, b, c))
+
+        theTest = MyTest("test_foo")
+        theTest.debug()
+        self.assertEqual(result, [(1, 2, 3)])
 
     def test_newMemoryLogger(self):
         """
