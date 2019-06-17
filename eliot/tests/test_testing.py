@@ -434,6 +434,7 @@ class ValidateLoggingTestsMixin(object):
         def another_wrapper(f):
             def g(this):
                 f(this, 1, 2, c=3)
+
             return g
 
         class MyTest(TestCase):
