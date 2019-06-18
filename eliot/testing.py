@@ -379,7 +379,7 @@ def capture_logging(assertion, *assertionArgs, **assertionKwargs):
                 swap_logger(previous_logger)
 
             self.addCleanup(cleanup)
-            return function(self, logger)
+            return function(self, *args, **kwargs)
 
         return wrapper
 

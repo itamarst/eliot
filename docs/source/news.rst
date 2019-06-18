@@ -1,12 +1,19 @@
 What's New
 ==========
 
+1.10.0
+^^^^^^
+
+Bug fix:
+
+* ``@eliot.testing.capture_logging`` now passes ``*args`` and ``**kwargs`` to the wrapped function, as one would expect. Fixes #420. Thanks to Jean-Paul Calderone for the bug report.
+
 1.9.0
 ^^^^^
 
 Deprecation:
 
-* Python versions older than 3.5.3, e.g. the 3.5.2 on Ubuntu Xenial, don't work with Eliot, so added a more informative error message explaining that. Fixes #418.
+* Python versions older than 3.5.3, e.g. the 3.5.2 on Ubuntu Xenial, don't work with Eliot, so added a more informative error message explaining that. Fixes #418. Thanks to Richard van der Hoff for the bug report.
 
 Features:
 
