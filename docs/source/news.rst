@@ -4,9 +4,10 @@ What's New
 1.10.0
 ^^^^^^
 
-Bug fix:
+Bug fixes:
 
 * ``@eliot.testing.capture_logging`` now passes ``*args`` and ``**kwargs`` to the wrapped function, as one would expect. Fixes #420. Thanks to Jean-Paul Calderone for the bug report.
+* Eliot works with Dask 2.0. Thanks to Dan Myung for the bug report.
 
 1.9.0
 ^^^^^
