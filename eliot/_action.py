@@ -221,6 +221,7 @@ class Action(object):
         }
         self._serializers = serializers
         self._finished = False
+        self._failed = False
 
     @property
     def task_uuid(self):
@@ -228,6 +229,13 @@ class Action(object):
         @return str: the current action's task UUID.
         """
         return self._identification[TASK_UUID_FIELD]
+    
+    @property
+    def failed(self):
+        """
+        @return bool: indicates whether during the action an exception was raised.
+        """
+        return self._failed
 
     def serialize_task_id(self):
         """
@@ -327,6 +335,7 @@ class Action(object):
             if self._serializers is not None:
                 serializer = self._serializers.success
         else:
+            self._failed = True
             fields = _error_extraction.get_fields_for_exception(self._logger, exception)
             fields[EXCEPTION_FIELD] = "%s.%s" % (
                 exception.__class__.__module__,
