@@ -2,11 +2,12 @@
 API and command-line support for human-readable Eliot messages.
 """
 
-from __future__ import unicode_literals
-
 import pprint
+import argparse
 from datetime import datetime
-from sys import stdin, stdout, argv
+from sys import stdin, stdout
+from collections import OrderedDict
+from json import dumps
 
 from ._bytesjson import loads
 from ._message import (
@@ -16,35 +17,36 @@ from ._message import (
     MESSAGE_TYPE_FIELD,
 )
 from ._action import ACTION_TYPE_FIELD, ACTION_STATUS_FIELD
-from ._util import load_module
 
-from six import text_type as unicode, PY2, PY3
 
-if PY3:
-    # Ensure binary stdin, since we expect specifically UTF-8 encoded
-    # messages, not platform-encoding messages.
-    stdin = stdin.buffer
-
-# On Python 2 pprint formats unicode with u'' prefix, which is inconsistent
-# with Python 3 and not very nice to read. So we modify a copy to omit the u''.
-if PY2:
-
-    def _nicer_unicode_repr(o, original_repr=repr):
-        if isinstance(o, unicode):
-            return original_repr(o.encode("utf-8"))
-        else:
-            return original_repr(o)
-
-    try:
-        pprint = load_module(b"unicode_pprint", pprint)
-        pprint.repr = _nicer_unicode_repr
-    except NotImplementedError:
-        # Oh well won't have nicer output.
-        import pprint
+# Ensure binary stdin, since we expect specifically UTF-8 encoded
+# messages, not platform-encoding messages.
+stdin = stdin.buffer
 
 
 # Fields that all Eliot messages are expected to have:
 REQUIRED_FIELDS = {TASK_LEVEL_FIELD, TASK_UUID_FIELD, TIMESTAMP_FIELD}
+
+# Fields that get treated specially when formatting.
+_skip_fields = {
+    TIMESTAMP_FIELD,
+    TASK_UUID_FIELD,
+    TASK_LEVEL_FIELD,
+    MESSAGE_TYPE_FIELD,
+    ACTION_TYPE_FIELD,
+    ACTION_STATUS_FIELD,
+}
+
+# First fields to render:
+_first_fields = [ACTION_TYPE_FIELD, MESSAGE_TYPE_FIELD, ACTION_STATUS_FIELD]
+
+
+def _render_timestamp(message: dict) -> str:
+    """Convert a message's timestamp to a string."""
+    # If we were returning or storing the datetime we'd want to use an
+    # explicit timezone instead of a naive datetime, but since we're
+    # just using it for formatting we needn't bother.
+    return datetime.utcfromtimestamp(message[TIMESTAMP_FIELD]).isoformat(sep="T")
 
 
 def pretty_format(message):
@@ -55,20 +57,10 @@ def pretty_format(message):
 
     @return: Unicode string.
     """
-    skip = {
-        TIMESTAMP_FIELD,
-        TASK_UUID_FIELD,
-        TASK_LEVEL_FIELD,
-        MESSAGE_TYPE_FIELD,
-        ACTION_TYPE_FIELD,
-        ACTION_STATUS_FIELD,
-    }
 
     def add_field(previous, key, value):
         value = (
-            unicode(pprint.pformat(value, width=40))
-            .replace("\\n", "\n ")
-            .replace("\\t", "\t")
+            pprint.pformat(value, width=40).replace("\\n", "\n ").replace("\\t", "\t")
         )
         # Reindent second line and later to match up with first line's
         # indentation:
@@ -79,28 +71,49 @@ def pretty_format(message):
         return "  %s: %s\n" % (key, value)
 
     remaining = ""
-    for field in [ACTION_TYPE_FIELD, MESSAGE_TYPE_FIELD, ACTION_STATUS_FIELD]:
+    for field in _first_fields:
         if field in message:
             remaining += add_field(remaining, field, message[field])
     for (key, value) in sorted(message.items()):
-        if key not in skip:
+        if key not in _skip_fields:
             remaining += add_field(remaining, key, value)
 
-    level = "/" + "/".join(map(unicode, message[TASK_LEVEL_FIELD]))
+    level = "/" + "/".join(map(str, message[TASK_LEVEL_FIELD]))
     return "%s -> %s\n%sZ\n%s" % (
         message[TASK_UUID_FIELD],
         level,
-        # If we were returning or storing the datetime we'd want to use an
-        # explicit timezone instead of a naive datetime, but since we're
-        # just using it for formatting we needn't bother.
-        datetime.utcfromtimestamp(message[TIMESTAMP_FIELD]).isoformat(sep=str(" ")),
+        _render_timestamp(message),
         remaining,
     )
 
 
-_CLI_HELP = """\
-Usage: cat messages | eliot-prettyprint
+def compact_format(message: dict) -> str:
+    """Format an Eliot message into a single line.
 
+    The message is presumed to be JSON-serializable.
+    """
+    ordered_message = OrderedDict()
+    for field in _first_fields:
+        if field in message:
+            ordered_message[field] = message[field]
+    for (key, value) in sorted(message.items()):
+        if key not in _skip_fields:
+            ordered_message[key] = value
+    # drop { and } from JSON:
+    rendered = " ".join(
+        "{}={}".format(key, dumps(value, separators=(",", ":")))
+        for (key, value) in ordered_message.items()
+    )
+
+    return "%s%s %sZ %s" % (
+        message[TASK_UUID_FIELD],
+        "/" + "/".join(map(str, message[TASK_LEVEL_FIELD])),
+        _render_timestamp(message),
+        rendered,
+    )
+
+
+_CLI_HELP = """\
 Convert Eliot messages into more readable format.
 
 Reads JSON lines from stdin, write out pretty-printed results on stdout.
@@ -112,9 +125,22 @@ def _main():
     Command-line program that reads in JSON from stdin and writes out
     pretty-printed messages to stdout.
     """
-    if argv[1:]:
-        stdout.write(_CLI_HELP)
-        raise SystemExit()
+    parser = argparse.ArgumentParser(
+        description=_CLI_HELP, usage="cat messages | %(prog)s [options]"
+    )
+    parser.add_argument(
+        "-c",
+        "--compact",
+        action="store_true",
+        dest="compact",
+        help="Compact format, one message per line.",
+    )
+    args = parser.parse_args()
+    if args.compact:
+        formatter = compact_format
+    else:
+        formatter = pretty_format
+
     for line in stdin:
         try:
             message = loads(line)
@@ -124,10 +150,8 @@ def _main():
         if REQUIRED_FIELDS - set(message.keys()):
             stdout.write("Not an Eliot message: {}\n\n".format(line.rstrip(b"\n")))
             continue
-        result = pretty_format(message) + "\n"
-        if PY2:
-            result = result.encode("utf-8")
+        result = formatter(message) + "\n"
         stdout.write(result)
 
 
-__all__ = ["pretty_format"]
+__all__ = ["pretty_format", "compact_format"]

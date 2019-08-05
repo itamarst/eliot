@@ -6,11 +6,12 @@ from __future__ import unicode_literals
 
 from unittest import TestCase
 from subprocess import check_output, Popen, PIPE
+from collections import OrderedDict
 
 from pyrsistent import pmap
 
 from .._bytesjson import dumps
-from ..prettyprint import pretty_format, _CLI_HELP, REQUIRED_FIELDS
+from ..prettyprint import pretty_format, compact_format, REQUIRED_FIELDS
 
 SIMPLE_MESSAGE = {
     "timestamp": 1443193754,
@@ -42,7 +43,7 @@ class FormattingTests(TestCase):
             pretty_format(SIMPLE_MESSAGE),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0 -> /1/2
-2015-09-25 15:09:14Z
+2015-09-25T15:09:14Z
   message_type: 'messagey'
   keys: [123, 456]
 """,
@@ -56,7 +57,7 @@ class FormattingTests(TestCase):
             pretty_format(UNTYPED_MESSAGE),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
-2015-09-25 15:09:14Z
+2015-09-25T15:09:14Z
   abc: 'def'
   key: 1234
 """,
@@ -78,7 +79,7 @@ class FormattingTests(TestCase):
             pretty_format(message),
             """\
 8bc6ded2-446c-4b6d-abbc-4f21f1c9a7d8 -> /2/2/2/1
-2015-09-25 15:12:38Z
+2015-09-25T15:12:38Z
   action_type: 'visited'
   action_status: 'started'
   place: 'Statue #1'
@@ -100,7 +101,7 @@ class FormattingTests(TestCase):
             pretty_format(message),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
-2015-09-25 15:09:14Z
+2015-09-25T15:09:14Z
   key: 'hello
      |  there
      |  monkeys!
@@ -123,7 +124,7 @@ class FormattingTests(TestCase):
             pretty_format(message),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
-2015-09-25 15:09:14Z
+2015-09-25T15:09:14Z
   key: 'hello	monkeys!'
 """,
         )
@@ -143,10 +144,44 @@ class FormattingTests(TestCase):
             pretty_format(message),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
-2015-09-25 15:09:14Z
+2015-09-25T15:09:14Z
   key: {'another': [1, 2, {'more': 'data'}],
      |  'value': 123}
 """,
+        )
+
+    def test_microsecond(self):
+        """
+        Microsecond timestamps are rendered in the output.
+        """
+        message = {
+            "timestamp": 1443193754.123455,
+            "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
+            "task_level": [1],
+        }
+        self.assertEqual(
+            pretty_format(message),
+            """\
+8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
+2015-09-25T15:09:14.123455Z
+""",
+        )
+
+    def test_compact(self):
+        """
+        The compact mode does everything on a single line, including
+        dictionaries and multi-line messages.
+        """
+        message = {
+            "timestamp": 1443193754,
+            "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
+            "task_level": [1],
+            "key": OrderedDict([("value", 123), ("another", [1, 2, {"more": "data"}])]),
+            "multiline": "hello\n\tthere!\nabc",
+        }
+        self.assertEqual(
+            compact_format(message),
+            r'8c668cde-235b-4872-af4e-caea524bd1c0/1 2015-09-25T15:09:14Z key={"value":123,"another":[1,2,{"more":"data"}]} multiline="hello\n\tthere!\nabc"',
         )
 
 
@@ -160,9 +195,9 @@ class CommandLineTests(TestCase):
         C{--help} prints out the help text and exits.
         """
         result = check_output(["eliot-prettyprint", "--help"])
-        self.assertEqual(result, _CLI_HELP.encode("utf-8"))
+        self.assertIn(b"Convert Eliot messages into more readable", result)
 
-    def write_and_read(self, lines):
+    def write_and_read(self, lines, extra_args=()):
         """
         Write the given lines to the command-line on stdin, return stdout.
 
@@ -170,7 +205,9 @@ class CommandLineTests(TestCase):
             new lines.
         @return: Unicode-decoded result of subprocess stdout.
         """
-        process = Popen([b"eliot-prettyprint"], stdin=PIPE, stdout=PIPE)
+        process = Popen(
+            [b"eliot-prettyprint"] + list(extra_args), stdin=PIPE, stdout=PIPE
+        )
         process.stdin.write(b"".join(line + b"\n" for line in lines))
         process.stdin.close()
         result = process.stdout.read().decode("utf-8")
@@ -186,6 +223,17 @@ class CommandLineTests(TestCase):
         stdout = self.write_and_read(map(dumps, messages))
         self.assertEqual(
             stdout, "".join(pretty_format(message) + "\n" for message in messages)
+        )
+
+    def test_compact_output(self):
+        """
+        In compact mode, the process reads JSON lines from stdin and writes out
+        a pretty-printed compact version.
+        """
+        messages = [SIMPLE_MESSAGE, UNTYPED_MESSAGE, SIMPLE_MESSAGE]
+        stdout = self.write_and_read(map(dumps, messages), [b"--compact"])
+        self.assertEqual(
+            stdout, "".join(compact_format(message) + "\n" for message in messages)
         )
 
     def test_not_json_message(self):
