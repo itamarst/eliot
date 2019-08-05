@@ -1,6 +1,13 @@
 What's New
 ==========
 
+1.11.0
+^^^^^^
+
+Features:
+
+* The ``eliot-prettyprint`` command line tool now supports a more compact format by using the ``--compact`` argument.
+
 1.10.0
 ^^^^^^
 
