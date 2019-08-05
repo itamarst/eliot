@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from unittest import TestCase
 from subprocess import check_output, Popen, PIPE
+from collections import OrderedDict
 
 from pyrsistent import pmap
 
@@ -175,7 +176,7 @@ class FormattingTests(TestCase):
             "timestamp": 1443193754,
             "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
             "task_level": [1],
-            "key": {"value": 123, "another": [1, 2, {"more": "data"}]},
+            "key": OrderedDict([("value", 123), ("another", [1, 2, {"more": "data"}])]),
             "multiline": "hello\n\tthere!\nabc",
         }
         self.assertEqual(
