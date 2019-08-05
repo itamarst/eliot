@@ -10,7 +10,7 @@ from subprocess import check_output, Popen, PIPE
 from pyrsistent import pmap
 
 from .._bytesjson import dumps
-from ..prettyprint import pretty_format, compact_format, _CLI_HELP, REQUIRED_FIELDS
+from ..prettyprint import pretty_format, compact_format, REQUIRED_FIELDS
 
 SIMPLE_MESSAGE = {
     "timestamp": 1443193754,
@@ -194,9 +194,9 @@ class CommandLineTests(TestCase):
         C{--help} prints out the help text and exits.
         """
         result = check_output(["eliot-prettyprint", "--help"])
-        self.assertEqual(result, _CLI_HELP.encode("utf-8"))
+        self.assertIn(b"Convert Eliot messages into more readable", result)
 
-    def write_and_read(self, lines):
+    def write_and_read(self, lines, extra_args=()):
         """
         Write the given lines to the command-line on stdin, return stdout.
 
@@ -204,7 +204,9 @@ class CommandLineTests(TestCase):
             new lines.
         @return: Unicode-decoded result of subprocess stdout.
         """
-        process = Popen([b"eliot-prettyprint"], stdin=PIPE, stdout=PIPE)
+        process = Popen(
+            [b"eliot-prettyprint"] + list(extra_args), stdin=PIPE, stdout=PIPE
+        )
         process.stdin.write(b"".join(line + b"\n" for line in lines))
         process.stdin.close()
         result = process.stdout.read().decode("utf-8")
@@ -220,6 +222,17 @@ class CommandLineTests(TestCase):
         stdout = self.write_and_read(map(dumps, messages))
         self.assertEqual(
             stdout, "".join(pretty_format(message) + "\n" for message in messages)
+        )
+
+    def test_compact_output(self):
+        """
+        In compact mode, the process reads JSON lines from stdin and writes out
+        a pretty-printed compact version.
+        """
+        messages = [SIMPLE_MESSAGE, UNTYPED_MESSAGE, SIMPLE_MESSAGE]
+        stdout = self.write_and_read(map(dumps, messages), [b"--compact"])
+        self.assertEqual(
+            stdout, "".join(compact_format(message) + "\n" for message in messages)
         )
 
     def test_not_json_message(self):

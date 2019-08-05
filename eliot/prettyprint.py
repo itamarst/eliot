@@ -3,6 +3,7 @@ API and command-line support for human-readable Eliot messages.
 """
 
 import pprint
+import argparse
 from datetime import datetime
 from sys import stdin, stdout, argv
 from collections import OrderedDict
@@ -113,8 +114,6 @@ def compact_format(message: dict) -> str:
 
 
 _CLI_HELP = """\
-Usage: cat messages | eliot-prettyprint
-
 Convert Eliot messages into more readable format.
 
 Reads JSON lines from stdin, write out pretty-printed results on stdout.
@@ -126,9 +125,22 @@ def _main():
     Command-line program that reads in JSON from stdin and writes out
     pretty-printed messages to stdout.
     """
-    if argv[1:]:
-        stdout.write(_CLI_HELP)
-        raise SystemExit()
+    parser = argparse.ArgumentParser(
+        description=_CLI_HELP, usage="cat messages | %(prog)s [options]"
+    )
+    parser.add_argument(
+        "-c",
+        "--compact",
+        action="store_true",
+        dest="compact",
+        help="Compact format, one message per line.",
+    )
+    args = parser.parse_args()
+    if args.compact:
+        formatter = compact_format
+    else:
+        formatter = pretty_format
+
     for line in stdin:
         try:
             message = loads(line)
@@ -138,8 +150,8 @@ def _main():
         if REQUIRED_FIELDS - set(message.keys()):
             stdout.write("Not an Eliot message: {}\n\n".format(line.rstrip(b"\n")))
             continue
-        result = pretty_format(message) + "\n"
+        result = formatter(message) + "\n"
         stdout.write(result)
 
 
-__all__ = ["pretty_format"]
+__all__ = ["pretty_format", "compact_format"]
