@@ -5,7 +5,7 @@ API and command-line support for human-readable Eliot messages.
 import pprint
 import argparse
 from datetime import datetime
-from sys import stdin, stdout, argv
+from sys import stdin, stdout
 from collections import OrderedDict
 from json import dumps
 
