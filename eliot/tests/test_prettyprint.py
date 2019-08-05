@@ -10,7 +10,7 @@ from subprocess import check_output, Popen, PIPE
 from pyrsistent import pmap
 
 from .._bytesjson import dumps
-from ..prettyprint import pretty_format, _CLI_HELP, REQUIRED_FIELDS
+from ..prettyprint import pretty_format, compact_format, _CLI_HELP, REQUIRED_FIELDS
 
 SIMPLE_MESSAGE = {
     "timestamp": 1443193754,
@@ -42,7 +42,7 @@ class FormattingTests(TestCase):
             pretty_format(SIMPLE_MESSAGE),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0 -> /1/2
-2015-09-25 15:09:14Z
+2015-09-25T15:09:14Z
   message_type: 'messagey'
   keys: [123, 456]
 """,
@@ -56,7 +56,7 @@ class FormattingTests(TestCase):
             pretty_format(UNTYPED_MESSAGE),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
-2015-09-25 15:09:14Z
+2015-09-25T15:09:14Z
   abc: 'def'
   key: 1234
 """,
@@ -78,7 +78,7 @@ class FormattingTests(TestCase):
             pretty_format(message),
             """\
 8bc6ded2-446c-4b6d-abbc-4f21f1c9a7d8 -> /2/2/2/1
-2015-09-25 15:12:38Z
+2015-09-25T15:12:38Z
   action_type: 'visited'
   action_status: 'started'
   place: 'Statue #1'
@@ -100,7 +100,7 @@ class FormattingTests(TestCase):
             pretty_format(message),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
-2015-09-25 15:09:14Z
+2015-09-25T15:09:14Z
   key: 'hello
      |  there
      |  monkeys!
@@ -123,7 +123,7 @@ class FormattingTests(TestCase):
             pretty_format(message),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
-2015-09-25 15:09:14Z
+2015-09-25T15:09:14Z
   key: 'hello	monkeys!'
 """,
         )
@@ -143,10 +143,44 @@ class FormattingTests(TestCase):
             pretty_format(message),
             """\
 8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
-2015-09-25 15:09:14Z
+2015-09-25T15:09:14Z
   key: {'another': [1, 2, {'more': 'data'}],
      |  'value': 123}
 """,
+        )
+
+    def test_microsecond(self):
+        """
+        Microsecond timestamps are rendered in the output.
+        """
+        message = {
+            "timestamp": 1443193754.123455,
+            "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
+            "task_level": [1],
+        }
+        self.assertEqual(
+            pretty_format(message),
+            """\
+8c668cde-235b-4872-af4e-caea524bd1c0 -> /1
+2015-09-25T15:09:14.123455Z
+""",
+        )
+
+    def test_compact(self):
+        """
+        The compact mode does everything on a single line, including
+        dictionaries and multi-line messages.
+        """
+        message = {
+            "timestamp": 1443193754,
+            "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
+            "task_level": [1],
+            "key": {"value": 123, "another": [1, 2, {"more": "data"}]},
+            "multiline": "hello\n\tthere!\nabc",
+        }
+        self.assertEqual(
+            compact_format(message),
+            r'8c668cde-235b-4872-af4e-caea524bd1c0/1 2015-09-25T15:09:14Z key={"value":123,"another":[1,2,{"more":"data"}]} multiline="hello\n\tthere!\nabc"',
         )
 
 
