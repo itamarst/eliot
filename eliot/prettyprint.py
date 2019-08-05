@@ -2,8 +2,6 @@
 API and command-line support for human-readable Eliot messages.
 """
 
-from __future__ import unicode_literals
-
 import pprint
 from datetime import datetime
 from sys import stdin, stdout, argv
@@ -16,31 +14,11 @@ from ._message import (
     MESSAGE_TYPE_FIELD,
 )
 from ._action import ACTION_TYPE_FIELD, ACTION_STATUS_FIELD
-from ._util import load_module
 
-from six import text_type as unicode, PY2, PY3
 
-if PY3:
-    # Ensure binary stdin, since we expect specifically UTF-8 encoded
-    # messages, not platform-encoding messages.
-    stdin = stdin.buffer
-
-# On Python 2 pprint formats unicode with u'' prefix, which is inconsistent
-# with Python 3 and not very nice to read. So we modify a copy to omit the u''.
-if PY2:
-
-    def _nicer_unicode_repr(o, original_repr=repr):
-        if isinstance(o, unicode):
-            return original_repr(o.encode("utf-8"))
-        else:
-            return original_repr(o)
-
-    try:
-        pprint = load_module(b"unicode_pprint", pprint)
-        pprint.repr = _nicer_unicode_repr
-    except NotImplementedError:
-        # Oh well won't have nicer output.
-        import pprint
+# Ensure binary stdin, since we expect specifically UTF-8 encoded
+# messages, not platform-encoding messages.
+stdin = stdin.buffer
 
 
 # Fields that all Eliot messages are expected to have:
@@ -66,7 +44,7 @@ def pretty_format(message):
 
     def add_field(previous, key, value):
         value = (
-            unicode(pprint.pformat(value, width=40))
+            pprint.pformat(value, width=40)
             .replace("\\n", "\n ")
             .replace("\\t", "\t")
         )
@@ -86,7 +64,7 @@ def pretty_format(message):
         if key not in skip:
             remaining += add_field(remaining, key, value)
 
-    level = "/" + "/".join(map(unicode, message[TASK_LEVEL_FIELD]))
+    level = "/" + "/".join(map(str, message[TASK_LEVEL_FIELD]))
     return "%s -> %s\n%sZ\n%s" % (
         message[TASK_UUID_FIELD],
         level,
@@ -125,8 +103,6 @@ def _main():
             stdout.write("Not an Eliot message: {}\n\n".format(line.rstrip(b"\n")))
             continue
         result = pretty_format(message) + "\n"
-        if PY2:
-            result = result.encode("utf-8")
         stdout.write(result)
 
 
