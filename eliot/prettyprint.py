@@ -56,7 +56,7 @@ def _render_timestamp(message: dict, local_timezone: bool) -> str:
     return result
 
 
-def pretty_format(message: dict, local_timezone: bool=False) -> str:
+def pretty_format(message: dict, local_timezone: bool = False) -> str:
     """
     Convert a message dictionary into a human-readable string.
 
@@ -94,7 +94,7 @@ def pretty_format(message: dict, local_timezone: bool=False) -> str:
     )
 
 
-def compact_format(message: dict, local_timezone: bool=False) -> str:
+def compact_format(message: dict, local_timezone: bool = False) -> str:
     """Format an Eliot message into a single line.
 
     The message is presumed to be JSON-serializable.

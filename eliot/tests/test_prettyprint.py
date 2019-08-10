@@ -258,9 +258,13 @@ class CommandLineTests(TestCase):
             "task_level": [1],
         }
         expected = datetime.fromtimestamp(1443193754).isoformat(sep="T")
-        stdout = self.write_and_read([dumps(message)], [b"--compact", b"--local-timezone"])
+        stdout = self.write_and_read(
+            [dumps(message)], [b"--compact", b"--local-timezone"]
+        )
         self.assertIn(expected, stdout)
-        stdout = self.write_and_read([dumps(message)], [b"--compact", b"--local-timezone"])
+        stdout = self.write_and_read(
+            [dumps(message)], [b"--compact", b"--local-timezone"]
+        )
         self.assertIn(expected, stdout)
 
     def test_not_json_message(self):
