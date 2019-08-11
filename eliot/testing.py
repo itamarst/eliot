@@ -1,5 +1,7 @@
 """
 Utilities to aid unit testing L{eliot} and code that uses it.
+
+DEPRECATED. Use L{eliot.testutil} instead.
 """
 
 from __future__ import unicode_literals
@@ -19,9 +21,23 @@ from ._action import (
 )
 from ._message import MESSAGE_TYPE_FIELD, TASK_LEVEL_FIELD, TASK_UUID_FIELD
 from ._output import MemoryLogger
+from ._util import exclusively
 from . import _output
 
+
 COMPLETED_STATUSES = (FAILED_STATUS, SUCCEEDED_STATUS)
+
+
+__all__ = [
+    "assertHasAction",
+    "assertHasMessage",
+    "assertContainsFields",
+    "MemoryLogger",
+    "LoggedAction",
+    "LoggedMessage",
+    "capture_logging",
+    "UnflushedTracebacks",
+]
 
 
 def issuperset(a, b):
@@ -262,11 +278,11 @@ class LoggedMessage(PClass):
 
 class UnflushedTracebacks(Exception):
     """
-    The L{MemoryLogger} had some tracebacks logged which were not flushed.
+    A test had some tracebacks logged which were not flushed.
 
     This means either your code has a bug and logged an unexpected
     traceback. If you expected the traceback then you will need to flush it
-    using L{MemoryLogger.flushTracebacks}.
+    using C{flush_tracebacks}.
     """
 
 
