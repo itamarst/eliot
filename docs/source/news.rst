@@ -7,6 +7,7 @@ What's New
 Features:
 
 * The ``eliot-prettyprint`` command line tool now supports a more compact format by using the ``--compact`` argument.
+* The ``eliot-prettyprint`` command line tool now supports outputting in local timezones using the ``--local-timezone`` argument.
 
 1.10.0
 ^^^^^^

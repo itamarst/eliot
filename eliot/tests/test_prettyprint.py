@@ -2,11 +2,10 @@
 Tests for C{eliot.prettyprint}.
 """
 
-from __future__ import unicode_literals
-
 from unittest import TestCase
 from subprocess import check_output, Popen, PIPE
 from collections import OrderedDict
+from datetime import datetime
 
 from pyrsistent import pmap
 
@@ -184,6 +183,19 @@ class FormattingTests(TestCase):
             r'8c668cde-235b-4872-af4e-caea524bd1c0/1 2015-09-25T15:09:14Z key={"value":123,"another":[1,2,{"more":"data"}]} multiline="hello\n\tthere!\nabc"',
         )
 
+    def test_local(self):
+        """
+        Timestamps can be generated in local timezone.
+        """
+        message = {
+            "timestamp": 1443193754,
+            "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
+            "task_level": [1],
+        }
+        expected = datetime.fromtimestamp(1443193754).isoformat(sep="T")
+        self.assertIn(expected, pretty_format(message, True))
+        self.assertIn(expected, compact_format(message, True))
+
 
 class CommandLineTests(TestCase):
     """
@@ -235,6 +247,25 @@ class CommandLineTests(TestCase):
         self.assertEqual(
             stdout, "".join(compact_format(message) + "\n" for message in messages)
         )
+
+    def test_local_timezone(self):
+        """
+        Local timezones are used if --local-timezone is given.
+        """
+        message = {
+            "timestamp": 1443193754,
+            "task_uuid": "8c668cde-235b-4872-af4e-caea524bd1c0",
+            "task_level": [1],
+        }
+        expected = datetime.fromtimestamp(1443193754).isoformat(sep="T")
+        stdout = self.write_and_read(
+            [dumps(message)], [b"--compact", b"--local-timezone"]
+        )
+        self.assertIn(expected, stdout)
+        stdout = self.write_and_read(
+            [dumps(message)], [b"--compact", b"--local-timezone"]
+        )
+        self.assertIn(expected, stdout)
 
     def test_not_json_message(self):
         """

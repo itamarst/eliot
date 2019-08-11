@@ -41,15 +41,22 @@ _skip_fields = {
 _first_fields = [ACTION_TYPE_FIELD, MESSAGE_TYPE_FIELD, ACTION_STATUS_FIELD]
 
 
-def _render_timestamp(message: dict) -> str:
+def _render_timestamp(message: dict, local_timezone: bool) -> str:
     """Convert a message's timestamp to a string."""
     # If we were returning or storing the datetime we'd want to use an
     # explicit timezone instead of a naive datetime, but since we're
     # just using it for formatting we needn't bother.
-    return datetime.utcfromtimestamp(message[TIMESTAMP_FIELD]).isoformat(sep="T")
+    if local_timezone:
+        dt = datetime.fromtimestamp(message[TIMESTAMP_FIELD])
+    else:
+        dt = datetime.utcfromtimestamp(message[TIMESTAMP_FIELD])
+    result = dt.isoformat(sep="T")
+    if not local_timezone:
+        result += "Z"
+    return result
 
 
-def pretty_format(message):
+def pretty_format(message: dict, local_timezone: bool = False) -> str:
     """
     Convert a message dictionary into a human-readable string.
 
@@ -79,15 +86,15 @@ def pretty_format(message):
             remaining += add_field(remaining, key, value)
 
     level = "/" + "/".join(map(str, message[TASK_LEVEL_FIELD]))
-    return "%s -> %s\n%sZ\n%s" % (
+    return "%s -> %s\n%s\n%s" % (
         message[TASK_UUID_FIELD],
         level,
-        _render_timestamp(message),
+        _render_timestamp(message, local_timezone),
         remaining,
     )
 
 
-def compact_format(message: dict) -> str:
+def compact_format(message: dict, local_timezone: bool = False) -> str:
     """Format an Eliot message into a single line.
 
     The message is presumed to be JSON-serializable.
@@ -105,10 +112,10 @@ def compact_format(message: dict) -> str:
         for (key, value) in ordered_message.items()
     )
 
-    return "%s%s %sZ %s" % (
+    return "%s%s %s %s" % (
         message[TASK_UUID_FIELD],
         "/" + "/".join(map(str, message[TASK_LEVEL_FIELD])),
-        _render_timestamp(message),
+        _render_timestamp(message, local_timezone),
         rendered,
     )
 
@@ -135,6 +142,14 @@ def _main():
         dest="compact",
         help="Compact format, one message per line.",
     )
+    parser.add_argument(
+        "-l",
+        "--local-timezone",
+        action="store_true",
+        dest="local_timezone",
+        help="Use local timezone instead of UTC.",
+    )
+
     args = parser.parse_args()
     if args.compact:
         formatter = compact_format
@@ -150,7 +165,7 @@ def _main():
         if REQUIRED_FIELDS - set(message.keys()):
             stdout.write("Not an Eliot message: {}\n\n".format(line.rstrip(b"\n")))
             continue
-        result = formatter(message) + "\n"
+        result = formatter(message, args.local_timezone) + "\n"
         stdout.write(result)
 
 
