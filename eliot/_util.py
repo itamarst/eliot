@@ -8,6 +8,7 @@ import sys
 from types import ModuleType
 
 from six import exec_, text_type as unicode, PY3
+from boltons.functools import wraps
 
 
 def safeunicode(o):
@@ -68,3 +69,17 @@ def load_module(name, original_module):
             source = f.read()
     exec_(source, module.__dict__, module.__dict__)
     return module
+
+
+def exclusively(f):
+    """
+    Decorate a function to make it thread-safe by serializing invocations
+    using a per-instance lock.
+    """
+
+    @wraps(f)
+    def exclusively_f(self, *a, **kw):
+        with self._lock:
+            return f(self, *a, **kw)
+
+    return exclusively_f
