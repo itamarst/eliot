@@ -11,6 +11,25 @@ Eliot is an ideal logging library for these cases:
 * It supports scientific libraries: NumPy and Dask.
   By default, Eliot will automatically serialize NumPy integers, floats, arrays, and bools to JSON (see :ref:`custom_json` for details).
 
+At PyCon 2019 Itamar Turner-Trauring gave talk about logging for scientific computing, in part using Eliot—you can `watch the video <https://pyvideo.org/pycon-us-2019/logging-for-scientific-computing-reproducibility-debugging-optimization.html>`_ or `read a prose version <https://pythonspeed.com/articles/logging-for-scientific-computing/>`_.
+
+.. _large_numpy_arrays:
+
+Logging large arrays
+--------------------
+
+Logging large arrays is a problem: it will take a lot of CPU, and it's no fun discovering that your batch process was slow because you mistakenly logged an array with 30 million integers every time you called a core function.
+
+So how do you deal with logging large arrays?
+
+1. **Log a summary (default behavior):** By default, if you log an array with size > 10,000, Eliot will only log the first 10,000 values, along with the shape.
+2. **Omit the array:** You can also just choose not to log the array at all.
+   With ``log_call`` you can use the ``include_args`` parameter to ensure the array isn't logged (see :ref:`log_call decorator`).
+   With ``start_action`` you can just not pass it in.
+3. **Manual transformation:** If you're using ``start_action`` you can also manually modify the array yourself before passing it in.
+   For example, you could write it to some sort of temporary storage, and then log the path to that file.
+   Or you could summarize it some other way than the default.
+
 
 .. _dask_usage:
 

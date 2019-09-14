@@ -127,7 +127,7 @@ def _add_logging(dsk, ignore=None):
         )
         result[key] = (wrapped_func,) + tuple(args)
 
-    assert result.keys() == dsk.keys()
+    assert set(result.keys()) == set(dsk.keys())
     return result
 
 

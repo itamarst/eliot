@@ -1,6 +1,40 @@
 What's New
 ==========
 
+1.11.0
+^^^^^^
+
+Features:
+
+* The ``eliot-prettyprint`` command line tool now supports a more compact format by using the ``--compact`` argument.
+* The ``eliot-prettyprint`` command line tool now supports outputting in local timezones using the ``--local-timezone`` argument.
+
+1.10.0
+^^^^^^
+
+Bug fixes:
+
+* ``@eliot.testing.capture_logging`` now passes ``*args`` and ``**kwargs`` to the wrapped function, as one would expect. Fixes #420. Thanks to Jean-Paul Calderone for the bug report.
+* Eliot works with Dask 2.0. Thanks to Dan Myung for the bug report.
+
+1.9.0
+^^^^^
+
+Deprecation:
+
+* Python versions older than 3.5.3, e.g. the 3.5.2 on Ubuntu Xenial, don't work with Eliot, so added a more informative error message explaining that. Fixes #418. Thanks to Richard van der Hoff for the bug report.
+
+Features:
+
+* If you call ``to_file()/FileDestination()`` with a non-writable file, an
+  exception will be raised. This prevents logging from being silently swallowed
+  when the program runs. Fixes #403.
+* PyPy3 is now officially supported.
+
+Changes:
+
+* If you log a NumPy array whose size > 10000, only a subset will logged. This is to ensure logging giant arrays by mistake doesn't impact your software's performance. If you want to customize logging of large arrays, see :ref:`large_numpy_arrays`. Fixes #410.
+
 1.8.0
 ^^^^^
 

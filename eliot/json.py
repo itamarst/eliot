@@ -22,7 +22,14 @@ class EliotJSONEncoder(json.JSONEncoder):
             if isinstance(o, (numpy.bool, numpy.bool_)):
                 return bool(o)
             if isinstance(o, numpy.ndarray):
-                return o.tolist()
+                if o.size > 10000:
+                    # Too big to want to log as-is, log a summary:
+                    return {
+                        "array_start": o.flat[:10000].tolist(),
+                        "original_shape": o.shape,
+                    }
+                else:
+                    return o.tolist()
         return json.JSONEncoder.default(self, o)
 
 
