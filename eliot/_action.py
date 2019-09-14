@@ -26,6 +26,7 @@ from ._message import (
     EXCEPTION_FIELD,
     REASON_FIELD,
     TASK_UUID_FIELD,
+    MESSAGE_TYPE_FIELD,
 )
 from ._util import safeunicode
 from ._errors import _error_extraction
@@ -430,6 +431,7 @@ class Action(object):
         fields[TIMESTAMP_FIELD] = time.time()
         fields[TASK_UUID_FIELD] = self._identification[TASK_UUID_FIELD]
         fields[TASK_LEVEL_FIELD] = self._nextTaskLevel().as_list()
+        fields[MESSAGE_TYPE_FIELD] = message_type
         _output._DEFAULT_LOGGER.write(fields, None)
 
 
