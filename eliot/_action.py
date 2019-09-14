@@ -945,10 +945,12 @@ def log_message(message_type, **fields):
 
     If there is no current action, a new UUID will be generated.
     """
+    # Loggers will hopefully go away...
+    logger = fields.pop("__eliot_logger__", None)
     action = current_action()
     if action is None:
-        task_uuid = unicode(uuid4())
-        task_level = [1]
+        action = Action(logger, str(uuid4()), TaskLevel(level=[]), "")
+    action.log(message_type, **fields)
 
 
 from . import _output

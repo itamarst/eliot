@@ -127,10 +127,8 @@ class MessageTests(TestCase):
         """
         logger = MemoryLogger()
         msg = Message.new(key=4)
-        timestamp = 1387299889.153187625
-        msg._time = lambda: timestamp
         msg.write(logger)
-        self.assertEqual(logger.messages[0]["timestamp"], timestamp)
+        self.assertTrue(time.time() - logger.messages[0]["timestamp"] < 0.1)
 
     def test_write_preserves_message_type(self):
         """
@@ -141,16 +139,6 @@ class MessageTests(TestCase):
         msg.write(logger)
         self.assertEqual(logger.messages[0]["message_type"], "isetit")
         self.assertNotIn("action_type", logger.messages[0])
-
-    def test_write_preserves_action_type(self):
-        """
-        L{Message.write} doesn't add a C{message_type} if an action type is set.
-        """
-        logger = MemoryLogger()
-        msg = Message.new(key=4, action_type="isetit")
-        msg.write(logger)
-        self.assertEqual(logger.messages[0]["action_type"], "isetit")
-        self.assertNotIn("message_type", logger.messages[0])
 
     def test_explicitAction(self):
         """
@@ -175,8 +163,8 @@ class MessageTests(TestCase):
         fields from the current execution context's L{Action} to the
         dictionary written to the logger.
         """
-        action = Action(MemoryLogger(), "unique", TaskLevel(level=[]), "sys:thename")
         logger = MemoryLogger()
+        action = Action(logger, "unique", TaskLevel(level=[]), "sys:thename")
         msg = Message.new(key=2)
         with action:
             msg.write(logger)

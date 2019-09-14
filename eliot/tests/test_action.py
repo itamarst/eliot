@@ -1745,8 +1745,7 @@ class IndividualMessageLogTests(TestCase):
         add_destination(messages.append)
         self.addCleanup(remove_destination, messages.append)
 
-        logger = MemoryLogger()
-        action = Action(logger, "unique", TaskLevel(level=[37, 4]), "sys:thename")
+        action = Action(None, "unique", TaskLevel(level=[37, 4]), "sys:thename")
         action.log("me", key=2)
         written = messages[0]
         del written["timestamp"]
