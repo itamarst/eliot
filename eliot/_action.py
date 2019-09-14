@@ -210,7 +210,7 @@ class Action(object):
         """
         self._numberOfMessages = iter(count())
         self._successFields = {}
-        self._logger = logger
+        self._logger = _output._DEFAULT_LOGGER if (logger is None) else logger
         if isinstance(task_level, unicode):
             warn(
                 "Action should be initialized with a TaskLevel",
@@ -302,11 +302,12 @@ class Action(object):
         fields[ACTION_STATUS_FIELD] = STARTED_STATUS
         fields[TIMESTAMP_FIELD] = time.time()
         fields.update(self._identification)
+        fields[TASK_LEVEL_FIELD] = self._nextTaskLevel().as_list()
         if self._serializers is None:
             serializer = None
         else:
             serializer = self._serializers.start
-        _output._DEFAULT_LOGGER.write(fields, serializer)
+        self._logger.write(fields, serializer)
 
     def finish(self, exception=None):
         """
@@ -345,7 +346,8 @@ class Action(object):
 
         fields[TIMESTAMP_FIELD] = time.time()
         fields.update(self._identification)
-        _output._DEFAULT_LOGGER.write(fields, serializer)
+        fields[TASK_LEVEL_FIELD] = self._nextTaskLevel().as_list()
+        self._logger.write(fields, serializer)
 
     def child(self, logger, action_type, serializers=None):
         """
@@ -432,7 +434,7 @@ class Action(object):
         fields[TASK_UUID_FIELD] = self._identification[TASK_UUID_FIELD]
         fields[TASK_LEVEL_FIELD] = self._nextTaskLevel().as_list()
         fields[MESSAGE_TYPE_FIELD] = message_type
-        _output._DEFAULT_LOGGER.write(fields, None)
+        self._logger.write(fields, fields.pop("__serializer__", None))
 
 
 class WrongTask(Exception):
@@ -936,6 +938,17 @@ def log_call(
             return result
 
     return logging_wrapper
+
+
+def log_message(message_type, **fields):
+    """Log a message in the context of the current action.
+
+    If there is no current action, a new UUID will be generated.
+    """
+    action = current_action()
+    if action is None:
+        task_uuid = unicode(uuid4())
+        task_level = [1]
 
 
 from . import _output
