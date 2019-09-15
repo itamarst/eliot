@@ -4,7 +4,7 @@ from pyrsistent import PClass, field
 
 from dask import compute, optimize
 from dask.core import toposort, get_dependencies
-from . import start_action, current_action, Action, Message
+from . import start_action, current_action, Action
 
 
 class _RunWithEliotContext(PClass):
@@ -35,8 +35,8 @@ class _RunWithEliotContext(PClass):
         return hash(self.func)
 
     def __call__(self, *args, **kwargs):
-        with Action.continue_task(task_id=self.task_id):
-            Message.log(
+        with Action.continue_task(task_id=self.task_id) as action:
+            action.log(
                 message_type="dask:task", key=self.key, dependencies=self.dependencies
             )
             return self.func(*args, **kwargs)

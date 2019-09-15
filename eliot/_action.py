@@ -434,7 +434,7 @@ class Action(object):
         fields[TASK_UUID_FIELD] = self._identification[TASK_UUID_FIELD]
         fields[TASK_LEVEL_FIELD] = self._nextTaskLevel().as_list()
         fields[MESSAGE_TYPE_FIELD] = message_type
-        self._logger.write(fields, fields.pop("__serializer__", None))
+        self._logger.write(fields, fields.pop("__eliot_serializer__", None))
 
 
 class WrongTask(Exception):

@@ -16,7 +16,7 @@ from . import _bytesjson as bytesjson
 from zope.interface import Interface, implementer
 
 from ._traceback import write_traceback, TRACEBACK_MESSAGE
-from ._message import Message, EXCEPTION_FIELD, MESSAGE_TYPE_FIELD, REASON_FIELD
+from ._message import EXCEPTION_FIELD, MESSAGE_TYPE_FIELD, REASON_FIELD
 from ._util import saferepr, safeunicode
 from .json import EliotJSONEncoder
 from ._validation import ValidationError
@@ -189,13 +189,13 @@ class Logger(object):
                 serializer.serialize(dictionary)
         except:
             write_traceback(self)
-            msg = Message(
-                {
-                    MESSAGE_TYPE_FIELD: "eliot:serialization_failure",
-                    "message": self._safeUnicodeDictionary(dictionary),
-                }
+            from ._action import log_message
+
+            log_message(
+                "eliot:serialization_failure",
+                message=self._safeUnicodeDictionary(dictionary),
+                __eliot_logger__=self,
             )
-            msg.write(self)
             return
 
         try:

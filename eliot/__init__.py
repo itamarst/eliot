@@ -28,6 +28,7 @@ from ._action import (
     preserve_context,
     current_action,
     log_call,
+    log_message,
 )
 from ._output import ILogger, Logger, MemoryLogger, to_file, FileDestination
 from ._validation import Field, fields, MessageType, ActionType, ValidationError
@@ -119,6 +120,7 @@ __all__ = [
     "add_global_fields",
     "to_file",
     "log_call",
+    "log_message",
     "__version__",
     # Backwards compat for eliot-tree:
     "_parse",

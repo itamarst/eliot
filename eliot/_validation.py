@@ -7,6 +7,8 @@ although in theory it could be done then as well.
 
 from __future__ import unicode_literals
 
+from warnings import warn
+
 import six
 
 unicode = six.text_type
@@ -29,6 +31,7 @@ from ._action import (
     STARTED_STATUS,
     SUCCEEDED_STATUS,
     FAILED_STATUS,
+    log_message,
 )
 
 
@@ -326,6 +329,12 @@ class MessageType(object):
 
         @rtype: L{eliot.Message}
         """
+        warn(
+            "MessageType.__call__() is deprecated since 1.11.0, "
+            "use MessageType.log() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         fields[MESSAGE_TYPE_FIELD] = self.message_type
         return Message(fields, self._serializer)
 
@@ -335,7 +344,8 @@ class MessageType(object):
 
         The keyword arguments will become contents of the L{Message}.
         """
-        self(**fields).write()
+        fields["__eliot_serializer__"] = self._serializer
+        log_message(self.message_type, **fields)
 
 
 class _ActionSerializers(PClass):

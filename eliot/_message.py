@@ -126,7 +126,7 @@ class Message(object):
         if "message_type" not in fields:
             fields["message_type"] = ""
         if self._serializer is not None:
-            fields["__serializer__"] = self._serializer
+            fields["__eliot_serializer__"] = self._serializer
         if action is None:
             fields["__eliot_logger__"] = logger
             log_message(**fields)
