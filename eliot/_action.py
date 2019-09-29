@@ -160,6 +160,10 @@ class TaskLevel(object):
     from_string = fromString
     to_string = toString
 
+try:
+    from ._action_c import TaskLevel
+except ImportError:
+    pass
 
 _TASK_ID_NOT_SUPPLIED = object()
 
@@ -278,11 +282,9 @@ class Action(object):
 
         @return: The message's C{task_level}.
         """
-        if not self._last_child:
-            self._last_child = self._task_level.child()
-        else:
-            self._last_child = self._last_child.next_sibling()
-        return self._last_child
+        result = self._next_child
+        self._next_child = result.sibling()
+        return result
 
     def _start(self, fields):
         """
