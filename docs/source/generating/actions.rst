@@ -93,8 +93,8 @@ Consider the following code sample:
 
      from eliot import start_action, start_task, Message
 
-     with start_task(action_type="parent"):
-         Message.log(message_type="info", x=1)
+     with start_task(action_type="parent") as action:
+         action.log(message_type="info", x=1)
          with start_action(action_type="child"):
              Message.log(message_type="info", x=2)
          raise RuntimeError("ono")
