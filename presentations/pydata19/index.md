@@ -7,16 +7,36 @@ class: middle
 
 ---
 
-# Why do we want logs?
+# Data processing has a slow feedback loop
 
-To know:
+## Your batch process is finally done...
 
-1. What happened.
-2. Why it happened.
+--
+## (it only took 4 hours)
 
-Traditional logging only tells us what happened.
+--
 
-Let's see why Eliot is better!
+## ...and the result is obviously wrong 🤦‍ 
+
+---
+
+# How do you solve this?
+
+## Often only happens with real data
+
+## Can’t use debugger with a 4 hour process
+
+## You need a record of what the batch process actually did
+
+---
+
+# You need logging!
+
+## Which functions called which other functions
+
+## What were the functions’ inputs and outputs
+
+## Intermediate values as well
 
 ---
 
@@ -35,23 +55,14 @@ def multiplysum(a, b, c):
 print(multiplysum(1, 2, 4)) # (1 + 2)*4⇒12
 ```
 
----
-
-# Example: we run it
-
-```shell-session
-$ python badmath.py
-0
-```
-
-## Something is wrong!
 
 ---
 
 # Example: add logging
 
 ```python
-from eliot import log_call
+from eliot import log_call, to_file
+to_file(open("out.log", "w"))
 
 @log_call
 def add(a, b):
@@ -69,15 +80,6 @@ def multiply(a, b):
 Just add decorator to each function.
 
 There are more sophisticated APIs for usage inside functions.
-
----
-
-# Example: also need to configure log output
-
-```python
-from eliot import to_file
-to_file(open("out.log", "w"))
-```
 
 ---
 
@@ -101,7 +103,7 @@ $ eliot-tree out.log
 
 # Features
 
-* Structured logging, JSON by default
+* **Logging of a structured tree of actions**
 * NumPy and Dask support
 * asyncio, Twisted, and Trio support
 * Easy, gradual migration from stdlib `logging`
