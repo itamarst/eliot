@@ -1,0 +1,79 @@
+<html>
+    <head>
+        <title>Small Big Data</title>
+        <meta charset="utf-8">
+        <style>
+         /* rosario-regular - latin */
+         @font-face {
+             font-family: 'Rosario';
+             font-style: normal;
+             font-weight: 400;
+             src: url('./fonts/rosario-v13-latin-regular.woff2') format('woff2'); /* Chrome 26+, Opera 23+, Firefox 39+ */
+         }
+
+         /* rosario-italic - latin */
+         @font-face {
+             font-family: 'Rosario';
+             font-style: italic;
+             font-weight: 400;
+             src: url('./fonts/rosario-v13-latin-italic.woff2') format('woff2'); /* Chrome 26+, Opera 23+, Firefox 39+ */
+         }
+
+         /* rosario-700 - latin */
+         @font-face {
+             font-family: 'Rosario';
+             font-style: normal;
+             font-weight: 700;
+             src:  url('./fonts/rosario-v13-latin-700.woff2') format('woff2'); /* Chrome 26+, Opera 23+, Firefox 39+ */
+         }
+         /* source-code-pro-regular - latin */
+         @font-face {
+             font-family: 'Ubuntu Mono';
+             font-style: normal;
+             font-weight: 400;
+             src: url('./fonts/ubuntu-mono-v8-latin-regular.woff2') format('woff2'); /* Chrome 26+, Opera 23+, Firefox 39+ */
+         }
+         @font-face {
+             font-family: 'Ubuntu Mono';
+             font-style: normal;
+             font-weight: 700;
+             src: url('./fonts/ubuntu-mono-v8-latin-700.woff2') format('woff2'); /* Chrome 26+, Opera 23+, Firefox 39+ */
+         }
+         body {
+             font-family: 'Rosario', serif;
+             font-variant-numeric: lining-nums;
+         }
+         h2, h3 {
+             font-weight: normal;
+         }
+         .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono', monospace; }
+         .remark-code {
+             font-size: 140%;
+         }
+         .footer {
+             position: fixed;
+             top: 90%;
+             left: 5%;
+             text-align: left;
+             width: 100%;
+             font-size: 150%;
+         }
+         li {
+             font-size: 2rem;
+             margin-top: 0.5em;
+         }
+         p {
+             font-size: 2rem;
+         }
+        </style>
+    </head>
+    <body>
+        <script src="remark-latest.min.js"></script>
+        <script>
+         var slideshow = remark.create({
+             sourceUrl: 'index.md'
+         });
+        </script>
+        <script src="remark-zoom.js"></script>
+    </body>
+</html>
