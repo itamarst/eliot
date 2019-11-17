@@ -6,6 +6,7 @@ What's New
 
 Features:
 
+* Python 3.8 is now supported.
 * The ``eliot-prettyprint`` command line tool now supports a more compact format by using the ``--compact`` argument.
 * The ``eliot-prettyprint`` command line tool now supports outputting in local timezones using the ``--local-timezone`` argument.
 
