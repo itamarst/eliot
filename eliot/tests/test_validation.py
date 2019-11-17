@@ -272,7 +272,7 @@ class FieldsTests(TestCase):
         The L{Field} instances constructed by L{fields} validate the specified
         types.
         """
-        field, = fields(key=int)
+        (field,) = fields(key=int)
         self.assertRaises(ValidationError, field.validate, "abc")
 
     def test_noSerialization(self):
@@ -280,7 +280,7 @@ class FieldsTests(TestCase):
         The L{Field} instances constructed by L{fields} do no special
         serialization.
         """
-        field, = fields(key=int)
+        (field,) = fields(key=int)
         self.assertEqual(field.serialize("abc"), "abc")
 
 
