@@ -219,7 +219,7 @@ class DeferredContextTests(TestCase):
         d = succeed(0)
         d = DeferredContext(d)
         d.addCallbacks(lambda x: [x, 1], lambda x: x)
-        self.assertEqual(self.successResultOf(d), [0, 1])
+        self.assertEqual(self.successResultOf(d.result), [0, 1])
 
     @withActionContext
     def test_addCallbacksErrbackResult(self):
@@ -231,7 +231,7 @@ class DeferredContextTests(TestCase):
         d = fail(exception)
         d = DeferredContext(d)
         d.addCallbacks(lambda x: x, lambda x: [x.value, 1])
-        self.assertEqual(self.successResultOf(d), [exception, 1])
+        self.assertEqual(self.successResultOf(d.result), [exception, 1])
 
     def test_addActionFinishNoImmediateLogging(self):
         """
