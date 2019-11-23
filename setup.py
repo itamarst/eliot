@@ -14,6 +14,7 @@ def read(path):
 setup(
     classifiers=[
         "Intended Audience :: Developers",
+        "Framework :: Pytest",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
@@ -68,7 +69,9 @@ setup(
             "black",
         ],
     },
-    entry_points={"console_scripts": ["eliot-prettyprint = eliot.prettyprint:_main"]},
+    entry_points={"console_scripts": ["eliot-prettyprint = eliot.prettyprint:_main"],
+                  "pytest11": ["eliot = eliot.pytest"]},
+    },
     keywords="logging",
     license="Apache 2.0",
     packages=["eliot", "eliot.tests"],

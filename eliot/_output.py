@@ -7,7 +7,6 @@ import traceback
 import inspect
 import json as pyjson
 from threading import Lock
-from functools import wraps
 from io import IOBase
 
 from pyrsistent import PClass, field
@@ -17,7 +16,7 @@ from zope.interface import Interface, implementer
 
 from ._traceback import write_traceback, TRACEBACK_MESSAGE
 from ._message import Message, EXCEPTION_FIELD, MESSAGE_TYPE_FIELD, REASON_FIELD
-from ._util import saferepr, safeunicode
+from ._util import saferepr, safeunicode, exclusively
 from .json import EliotJSONEncoder
 from ._validation import ValidationError
 
@@ -222,20 +221,6 @@ class Logger(object):
                     # break business logic, better to have that continue to
                     # work even if logging isn't.
                     pass
-
-
-def exclusively(f):
-    """
-    Decorate a function to make it thread-safe by serializing invocations
-    using a per-instance lock.
-    """
-
-    @wraps(f)
-    def exclusively_f(self, *a, **kw):
-        with self._lock:
-            return f(self, *a, **kw)
-
-    return exclusively_f
 
 
 @implementer(ILogger)

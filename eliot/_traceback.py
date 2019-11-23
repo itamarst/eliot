@@ -13,16 +13,18 @@ from ._util import safeunicode, load_module
 from ._validation import MessageType, Field
 from ._errors import _error_extraction
 
+
+def class_fqpn(typ):
+    """Convert a class to it's fully-qualified name."""
+    return "%s.%s" % (typ.__module__, typ.__name__)
+
+
 TRACEBACK_MESSAGE = MessageType(
     "eliot:traceback",
     [
         Field(REASON_FIELD, safeunicode, "The exception's value."),
         Field("traceback", safeunicode, "The traceback."),
-        Field(
-            EXCEPTION_FIELD,
-            lambda typ: "%s.%s" % (typ.__module__, typ.__name__),
-            "The exception type's FQPN.",
-        ),
+        Field(EXCEPTION_FIELD, class_fqpn, "The exception type's FQPN."),
     ],
     "An unexpected exception indicating a bug.",
 )
