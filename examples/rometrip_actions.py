@@ -1,5 +1,5 @@
 from sys import stdout
-from eliot import start_action, start_task, to_file
+from eliot import start_action, to_file
 to_file(stdout)
 
 
@@ -16,7 +16,7 @@ class Place(object):
 
 
 def honeymoon(family, destination):
-    with start_task(action_type="honeymoon", people=family):
+    with start_action(action_type="honeymoon", people=family):
         destination.visited(family)
 
 

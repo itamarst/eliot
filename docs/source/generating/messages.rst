@@ -1,49 +1,35 @@
+.. _messages:
+
 Messages
 ========
 
-Basic usage
------------
+Sometimes you don't want to generate actions; sometimes you just want an individual isolated message, the way traditional logging systems work.
+Here's how to do it.
 
-At its base, Eliot outputs structured messages composed of named fields.
-Eliot messages are typically serialized to JSON objects.
-Fields therefore can have Unicode names, so either ``unicode`` or ``bytes`` containing UTF-8 encoded Unicode.
-Message values must be supported by JSON: ``int``, ``float``, ``None``, ``unicode``, UTF-8 encoded Unicode as ``bytes``, ``dict`` or ``list``.
-The latter two can only be composed of other supported types.
+When you have an action
+-----------------------
 
-You can log a message like this:
+If you already have an action object, you can log a message in that action's context:
 
 .. code-block:: python
 
-    from eliot import Message
+    from eliot import start_action
 
     class YourClass(object):
         def run(self):
-            # Log a message with two fields, "key" and "value":
-            Message.log(key=123, value=u"hello")
+            with start_action(action_type="myaction") as ctx:
+                ctx.log(message_type="mymessage", key="abc", key2=4)
 
-You can also create message and then log it later like this:
+If you don't have an action
+---------------------------
 
-.. code-block:: python
-
-    from eliot import Message
-
-    class YourClass(object):
-        def run(self):
-            # Create a message with two fields, "key" and "value":
-            msg = Message.new(key=123, value=u"hello")
-            # Write the message:
-            msg.write()
-
-
-Message binding
----------------
-
-You can also create a new ``Message`` from an existing one by binding new values.
-New values will override ones on the base ``Message``, but ``bind()`` does not mutate the original ``Message``.
+If you don't have a reference to an action, or you're worried the function will sometimes be called outside the context of any action at all, you can use ``log_message``:
 
 .. code-block:: python
 
-      # This message has fields key=123, value=u"hello"
-      msg = Message.new(key=123, value=u"hello")
-      # And this one has fields key=123, value=u"other", extra=456
-      msg2 = msg.bind(value=u"other", extra=456)
+    from eliot import log_message
+
+    def run(x):
+        log_message(message_type="in_run", xfield=x)
+
+The main downside to using this function is that it's a little slower, since it needs to handle the case where there is no action in context.

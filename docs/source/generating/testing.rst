@@ -1,9 +1,10 @@
-Unit Testing Your Logging with Types
-====================================
+Unit Testing Your Logging
+=========================
 
 Now that you've got some code emitting log messages (or even better, before you've written the code) you can write unit tests to verify it.
 Given good test coverage all code branches should already be covered by tests unrelated to logging.
 Logging can be considered just another aspect of testing those code branches.
+
 Rather than recreating all those tests as separate functions Eliot provides a decorator the allows adding logging assertions to existing tests.
 
 
@@ -32,7 +33,7 @@ You can also ensure the correct messages were logged.
 
 .. code-block:: python
 
-      from eliot import Message
+      from eliot import log_message
 
       class UserRegistration(object):
 
@@ -41,7 +42,7 @@ You can also ensure the correct messages were logged.
 
           def register(self, username, password, age):
               self.db[username] = (password, age)
-              Message.log(message_type="user_registration",
+              log_message(message_type="user_registration",
                           username=username, password=password,
                           age=age)
 

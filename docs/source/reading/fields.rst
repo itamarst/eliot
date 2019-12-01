@@ -1,6 +1,14 @@
 Message Fields in Depth
 =======================
 
+Structure
+---------
+
+Eliot messages are typically serialized to JSON objects.
+Fields therefore must have ``str`` as their name.
+Message values must be supported by JSON: ``int``, ``float``, ``None``, ``str``, ``dict`` or ``list``.
+The latter two can only be composed of other supported types.
+
 Built-in Fields
 ---------------
 

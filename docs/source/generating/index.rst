@@ -2,8 +2,8 @@ Generating Logs
 ===============
 
 .. toctree::
-   messages
    actions
+   messages
    errors
    loglevels
    migrating

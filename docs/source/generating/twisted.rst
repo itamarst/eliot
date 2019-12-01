@@ -78,10 +78,10 @@ To understand why, consider the following example:
 
      @inlineCallbacks  # don't use this in real code, use eliot.twisted.inline_callbacks
      def go():
-         with start_action(action_type=u"yourapp:subsystem:frob"):
-	     d = some_deferred_api()
-	     x = yield d
-	     Message.log(message_type=u"some-report", x=x)
+         with start_action(action_type=u"yourapp:subsystem:frob") as action:
+	           d = some_deferred_api()
+	           x = yield d
+	           action.log(message_type=u"some-report", x=x)
 
 The action started by this generator remains active as ``yield d`` gives up control to the ``inlineCallbacks`` controller.
 The next bit of code to run will be considered to be a child of ``action``.
