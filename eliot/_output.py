@@ -201,6 +201,8 @@ class Logger(object):
         try:
             self._destinations.send(dictionary)
         except _DestinationsSendError as e:
+            from ._action import log_message
+
             if self._log_tracebacks:
                 for (exc_type, exception, exc_traceback) in e.errors:
                     # Can't use same Logger as serialization errors because
@@ -217,8 +219,6 @@ class Logger(object):
                         "message": self._safeUnicodeDictionary(dictionary),
                         "__eliot_logger__": logger,
                     }
-                    from ._action import log_message
-
                     log_message(**msg)
             else:
                 # Nothing we can do here, raising exception to caller will

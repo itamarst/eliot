@@ -9,9 +9,7 @@ from __future__ import unicode_literals, absolute_import
 
 import threading
 from uuid import uuid4
-from itertools import count
 from contextlib import contextmanager
-from warnings import warn
 from functools import partial
 from inspect import getcallargs
 from contextvars import ContextVar
@@ -21,7 +19,6 @@ from boltons.funcutils import wraps
 from six import text_type as unicode, PY3
 
 from ._message import (
-    Message,
     WrittenMessage,
     EXCEPTION_FIELD,
     REASON_FIELD,

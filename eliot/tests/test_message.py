@@ -334,4 +334,3 @@ class LogMessageTests(TestCase):
             ),
             (True, [1], [1]),
         )
-

@@ -9,7 +9,6 @@ import time
 from unittest import TestCase, skipIf
 from unittest.mock import patch
 from threading import Thread
-from warnings import catch_warnings, simplefilter
 
 import six
 

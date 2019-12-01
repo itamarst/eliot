@@ -5,7 +5,6 @@ Log messages and related utilities.
 from __future__ import unicode_literals
 
 import time
-from uuid import uuid4
 from warnings import warn
 from six import text_type as unicode
 
