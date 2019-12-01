@@ -15,13 +15,13 @@ try:
 except ImportError:
     Failure = None
 
-from .._message import WrittenMessage, Message
+from .._message import WrittenMessage, Message, log_message
 from .._output import MemoryLogger
 from .._action import Action, start_action, TaskLevel
-from .. import add_destination, remove_destination
+from .. import add_destinations, remove_destination
 
 
-class MessageTests(TestCase):
+class DeprecatedMessageTests(TestCase):
     """
     Test for L{Message}.
     """
@@ -76,7 +76,7 @@ class MessageTests(TestCase):
         L{Message.write} writes to the default logger if none is given.
         """
         messages = []
-        add_destination(messages.append)
+        add_destinations(messages.append)
         self.addCleanup(remove_destination, messages.append)
         Message.new(some_key=1234).write()
         self.assertEqual(messages[0]["some_key"], 1234)
@@ -108,7 +108,7 @@ class MessageTests(TestCase):
         dictionary that is superset of the L{Message} contents.
         """
         messages = []
-        add_destination(messages.append)
+        add_destinations(messages.append)
         self.addCleanup(remove_destination, messages.append)
         Message.log(some_key=1234)
         self.assertEqual(messages[0]["some_key"], 1234)
@@ -276,3 +276,62 @@ class WrittenMessageTests(TestCase):
         self.assertEqual(parsed.task_uuid, "unique")
         self.assertEqual(parsed.task_level, TaskLevel(level=[1]))
         self.assertEqual(parsed.contents, pmap({"foo": "bar"}))
+
+
+class LogMessageTests(TestCase):
+    """Tests for L{log_message}."""
+
+    def test_writes_message(self):
+        """
+        L{log_message} writes to the default logger.
+        """
+        messages = []
+        add_destinations(messages.append)
+        self.addCleanup(remove_destination, messages.append)
+        log_message(message_type="hello", some_key=1234)
+        self.assertEqual(messages[0]["some_key"], 1234)
+        self.assertEqual(messages[0]["message_type"], "hello")
+        self.assertTrue(time.time() - messages[0]["timestamp"] < 0.1)
+
+    def test_implicitAction(self):
+        """
+        If no L{Action} is specified, L{log_message} adds the identification
+        fields from the current execution context's L{Action} to the
+        dictionary written to the logger.
+        """
+        logger = MemoryLogger()
+        action = Action(logger, "unique", TaskLevel(level=[]), "sys:thename")
+        with action:
+            log_message(key=2, message_type="a")
+        written = logger.messages[0]
+        del written["timestamp"]
+        self.assertEqual(
+            written,
+            {"task_uuid": "unique", "task_level": [1], "key": 2, "message_type": "a"},
+        )
+
+    def test_missingAction(self):
+        """
+        If no L{Action} is specified, and the current execution context has no
+        L{Action}, a new task_uuid is generated.
+
+        This ensures all messages have a unique identity, as specified by
+        task_uuid/task_level.
+        """
+        messages = []
+        add_destinations(messages.append)
+        self.addCleanup(remove_destination, messages.append)
+
+        log_message(key=2, message_type="")
+        log_message(key=3, message_type="")
+
+        message1, message2 = messages
+        self.assertEqual(
+            (
+                UUID(message1["task_uuid"]) != UUID(message2["task_uuid"]),
+                message1["task_level"],
+                message2["task_level"],
+            ),
+            (True, [1], [1]),
+        )
+

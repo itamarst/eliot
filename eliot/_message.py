@@ -64,7 +64,7 @@ class Message(object):
         """
         warn(
             "Message.log() is deprecated since 1.11.0, "
-            "use eliot.log_message() instead.",
+            "use Action.log() or eliot.log_message() instead.",
             DeprecationWarning,
             stacklevel=2,
         )
