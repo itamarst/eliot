@@ -95,8 +95,8 @@ Consider the following code sample:
 
      with start_task(action_type="parent") as action:
          action.log(message_type="info", x=1)
-         with start_action(action_type="child"):
-             log_message(message_type="info", x=2)
+         with start_action(action_type="child") as action:
+             action.log(message_type="info", x=2)
          raise RuntimeError("ono")
 
 All these messages will share the same UUID in their ``task_uuid`` field, since they are all part of the same high-level task.
