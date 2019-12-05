@@ -3,8 +3,8 @@
 Messages
 ========
 
-Sometimes you don't want to generate actions; sometimes you just want an individual isolated message, the way traditional logging systems work.
-Here's how to do it.
+Sometimes you don't want to generate actions. sometimes you just want an individual isolated message, the way traditional logging systems work.
+Here's how to do that.
 
 When you have an action
 -----------------------
