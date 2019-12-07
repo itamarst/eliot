@@ -5,8 +5,7 @@ Log messages and related utilities.
 from __future__ import unicode_literals
 
 import time
-from uuid import uuid4
-
+from warnings import warn
 from six import text_type as unicode
 
 from pyrsistent import PClass, pmap_field
@@ -47,6 +46,12 @@ class Message(object):
 
         @return: The new L{Message}
         """
+        warn(
+            "Message.new() is deprecated since 1.11.0, "
+            "use eliot.log_message() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return _class(fields, _serializer)
 
     @classmethod
@@ -56,6 +61,12 @@ class Message(object):
 
         The keyword arguments will become contents of the L{Message}.
         """
+        warn(
+            "Message.log() is deprecated since 1.11.0, "
+            "use Action.log() or eliot.log_message() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         _class(fields).write()
 
     def __init__(self, contents, serializer=None):
@@ -95,38 +106,6 @@ class Message(object):
         """
         return self._time()
 
-    def _freeze(self, action=None):
-        """
-        Freeze this message for logging, registering it with C{action}.
-
-        @param action: The L{Action} which is the context for this message. If
-            C{None}, the L{Action} will be deduced from the current call
-            stack.
-
-        @return: A L{PMap} with added C{timestamp}, C{task_uuid}, and
-            C{task_level} entries.
-        """
-        if action is None:
-            action = current_action()
-        if action is None:
-            task_uuid = unicode(uuid4())
-            task_level = [1]
-        else:
-            task_uuid = action._identification[TASK_UUID_FIELD]
-            task_level = action._nextTaskLevel().as_list()
-        timestamp = self._timestamp()
-        new_values = {
-            TIMESTAMP_FIELD: timestamp,
-            TASK_UUID_FIELD: task_uuid,
-            TASK_LEVEL_FIELD: task_level,
-        }
-        if "action_type" not in self._contents and (
-            "message_type" not in self._contents
-        ):
-            new_values["message_type"] = ""
-        new_values.update(self._contents)
-        return new_values
-
     def write(self, logger=None, action=None):
         """
         Write the message to the given logger.
@@ -142,10 +121,16 @@ class Message(object):
             C{None}, the L{Action} will be deduced from the current call
             stack.
         """
-        if logger is None:
-            logger = _output._DEFAULT_LOGGER
-        logged_dict = self._freeze(action=action)
-        logger.write(logged_dict, self._serializer)
+        fields = dict(self._contents)
+        if "message_type" not in fields:
+            fields["message_type"] = ""
+        if self._serializer is not None:
+            fields["__eliot_serializer__"] = self._serializer
+        if action is None:
+            fields["__eliot_logger__"] = logger
+            log_message(**fields)
+        else:
+            action.log(**fields)
 
 
 class WrittenMessage(PClass):
@@ -209,5 +194,4 @@ class WrittenMessage(PClass):
 
 
 # Import at end to deal with circular imports:
-from ._action import current_action, TaskLevel
-from . import _output
+from ._action import log_message, TaskLevel

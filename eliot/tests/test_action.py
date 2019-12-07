@@ -7,8 +7,8 @@ from __future__ import unicode_literals
 import pickle
 import time
 from unittest import TestCase, skipIf
+from unittest.mock import patch
 from threading import Thread
-from warnings import catch_warnings, simplefilter
 
 import six
 
@@ -503,25 +503,6 @@ class ActionTests(TestCase):
             act.finish()
         # Only initial finish message is logged:
         self.assertEqual(len(logger.messages), 1)
-
-    def test_stringActionCompatibility(self):
-        """
-        L{Action} can be initialized with a string version of a L{TaskLevel},
-        for backwards compatibility.
-        """
-        logger = MemoryLogger()
-        action = Action(logger, "uuid", "/1/2/", "sys:me")
-        self.assertEqual(action._task_level, TaskLevel(level=[1, 2]))
-
-    def test_stringActionCompatibilityWarning(self):
-        """
-        Calling L{Action} with a string results in a L{DeprecationWarning}
-        """
-        logger = MemoryLogger()
-        with catch_warnings(record=True) as warnings:
-            simplefilter("always")  # Catch all warnings
-            Action(logger, "uuid", "/1/2/", "sys:me")
-            self.assertEqual(warnings[-1].category, DeprecationWarning)
 
 
 class StartActionAndTaskTests(TestCase):
@@ -1696,3 +1677,64 @@ class LogCallTests(TestCase):
 
         C().f(2)
         self.assert_logged(logger, self.id() + ".<locals>.C.f", {"x": 2}, None)
+
+
+class IndividualMessageLogTests(TestCase):
+    """Action.log() tests."""
+
+    def test_log_creates_new_dictionary(self):
+        """
+        L{Action.log} creates a new dictionary on each call.
+
+        This is important because we might mutate the dictionary in
+        ``Logger.write``.
+        """
+        messages = []
+        add_destination(messages.append)
+        self.addCleanup(remove_destination, messages.append)
+
+        with start_action(action_type="x") as action:
+            action.log("mymessage", key=4)
+            action.log(message_type="mymessage2", key=5)
+        self.assertEqual(messages[1]["key"], 4)
+        self.assertEqual(messages[2]["key"], 5)
+        self.assertEqual(messages[1]["message_type"], "mymessage")
+        self.assertEqual(messages[2]["message_type"], "mymessage2")
+
+    @patch("time.time")
+    def test_log_adds_timestamp(self, time_func):
+        """
+        L{Action.log} adds a C{"timestamp"} field to the dictionary written
+        to the logger, with the current time in seconds since the epoch.
+        """
+        messages = []
+        add_destination(messages.append)
+        self.addCleanup(remove_destination, messages.append)
+
+        time_func.return_value = timestamp = 1387299889.153187625
+        with start_action(action_type="x") as action:
+            action.log("mymessage", key=4)
+        self.assertEqual(messages[1]["timestamp"], timestamp)
+
+    def test_part_of_action(self):
+        """
+        L{Action.log} adds the identification fields from the given
+        L{Action} to the dictionary written to the logger.
+        """
+        messages = []
+        add_destination(messages.append)
+        self.addCleanup(remove_destination, messages.append)
+
+        action = Action(None, "unique", TaskLevel(level=[37, 4]), "sys:thename")
+        action.log("me", key=2)
+        written = messages[0]
+        del written["timestamp"]
+        self.assertEqual(
+            written,
+            {
+                "task_uuid": "unique",
+                "task_level": [37, 4, 1],
+                "key": 2,
+                "message_type": "me",
+            },
+        )

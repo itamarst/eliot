@@ -6,6 +6,7 @@ What's New
 
 Features:
 
+* ``Message.log()`` has been replaced by top-level function ``log_message()``. Or if you're in the context of action ``ctx``, you can call ``ctx.log()``. See :ref:`messages` for details.
 * Python 3.8 is now supported.
 * The ``eliot-prettyprint`` command line tool now supports a more compact format by using the ``--compact`` argument.
 * The ``eliot-prettyprint`` command line tool now supports outputting in local timezones using the ``--local-timezone`` argument.

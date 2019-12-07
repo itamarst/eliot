@@ -2,7 +2,7 @@
 
 from logging import Handler
 
-from ._message import Message
+from ._action import log_message
 from ._traceback import write_traceback
 
 
@@ -10,7 +10,7 @@ class EliotHandler(Handler):
     """A C{logging.Handler} that routes log messages to Eliot."""
 
     def emit(self, record):
-        Message.log(
+        log_message(
             message_type="eliot:stdlib",
             log_level=record.levelname,
             logger=record.name,

@@ -16,7 +16,7 @@ from . import _bytesjson as bytesjson
 from zope.interface import Interface, implementer
 
 from ._traceback import write_traceback, TRACEBACK_MESSAGE
-from ._message import Message, EXCEPTION_FIELD, MESSAGE_TYPE_FIELD, REASON_FIELD
+from ._message import EXCEPTION_FIELD, MESSAGE_TYPE_FIELD, REASON_FIELD
 from ._util import saferepr, safeunicode
 from .json import EliotJSONEncoder
 from ._validation import ValidationError
@@ -155,6 +155,7 @@ class Logger(object):
     """
 
     _destinations = Destinations()
+    _log_tracebacks = True
 
     def _safeUnicodeDictionary(self, dictionary):
         """
@@ -188,40 +189,42 @@ class Logger(object):
                 serializer.serialize(dictionary)
         except:
             write_traceback(self)
-            msg = Message(
-                {
-                    MESSAGE_TYPE_FIELD: "eliot:serialization_failure",
-                    "message": self._safeUnicodeDictionary(dictionary),
-                }
+            from ._action import log_message
+
+            log_message(
+                "eliot:serialization_failure",
+                message=self._safeUnicodeDictionary(dictionary),
+                __eliot_logger__=self,
             )
-            msg.write(self)
             return
 
         try:
             self._destinations.send(dictionary)
         except _DestinationsSendError as e:
-            for (exc_type, exception, exc_traceback) in e.errors:
-                try:
-                    # Can't use same code path as serialization errors because
+            from ._action import log_message
+
+            if self._log_tracebacks:
+                for (exc_type, exception, exc_traceback) in e.errors:
+                    # Can't use same Logger as serialization errors because
                     # if destination continues to error out we will get
                     # infinite recursion. So instead we have to manually
-                    # construct a message.
-                    msg = Message(
-                        {
-                            MESSAGE_TYPE_FIELD: "eliot:destination_failure",
-                            REASON_FIELD: safeunicode(exception),
-                            EXCEPTION_FIELD: exc_type.__module__
-                            + "."
-                            + exc_type.__name__,
-                            "message": self._safeUnicodeDictionary(dictionary),
-                        }
-                    )
-                    self._destinations.send(msg._freeze())
-                except:
-                    # Nothing we can do here, raising exception to caller will
-                    # break business logic, better to have that continue to
-                    # work even if logging isn't.
-                    pass
+                    # construct a Logger that won't retry.
+                    logger = Logger()
+                    logger._log_tracebacks = False
+                    logger._destinations = self._destinations
+                    msg = {
+                        MESSAGE_TYPE_FIELD: "eliot:destination_failure",
+                        REASON_FIELD: safeunicode(exception),
+                        EXCEPTION_FIELD: exc_type.__module__ + "." + exc_type.__name__,
+                        "message": self._safeUnicodeDictionary(dictionary),
+                        "__eliot_logger__": logger,
+                    }
+                    log_message(**msg)
+            else:
+                # Nothing we can do here, raising exception to caller will
+                # break business logic, better to have that continue to
+                # work even if logging isn't.
+                pass
 
 
 def exclusively(f):

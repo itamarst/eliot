@@ -91,12 +91,12 @@ Consider the following code sample:
 
 .. code-block:: python
 
-     from eliot import start_action, start_task, Message
+     from eliot import start_action, start_task
 
-     with start_task(action_type="parent"):
-         Message.log(message_type="info", x=1)
-         with start_action(action_type="child"):
-             Message.log(message_type="info", x=2)
+     with start_task(action_type="parent") as action:
+         action.log(message_type="info", x=1)
+         with start_action(action_type="child") as action:
+             action.log(message_type="info", x=2)
          raise RuntimeError("ono")
 
 All these messages will share the same UUID in their ``task_uuid`` field, since they are all part of the same high-level task.
@@ -197,14 +197,14 @@ You shouldn't log within an action's context after it has been finished:
 
 .. code-block:: python
 
-     from eliot import start_action, Message
+     from eliot import start_action
 
      with start_action(action_type=u"message_late").context() as action:
-         Message.log(message_type=u"ok")
+         action.log(message_type=u"ok")
          # finish the action:
          action.finish()
          # Don't do this! This message is being added to a finished action!
-         Message.log(message_type=u"late")
+         action.log(message_type=u"late")
 
 As an alternative to ``with``, you can also explicitly run a function within the action context:
 

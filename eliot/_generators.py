@@ -10,7 +10,7 @@ from contextlib import contextmanager
 from contextvars import copy_context
 from weakref import WeakKeyDictionary
 
-from . import Message
+from . import log_message
 
 
 class _GeneratorContext(object):
@@ -105,7 +105,7 @@ def eliot_friendly_generator_function(original):
                     #
                     # This is noisy, enable only for debugging:
                     if wrapper.debug:
-                        Message.log(message_type="yielded")
+                        log_message(message_type="yielded")
                     return value_out
 
                 value_out = context.run(go)
