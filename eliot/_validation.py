@@ -388,7 +388,7 @@ class ActionType(object):
         this action's start message.
 
     @ivar successFields: A C{list} of L{Field} instances which can appear in
-        this action's succesful finish message.
+        this action's successful finish message.
 
     @ivar failureFields: A C{list} of L{Field} instances which can appear in
         this action's failed finish message (in addition to the built-in
