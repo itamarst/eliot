@@ -8,6 +8,7 @@ from .. import start_action, Message
 try:
     import dask
     from dask.bag import from_sequence
+    from dask.distributed import Client
 except ImportError:
     dask = None
 else:
@@ -26,6 +27,14 @@ class DaskTests(TestCase):
         bag = from_sequence([1, 2, 3])
         bag = bag.map(lambda x: x * 7).map(lambda x: x * 4)
         bag = bag.fold(lambda x, y: x + y)
+        self.assertEqual(dask.compute(bag), compute_with_trace(bag))
+
+    def test_future(self):
+        """compute_with_trace() can handle Futures."""
+        client = Client(processes=False)
+        self.addCleanup(client.shutdown)
+        [bag] = dask.persist(from_sequence([1, 2, 3]))
+        bag = bag.map(lambda x: x * 7)
         self.assertEqual(dask.compute(bag), compute_with_trace(bag))
 
     @capture_logging(None)

@@ -3,6 +3,11 @@
 from pyrsistent import PClass, field
 
 from dask import compute, optimize
+try:
+    from dask.distributed import Future
+except:
+    class Future(object):
+        pass
 from dask.core import toposort, get_dependencies
 from . import start_action, current_action, Action
 
@@ -112,6 +117,10 @@ def _add_logging(dsk, ignore=None):
 
     # 3. Replace function with wrapper that logs appropriate Action:
     for key in keys:
+        if isinstance(dsk[key], Future):
+            # Futures can't be wrapped, they're already running.
+            result[key] = dsk[key]
+            continue
         func = dsk[key][0]
         args = dsk[key][1:]
         if not callable(func):
