@@ -2,12 +2,16 @@
 
 from pyrsistent import PClass, field
 
-from dask import compute, optimize
+from dask import compute, optimize, persist
+
 try:
     from dask.distributed import Future
 except:
+
     class Future(object):
         pass
+
+
 from dask.core import toposort, get_dependencies
 from . import start_action, current_action, Action
 
@@ -80,6 +84,22 @@ def compute_with_trace(*args):
         return compute(*optimized, optimize_graph=False)
 
 
+def persist_with_trace(*args):
+    """Do Dask persist(), but with added Eliot tracing.
+
+    Known issues:
+
+        1. Retries will confuse Eliot.  Probably need different
+           distributed-tree mechanism within Eliot to solve that.
+    """
+    # 1. Create top-level Eliot Action:
+    with start_action(action_type="dask:persist"):
+        # In order to reduce logging verbosity, add logging to the already
+        # optimized graph:
+        optimized = optimize(*args, optimizations=[_add_logging])
+        return persist(*optimized, optimize_graph=False)
+
+
 def _add_logging(dsk, ignore=None):
     """
     Add logging to a Dask graph.
@@ -140,4 +160,4 @@ def _add_logging(dsk, ignore=None):
     return result
 
 
-__all__ = ["compute_with_trace"]
+__all__ = ["compute_with_trace", "persist_with_trace"]
