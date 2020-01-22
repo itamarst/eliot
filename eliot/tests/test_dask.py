@@ -9,6 +9,8 @@ try:
     import dask
     from dask.bag import from_sequence
     from dask.distributed import Client
+    import dask.dataframe as dd
+    import pandas as pd
 except ImportError:
     dask = None
 else:
@@ -54,6 +56,15 @@ class DaskTests(TestCase):
             [b.compute() for b in dask.persist(bag)],
             [b.compute() for b in persist_with_trace(bag)],
         )
+
+    def test_persist_pandas(self):
+        """persist_with_trace() with a Pandas dataframe.
+
+        This ensures we don't blow up, which used to be the case.
+        """
+        df = pd.DataFrame()
+        df = dd.from_pandas(df, npartitions=1)
+        persist_with_trace(df)
 
     @capture_logging(None)
     def test_persist_logging(self, logger):
@@ -145,3 +156,18 @@ class AddLoggingTests(TestCase):
             logging_removed[key] = value
 
         self.assertEqual(logging_removed, graph)
+
+    def test_add_logging_explicit(self):
+        """_add_logging() on more edge cases of the graph."""
+
+        def add(s):
+            return s + "s"
+
+        graph = {
+            "a": [1, 2, (add, "d")],
+            "d": "b",
+            ("b", 0): 1,
+            "c": (add, "b"),
+        }
+        with start_action(action_type="bleh"):
+            self.assertEqual(_add_logging(graph), {})
