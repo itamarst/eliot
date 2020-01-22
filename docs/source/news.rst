@@ -1,6 +1,13 @@
 What's New
 ==========
 
+1.12.0
+^^^^^^
+
+Features:
+
+* Dask support now includes support for tracing logging of ``dask.persist()``, via wrapper API ``eliot.dask.persist_with_trace()``.
+
 1.11.0
 ^^^^^^
 
