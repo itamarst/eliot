@@ -8,7 +8,7 @@ from .. import start_action, log_message
 try:
     import dask
     from dask.bag import from_sequence
-    from dask.distributed import Client, Future
+    from dask.distributed import Client
 except ImportError:
     dask = None
 else:
