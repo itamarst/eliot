@@ -8,6 +8,10 @@ Features:
 
 * Dask support now includes support for tracing logging of ``dask.persist()``, via wrapper API ``eliot.dask.persist_with_trace()``.
 
+Bug fixes:
+
+* Dask edge cases that previously weren't handled correctly should work better.
+
 1.11.0
 ^^^^^^
 
