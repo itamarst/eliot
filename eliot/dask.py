@@ -2,8 +2,17 @@
 
 from pyrsistent import PClass, field
 
-from dask import compute, optimize
-from dask.core import toposort, get_dependencies
+from dask import compute, optimize, persist
+
+try:
+    from dask.distributed import Future
+except:
+
+    class Future(object):
+        pass
+
+
+from dask.core import toposort, get_dependencies, ishashable
 from . import start_action, current_action, Action
 
 
@@ -75,6 +84,22 @@ def compute_with_trace(*args):
         return compute(*optimized, optimize_graph=False)
 
 
+def persist_with_trace(*args):
+    """Do Dask persist(), but with added Eliot tracing.
+
+    Known issues:
+
+        1. Retries will confuse Eliot.  Probably need different
+           distributed-tree mechanism within Eliot to solve that.
+    """
+    # 1. Create top-level Eliot Action:
+    with start_action(action_type="dask:persist"):
+        # In order to reduce logging verbosity, add logging to the already
+        # optimized graph:
+        optimized = optimize(*args, optimizations=[_add_logging])
+        return persist(*optimized, optimize_graph=False)
+
+
 def _add_logging(dsk, ignore=None):
     """
     Add logging to a Dask graph.
@@ -101,34 +126,43 @@ def _add_logging(dsk, ignore=None):
     key_names = {}
     for key in keys:
         value = dsk[key]
-        if not callable(value) and value in keys:
+        if not callable(value) and ishashable(value) and value in keys:
             # It's an alias for another key:
             key_names[key] = key_names[value]
         else:
             key_names[key] = simplify(key)
 
-    # 2. Create Eliot child Actions for each key, in topological order:
-    key_to_action_id = {key: str(ctx.serialize_task_id(), "utf-8") for key in keys}
+    # Values in the graph can be either:
+    #
+    # 1. A list of other values.
+    # 2. A tuple, where first value might be a callable, aka a task.
+    # 3. A literal of some sort.
+    def maybe_wrap(key, value):
+        if isinstance(value, list):
+            return [maybe_wrap(key, v) for v in value]
+        elif isinstance(value, tuple):
+            func = value[0]
+            args = value[1:]
+            if not callable(func):
+                # Not a callable, so nothing to wrap.
+                return value
+            wrapped_func = _RunWithEliotContext(
+                task_id=str(ctx.serialize_task_id(), "utf-8"),
+                func=func,
+                key=key_names[key],
+                dependencies=[key_names[k] for k in get_dependencies(dsk, key)],
+            )
+            return (wrapped_func,) + args
+        else:
+            return value
 
-    # 3. Replace function with wrapper that logs appropriate Action:
+    # Replace function with wrapper that logs appropriate Action; iterate in
+    # topological order so action task levels are in reasonable order.
     for key in keys:
-        func = dsk[key][0]
-        args = dsk[key][1:]
-        if not callable(func):
-            # This key is just an alias for another key, no need to add
-            # logging:
-            result[key] = dsk[key]
-            continue
-        wrapped_func = _RunWithEliotContext(
-            task_id=key_to_action_id[key],
-            func=func,
-            key=key_names[key],
-            dependencies=[key_names[k] for k in get_dependencies(dsk, key)],
-        )
-        result[key] = (wrapped_func,) + tuple(args)
+        result[key] = maybe_wrap(key, dsk[key])
 
     assert set(result.keys()) == set(dsk.keys())
     return result
 
 
-__all__ = ["compute_with_trace"]
+__all__ = ["compute_with_trace", "persist_with_trace"]

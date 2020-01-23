@@ -44,8 +44,9 @@ In order to do this you will need to:
 * Ensure all worker processes write the Eliot logs to disk (if you're using the ``multiprocessing`` or ``distributed`` backends).
 * If you're using multiple worker machines, aggregate all log files into a single place, so you can more easily analyze them with e.g. `eliot-tree <https://github.com/jonathanj/eliottree>`_.
 * Replace ``dask.compute()`` with ``eliot.dask.compute_with_trace()``.
+* Replace ``dask.persist()`` with ``eliot.dask.persist_with_trace()``.
 
-In the following example, you can see how this works for a Dask run using ``distributed``, the recommended Dask scheduler.
+In the following example, you can see how this works for a Dask run using ``distributed``, the recommended Dask scheduler for more sophisticated use cases.
 We'll be using multiple worker processes, but only use a single machine:
 
 .. literalinclude:: ../../examples/dask_eliot.py
