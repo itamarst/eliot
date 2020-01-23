@@ -18,7 +18,7 @@ Eliot includes a command-line tool that makes it easier to read JSON-formatted E
 
 Run ``eliot-prettyprint --help`` to see the various formatting options; you can for example use a more compact one-message-per-line format.
 
-Additionally, the **highly recommended third-party `eliot-tree`_ tool** renders JSON-formatted Eliot messages into a tree visualizing the tasks' actions.
+Additionally, the **highly recommended** third-party `eliot-tree`_ tool renders JSON-formatted Eliot messages into a tree visualizing the tasks' actions.
 
 
 Filtering logs
