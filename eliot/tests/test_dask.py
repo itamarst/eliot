@@ -135,6 +135,8 @@ class DaskTests(TestCase):
 class AddLoggingTests(TestCase):
     """Tests for _add_logging()."""
 
+    maxDiff = None
+
     def test_add_logging_to_full_graph(self):
         """_add_logging() recreates Dask graph with wrappers."""
         bag = from_sequence([1, 2, 3])
@@ -163,11 +165,45 @@ class AddLoggingTests(TestCase):
         def add(s):
             return s + "s"
 
+        def add2(s):
+            return s + "s"
+
+        # b runs first, then d, then a and c.
         graph = {
-            "a": [1, 2, (add, "d")],
-            "d": "b",
+            "a": "d",
+            "d": [1, 2, (add, "b")],
             ("b", 0): 1,
-            "c": (add, "b"),
+            "c": (add2, "d"),
         }
-        with start_action(action_type="bleh"):
-            self.assertEqual(_add_logging(graph), {})
+
+        with start_action(action_type="bleh") as action:
+            task_id = action.task_uuid
+            self.assertEqual(
+                _add_logging(graph),
+                {
+                    "d": [
+                        1,
+                        2,
+                        (
+                            _RunWithEliotContext(
+                                task_id=task_id + "@/2",
+                                func=add,
+                                key="d",
+                                dependencies=["b"],
+                            ),
+                            "b",
+                        ),
+                    ],
+                    "a": "d",
+                    ("b", 0): 1,
+                    "c": (
+                        _RunWithEliotContext(
+                            task_id=task_id + "@/3",
+                            func=add2,
+                            key="c",
+                            dependencies=["d"],
+                        ),
+                        "d",
+                    ),
+                },
+            )
