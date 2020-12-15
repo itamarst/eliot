@@ -262,8 +262,12 @@ class MemoryLogger(object):
         not mutate this list.
     """
 
-    def __init__(self):
+    def __init__(self, encoder=EliotJSONEncoder):
+        """
+        @param encoder: A JSONEncoder subclass to use when encoding JSON.
+        """
         self._lock = Lock()
+        self._encoder = encoder
         self.reset()
 
     @exclusively
@@ -344,8 +348,7 @@ class MemoryLogger(object):
             serializer.serialize(dictionary)
 
         try:
-            bytesjson.dumps(dictionary)
-            pyjson.dumps(dictionary)
+            pyjson.dumps(dictionary, cls=self._encoder)
         except Exception as e:
             raise TypeError("Message %s doesn't encode to JSON: %s" % (dictionary, e))
 
@@ -462,6 +465,8 @@ def to_file(output_file, encoder=EliotJSONEncoder):
     Add a destination that writes a JSON message per line to the given file.
 
     @param output_file: A file-like object.
+
+    @param encoder: A JSONEncoder subclass to use when encoding JSON.
     """
     Logger._destinations.add(FileDestination(file=output_file, encoder=encoder))
 

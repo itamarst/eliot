@@ -3,6 +3,20 @@ Common testing infrastructure.
 """
 
 from io import BytesIO
+from json import JSONEncoder
+
+
+class CustomObject(object):
+    """Gets encoded to JSON."""
+
+
+class CustomJSONEncoder(JSONEncoder):
+    """JSONEncoder that knows about L{CustomObject}."""
+
+    def default(self, o):
+        if isinstance(o, CustomObject):
+            return "CUSTOM!"
+        return JSONEncoder.default(self, o)
 
 
 class FakeSys(object):
