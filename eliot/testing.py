@@ -300,7 +300,7 @@ def swap_logger(logger):
 
 
 def validateLogging(
-    assertion, *assertionArgs, _encoder=EliotJSONEncoder, **assertionKwargs
+    assertion, *assertionArgs, encoder_=EliotJSONEncoder, **assertionKwargs
 ):
     """
     Decorator factory for L{unittest.TestCase} methods to add logging
@@ -334,7 +334,7 @@ def validateLogging(
     @param assertionKwargs: Additional keyword arguments to pass to
         C{assertion}.
 
-    @param _encoder: C{json.JSONEncoder} subclass to use when validating JSON.
+    @param encoder_: C{json.JSONEncoder} subclass to use when validating JSON.
     """
 
     def decorator(function):
@@ -342,7 +342,7 @@ def validateLogging(
         def wrapper(self, *args, **kwargs):
             skipped = False
 
-            kwargs["logger"] = logger = MemoryLogger(encoder=_encoder)
+            kwargs["logger"] = logger = MemoryLogger(encoder=encoder_)
             self.addCleanup(check_for_errors, logger)
             # TestCase runs cleanups in reverse order, and we want this to
             # run *before* tracebacks are checked:
@@ -367,7 +367,7 @@ validate_logging = validateLogging
 
 
 def capture_logging(
-    assertion, *assertionArgs, _encoder=EliotJSONEncoder, **assertionKwargs
+    assertion, *assertionArgs, encoder_=EliotJSONEncoder, **assertionKwargs
 ):
     """
     Capture and validate all logging that doesn't specify a L{Logger}.
@@ -377,7 +377,7 @@ def capture_logging(
 
     def decorator(function):
         @validate_logging(
-            assertion, *assertionArgs, _encoder=_encoder, **assertionKwargs
+            assertion, *assertionArgs, encoder_=encoder_, **assertionKwargs
         )
         @wraps(function)
         def wrapper(self, *args, **kwargs):

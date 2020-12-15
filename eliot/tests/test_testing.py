@@ -758,7 +758,7 @@ class JSONEncodingTests(TestCase):
         # Default JSON encoder can't handle NumPy:
         log_message(message_type="hello", number=np.uint32(12))
 
-    @capture_logging(None, _encoder=CustomJSONEncoder)
+    @capture_logging(None, encoder_=CustomJSONEncoder)
     def test_custom_JSON_encoder(self, logger):
         """
         L{capture_logging} can be called with a custom JSON encoder, which is then
