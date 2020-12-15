@@ -260,7 +260,7 @@ Just like a ``FileDestination`` can have a custom JSON encoder, so can your test
            # Logged messages will be validated using MyEncoder....
            ...
 
-Notice that the hyphen after `encoder_` is deliberate: by default keyword arguments are passed to the assertion function (the first argument to ``@capture_logging``) so it's marked this way to indicate it's part of Eliot's API.
+Notice that the hyphen after ``encoder_`` is deliberate: by default keyword arguments are passed to the assertion function (the first argument to ``@capture_logging``) so it's marked this way to indicate it's part of Eliot's API.
 
 Custom testing setup
 --------------------
