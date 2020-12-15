@@ -18,10 +18,10 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Topic :: System :: Logging",
@@ -30,7 +30,7 @@ setup(
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description="Logging library that tells you why it happened",
-    python_requires=">=3.5.3",
+    python_requires=">=3.6.0",
     install_requires=[
         # Python 3 compatibility:
         "six",
@@ -54,6 +54,7 @@ setup(
             # Tasteful testing for Python:
             "testtools",
             "pytest",
+            "pytest-xdist",
         ],
         "dev": [
             # Ensure we can do python_requires correctly:
