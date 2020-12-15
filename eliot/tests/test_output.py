@@ -139,7 +139,8 @@ class MemoryLoggerTests(TestCase):
         """
         logger = MemoryLogger(encoder=CustomJSONEncoder)
         logger.write(
-            {"message_type": "type", "custom": CustomObject()}, None,
+            {"message_type": "type", "custom": CustomObject()},
+            None,
         )
         logger.validate()
 
