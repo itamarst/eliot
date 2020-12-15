@@ -4,7 +4,12 @@ Tests for L{eliot.testing}.
 
 from __future__ import unicode_literals
 
-from unittest import SkipTest, TestResult, TestCase
+from unittest import SkipTest, TestResult, TestCase, skipUnless
+
+try:
+    import numpy as np
+except ImportError:
+    np = None
 
 from ..testing import (
     issuperset,
@@ -25,7 +30,8 @@ from .._action import start_action
 from .._message import Message
 from .._validation import ActionType, MessageType, ValidationError, Field
 from .._traceback import write_traceback
-from .. import add_destination, remove_destination, _output
+from .. import add_destination, remove_destination, _output, log_message
+from .common import CustomObject, CustomJSONEncoder
 
 
 class IsSuperSetTests(TestCase):
@@ -738,6 +744,28 @@ class CaptureLoggingTests(ValidateLoggingTestsMixin, TestCase):
             (test.recorded, result.skipped, result.errors, result.failures),
             (False, [(test, "Do not run this test.")], [], []),
         )
+
+
+class JSONEncodingTests(TestCase):
+    """Tests for L{capture_logging} JSON encoder support."""
+
+    @skipUnless(np, "NumPy is not installed.")
+    @capture_logging(None)
+    def test_default_JSON_encoder(self, logger):
+        """
+        L{capture_logging} validates using L{EliotJSONEncoder} by default.
+        """
+        # Default JSON encoder can't handle NumPy:
+        log_message(message_type="hello", number=np.uint32(12))
+
+    @capture_logging(None, _encoder=CustomJSONEncoder)
+    def test_custom_JSON_encoder(self, logger):
+        """
+        L{capture_logging} can be called with a custom JSON encoder, which is then
+        used for validation.
+        """
+        # Default JSON encoder can't handle this custom object:
+        log_message(message_type="hello", object=CustomObject())
 
 
 MESSAGE1 = MessageType(
