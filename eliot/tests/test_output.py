@@ -32,6 +32,7 @@ from .._output import (
 from .._validation import ValidationError, Field, _MessageSerializer
 from .._traceback import write_traceback
 from ..testing import assertContainsFields
+from .common import CustomObject, CustomJSONEncoder
 
 
 class MemoryLoggerTests(TestCase):
@@ -121,6 +122,27 @@ class MemoryLoggerTests(TestCase):
             {"message_type": "type", "foo": "will become object()"}, serializer
         )
         self.assertRaises(TypeError, logger.validate)
+
+    @skipUnless(np, "NumPy is not installed.")
+    def test_EliotJSONEncoder(self):
+        """
+        L{MemoryLogger.validate} uses the EliotJSONEncoder by default to do
+        encoding testing.
+        """
+        logger = MemoryLogger()
+        logger.write({"message_type": "type", "foo": np.uint64(12)}, None)
+        logger.validate()
+
+    def test_JSON_custom_encoder(self):
+        """
+        L{MemoryLogger.validate} will use a custom JSON encoder if one was given.
+        """
+        logger = MemoryLogger(encoder=CustomJSONEncoder)
+        logger.write(
+            {"message_type": "type", "custom": CustomObject()},
+            None,
+        )
+        logger.validate()
 
     def test_serialize(self):
         """

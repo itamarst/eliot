@@ -1,6 +1,18 @@
 What's New
 ==========
 
+1.13.0
+^^^^^^
+
+Features:
+
+* ``@capture_logging`` and ``MemoryLogger`` now support specifying a custom JSON encoder. By default they now use Eliot's encoder. This means tests can now match the encoding used by a ``FileDestination``.
+* Added support for Python 3.9.
+
+Deprecation:
+
+* Python 3.5 is no longer supported.
+
 1.12.0
 ^^^^^^
 

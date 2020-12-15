@@ -20,6 +20,7 @@ from ._action import (
 from ._message import MESSAGE_TYPE_FIELD, TASK_LEVEL_FIELD, TASK_UUID_FIELD
 from ._output import MemoryLogger
 from . import _output
+from .json import EliotJSONEncoder
 
 COMPLETED_STATUSES = (FAILED_STATUS, SUCCEEDED_STATUS)
 
@@ -298,7 +299,9 @@ def swap_logger(logger):
     return previous_logger
 
 
-def validateLogging(assertion, *assertionArgs, **assertionKwargs):
+def validateLogging(
+    assertion, *assertionArgs, encoder_=EliotJSONEncoder, **assertionKwargs
+):
     """
     Decorator factory for L{unittest.TestCase} methods to add logging
     validation.
@@ -330,6 +333,8 @@ def validateLogging(assertion, *assertionArgs, **assertionKwargs):
 
     @param assertionKwargs: Additional keyword arguments to pass to
         C{assertion}.
+
+    @param encoder_: C{json.JSONEncoder} subclass to use when validating JSON.
     """
 
     def decorator(function):
@@ -337,7 +342,7 @@ def validateLogging(assertion, *assertionArgs, **assertionKwargs):
         def wrapper(self, *args, **kwargs):
             skipped = False
 
-            kwargs["logger"] = logger = MemoryLogger()
+            kwargs["logger"] = logger = MemoryLogger(encoder=encoder_)
             self.addCleanup(check_for_errors, logger)
             # TestCase runs cleanups in reverse order, and we want this to
             # run *before* tracebacks are checked:
@@ -361,7 +366,9 @@ def validateLogging(assertion, *assertionArgs, **assertionKwargs):
 validate_logging = validateLogging
 
 
-def capture_logging(assertion, *assertionArgs, **assertionKwargs):
+def capture_logging(
+    assertion, *assertionArgs, encoder_=EliotJSONEncoder, **assertionKwargs
+):
     """
     Capture and validate all logging that doesn't specify a L{Logger}.
 
@@ -369,7 +376,9 @@ def capture_logging(assertion, *assertionArgs, **assertionKwargs):
     """
 
     def decorator(function):
-        @validate_logging(assertion, *assertionArgs, **assertionKwargs)
+        @validate_logging(
+            assertion, *assertionArgs, encoder_=encoder_, **assertionKwargs
+        )
         @wraps(function)
         def wrapper(self, *args, **kwargs):
             logger = kwargs["logger"]
