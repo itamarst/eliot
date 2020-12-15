@@ -106,6 +106,8 @@ class DaskTests(TestCase):
                         top_action_name: [
                             {"eliot:remote_task": ["dask:task", "mult"]},
                             {"eliot:remote_task": ["dask:task", "mult"]},
+                            {"eliot:remote_task": ["dask:task"]},
+                            {"eliot:remote_task": ["dask:task"]},
                             {"eliot:remote_task": ["dask:task", "finally"]},
                         ]
                     }
@@ -114,20 +116,36 @@ class DaskTests(TestCase):
         )
 
         # Make sure dependencies are tracked:
-        mult1_msg, mult2_msg, final_msg = LoggedMessage.ofType(
-            logger.messages, "dask:task"
+        (
+            mult1_msg,
+            mult2_msg,
+            reduce1_msg,
+            reduce2_msg,
+            final_msg,
+        ) = LoggedMessage.ofType(logger.messages, "dask:task")
+        self.assertEqual(
+            reduce1_msg.message["dependencies"], [mult1_msg.message["key"]]
+        )
+        self.assertEqual(
+            reduce2_msg.message["dependencies"], [mult2_msg.message["key"]]
         )
         self.assertEqual(
             sorted(final_msg.message["dependencies"]),
-            sorted([mult1_msg.message["key"], mult2_msg.message["key"]]),
+            sorted([reduce1_msg.message["key"], reduce2_msg.message["key"]]),
         )
 
         # Make sure dependencies are logically earlier in the logs:
         self.assertTrue(
-            mult1_msg.message["task_level"] < final_msg.message["task_level"]
+            mult1_msg.message["task_level"] < reduce1_msg.message["task_level"]
         )
         self.assertTrue(
-            mult2_msg.message["task_level"] < final_msg.message["task_level"]
+            mult2_msg.message["task_level"] < reduce2_msg.message["task_level"]
+        )
+        self.assertTrue(
+            reduce1_msg.message["task_level"] < final_msg.message["task_level"]
+        )
+        self.assertTrue(
+            reduce2_msg.message["task_level"] < final_msg.message["task_level"]
         )
 
 
