@@ -233,6 +233,34 @@ Or we can simplify further by using ``assertHasMessage`` and ``assertHasAction``
             self.assertEqual(servers, [msg.message["server"] for msg in messages])
 
 
+Custom JSON encoding
+--------------------
+
+Just like a ``FileDestination`` can have a custom JSON encoder, so can your tests, so you can validate your messages with that JSON encoder:
+
+.. code-block:: python
+
+   from unittest import TestCase
+   from eliot.json import EliotJSONEncoder
+   from eliot.testing import capture_logging
+
+   class MyClass:
+       def __init__(self, x):
+           self.x = x
+
+   class MyEncoder(EliotJSONEncoder):
+       def default(self, obj):
+           if isinstance(obj, MyClass):
+               return {"x": obj.x}
+           return EliotJSONEncoder.default(self, obj)
+
+   class LoggingTests(TestCase):
+       @capture_logging(None, _encoder=MyEncoder)
+       def test_logging(self, logger):
+           # Logged messages will be validated using MyEncoder....
+           ...
+
+
 Custom testing setup
 --------------------
 
