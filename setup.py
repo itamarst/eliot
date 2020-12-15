@@ -54,6 +54,7 @@ setup(
             # Tasteful testing for Python:
             "testtools",
             "pytest",
+            "pytest-xdist",
         ],
         "dev": [
             # Ensure we can do python_requires correctly:
