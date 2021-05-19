@@ -1,0 +1,76 @@
+<html>
+    <head>
+        <title>Logging for Scientific Computing: Dask edition</title>
+        <meta charset="utf-8">
+        <style>
+         /* rosario-regular - latin */
+         @font-face {
+             font-family: 'Rosario';
+             font-style: normal;
+             font-weight: 400;
+             src: local('Rosario'), local('Rosario-Regular'),
+             url('./fonts/rosario-v13-latin-regular.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+             url('./fonts/rosario-v13-latin-regular.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+         }
+
+         /* rosario-italic - latin */
+         @font-face {
+             font-family: 'Rosario';
+             font-style: italic;
+             font-weight: 400;
+             src: local('Rosario Italic'), local('Rosario-Italic'),
+             url('./fonts/rosario-v13-latin-italic.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+             url('./fonts/rosario-v13-latin-italic.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+         }
+
+         /* rosario-700 - latin */
+         @font-face {
+             font-family: 'Rosario';
+             font-style: normal;
+             font-weight: 700;
+             src: local('Rosario Bold'), local('Rosario-Bold'),
+             url('./fonts/rosario-v13-latin-700.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+             url('./fonts/rosario-v13-latin-700.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+         }
+         /* source-code-pro-regular - latin */
+         @font-face {
+             font-family: 'Source Code Pro';
+             font-style: normal;
+             font-weight: 400;
+             src: local('Source Code Pro'), local('SourceCodePro-Regular'),
+             url('./fonts/source-code-pro-v9-latin-regular.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+             url('./fonts/source-code-pro-v9-latin-regular.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+         }
+         body { font-family: 'Rosario', serif;
+             letter-spacing: -0.05em;}
+         h2, h3 {
+             font-weight: normal;
+         }
+         .remark-code, .remark-inline-code { font-family: 'Source Code Pro', monospace; }
+         .remark-code {
+             font-size: 140%;
+         }
+         .footer {
+             position: fixed;
+             top: 90%;
+             left: 5%;
+             text-align: left;
+             width: 100%;
+             font-size: 150%;
+         }
+         li {
+             font-size: 2rem;
+             margin-top: 0.5em;
+         }
+        </style>
+    </head>
+    <body>
+        <script src="remark-latest.min.js"></script>
+        <script>
+         var slideshow = remark.create({
+             sourceUrl: 'presentation.md'
+         });
+        </script>
+        <script src="remark-zoom.js"></script>
+    </body>
+</html>
