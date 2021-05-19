@@ -167,10 +167,10 @@ to_file(open("out.log", "w"))
 $ python badmath.py
 0
 $ eliot-tree out.log
-─── multiplysum (inputs a=1 b=2 c=4)
-    ├── add (inputs a=1 b=2)
+─── multiplysum (inputs a: 1 b: 2 c: 4)
+    ├── add (inputs a: 1 b: 2)
     │   └── result: 3
-    ├── multiply (inputs a=3 b=4)
+    ├── multiply (inputs a: 3 b: 4)
     │   └── result: 0
     └── result: 0
 ```
@@ -190,7 +190,7 @@ class: middle
 
 ## Profilers can’t tell you which inputs are slow:
 * `f()` may be fast on some inputs, but slow on others.
-* Profiler just tells you "`f()` is slowish on average."
+* Profiler just tells you "`f()` is slow sometimes."
 
 ---
 
@@ -207,11 +207,12 @@ class: middle
 ```python
 from eliot import start_action
 
-def main(inputs):
-    with start_action(action_type="main"):
+def main(xs):
+    with start_action(action_type="main",
+                      xs=xs):
         A = []
-        for i in inputs:
-            A.append(complex_calc(i))
+        for x in xs:
+            A.append(complex_calc(x))
         return np.median(A, axis=0)
 ```
 
@@ -226,11 +227,11 @@ you can see here I'm using a different Eliot API, just for variety.
 ```
 $ python slow.py
 $ eliot-tree out.log | grep complex_calc
-    ├── complex_calc ⇒ (arg: 13) ⧖ 0.1s
+    ├── complex_calc ⇒ (x: 13) ⧖ 0.1s
 ...
-    ├── complex_calc ⇒ (arg: -12) ⧖ 10.0s
+    ├── complex_calc ⇒ (x: -12) ⧖ 10.0s
 ...
-    ├── complex_calc ⇒ (arg: 4) ⧖ 0.2s
+    ├── complex_calc ⇒ (x: 4) ⧖ 0.2s
 ```
 
 ### It's slow when the input argument is -12!
@@ -256,7 +257,6 @@ class: middle
 
 ```python
 from eliot import log_call
-from eliot.dask import compute_with_trace
 
 @log_call
 def multiply(x, y=7):
@@ -272,8 +272,10 @@ def add(x, y):
 # Eliot's Dask support: Logic 2
 
 ```python
-@log_call
-def main_computation():
+from eliot import log_call
+from dask.bag import from_sequence
+
+def create_computation():
     bag = from_sequence([1, 2, 3])
     return bag.map(multiply).fold(add)
 ```
@@ -285,6 +287,7 @@ def main_computation():
 ```python
 from os import getpid
 from eliot import to_file
+from dask.distributed import Client
 
 def _start_logging():
     to_file(open(f"{getpid()}.log", "a"))
@@ -301,29 +304,48 @@ client.run(_start_logging)  # <-- workers
 
 ```python
 from eliot.dask import compute_with_trace
+from eliot import start_action
 
-bag = main_computation()
-
-# Instead of dask.compute():
-result = compute_with_trace(bag)
+with start_action(action_type="main"):
+    bag = create_computation()
+    # Instead of dask.compute():
+    result = compute_with_trace(bag)
 print(result)
 ```
 
 ---
 
-# Resulting logs (simplified)
+# Resulting logs, overview
+
+```
+$ eliot-tree *.log | grep started
+└── main/1 ⇒ started 2021-05-17 20:06:56Z ⧖ 0.039s
+    ├── dask:compute/2/1 ⇒ started 2021-05-17 20:06:56Z ⧖ 0.036s
+    │   ├── eliot:remote_task/2/2/1 ⇒ started 2021-05-17 20:06:56Z ⧖ 0.000s
+    │   │   ├── multiply/2/2/3/1 ⇒ started 2021-05-17 20:06:56Z ⧖ 0.000s
+    │   ├── eliot:remote_task/2/3/1 ⇒ started 2021-05-17 20:06:56Z ⧖ 0.001s
+    │   │   ├── multiply/2/3/3/1 ⇒ started 2021-05-17 20:06:56Z ⧖ 0.000s
+    │   ├── eliot:remote_task/2/4/1 ⇒ started 2021-05-17 20:06:56Z ⧖ 0.000s
+    │   │   ├── multiply/2/4/3/1 ⇒ started 2021-05-17 20:06:56Z ⧖ 0.000s
+    │   ├── eliot:remote_task/2/5/1 ⇒ started 2021-05-17 20:06:56Z ⧖ 0.000s
+    │   │   ├── add/2/5/3/1 ⇒ started 2021-05-17 20:06:56Z ⧖ 0.000s
+    │   │   ├── add/2/5/4/1 ⇒ started 2021-05-17 20:06:56Z ⧖ 0.000s
+```
+
+---
+# Resulting logs, details (simplified)
 
 ```
 $ eliot-tree *.log
-└── main_computation/1 ⇒ ()
-    │   │   ├── multiply/2/2/3/1 ⇒ (x: 1 y: z)
+└── main/1 ⇒ ()
+    │   │   ├── multiply/2/2/3/1 ⇒ (x: 1 y: 7)
     │   │   │   └── multiply/2/2/3/2 ⇒ (result: 7)
     ...
     │   ├── add/2/5/3/1 ⇒ (x: 7, y: 14)
     │   │   │   └── add/2/5/3/2 ⇒ (result: 21)
-    │   │   ├── add/2/5/4/1 ⇒ (x: 21, y: 21)
-    │   │   │   └── add/2/5/4/2 ⇒ (result: 42)
-    └── main_computation/3 ⇒ (result: 42)
+    │   ├── add/2/5/4/1 ⇒ (x: 21, y: 21)
+    │   │   └── add/2/5/4/2 ⇒ (result: 42)
+    └── main/3 ⇒ (result: 42)
 ```
 
 ???
@@ -335,9 +357,10 @@ this is simplified output to fit on slide
 # Caveats and missing features
 
 * Dask is a graph, Eliot is a tree.
-    * **Solution:** All parent tasks are automatically recorded in logs. Omitted from previous slide just so it fits on screen.
+    * **Solution:** All parent tasks are automatically recorded in logs for manual inspection.
 * No built-in way to centralize logs from multiple machines.
-    * **Solution:** `scp`, or upload to S3, or tools like `logstash`.
+    * **Solution:** `scp`, upload to cloud, `logstash`.
+* Retries will break Eliot graph. Solvable, haven't done it yet.
 
 ---
 
