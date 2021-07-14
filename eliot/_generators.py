@@ -36,13 +36,6 @@ class _GeneratorContext(object):
             self._current_generator = previous_generator
 
 
-class GeneratorSupportNotEnabled(Exception):
-    """
-    An attempt was made to use a decorated generator without first turning on
-    the generator context manager.
-    """
-
-
 def eliot_friendly_generator_function(original):
     """
     Decorate a generator function so that the Eliot action context is
