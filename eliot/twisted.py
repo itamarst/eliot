@@ -262,6 +262,7 @@ def inline_callbacks(original, debug=False):
     function.
     """
     f = eliot_friendly_generator_function(original)
+    f._use_failure = True
     if debug:
         f.debug = True
     return inlineCallbacks(f)
