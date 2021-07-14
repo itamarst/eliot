@@ -220,14 +220,14 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
 
         g.debug = True  # output yielded messages
 
-        gens = [g("1"), g("2")]
         with start_action(action_type="the-action"):
-            while gens:
-                for g in gens[:]:
-                    try:
-                        next(g)
-                    except StopIteration:
-                        gens.remove(g)
+            gens = [g("1"), g("2")]
+        while gens:
+            for g in gens[:]:
+                try:
+                    next(g)
+                except StopIteration:
+                    gens.remove(g)
 
         assert_expected_action_tree(
             self,
@@ -290,5 +290,41 @@ class EliotFriendlyGeneratorFunctionTests(TestCase):
                         {"a-recurse=False": ["m-recurse=False", "yielded"]},
                     ]
                 }
+            ],
+        )
+
+    @capture_logging(None)
+    def test_capture_context(self, logger):
+        """
+        L{eliot_friendly_generator_function} decorated generators capture the
+        context where they are created, not where L{.send} is first called on
+        them.
+        """
+
+        @eliot_friendly_generator_function
+        def g():
+            yield
+
+        g.debug = True  # output yielded messages
+
+        with start_action(action_type="the-action"):
+            with start_action(action_type="start"):
+                gen = g()
+            with start_action(action_type="run"):
+                list(gen)
+
+        assert_expected_action_tree(
+            self,
+            logger,
+            "the-action",
+            [
+                {
+                    "start": [
+                        "yielded",
+                    ],
+                },
+                {
+                    "run": [],
+                },
             ],
         )
