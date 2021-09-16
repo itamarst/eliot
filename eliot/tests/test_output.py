@@ -29,6 +29,7 @@ from .._output import (
     FileDestination,
     _DestinationsSendError,
 )
+from .._action import start_action
 from .._validation import ValidationError, Field, _MessageSerializer
 from .._traceback import write_traceback
 from ..testing import assertContainsFields
@@ -736,6 +737,25 @@ class LoggerTests(TestCase):
         # No exception raised; since everything is dropped no other
         # assertions to be made.
         logger.write({"hello": 123})
+
+    def test_destinationExceptionCaughtTwiceInsideAction(self):
+        """
+        If a destination throws an exception, and the logged error about
+        it also causes an exception, then just drop that exception on the
+        floor, since there's nothing we can do with it.
+        """
+        logger = Logger()
+        logger._destinations = Destinations()
+
+        def always_raise(message):
+            raise ZeroDivisionError()
+
+        logger._destinations.add(always_raise)
+
+        # No exception raised; since everything is dropped no other
+        # assertions to be made.
+        with start_action(logger, "sys:do"):
+            logger.write({"hello": 123})
 
 
 class PEP8Tests(TestCase):

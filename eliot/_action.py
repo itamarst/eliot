@@ -939,6 +939,8 @@ def log_message(message_type, **fields):
     action = current_action()
     if action is None:
         action = Action(logger, str(uuid4()), TaskLevel(level=[]), "")
+    elif logger:
+        action._logger = logger
     action.log(message_type, **fields)
 
 
