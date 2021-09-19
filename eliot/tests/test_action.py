@@ -781,6 +781,27 @@ class SerializationTests(TestCase):
             },
         )
 
+    def test_continueTaskCustomType(self):
+        """
+        L{Action.continue_task} uses the provided action type and extra fields.
+        """
+        originalAction = Action(None, "uniq456", TaskLevel(level=[3, 4]), "mytype")
+        taskId = originalAction.serializeTaskId()
+        logger = MemoryLogger()
+
+        Action.continue_task(logger, taskId, action_type="custom:action", field="value")
+        assertContainsFields(
+            self,
+            logger.messages[0],
+            {
+                "task_uuid": "uniq456",
+                "task_level": [3, 4, 1, 1],
+                "action_type": "custom:action",
+                "action_status": "started",
+                "field": "value",
+            },
+        )
+
     def test_continueTaskNoLogger(self):
         """
         L{Action.continue_task} can be called without a logger.
