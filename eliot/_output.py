@@ -2,14 +2,12 @@
 Implementation of hooks and APIs for outputting log messages.
 """
 
-import sys
 import traceback
 import inspect
 import json as pyjson
 from threading import Lock
 from functools import wraps
 from io import IOBase
-from uuid import uuid4
 
 from pyrsistent import PClass, field
 
