@@ -8,6 +8,10 @@ Features:
 
 * ``Action.continue_task`` now takes ``action_task`` and extra fields to use for the action, so the default ``eliot:remote_task`` can be changed.
 
+Bug fixes:
+
+* Fix infinite recursion when a logging destination raises exceptions forever. Thanks to to @alextatarinov.
+
 1.13.0
 ^^^^^^
 
