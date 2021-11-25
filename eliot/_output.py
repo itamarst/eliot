@@ -9,6 +9,7 @@ import json as pyjson
 from threading import Lock
 from functools import wraps
 from io import IOBase
+from uuid import uuid4
 
 from pyrsistent import PClass, field
 
@@ -22,16 +23,9 @@ from .json import EliotJSONEncoder
 from ._validation import ValidationError
 
 
-class _DestinationsSendError(Exception):
-    """
-    An error occured sending to one or more destinations.
-
-    @ivar errors: A list of tuples output from C{sys.exc_info()}.
-    """
-
-    def __init__(self, errors):
-        self.errors = errors
-        Exception.__init__(self, errors)
+# Action type for log messages due to a (hopefully temporarily) broken
+# destination.
+DESTINATION_FAILURE = "eliot:destination_failure"
 
 
 class BufferingDestination(object):
@@ -70,24 +64,57 @@ class Destinations(object):
         """
         self._globalFields.update(fields)
 
-    def send(self, message):
+    def send(self, message, logger=None):
         """
         Deliver a message to all destinations.
 
         The passed in message might be mutated.
 
+        This should never raise an exception.
+
         @param message: A message dictionary that can be serialized to JSON.
         @type message: L{dict}
+
+        @param logger: The ``ILogger`` that wrote the message, if any.
         """
         message.update(self._globalFields)
         errors = []
+        is_destination_error_message = (
+            message.get("message_type", None) == DESTINATION_FAILURE
+        )
         for dest in self._destinations:
             try:
                 dest(message)
+            except Exception as e:
+                # If the destination is broken not because of a specific
+                # message, but rather continously, we will get a
+                # "eliot:destination_failure" log message logged, and so we
+                # want to ensure it doesn't do infinite recursion.
+                if not is_destination_error_message:
+                    errors.append(e)
+
+        for exception in errors:
+            from ._action import log_message
+
+            try:
+                new_msg = {
+                    MESSAGE_TYPE_FIELD: DESTINATION_FAILURE,
+                    REASON_FIELD: safeunicode(exception),
+                    EXCEPTION_FIELD: exception.__class__.__module__
+                    + "."
+                    + exception.__class__.__name__,
+                    "message": _safe_unicode_dictionary(message),
+                }
+                if logger is not None:
+                    # This is really only useful for testing, should really
+                    # figure out way to get rid of this mechanism...
+                    new_msg["__eliot_logger__"] = logger
+                log_message(**new_msg)
             except:
-                errors.append(sys.exc_info())
-        if errors:
-            raise _DestinationsSendError(errors)
+                # Nothing we can do here, raising exception to caller will
+                # break business logic, better to have that continue to
+                # work even if logging isn't.
+                pass
 
     def add(self, *destinations):
         """
@@ -144,6 +171,28 @@ class ILogger(Interface):
         """
 
 
+def _safe_unicode_dictionary(dictionary):
+    """
+    Serialize a dictionary to a unicode string no matter what it contains.
+
+    The resulting dictionary will loosely follow Python syntax but it is
+    not expected to actually be a lossless encoding in all cases.
+
+    @param dictionary: A L{dict} to serialize.
+
+    @return: A L{unicode} string representing the input dictionary as
+        faithfully as can be done without putting in too much effort.
+    """
+    try:
+        return str(
+            dict(
+                (saferepr(key), saferepr(value)) for (key, value) in dictionary.items()
+            )
+        )
+    except:
+        return saferepr(dictionary)
+
+
 @implementer(ILogger)
 class Logger(object):
     """
@@ -155,29 +204,6 @@ class Logger(object):
     """
 
     _destinations = Destinations()
-    _log_tracebacks = True
-
-    def _safeUnicodeDictionary(self, dictionary):
-        """
-        Serialize a dictionary to a unicode string no matter what it contains.
-
-        The resulting dictionary will loosely follow Python syntax but it is
-        not expected to actually be a lossless encoding in all cases.
-
-        @param dictionary: A L{dict} to serialize.
-
-        @return: A L{unicode} string representing the input dictionary as
-            faithfully as can be done without putting in too much effort.
-        """
-        try:
-            return str(
-                dict(
-                    (saferepr(key), saferepr(value))
-                    for (key, value) in dictionary.items()
-                )
-            )
-        except:
-            return saferepr(dictionary)
 
     def write(self, dictionary, serializer=None):
         """
@@ -193,38 +219,12 @@ class Logger(object):
 
             log_message(
                 "eliot:serialization_failure",
-                message=self._safeUnicodeDictionary(dictionary),
+                message=_safe_unicode_dictionary(dictionary),
                 __eliot_logger__=self,
             )
             return
 
-        try:
-            self._destinations.send(dictionary)
-        except _DestinationsSendError as e:
-            from ._action import log_message
-
-            if self._log_tracebacks:
-                for (exc_type, exception, exc_traceback) in e.errors:
-                    # Can't use same Logger as serialization errors because
-                    # if destination continues to error out we will get
-                    # infinite recursion. So instead we have to manually
-                    # construct a Logger that won't retry.
-                    logger = Logger()
-                    logger._log_tracebacks = False
-                    logger._destinations = self._destinations
-                    msg = {
-                        MESSAGE_TYPE_FIELD: "eliot:destination_failure",
-                        REASON_FIELD: safeunicode(exception),
-                        EXCEPTION_FIELD: exc_type.__module__ + "." + exc_type.__name__,
-                        "message": self._safeUnicodeDictionary(dictionary),
-                        "__eliot_logger__": logger,
-                    }
-                    log_message(**msg)
-            else:
-                # Nothing we can do here, raising exception to caller will
-                # break business logic, better to have that continue to
-                # work even if logging isn't.
-                pass
+        self._destinations.send(dictionary, self)
 
 
 def exclusively(f):
