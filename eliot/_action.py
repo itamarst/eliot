@@ -440,7 +440,9 @@ class Action(object):
         fields[TASK_UUID_FIELD] = self._identification[TASK_UUID_FIELD]
         fields[TASK_LEVEL_FIELD] = self._nextTaskLevel().as_list()
         fields[MESSAGE_TYPE_FIELD] = message_type
-        self._logger.write(fields, fields.pop("__eliot_serializer__", None))
+        # Loggers will hopefully go away...
+        logger = fields.pop("__eliot_logger__", self._logger)
+        logger.write(fields, fields.pop("__eliot_serializer__", None))
 
 
 class WrongTask(Exception):
@@ -951,10 +953,10 @@ def log_message(message_type, **fields):
 
     If there is no current action, a new UUID will be generated.
     """
-    # Loggers will hopefully go away...
-    logger = fields.pop("__eliot_logger__", None)
     action = current_action()
     if action is None:
+        # Loggers will hopefully go away...
+        logger = fields.pop("__eliot_logger__", None)
         action = Action(logger, str(uuid4()), TaskLevel(level=[]), "")
     action.log(message_type, **fields)
 

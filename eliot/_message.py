@@ -116,10 +116,10 @@ class Message(object):
         Byte field names will be converted to Unicode.
 
         @type logger: L{eliot.ILogger} or C{None} indicating the default one.
+            Should not be set if the action is also set.
 
-        @param action: The L{Action} which is the context for this message. If
-            C{None}, the L{Action} will be deduced from the current call
-            stack.
+        @param action: The L{Action} which is the context for this message.  If
+            C{None}, the L{Action} will be deduced from the current call stack.
         """
         fields = dict(self._contents)
         if "message_type" not in fields:
@@ -127,7 +127,8 @@ class Message(object):
         if self._serializer is not None:
             fields["__eliot_serializer__"] = self._serializer
         if action is None:
-            fields["__eliot_logger__"] = logger
+            if logger is not None:
+                fields["__eliot_logger__"] = logger
             log_message(**fields)
         else:
             action.log(**fields)

@@ -27,8 +27,9 @@ from .._output import (
     bytesjson as json,
     to_file,
     FileDestination,
-    _DestinationsSendError,
+    _safe_unicode_dictionary,
 )
+from .._action import start_action
 from .._validation import ValidationError, Field, _MessageSerializer
 from .._traceback import write_traceback
 from ..testing import assertContainsFields
@@ -372,7 +373,7 @@ class DestinationsTests(TestCase):
         self.assertEqual(dest2, [message])
         self.assertEqual(dest3, [message])
 
-    def test_destinationExceptionMultipleDestinations(self):
+    def test_destination_exception_multiple_destinations(self):
         """
         If one destination throws an exception, other destinations still
         get the message.
@@ -386,10 +387,11 @@ class DestinationsTests(TestCase):
         destinations.add(dest3.append)
 
         message = {"hello": 123}
-        self.assertRaises(_DestinationsSendError, destinations.send, {"hello": 123})
-        self.assertEqual((dest, dest3), ([message], [message]))
+        destinations.send(message)
+        self.assertIn(message, dest)
+        self.assertIn(message, dest3)
 
-    def test_destinationExceptionContinue(self):
+    def test_destination_exception_continue(self):
         """
         If a destination throws an exception, future messages are still
         sent to it.
@@ -398,9 +400,12 @@ class DestinationsTests(TestCase):
         dest = BadDestination()
         destinations.add(dest)
 
-        self.assertRaises(_DestinationsSendError, destinations.send, {"hello": 123})
-        destinations.send({"hello": 200})
-        self.assertEqual(dest, [{"hello": 200}])
+        msg1 = {"hello": 123}
+        msg2 = {"world": 456}
+        destinations.send(msg1)
+        self.assertNotIn(msg1, dest)
+        destinations.send(msg2)
+        self.assertIn(msg2, dest)
 
     def test_remove(self):
         """
@@ -560,9 +565,9 @@ class LoggerTests(TestCase):
         logger.write(d, serializer)
         self.assertEqual(d, original)
 
-    def test_safeUnicodeDictionary(self):
+    def test_safe_unicode_dictionary(self):
         """
-        L{Logger._safeUnicodeDictionary} converts the given dictionary's
+        L{_safe_unicode_dictionary} converts the given dictionary's
         values and keys to unicode using C{safeunicode}.
         """
 
@@ -573,20 +578,20 @@ class LoggerTests(TestCase):
         dictionary = {badobject(): 123, 123: badobject()}
         badMessage = "eliot: unknown, unicode() raised exception"
         self.assertEqual(
-            eval(Logger()._safeUnicodeDictionary(dictionary)),
+            eval(_safe_unicode_dictionary(dictionary)),
             {badMessage: "123", "123": badMessage},
         )
 
-    def test_safeUnicodeDictionaryFallback(self):
+    def test_safe_unicode_dictionary_fallback(self):
         """
         If converting the dictionary failed for some reason,
-        L{Logger._safeUnicodeDictionary} runs C{repr} on the object.
+        L{_safe_unicode_dictionary} runs C{repr} on the object.
         """
-        self.assertEqual(Logger()._safeUnicodeDictionary(None), "None")
+        self.assertEqual(_safe_unicode_dictionary(None), "None")
 
-    def test_safeUnicodeDictionaryFallbackFailure(self):
+    def test_safe_unicode_dictionary_fallback_failure(self):
         """
-        If all else fails, L{Logger._safeUnicodeDictionary} just gives up.
+        If all else fails, L{_safe_unicode_dictionary} just gives up.
         """
 
         class badobject(object):
@@ -594,7 +599,7 @@ class LoggerTests(TestCase):
                 raise TypeError()
 
         self.assertEqual(
-            Logger()._safeUnicodeDictionary(badobject()),
+            _safe_unicode_dictionary(badobject()),
             "eliot: unknown, unicode() raised exception",
         )
 
@@ -628,7 +633,7 @@ class LoggerTests(TestCase):
             },
         )
         self.assertIn("RuntimeError: oops", tracebackMessage["traceback"])
-        # Calling _safeUnicodeDictionary multiple times leads to
+        # Calling _safe_unicode_dictionary multiple times leads to
         # inconsistent results due to hash ordering, so compare contents:
         assertContainsFields(
             self, written[1], {"message_type": "eliot:serialization_failure"}
@@ -638,7 +643,7 @@ class LoggerTests(TestCase):
             dict((repr(key), repr(value)) for (key, value) in message.items()),
         )
 
-    def test_destinationExceptionCaught(self):
+    def test_destination_exception_caught(self):
         """
         If a destination throws an exception, an appropriate error is
         logged.
@@ -655,13 +660,13 @@ class LoggerTests(TestCase):
             dest[0],
             {
                 "message_type": "eliot:destination_failure",
-                "message": logger._safeUnicodeDictionary(message),
+                "message": _safe_unicode_dictionary(message),
                 "reason": "ono",
                 "exception": "eliot.tests.test_output.MyException",
             },
         )
 
-    def test_destinationMultipleExceptionsCaught(self):
+    def test_destination_multiple_exceptions_caught(self):
         """
         If multiple destinations throw an exception, an appropriate error is
         logged for each.
@@ -705,13 +710,13 @@ class LoggerTests(TestCase):
                     message,
                     {
                         "message_type": "eliot:destination_failure",
-                        "message": logger._safeUnicodeDictionary(message),
+                        "message": _safe_unicode_dictionary(message),
                         "reason": "ono",
                         "exception": "eliot.tests.test_output.MyException",
                     },
                     {
                         "message_type": "eliot:destination_failure",
-                        "message": logger._safeUnicodeDictionary(message),
+                        "message": _safe_unicode_dictionary(message),
                         "reason": zero_divide,
                         "exception": zero_type,
                     },
@@ -719,7 +724,7 @@ class LoggerTests(TestCase):
             ),
         )
 
-    def test_destinationExceptionCaughtTwice(self):
+    def test_destination_exception_caught_twice(self):
         """
         If a destination throws an exception, and the logged error about
         it also causes an exception, then just drop that exception on the
@@ -733,9 +738,14 @@ class LoggerTests(TestCase):
 
         logger._destinations.add(always_raise)
 
-        # No exception raised; since everything is dropped no other
-        # assertions to be made.
+        # Just a message. No exception raised; since everything is dropped no
+        # other assertions to be made.
         logger.write({"hello": 123})
+
+        # With an action. No exception raised; since everything is dropped no
+        # other assertions to be made.
+        with start_action(logger, "sys:do"):
+            logger.write({"hello": 123})
 
 
 class PEP8Tests(TestCase):
