@@ -19,7 +19,7 @@ class EliotJSONEncoder(json.JSONEncoder):
                 return float(o)
             if isinstance(o, numpy.integer):
                 return int(o)
-            if isinstance(o, (numpy.bool, numpy.bool_)):
+            if isinstance(o, numpy.bool_):
                 return bool(o)
             if isinstance(o, numpy.ndarray):
                 if o.size > 10000:
