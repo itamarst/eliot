@@ -12,6 +12,10 @@ try:
     import numpy as np
 except ImportError:
     np = None
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 
 from eliot.json import EliotJSONEncoder
 
@@ -60,6 +64,21 @@ class EliotJSONEncoderTests(TestCase):
         l2 = [l, np.array([1, 2, 3])]
         roundtripped = loads(dumps(l2, cls=EliotJSONEncoder))
         self.assertEqual([l, [1, 2, 3]], roundtripped)
+
+    @skipUnless(np, "Pandas not installed.")
+    def test_pandas(self):
+        """Pandas objects get serialized to readable JSON."""
+        df = pd.DataFrame({"col1": [0, 1], "col2": ["a", "b"]})
+        l = [df]
+        targetOutput = [
+            {
+                "columns": {"col1": "int64", "col2": "object"},
+                "data": df.to_json(),
+                "shape": {"rows": 2, "columns": 2},
+            }
+        ]
+        roundtripped = loads(dumps(l, cls=EliotJSONEncoder))
+        self.assertEqual(targetOutput, roundtripped)
 
     @skipIf(np, "NumPy is installed.")
     def test_numpy_not_imported(self):
