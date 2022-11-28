@@ -2,7 +2,6 @@
 Standardized serialization code.
 """
 
-from __future__ import unicode_literals
 
 from hashlib import md5
 

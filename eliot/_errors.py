@@ -2,7 +2,6 @@
 Error-handling utility code.
 """
 
-from __future__ import unicode_literals
 
 from inspect import getmro
 

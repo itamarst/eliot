@@ -1,7 +1,6 @@
 """
 Output an Eliot message to a log file using the threaded log writer.
 """
-from __future__ import unicode_literals, print_function
 
 from twisted.internet.task import react
 

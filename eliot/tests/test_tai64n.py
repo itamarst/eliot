@@ -2,7 +2,6 @@
 Tests for L{eliot.tai64n}.
 """
 
-from __future__ import unicode_literals
 
 import errno
 import time

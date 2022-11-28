@@ -2,7 +2,6 @@
 Tests for L{eliot._generators}.
 """
 
-from __future__ import unicode_literals, absolute_import
 
 from pprint import pformat
 from unittest import TestCase

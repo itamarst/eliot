@@ -2,13 +2,8 @@
 Tests for L{eliot._parse}.
 """
 
-from __future__ import unicode_literals
-
 from unittest import TestCase
-from itertools import chain
-
-from six import text_type as unicode, assertCountEqual
-from six.moves import zip_longest
+from itertools import chain, zip_longest
 
 from hypothesis import strategies as st, given, assume
 
@@ -35,14 +30,14 @@ class ActionStructure(PClass):
     encoded as a L{ActionStructure} instance.
     """
 
-    type = field(type=(unicode, None.__class__))
+    type = field(type=(str, None.__class__))
     children = pvector_field(object)  # XXX ("StubAction", unicode))
     failed = field(type=bool)
 
     @classmethod
     def from_written(cls, written):
         """
-        Create an L{ActionStructure} or L{unicode} from a L{WrittenAction} or
+        Create an L{ActionStructure} or L{str} from a L{WrittenAction} or
         L{WrittenMessage}.
         """
         if isinstance(written, WrittenMessage):
@@ -61,7 +56,7 @@ class ActionStructure(PClass):
     @classmethod
     def to_eliot(cls, structure_or_message, logger):
         """
-        Given a L{ActionStructure} or L{unicode}, generate appropriate
+        Given a L{ActionStructure} or L{str}, generate appropriate
         structured Eliot log mesages to given L{MemoryLogger}.
         """
         if isinstance(structure_or_message, cls):
@@ -83,7 +78,7 @@ class ActionStructure(PClass):
 def action_structures(draw):
     """
     A Hypothesis strategy that creates a tree of L{ActionStructure} and
-    L{unicode}.
+    L{str}.
     """
     tree = draw(st.recursive(labels, st.lists, max_leaves=20))
 
@@ -137,7 +132,7 @@ class TaskTests(TestCase):
         remaining messages.
         """
         action_structure, messages = structure_and_messages
-        assume(not isinstance(action_structure, unicode))
+        assume(not isinstance(action_structure, str))
 
         # Remove first start message we encounter; since messages are
         # shuffled the location removed will differ over Hypothesis test
@@ -240,8 +235,8 @@ class ParserTests(TestCase):
                 completed_tasks, parser = parser.add(message)
                 all_tasks.extend(completed_tasks)
 
-        assertCountEqual(
-            self, all_tasks, [parse_to_task(msgs) for msgs in all_messages]
+        self.assertCountEqual(
+            all_tasks, [parse_to_task(msgs) for msgs in all_messages]
         )
 
     @given(structure_and_messages=STRUCTURES_WITH_MESSAGES)
@@ -300,8 +295,8 @@ class ParserTests(TestCase):
                 [m for m in chain(*zip_longest(*all_messages)) if m is not None]
             )
         )
-        assertCountEqual(
-            self, all_tasks, [parse_to_task(msgs) for msgs in all_messages]
+        self.assertCountEqual(
+            all_tasks, [parse_to_task(msgs) for msgs in all_messages]
         )
 
 

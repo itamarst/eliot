@@ -4,7 +4,6 @@
 Example of an Eliot action context spanning multiple threads.
 """
 
-from __future__ import unicode_literals
 
 from threading import Thread
 from sys import stdout

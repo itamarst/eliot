@@ -2,7 +2,6 @@
 Command line program for filtering line-based Eliot logs.
 """
 
-from __future__ import unicode_literals, absolute_import
 
 if __name__ == "__main__":
     import eliot.filter

@@ -6,7 +6,6 @@ realistic manner. That is, mesages are logged in context of a message with a
 small number of fields.
 """
 
-from __future__ import unicode_literals
 
 import time
 

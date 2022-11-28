@@ -2,7 +2,6 @@
 Tests for L{eliot._message}.
 """
 
-from __future__ import unicode_literals
 
 from unittest import TestCase
 from uuid import UUID

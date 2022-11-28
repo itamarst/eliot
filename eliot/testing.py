@@ -2,13 +2,10 @@
 Utilities to aid unit testing L{eliot} and code that uses it.
 """
 
-from __future__ import unicode_literals
-
 from unittest import SkipTest
 from functools import wraps
 
 from pyrsistent import PClass, field
-from six import text_type
 
 from ._action import (
     ACTION_STATUS_FIELD,
@@ -167,7 +164,7 @@ class LoggedAction(PClass):
 
         @return: A C{list} of L{LoggedAction}.
         """
-        if not isinstance(actionType, text_type):
+        if not isinstance(actionType, str):
             actionType = actionType.action_type
         result = []
         for message in messages:
@@ -250,7 +247,7 @@ class LoggedMessage(PClass):
         @return: A C{list} of L{LoggedMessage}.
         """
         result = []
-        if not isinstance(messageType, text_type):
+        if not isinstance(messageType, str):
             messageType = messageType.message_type
         for message in messages:
             if message.get(MESSAGE_TYPE_FIELD) == messageType:

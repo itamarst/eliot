@@ -2,7 +2,6 @@
 Tests for L{eliot.serializers}.
 """
 
-from __future__ import unicode_literals
 
 from unittest import TestCase
 from datetime import datetime

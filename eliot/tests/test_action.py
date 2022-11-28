@@ -2,18 +2,11 @@
 Tests for L{eliot._action}.
 """
 
-from __future__ import unicode_literals
-
 import pickle
 import time
 from unittest import TestCase, skipIf
 from unittest.mock import patch
 from threading import Thread
-
-import six
-
-if six.PY3:
-    unicode = six.text_type
 
 from hypothesis import assume, given, settings, HealthCheck
 from hypothesis.strategies import integers, lists, just, text
@@ -388,7 +381,7 @@ class ActionTests(TestCase):
     def test_finishWithBadException(self):
         """
         L{Action.finish} still logs a message if the given exception raises
-        another exception when called with C{unicode()}.
+        another exception when called with C{str()}.
         """
         logger = MemoryLogger()
         action = Action(logger, "unique", TaskLevel(level=[]), "sys:thename")
@@ -399,7 +392,7 @@ class ActionTests(TestCase):
 
         action.finish(BadException())
         self.assertEqual(
-            logger.messages[0]["reason"], "eliot: unknown, unicode() raised exception"
+            logger.messages[0]["reason"], "eliot: unknown, str() raised exception"
         )
 
     def test_withLogsSuccessfulFinishMessage(self):
@@ -756,7 +749,7 @@ class SerializationTests(TestCase):
         L{Action.continue_task} can take a Unicode task identifier.
         """
         original_action = Action(None, "uniq790", TaskLevel(level=[3, 4]), "mytype")
-        task_id = unicode(original_action.serialize_task_id(), "utf-8")
+        task_id = str(original_action.serialize_task_id(), "utf-8")
 
         new_action = Action.continue_task(MemoryLogger(), task_id)
         self.assertEqual(new_action._identification["task_uuid"], "uniq790")
@@ -1553,9 +1546,6 @@ class LogCallTests(TestCase):
 
     def assert_logged(self, logger, action_type, expected_params, expected_result):
         """Assert that an action of given structure was logged."""
-        if six.PY2:
-            # On Python 2 we don't include the module or class:
-            action_type = action_type.split(".")[-1]
         [tree] = Parser.parse_stream(logger.messages)
         root = tree.root()
         self.assertEqual(root.action_type, action_type)
@@ -1656,7 +1646,6 @@ class LogCallTests(TestCase):
         myfunc(2, 3, 4)
         self.assert_logged(logger, self.id() + ".<locals>.myfunc", {"x": 2, "z": 4}, 6)
 
-    @skipIf(six.PY2, "Didn't bother implementing safety check on Python 2")
     def test_wrong_whitelist_args(self):
         """If C{include_args} doesn't match function, raise an exception."""
         with self.assertRaises(ValueError):

@@ -2,8 +2,7 @@
 Tests for L{eliot.logwriter}.
 """
 
-from __future__ import unicode_literals
-
+import sys
 import time
 import threading
 
@@ -12,8 +11,6 @@ from io import BytesIO, StringIO
 from unittest import skipIf
 import json as pyjson
 from warnings import catch_warnings, simplefilter
-
-from six import PY2
 
 try:
     from zope.interface.verify import verifyClass
@@ -300,7 +297,6 @@ class ThreadedFileWriterTests(TestCase):
             time.sleep(0.0001)
         self.assertEqual(f.getvalue(), b'{"hello": 123}\n')
 
-    @skipIf(PY2, "Python 2 files always accept bytes")
     def test_write_unicode(self):
         """
         Messages passed to L{ThreadedFileWriter.__call__} are then written by

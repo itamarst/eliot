@@ -9,8 +9,6 @@ from sys import argv
 from uuid import uuid4
 from time import sleep
 
-from six import text_type as unicode
-
 from .._bytesjson import loads
 from .._output import MemoryLogger
 from .._message import TASK_UUID_FIELD
@@ -43,7 +41,7 @@ def last_journald_message():
     # It may take a little for messages to actually reach journald, so we
     # write out marker message and wait until it arrives. We can then be
     # sure the message right before it is the one we want.
-    marker = unicode(uuid4())
+    marker = str(uuid4())
     sd_journal_send(MESSAGE=marker.encode("ascii"))
     for i in range(500):
         messages = check_output(

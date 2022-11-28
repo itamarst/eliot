@@ -276,7 +276,6 @@ https://creativecommons.org/publicdomain/zero/1.0/ .
 
 """
 
-from __future__ import print_function
 try:
     import configparser
 except ImportError:
@@ -1185,7 +1184,6 @@ SHORT_VERSION_PY = """
 # revision-control system data, or from the parent directory name of an
 # unpacked source archive. Distribution tarballs contain a pre-generated copy
 # of this file.
-from __future__ import absolute_import
 import json
 
 version_json = '''

@@ -2,7 +2,6 @@
 Tests for the public API exposed by L{eliot}.
 """
 
-from __future__ import unicode_literals
 
 from unittest import TestCase
 

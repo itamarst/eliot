@@ -4,7 +4,6 @@ A log destination for use by Twisted applications.
 Runs in a thread, so that we don't do blocking I/O in the event loop thread.
 """
 
-from __future__ import unicode_literals, absolute_import
 
 import threading
 import select
