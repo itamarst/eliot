@@ -18,13 +18,13 @@ try:
 except ImportError:
     np = None
 from zope.interface.verify import verifyClass
+import orjson
 
 from .._output import (
     MemoryLogger,
     ILogger,
     Destinations,
     Logger,
-    bytesjson as json,
     to_file,
     FileDestination,
     _safe_unicode_dictionary,
@@ -788,23 +788,9 @@ class ToFileTests(TestCase):
         self.addCleanup(Logger._destinations.remove, expected)
         self.assertIn(expected, Logger._destinations._destinations)
 
-    def test_bytes_values(self):
-        """
-        DEPRECATED: On Python 3L{FileDestination} will encode bytes as if they were
-        UTF-8 encoded strings when writing to BytesIO only.
-        """
-        message = {"x": b"abc"}
-        bytes_f = BytesIO()
-        destination = FileDestination(file=bytes_f)
-        destination(message)
-        self.assertEqual(
-            [json.loads(line) for line in bytes_f.getvalue().splitlines()],
-            [{"x": "abc"}],
-        )
-
     @skipUnless(np, "NumPy is not installed.")
     def test_default_encoder_is_EliotJSONEncoder(self):
-        """The default encoder if none are specified is EliotJSONEncoder."""
+        """The default encoder is EliotJSONEncoder."""
         message = {"x": np.int64(3)}
         f = StringIO()
         destination = FileDestination(file=f)
@@ -825,7 +811,7 @@ class ToFileTests(TestCase):
         destination(message1)
         destination(message2)
         self.assertEqual(
-            [json.loads(line) for line in bytes_f.getvalue().splitlines()],
+            [orjson.loads(line) for line in bytes_f.getvalue().splitlines()],
             [message1, message2],
         )
 
@@ -847,7 +833,7 @@ class ToFileTests(TestCase):
         destination = FileDestination(file=f, encoder=CustomEncoder)
         destination(message)
         self.assertEqual(
-            json.loads(f.getvalue().splitlines()[0]), {"x": 123, "z": "CUSTOM!"}
+            orjson.loads(f.getvalue().splitlines()[0]), {"x": 123, "z": "CUSTOM!"}
         )
 
     def test_filedestination_flushes(self):
@@ -866,7 +852,7 @@ class ToFileTests(TestCase):
 
         # Message got written even though buffer wasn't filled:
         self.assertEqual(
-            [json.loads(line) for line in open(path, "rb").read().splitlines()],
+            [orjson.loads(line) for line in open(path, "rb").read().splitlines()],
             [message1],
         )
 

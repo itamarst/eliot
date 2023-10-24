@@ -11,9 +11,7 @@ if __name__ == "__main__":
 
 import sys
 from datetime import datetime, timedelta
-from json import JSONEncoder
-
-from ._bytesjson import dumps, loads
+from json import JSONEncoder, dumps, loads
 
 
 class _DatetimeJSONEncoder(JSONEncoder):
@@ -61,7 +59,7 @@ class EliotFilter(object):
             result = self._evaluate(message)
             if result is self._SKIP:
                 continue
-            self.output.write(dumps(result, cls=_DatetimeJSONEncoder) + b"\n")
+            self.output.write(dumps(result, cls=_DatetimeJSONEncoder) + "\n")
 
     def _evaluate(self, message):
         """

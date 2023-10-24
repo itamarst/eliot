@@ -9,7 +9,8 @@ from sys import stdin, stdout
 from collections import OrderedDict
 from json import dumps
 
-from ._bytesjson import loads
+from orjson import loads
+
 from ._message import (
     TIMESTAMP_FIELD,
     TASK_UUID_FIELD,

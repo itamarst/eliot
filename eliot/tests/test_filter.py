@@ -9,9 +9,9 @@ from unittest import TestCase
 from datetime import datetime
 from io import BytesIO
 import inspect
+import json
 
 from .common import FakeSys
-from .. import _bytesjson as json
 from ..filter import EliotFilter, main, USAGE
 
 

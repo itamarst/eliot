@@ -6,8 +6,8 @@ from cffi import FFI
 from os import strerror
 from sys import argv
 from os.path import basename
+from json import dumps
 
-from ._bytesjson import dumps
 from ._message import TASK_UUID_FIELD, MESSAGE_TYPE_FIELD
 from ._action import ACTION_TYPE_FIELD, ACTION_STATUS_FIELD, FAILED_STATUS
 
