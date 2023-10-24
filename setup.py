@@ -43,6 +43,8 @@ setup(
         "boltons >= 19.0.1",
         # Backwards compatibility for Python 3.5 and 3.6:
         'aiocontextvars;python_version<"3.7" and python_version>"2.7"',
+        # Faster JSON serialization:
+        "orjson",
     ],
     extras_require={
         "journald": [
