@@ -1,6 +1,21 @@
 What's New
 ==========
 
+1.15.0
+^^^^^^
+
+Enhancements:
+
+* Switched to JSON serialization with ``orjson``, which is much faster.
+
+Changes:
+
+* JSON customization is now done with a default function rather than an encoder class.
+
+Deprecation and removals:
+
+* The deprecated support for serializing ``bytes`` in JSON log messages has been removed.
+
 1.14.0
 ^^^^^^
 
