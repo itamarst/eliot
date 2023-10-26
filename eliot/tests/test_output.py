@@ -789,7 +789,7 @@ class ToFileTests(TestCase):
         self.assertIn(expected, Logger._destinations._destinations)
 
     @skipUnless(np, "NumPy is not installed.")
-    def test_default_encoder_is_EliotJSONEncoder(self):
+    def test_default_encoder_supports_numpy(self):
         """The default encoder is EliotJSONEncoder."""
         message = {"x": np.int64(3)}
         f = StringIO()
