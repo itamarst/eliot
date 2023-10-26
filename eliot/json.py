@@ -22,7 +22,8 @@ def json_default(o: object) -> object:
     types.  If you are wrappnig it, call it last, as it will raise a
     ``TypeError`` on unsupported types.
     """
-    if "numpy" in sys.modules:
+    numpy = sys.modules.get("numpy", None)
+    if numpy is not None:
         if isinstance(o, numpy.floating):
             return float(o)
         if isinstance(o, numpy.integer):
