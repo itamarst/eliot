@@ -770,7 +770,7 @@ class ToFileTests(TestCase):
         """
         L{to_file} adds a L{FileDestination} destination with the given file.
         """
-        f = stdout
+        f = BytesIO()
         to_file(f)
         expected = FileDestination(file=f)
         self.addCleanup(Logger._destinations.remove, expected)
@@ -781,22 +781,43 @@ class ToFileTests(TestCase):
         L{to_file} accepts a custom encoder, and sets it on the resulting
         L{FileDestination}.
         """
+        from json import JSONEncoder
+
         f = stdout
-        encoder = object()
-        to_file(f, encoder=encoder)
-        expected = FileDestination(file=f, encoder=encoder)
-        self.addCleanup(Logger._destinations.remove, expected)
-        self.assertIn(expected, Logger._destinations._destinations)
+
+        class MyEncoder(JSONEncoder):
+            def default(self, o):
+                return 17
+
+        to_file(f, encoder=MyEncoder)
+        added = Logger._destinations._destinations[-1]
+        self.addCleanup(Logger._destinations.remove, added)
+        self.assertEqual(added._json_default(object()), 17)
+
+    def test_to_file_custom_json_default(self):
+        """
+        L{to_file} accepts a custom JSON default object, and sets it on the resulting
+        L{FileDestination}.
+        """
+        f = BytesIO()
+
+        def default(o):
+            return 23
+
+        to_file(f, json_default=default)
+        added = Logger._destinations._destinations[-1]
+        self.addCleanup(Logger._destinations.remove, added)
+        self.assertEqual(added._json_default(object()), 23)
 
     @skipUnless(np, "NumPy is not installed.")
     def test_default_encoder_supports_numpy(self):
-        """The default encoder is EliotJSONEncoder."""
+        """The default encoder can encode NumPy objects."""
         message = {"x": np.int64(3)}
         f = StringIO()
         destination = FileDestination(file=f)
         destination(message)
         self.assertEqual(
-            [json.loads(line) for line in f.getvalue().splitlines()], [{"x": 3}]
+            [orjson.loads(line) for line in f.getvalue().splitlines()], [{"x": 3}]
         )
 
     def test_filedestination_writes_json_bytes(self):
@@ -831,6 +852,26 @@ class ToFileTests(TestCase):
         message = {"x": 123, "z": custom}
         f = BytesIO()
         destination = FileDestination(file=f, encoder=CustomEncoder)
+        destination(message)
+        self.assertEqual(
+            orjson.loads(f.getvalue().splitlines()[0]), {"x": 123, "z": "CUSTOM!"}
+        )
+
+    def test_filedestination_custom_json_default(self):
+        """
+        L{FileDestination} accepts a custom JSON default callable.
+        """
+        custom = object()
+
+        def default(o):
+            if o is custom:
+                return "CUSTOM!"
+            else:
+                raise TypeError
+
+        message = {"x": 123, "z": custom}
+        f = BytesIO()
+        destination = FileDestination(file=f, json_default=default)
         destination(message)
         self.assertEqual(
             orjson.loads(f.getvalue().splitlines()[0]), {"x": 123, "z": "CUSTOM!"}

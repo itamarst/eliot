@@ -432,6 +432,11 @@ def _json_default_from_encoder_and_json_default(encoder, json_default):
     return json_default
 
 
+def _unicode_dumps(o, default):
+    """Like orjson.dumps(), but return Unicode."""
+    return orjson.dumps(o, default=default).decode("utf-8")
+
+
 class FileDestination(PClass):
     """
     Callable that writes JSON messages to a file that accepts either C{bytes}
@@ -469,9 +474,7 @@ class FileDestination(PClass):
             unicodeFile = True
 
         if unicodeFile:
-            _dumps = lambda obj, default: orjson.dumps(obj, default=default).decode(
-                "utf-8"
-            )
+            _dumps = _unicode_dumps
             _linebreak = "\n"
         else:
             _dumps = orjson.dumps
@@ -494,7 +497,7 @@ class FileDestination(PClass):
         self.file.flush()
 
 
-def to_file(output_file, encoder=None, josn_default=json_default):
+def to_file(output_file, encoder=None, json_default=json_default):
     """
     Add a destination that writes a JSON message per line to the given file.
 
