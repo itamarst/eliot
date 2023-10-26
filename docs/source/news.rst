@@ -11,6 +11,7 @@ Enhancements:
 Changes:
 
 * JSON customization is now done with a default function rather than an encoder class.
+* ``NaN``, ``inf``, and ``-inf`` are now serialized to JSON as ``null``, as per ``orjson`` this is more standards compliant.
 
 Deprecation and removals:
 
