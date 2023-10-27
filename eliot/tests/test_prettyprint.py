@@ -6,7 +6,7 @@ from unittest import TestCase
 from subprocess import check_output, Popen, PIPE
 from collections import OrderedDict
 from datetime import datetime
-from json import dumps
+from orjson import dumps
 
 from pyrsistent import pmap
 

@@ -2,7 +2,7 @@
 Common testing infrastructure.
 """
 
-from io import BytesIO
+from io import BytesIO, StringIO
 from json import JSONEncoder
 
 
@@ -24,13 +24,13 @@ class FakeSys(object):
     A fake L{sys} module.
     """
 
-    def __init__(self, argv, stdinBytes):
+    def __init__(self, argv, stdinStr):
         """
         @param argv: List of command-line arguments.
 
-        @param stdinBytes: C{bytes} that are readable from stdin.
+        @param stdinStr: C{str} that are readable from stdin.
         """
         self.argv = argv
-        self.stdin = BytesIO(stdinBytes)
-        self.stdout = BytesIO()
-        self.stderr = BytesIO()
+        self.stdin = StringIO(stdinStr)
+        self.stdout = StringIO()
+        self.stderr = StringIO()

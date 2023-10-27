@@ -2,8 +2,6 @@
 Command line program for filtering line-based Eliot logs.
 """
 
-from __future__ import unicode_literals, absolute_import
-
 if __name__ == "__main__":
     import eliot.filter
 
@@ -81,7 +79,7 @@ class EliotFilter(object):
         )
 
 
-USAGE = b"""\
+USAGE = """\
 Usage: cat eliot.log | python -m eliot.filter <expr>
 
 Read JSON-expression per line from stdin, and filter it using a Python
