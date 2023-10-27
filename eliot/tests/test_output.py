@@ -18,7 +18,6 @@ try:
 except ImportError:
     np = None
 from zope.interface.verify import verifyClass
-import orjson
 
 from .._output import (
     MemoryLogger,
@@ -817,7 +816,7 @@ class ToFileTests(TestCase):
         destination = FileDestination(file=f)
         destination(message)
         self.assertEqual(
-            [orjson.loads(line) for line in f.getvalue().splitlines()], [{"x": 3}]
+            [pyjson.loads(line) for line in f.getvalue().splitlines()], [{"x": 3}]
         )
 
     def test_filedestination_writes_json_bytes(self):
@@ -832,7 +831,7 @@ class ToFileTests(TestCase):
         destination(message1)
         destination(message2)
         self.assertEqual(
-            [orjson.loads(line) for line in bytes_f.getvalue().splitlines()],
+            [pyjson.loads(line) for line in bytes_f.getvalue().splitlines()],
             [message1, message2],
         )
 
@@ -854,7 +853,7 @@ class ToFileTests(TestCase):
         destination = FileDestination(file=f, encoder=CustomEncoder)
         destination(message)
         self.assertEqual(
-            orjson.loads(f.getvalue().splitlines()[0]), {"x": 123, "z": "CUSTOM!"}
+            pyjson.loads(f.getvalue().splitlines()[0]), {"x": 123, "z": "CUSTOM!"}
         )
 
     def test_filedestination_custom_json_default(self):
@@ -874,7 +873,7 @@ class ToFileTests(TestCase):
         destination = FileDestination(file=f, json_default=default)
         destination(message)
         self.assertEqual(
-            orjson.loads(f.getvalue().splitlines()[0]), {"x": 123, "z": "CUSTOM!"}
+            pyjson.loads(f.getvalue().splitlines()[0]), {"x": 123, "z": "CUSTOM!"}
         )
 
     def test_filedestination_flushes(self):
@@ -893,7 +892,10 @@ class ToFileTests(TestCase):
 
         # Message got written even though buffer wasn't filled:
         self.assertEqual(
-            [orjson.loads(line) for line in open(path, "rb").read().splitlines()],
+            [
+                pyjson.loads(line.decode("utf-8"))
+                for line in open(path, "rb").read().splitlines()
+            ],
             [message1],
         )
 

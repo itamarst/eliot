@@ -9,7 +9,6 @@ from functools import wraps
 from io import IOBase
 import warnings
 
-import orjson
 from pyrsistent import PClass, field
 
 from zope.interface import Interface, implementer
@@ -17,7 +16,12 @@ from zope.interface import Interface, implementer
 from ._traceback import write_traceback, TRACEBACK_MESSAGE
 from ._message import EXCEPTION_FIELD, MESSAGE_TYPE_FIELD, REASON_FIELD
 from ._util import saferepr, safeunicode
-from .json import json_default, _encoder_to_default_function
+from .json import (
+    json_default,
+    _encoder_to_default_function,
+    _dumps_bytes,
+    _dumps_unicode,
+)
 from ._validation import ValidationError
 
 
@@ -353,7 +357,7 @@ class MemoryLogger(object):
             serializer.serialize(dictionary)
 
         try:
-            orjson.dumps(dictionary, default=self._json_default)
+            _dumps_unicode(dictionary, default=self._json_default)
         except Exception as e:
             raise TypeError("Message %s doesn't encode to JSON: %s" % (dictionary, e))
 
@@ -432,11 +436,6 @@ def _json_default_from_encoder_and_json_default(encoder, json_default):
     return json_default
 
 
-def _unicode_dumps(o, default):
-    """Like orjson.dumps(), but return Unicode."""
-    return orjson.dumps(o, default=default).decode("utf-8")
-
-
 class FileDestination(PClass):
     """
     Callable that writes JSON messages to a file that accepts either C{bytes}
@@ -474,10 +473,10 @@ class FileDestination(PClass):
             unicodeFile = True
 
         if unicodeFile:
-            _dumps = _unicode_dumps
+            _dumps = _dumps_unicode
             _linebreak = "\n"
         else:
-            _dumps = orjson.dumps
+            _dumps = _dumps_bytes
             _linebreak = b"\n"
         return PClass.__new__(
             cls,

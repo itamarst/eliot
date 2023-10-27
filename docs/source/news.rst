@@ -6,7 +6,7 @@ What's New
 
 Enhancements:
 
-* Switched to JSON serialization with ``orjson``, which is much faster.
+* Switched to JSON serialization with ``orjson`` (on CPython), which is much faster.
 * Added support for Python 3.11 and 3.12.
 
 Changes:

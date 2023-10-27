@@ -5,15 +5,20 @@ Tests for L{eliot.json}.
 from __future__ import unicode_literals, absolute_import
 
 from unittest import TestCase, skipUnless, skipIf
-from orjson import loads, dumps
 from math import isnan
+from json import loads
 
 try:
     import numpy as np
 except ImportError:
     np = None
 
-from eliot.json import EliotJSONEncoder, json_default, _encoder_to_default_function
+from eliot.json import (
+    EliotJSONEncoder,
+    json_default,
+    _encoder_to_default_function,
+    _dumps_unicode as dumps,
+)
 
 
 class EliotJSONEncoderTests(TestCase):
@@ -63,7 +68,7 @@ class EliotJSONEncoderTests(TestCase):
         """
         with self.assertRaises(TypeError):
             dumps([object()], default=json_default)
-        self.assertEqual(dumps(12, default=json_default), b"12")
+        self.assertEqual(dumps(12, default=json_default), "12")
 
     @skipUnless(np, "NumPy is not installed.")
     def test_large_numpy_array(self):

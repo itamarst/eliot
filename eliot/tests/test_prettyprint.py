@@ -6,10 +6,10 @@ from unittest import TestCase
 from subprocess import check_output, Popen, PIPE
 from collections import OrderedDict
 from datetime import datetime
-from orjson import dumps
 
 from pyrsistent import pmap
 
+from ..json import _dumps_bytes as dumps
 from ..prettyprint import pretty_format, compact_format, REQUIRED_FIELDS
 
 SIMPLE_MESSAGE = {

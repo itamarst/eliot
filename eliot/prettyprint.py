@@ -9,7 +9,7 @@ from sys import stdin, stdout
 from collections import OrderedDict
 from json import dumps
 
-from orjson import loads
+from json import loads
 
 from ._message import (
     TIMESTAMP_FIELD,

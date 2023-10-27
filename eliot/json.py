@@ -55,4 +55,18 @@ def _encoder_to_default_function(
     return default
 
 
+try:
+    from orjson import dumps as _dumps_bytes
+
+    def _dumps_unicode(o: object, default=None) -> str:
+        return _dumps_bytes(o, default=default).decode("utf-8")
+
+except ImportError:
+
+    def _dumps_bytes(o: object, default=None) -> bytes:
+        """Serialize an object to JSON, output bytes."""
+        return json.dumps(o, default=default).encode("utf-8")
+
+    _dumps_unicode = json.dumps
+
 __all__ = ["EliotJSONEncoder", "json_default"]
