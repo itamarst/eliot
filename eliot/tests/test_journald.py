@@ -10,7 +10,7 @@ from uuid import uuid4
 from time import sleep
 
 from six import text_type as unicode
-from orjson import loads
+from json import loads
 
 from .._output import MemoryLogger
 from .._message import TASK_UUID_FIELD
