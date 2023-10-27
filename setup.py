@@ -42,7 +42,7 @@ setup(
         # Better decorators, with version that works better with type annotations:
         "boltons >= 19.0.1",
         # Faster JSON serialization:
-        "orjson",
+        "orjson; implementation_name=='cpython'",
     ],
     extras_require={
         "journald": [
