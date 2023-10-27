@@ -18,7 +18,7 @@ from ._output import ILogger, Logger, MemoryLogger, to_file, FileDestination
 from ._validation import Field, fields, MessageType, ActionType, ValidationError
 from ._traceback import write_traceback, writeFailure
 from ._errors import register_exception_extractor
-from ._version import get_versions
+
 
 # Backwards compatibility:
 def add_destination(destination):
@@ -52,6 +52,7 @@ write_failure = writeFailure
 add_destinations = Logger._destinations.add
 remove_destination = removeDestination
 add_global_fields = addGlobalFields
+
 
 # Backwards compatibility for old versions of eliot-tree, which rely on
 # eliot._parse:

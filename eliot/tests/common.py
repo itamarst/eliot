@@ -2,7 +2,7 @@
 Common testing infrastructure.
 """
 
-from io import BytesIO, StringIO
+from io import StringIO
 from json import JSONEncoder
 
 

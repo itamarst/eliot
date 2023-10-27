@@ -2,10 +2,7 @@
 Tests for L{eliot.json}.
 """
 
-from __future__ import unicode_literals, absolute_import
-
 from unittest import TestCase, skipUnless, skipIf
-from math import isnan
 from json import loads
 
 try:
