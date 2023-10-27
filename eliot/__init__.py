@@ -2,22 +2,6 @@
 Eliot: Logging for Complex & Distributed Systems.
 """
 from warnings import warn
-from sys import version_info
-
-# Enable asyncio contextvars support in Python 3.5/3.6:
-if version_info < (3, 7):
-    # On Python 3.5.2 and earlier, some of the necessary attributes aren't exposed:
-    if version_info < (3, 5, 3):
-        raise RuntimeError(
-            "This version of Eliot doesn't work on Python 3.5.2 or earlier. "
-            "Either upgrade to Python 3.5.3 or later (on Ubuntu 16.04 "
-            "you can use https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa "
-            "to get Python 3.6), or pin Eliot to version 1.7."
-        )
-    import aiocontextvars
-
-    dir(aiocontextvars)  # pacify pyflakes
-    del aiocontextvars
 
 # Expose the public API:
 from ._message import Message
@@ -127,5 +111,6 @@ __all__ = [
 ]
 
 
-__version__ = get_versions()["version"]
-del get_versions
+from . import _version
+
+__version__ = _version.get_versions()["version"]
