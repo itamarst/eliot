@@ -63,7 +63,7 @@ class EliotJSONEncoderTests(TestCase):
         """
         with self.assertRaises(TypeError):
             dumps([object()], default=json_default)
-        self.assertEqual(dumps(12, default=json_default), "12")
+        self.assertEqual(dumps(12, default=json_default), b"12")
 
     @skipUnless(np, "NumPy is not installed.")
     def test_large_numpy_array(self):
