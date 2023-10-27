@@ -7,6 +7,7 @@ What's New
 Enhancements:
 
 * Switched to JSON serialization with ``orjson``, which is much faster.
+* Added support for Python 3.11 and 3.12.
 
 Changes:
 
@@ -16,6 +17,7 @@ Changes:
 Deprecation and removals:
 
 * The deprecated support for serializing ``bytes`` in JSON log messages has been removed.
+* Dropped support for Python 3.6 and 3.7.
 
 1.14.0
 ^^^^^^

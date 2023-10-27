@@ -1,10 +1,6 @@
 Eliot: Logging that tells you *why* it happened
 ================================================
 
-.. image:: https://travis-ci.org/itamarst/eliot.png?branch=master
-           :target: http://travis-ci.org/itamarst/eliot
-           :alt: Build Status
-
 Python's built-in ``logging`` and other similar systems output a stream of factoids: they're interesting, but you can't really tell what's going on.
 
 * Why is your application slow?
@@ -29,7 +25,7 @@ Eliot supports a range of use cases and 3rd party libraries:
 
 Eliot is only used to generate your logs; you will might need tools like Logstash and ElasticSearch to aggregate and store logs if you are using multiple processes across multiple machines.
 
-Eliot supports Python 3.6, 3.7, 3.8, 3.9, and 3.10, as well as PyPy3.
+Eliot supports Python 3.8-3.12, as well as PyPy3.
 It is maintained by Itamar Turner-Trauring, and released under the Apache 2.0 License.
 
 * `Read the documentation <https://eliot.readthedocs.io>`_.
