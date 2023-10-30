@@ -7,11 +7,11 @@ import sys
 
 from unittest import TestCase
 from datetime import datetime
-from io import BytesIO
+from io import StringIO
 import inspect
+import json
 
 from .common import FakeSys
-from .. import _bytesjson as json
 from ..filter import EliotFilter, main, USAGE
 
 
@@ -26,17 +26,17 @@ class EliotFilterTests(TestCase):
         L{EliotFilter._evaluate} with the item decoded from JSON, and writes the
         result to the output file as JSON.
         """
-        f = BytesIO()
+        f = StringIO()
         efilter = EliotFilter("J", [b'"abcd"', b"[1, 2]"], f)
         efilter._evaluate = lambda expr: {"x": len(expr), "orig": expr}
-        self.assertEqual(f.getvalue(), b"")
+        self.assertEqual(f.getvalue(), "")
         efilter.run()
         self.assertEqual(
             f.getvalue(),
             json.dumps({"x": 4, "orig": "abcd"})
-            + b"\n"
+            + "\n"
             + json.dumps({"x": 2, "orig": [1, 2]})
-            + b"\n",
+            + "\n",
         )
 
     def evaluateExpression(self, expr, message):
@@ -44,7 +44,7 @@ class EliotFilterTests(TestCase):
         Render a single message with the given expression using
         L{EliotFilter._evaluate}.
         """
-        efilter = EliotFilter(expr, [], BytesIO())
+        efilter = EliotFilter(expr, [], StringIO())
         return efilter._evaluate(message)
 
     def test_J(self):
@@ -70,18 +70,18 @@ class EliotFilterTests(TestCase):
         Any L{datetime} in results will be serialized using L{datetime.isoformat}.
         """
         dt = datetime(2012, 12, 31)
-        f = BytesIO()
+        f = StringIO()
         EliotFilter("datetime(2012, 12, 31)", ["{}"], f).run()
-        expected = json.dumps(dt.isoformat()) + b"\n"
+        expected = json.dumps(dt.isoformat()) + "\n"
         self.assertEqual(f.getvalue(), expected)
 
     def test_SKIP(self):
         """
         A result of C{SKIP} indicates nothing should be output.
         """
-        f = BytesIO()
+        f = StringIO()
         EliotFilter("SKIP", [b'{"a": 123}'], f).run()
-        self.assertEqual(f.getvalue(), b"")
+        self.assertEqual(f.getvalue(), "")
 
 
 class MainTests(TestCase):
@@ -93,22 +93,22 @@ class MainTests(TestCase):
         """
         By default L{main} uses information from L{sys}.
         """
-        self.assertEqual(inspect.getargspec(main).defaults, (sys,))
+        self.assertEqual(inspect.getfullargspec(main).defaults, (sys,))
 
     def test_stdinOut(self):
         """
         L{main} reads from the C{stdin} attribute of the given C{sys} equivalent,
         and writes rendered expressions to the C{stdout} attribute.
         """
-        sys = FakeSys(["eliotfilter", "J[0]"], b"[1, 2]\n[4, 5]\n")
+        sys = FakeSys(["eliotfilter", "J[0]"], "[1, 2]\n[4, 5]\n")
         main(sys)
-        self.assertEqual(sys.stdout.getvalue(), b"1\n4\n")
+        self.assertEqual(sys.stdout.getvalue(), "1\n4\n")
 
     def test_success(self):
         """
         A successful run returns C{0}.
         """
-        sys = FakeSys(["eliotfilter", "J[0]"], b"[1, 2]\n[4, 5]\n")
+        sys = FakeSys(["eliotfilter", "J[0]"], "[1, 2]\n[4, 5]\n")
         result = main(sys)
         self.assertEqual(result, 0)
 
@@ -117,7 +117,7 @@ class MainTests(TestCase):
         If given no arguments, usage documentation is printed to stderr and C{1}
         is returned.
         """
-        sys = FakeSys(["eliotfilter"], b"")
+        sys = FakeSys(["eliotfilter"], "")
         result = main(sys)
         self.assertEqual(sys.stderr.getvalue(), USAGE)
         self.assertEqual(result, 1)

@@ -2,8 +2,6 @@
 Command line program for filtering line-based Eliot logs.
 """
 
-from __future__ import unicode_literals, absolute_import
-
 if __name__ == "__main__":
     import eliot.filter
 
@@ -11,9 +9,7 @@ if __name__ == "__main__":
 
 import sys
 from datetime import datetime, timedelta
-from json import JSONEncoder
-
-from ._bytesjson import dumps, loads
+from json import JSONEncoder, dumps, loads
 
 
 class _DatetimeJSONEncoder(JSONEncoder):
@@ -61,7 +57,7 @@ class EliotFilter(object):
             result = self._evaluate(message)
             if result is self._SKIP:
                 continue
-            self.output.write(dumps(result, cls=_DatetimeJSONEncoder) + b"\n")
+            self.output.write(dumps(result, cls=_DatetimeJSONEncoder) + "\n")
 
     def _evaluate(self, message):
         """
@@ -83,7 +79,7 @@ class EliotFilter(object):
         )
 
 
-USAGE = b"""\
+USAGE = """\
 Usage: cat eliot.log | python -m eliot.filter <expr>
 
 Read JSON-expression per line from stdin, and filter it using a Python

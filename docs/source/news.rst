@@ -1,6 +1,25 @@
 What's New
 ==========
 
+1.15.0
+^^^^^^
+
+Enhancements:
+
+* Switched to JSON serialization with ``orjson`` (on CPython), which is much faster.
+* Added support for Python 3.11 and 3.12.
+
+Changes:
+
+* JSON customization is now done with a default function rather than an encoder class.
+* ``NaN``, ``inf``, and ``-inf`` are now serialized to JSON as ``null``, as per ``orjson`` this is more standards compliant.
+
+Deprecation and removals:
+
+* The deprecated support for serializing ``bytes`` in JSON log messages has been removed.
+* Dropped support for Python 3.6 and 3.7.
+* Removed the deprecated ``eliot.logwriter.ThreadedFileWriter``.
+
 1.14.0
 ^^^^^^
 

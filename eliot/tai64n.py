@@ -12,7 +12,7 @@ import struct
 from binascii import b2a_hex, a2b_hex
 
 _STRUCTURE = b">QI"
-_OFFSET = (2 ** 62) + 10  # last 10 are leap seconds
+_OFFSET = (2**62) + 10  # last 10 are leap seconds
 
 
 def encode(timestamp):

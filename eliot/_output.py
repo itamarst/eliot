@@ -4,20 +4,24 @@ Implementation of hooks and APIs for outputting log messages.
 
 import traceback
 import inspect
-import json as pyjson
 from threading import Lock
 from functools import wraps
 from io import IOBase
+import warnings
 
 from pyrsistent import PClass, field
 
-from . import _bytesjson as bytesjson
 from zope.interface import Interface, implementer
 
 from ._traceback import write_traceback, TRACEBACK_MESSAGE
 from ._message import EXCEPTION_FIELD, MESSAGE_TYPE_FIELD, REASON_FIELD
 from ._util import saferepr, safeunicode
-from .json import EliotJSONEncoder
+from .json import (
+    json_default,
+    _encoder_to_default_function,
+    _dumps_bytes,
+    _dumps_unicode,
+)
 from ._validation import ValidationError
 
 
@@ -260,12 +264,19 @@ class MemoryLogger(object):
         not mutate this list.
     """
 
-    def __init__(self, encoder=EliotJSONEncoder):
+    def __init__(self, encoder=None, json_default=json_default):
         """
-        @param encoder: A JSONEncoder subclass to use when encoding JSON.
+        @param encoder: DEPRECATED.  A JSONEncoder subclass to use when
+            encoding JSON.
+
+        @param json_default: A callable that handles objects the default JSON
+            serializer can't handle.
         """
+        json_default = _json_default_from_encoder_and_json_default(
+            encoder, json_default
+        )
         self._lock = Lock()
-        self._encoder = encoder
+        self._json_default = json_default
         self.reset()
 
     @exclusively
@@ -346,7 +357,7 @@ class MemoryLogger(object):
             serializer.serialize(dictionary)
 
         try:
-            pyjson.dumps(dictionary, cls=self._encoder)
+            _dumps_unicode(dictionary, default=self._json_default)
         except Exception as e:
             raise TypeError("Message %s doesn't encode to JSON: %s" % (dictionary, e))
 
@@ -409,13 +420,26 @@ class MemoryLogger(object):
         self._failed_validations = []
 
 
+def _json_default_from_encoder_and_json_default(encoder, json_default):
+    if encoder is not None:
+        warnings.warn(
+            "Using a JSON encoder subclass is no longer supported, please switch to using a default function",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        from .json import json_default as default_json_default
+
+        if json_default is not default_json_default:
+            raise RuntimeError("Can't pass in both encoder and default function")
+
+        json_default = _encoder_to_default_function(encoder())
+    return json_default
+
+
 class FileDestination(PClass):
     """
-    Callable that writes JSON messages to a file.
-
-    On Python 3 the file may support either C{bytes} or C{unicode}.  On
-    Python 2 only C{bytes} are supported since that is what all files expect
-    in practice.
+    Callable that writes JSON messages to a file that accepts either C{bytes}
+    or C{str}.
 
     @ivar file: The file to which messages will be written.
 
@@ -425,13 +449,22 @@ class FileDestination(PClass):
     """
 
     file = field(mandatory=True)
-    encoder = field(mandatory=True)
+    _json_default = field(mandatory=True)
     _dumps = field(mandatory=True)
     _linebreak = field(mandatory=True)
 
-    def __new__(cls, file, encoder=EliotJSONEncoder):
+    def __new__(cls, file, encoder=None, json_default=json_default):
+        """
+        Use ``json_default`` to pass in a default function for JSON dumping.
+
+        The ``encoder`` parameter is deprecated.
+        """
         if isinstance(file, IOBase) and not file.writable():
             raise RuntimeError("Given file {} is not writeable.")
+
+        json_default = _json_default_from_encoder_and_json_default(
+            encoder, json_default
+        )
 
         unicodeFile = False
         try:
@@ -440,33 +473,44 @@ class FileDestination(PClass):
             unicodeFile = True
 
         if unicodeFile:
-            # On Python 3 native json module outputs unicode:
-            _dumps = pyjson.dumps
+            _dumps = _dumps_unicode
             _linebreak = "\n"
         else:
-            _dumps = bytesjson.dumps
+            _dumps = _dumps_bytes
             _linebreak = b"\n"
         return PClass.__new__(
-            cls, file=file, _dumps=_dumps, _linebreak=_linebreak, encoder=encoder
+            cls,
+            file=file,
+            _dumps=_dumps,
+            _linebreak=_linebreak,
+            _json_default=json_default,
         )
 
     def __call__(self, message):
         """
         @param message: A message dictionary.
         """
-        self.file.write(self._dumps(message, cls=self.encoder) + self._linebreak)
+        self.file.write(
+            self._dumps(message, default=self._json_default) + self._linebreak
+        )
         self.file.flush()
 
 
-def to_file(output_file, encoder=EliotJSONEncoder):
+def to_file(output_file, encoder=None, json_default=json_default):
     """
     Add a destination that writes a JSON message per line to the given file.
 
     @param output_file: A file-like object.
 
-    @param encoder: A JSONEncoder subclass to use when encoding JSON.
+    @param encoder: DEPRECATED.  A JSONEncoder subclass to use when encoding
+        JSON.
+
+    @param json_default: A callable that handles objects the default JSON
+        serializer can't handle.
     """
-    Logger._destinations.add(FileDestination(file=output_file, encoder=encoder))
+    Logger._destinations.add(
+        FileDestination(file=output_file, encoder=encoder, json_default=json_default)
+    )
 
 
 # The default Logger, used when none is specified:

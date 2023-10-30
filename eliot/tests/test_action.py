@@ -1735,7 +1735,8 @@ class IndividualMessageLogTests(TestCase):
         time_func.return_value = timestamp = 1387299889.153187625
         with start_action(action_type="x") as action:
             action.log("mymessage", key=4)
-        self.assertEqual(messages[1]["timestamp"], timestamp)
+        self.assertEqual(messages[-2]["message_type"], "mymessage")
+        self.assertEqual(messages[-2]["timestamp"], timestamp)
 
     def test_part_of_action(self):
         """

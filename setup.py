@@ -18,11 +18,11 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Topic :: System :: Logging",
@@ -31,7 +31,7 @@ setup(
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description="Logging library that tells you why it happened",
-    python_requires=">=3.6.0",
+    python_requires=">=3.8.0",
     install_requires=[
         # Python 3 compatibility:
         "six",
@@ -41,8 +41,8 @@ setup(
         "pyrsistent >= 0.11.8",  # version with multi-type pvector/pmap_field
         # Better decorators, with version that works better with type annotations:
         "boltons >= 19.0.1",
-        # Backwards compatibility for Python 3.5 and 3.6:
-        'aiocontextvars;python_version<"3.7" and python_version>"2.7"',
+        # Faster JSON serialization:
+        "orjson; implementation_name=='cpython'",
     ],
     extras_require={
         "journald": [

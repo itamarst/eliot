@@ -45,12 +45,12 @@ Customizing JSON Encoding
 -------------------------
 
 If you're using Eliot's JSON output you may wish to customize encoding.
-By default Eliot uses ``eliot.json.EliotJSONEncoder`` (a subclass of ``json.JSONEncoder``) to encode objects.
-You can customize encoding by passing a custom subclass to either ``eliot.FileDestination`` or ``eliot.to_file``:
+By default Eliot uses ``eliot.json.json_default`` to encode objects that the default JSON serializer doesn't handle.
+You can customize encoding by passing a custom function to either ``eliot.FileDestination`` or ``eliot.to_file``:
 
 .. code-block:: python
 
-   from eliot.json import EliotJSONEncoder
+   from eliot.json import json_default
    from eliot import to_file
 
 
@@ -58,15 +58,15 @@ You can customize encoding by passing a custom subclass to either ``eliot.FileDe
        def __init__(self, x):
            self.x = x
 
-   class MyEncoder(EliotJSONEncoder):
-       def default(self, obj):
-           if isinstance(obj, MyClass):
-               return {"x": obj.x}
-           return EliotJSONEncoder.default(self, obj)
+   def default(self, obj):
+       if isinstance(obj, MyClass):
+           return {"x": obj.x}
+       return json_default(obj)
 
-   to_file(open("eliot.log", "ab"), encoder=MyEncoder)   
+   to_file(open("eliot.log", "ab"), default=default)
 
 For more details on JSON encoding see the Python `JSON documentation <https://docs.python.org/3/library/json.html>`_.
+Note that Eliot uses `orjson <https://pypi.org/project/orjson/>`_ on CPython (for performance), and the built-in JSON module on PyPy.
 
 .. _add_global_fields:
 

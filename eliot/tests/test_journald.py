@@ -10,8 +10,8 @@ from uuid import uuid4
 from time import sleep
 
 from six import text_type as unicode
+from json import loads
 
-from .._bytesjson import loads
 from .._output import MemoryLogger
 from .._message import TASK_UUID_FIELD
 from .. import start_action, Message, write_traceback
