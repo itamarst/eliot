@@ -510,7 +510,7 @@ class RedirectLogsForTrialTests(TestCase):
         @param programPath: A path to a program.
         @type programPath: L{str}
         """
-        destination = _RedirectLogsForTrial(FakeSys([programPath], b""))()
+        destination = _RedirectLogsForTrial(FakeSys([programPath], ""))()
         self.assertIsInstance(destination, TwistedDestination)
         # If this was not added as destination, removing it will raise an
         # exception:
@@ -546,7 +546,7 @@ class RedirectLogsForTrialTests(TestCase):
         L{redirectLogsForTrial}.
         """
         originalDestinations = Logger._destinations._destinations[:]
-        _RedirectLogsForTrial(FakeSys(["myprogram.py"], b""))()
+        _RedirectLogsForTrial(FakeSys(["myprogram.py"], ""))()
         self.assertEqual(Logger._destinations._destinations, originalDestinations)
 
     def test_trialAsPathNoDestination(self):
@@ -555,21 +555,21 @@ class RedirectLogsForTrialTests(TestCase):
         name no destination is added by L{redirectLogsForTrial}.
         """
         originalDestinations = Logger._destinations._destinations[:]
-        _RedirectLogsForTrial(FakeSys(["./trial/myprogram.py"], b""))()
+        _RedirectLogsForTrial(FakeSys(["./trial/myprogram.py"], ""))()
         self.assertEqual(Logger._destinations._destinations, originalDestinations)
 
     def test_withoutTrialResult(self):
         """
         When not running under I{trial} L{None} is returned.
         """
-        self.assertIs(None, _RedirectLogsForTrial(FakeSys(["myprogram.py"], b""))())
+        self.assertIs(None, _RedirectLogsForTrial(FakeSys(["myprogram.py"], ""))())
 
     def test_noDuplicateAdds(self):
         """
         If a destination has already been added, calling
         L{redirectLogsForTrial} a second time does not add another destination.
         """
-        redirect = _RedirectLogsForTrial(FakeSys(["trial"], b""))
+        redirect = _RedirectLogsForTrial(FakeSys(["trial"], ""))
         destination = redirect()
         self.addCleanup(removeDestination, destination)
         originalDestinations = Logger._destinations._destinations[:]
@@ -581,7 +581,7 @@ class RedirectLogsForTrialTests(TestCase):
         If a destination has already been added, calling
         L{redirectLogsForTrial} a second time returns L{None}.
         """
-        redirect = _RedirectLogsForTrial(FakeSys(["trial"], b""))
+        redirect = _RedirectLogsForTrial(FakeSys(["trial"], ""))
         destination = redirect()
         self.addCleanup(removeDestination, destination)
         result = redirect()
