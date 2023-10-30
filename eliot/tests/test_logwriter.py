@@ -2,18 +2,10 @@
 Tests for L{eliot.logwriter}.
 """
 
-from __future__ import unicode_literals
-
 import time
 import threading
 
-# Make sure to use StringIO that only accepts unicode:
-from io import BytesIO, StringIO
-from unittest import skipIf
-import json as pyjson
-from warnings import catch_warnings, simplefilter
-
-from six import PY2
+from io import BytesIO
 
 try:
     from zope.interface.verify import verifyClass
