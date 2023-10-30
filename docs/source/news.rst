@@ -18,6 +18,7 @@ Deprecation and removals:
 
 * The deprecated support for serializing ``bytes`` in JSON log messages has been removed.
 * Dropped support for Python 3.6 and 3.7.
+* Removed the deprecated ``eliot.logwriter.ThreadedFileWriter``.
 
 1.14.0
 ^^^^^^
