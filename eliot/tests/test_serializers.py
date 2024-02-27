@@ -2,7 +2,6 @@
 Tests for L{eliot.serializers}.
 """
 
-
 from unittest import TestCase
 from datetime import datetime
 from hashlib import md5

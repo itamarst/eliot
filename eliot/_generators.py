@@ -2,7 +2,6 @@
 Support for maintaining an action context across generator suspension.
 """
 
-
 from sys import exc_info
 from functools import wraps
 from contextlib import contextmanager

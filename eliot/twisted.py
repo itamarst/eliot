@@ -2,7 +2,6 @@
 APIs for using Eliot from Twisted.
 """
 
-
 import os
 import sys
 

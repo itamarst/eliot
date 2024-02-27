@@ -2,7 +2,6 @@
 Tests for the public API exposed by L{eliot}.
 """
 
-
 from unittest import TestCase
 
 from .._output import Logger

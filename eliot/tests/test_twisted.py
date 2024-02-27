@@ -2,7 +2,6 @@
 Tests for L{eliot.twisted}.
 """
 
-
 import sys
 from functools import wraps
 

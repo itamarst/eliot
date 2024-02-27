@@ -2,7 +2,6 @@
 Tests for L{eliot._util}.
 """
 
-
 from unittest import TestCase
 import pprint
 

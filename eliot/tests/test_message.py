@@ -2,7 +2,6 @@
 Tests for L{eliot._message}.
 """
 
-
 from unittest import TestCase
 from uuid import UUID
 import time

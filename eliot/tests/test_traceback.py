@@ -2,7 +2,6 @@
 Tests for L{eliot._traceback}.
 """
 
-
 from unittest import TestCase, SkipTest
 import traceback
 import sys

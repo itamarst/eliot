@@ -2,7 +2,6 @@
 Tests for L{eliot.tai64n}.
 """
 
-
 import errno
 import time
 import subprocess

@@ -3,7 +3,6 @@ Logging of tracebacks and L{twisted.python.failure.Failure} instances,
 as well as common utilities for handling exception logging.
 """
 
-
 import traceback
 import sys
 

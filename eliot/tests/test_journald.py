@@ -1,6 +1,7 @@
 """
 Tests for L{eliot.journald}.
 """
+
 from os import getpid, strerror
 from unittest import skipUnless, TestCase
 from subprocess import check_output, CalledProcessError, STDOUT

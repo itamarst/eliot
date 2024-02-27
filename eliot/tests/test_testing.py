@@ -2,7 +2,6 @@
 Tests for L{eliot.testing}.
 """
 
-
 from unittest import SkipTest, TestResult, TestCase, skipUnless
 
 try:

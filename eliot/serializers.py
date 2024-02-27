@@ -2,7 +2,6 @@
 Standardized serialization code.
 """
 
-
 from hashlib import md5
 
 _TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"

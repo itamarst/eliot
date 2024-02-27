@@ -2,7 +2,6 @@
 Tests for L{eliot._generators}.
 """
 
-
 from pprint import pformat
 from unittest import TestCase
 

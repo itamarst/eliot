@@ -2,7 +2,6 @@
 Error-handling utility code.
 """
 
-
 from inspect import getmro
 
 
