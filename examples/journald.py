@@ -2,7 +2,6 @@
 Write some logs to journald.
 """
 
-from __future__ import print_function
 
 from eliot import log_message, start_action, add_destinations
 from eliot.journald import JournaldDestination

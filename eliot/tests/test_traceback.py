@@ -2,8 +2,6 @@
 Tests for L{eliot._traceback}.
 """
 
-from __future__ import unicode_literals
-
 from unittest import TestCase, SkipTest
 import traceback
 import sys
@@ -204,7 +202,7 @@ class TracebackLoggingTests(TestCase):
         _writeTracebackMessage(logger, *exc_info)
         self.assertEqual(
             logger.serialize()[0]["reason"],
-            "eliot: unknown, unicode() raised exception",
+            "eliot: unknown, str() raised exception",
         )
         logger.flushTracebacks(BadException)
 

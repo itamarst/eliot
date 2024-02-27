@@ -1,7 +1,6 @@
 """
 Tests for L{eliot.filter}.
 """
-from __future__ import unicode_literals
 
 import sys
 

@@ -2,11 +2,7 @@
 Tests for L{eliot._validation}.
 """
 
-from __future__ import unicode_literals
-
 from unittest import TestCase
-
-from six import text_type as unicode
 
 from .._validation import (
     Field,
@@ -32,7 +28,7 @@ class TypedFieldTests(TestCase):
         L{Field.validate} will not raise an exception if the given value is in
         the list of supported classes.
         """
-        field = Field.forTypes("path", [unicode, int], "A path!")
+        field = Field.forTypes("path", [str, int], "A path!")
         field.validate(123)
         field.validate("hello")
 
@@ -879,7 +875,7 @@ class EndToEndValidationTests(TestCase):
     ACTION = ActionType(
         "myapp:myaction",
         [Field.forTypes("key", [int], "The key")],
-        [Field.forTypes("result", [unicode], "The result")],
+        [Field.forTypes("result", [str], "The result")],
         "An action for testing.",
     )
 

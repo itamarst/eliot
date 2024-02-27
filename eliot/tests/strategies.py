@@ -2,10 +2,7 @@
 Hypothesis strategies for eliot.
 """
 
-from __future__ import unicode_literals
-
 from functools import partial
-from six import text_type as unicode
 
 from hypothesis.strategies import (
     builds,
@@ -58,7 +55,7 @@ timestamps = floats(min_value=0, max_value=1000.0)
 message_core_dicts = fixed_dictionaries(
     dict(
         task_level=task_level_lists.map(pvector),
-        task_uuid=uuids().map(unicode),
+        task_uuid=uuids().map(str),
         timestamp=timestamps,
     )
 ).map(pmap)

@@ -3,10 +3,6 @@ Parse a stream of serialized messages into a forest of
 ``WrittenAction`` and ``WrittenMessage`` objects.
 """
 
-from __future__ import unicode_literals
-
-from six import text_type as unicode
-
 from pyrsistent import PClass, pmap_field, pset_field, discard
 
 from ._message import WrittenMessage, TASK_UUID_FIELD
@@ -141,7 +137,7 @@ class Parser(PClass):
     @ivar _tasks: Map from UUID to corresponding L{Task}.
     """
 
-    _tasks = pmap_field(unicode, Task)
+    _tasks = pmap_field(str, Task)
 
     def add(self, message_dict):
         """

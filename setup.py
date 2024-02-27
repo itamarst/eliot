@@ -33,8 +33,6 @@ setup(
     description="Logging library that tells you why it happened",
     python_requires=">=3.8.0",
     install_requires=[
-        # Python 3 compatibility:
-        "six",
         # Internal code documentation:
         "zope.interface",
         # Persistent objects for Python:

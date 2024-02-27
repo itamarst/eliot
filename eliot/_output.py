@@ -182,7 +182,7 @@ def _safe_unicode_dictionary(dictionary):
 
     @param dictionary: A L{dict} to serialize.
 
-    @return: A L{unicode} string representing the input dictionary as
+    @return: A L{str} string representing the input dictionary as
         faithfully as can be done without putting in too much effort.
     """
     try:

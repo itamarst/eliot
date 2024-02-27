@@ -2,8 +2,6 @@
 Support for maintaining an action context across generator suspension.
 """
 
-from __future__ import unicode_literals, absolute_import
-
 from sys import exc_info
 from functools import wraps
 from contextlib import contextmanager

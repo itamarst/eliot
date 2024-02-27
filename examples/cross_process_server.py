@@ -1,7 +1,6 @@
 """
 Cross-process log tracing: HTTP server.
 """
-from __future__ import unicode_literals
 
 import sys
 from flask import Flask, request

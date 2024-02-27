@@ -5,13 +5,7 @@ Validation is intended to be done by unit tests, not the production code path,
 although in theory it could be done then as well.
 """
 
-from __future__ import unicode_literals
-
 from warnings import warn
-
-import six
-
-unicode = six.text_type
 
 from pyrsistent import PClass, field as pyrsistent_field
 
@@ -42,8 +36,8 @@ class ValidationError(Exception):
 
 
 # Types that can be encoded to JSON:
-_JSON_TYPES = {type(None), int, float, unicode, list, dict, bytes, bool}
-_JSON_TYPES |= set(six.integer_types)
+_JSON_TYPES = {type(None), int, float, str, list, dict, bytes, bool}
+_JSON_TYPES |= set((int,))
 
 RESERVED_FIELDS = (TASK_LEVEL_FIELD, TASK_UUID_FIELD, TIMESTAMP_FIELD)
 
@@ -60,7 +54,7 @@ class Field(object):
         e.g. C{"path"}.
 
     @ivar description: A description of what this field contains.
-    @type description: C{unicode}
+    @type description: C{str}
     """
 
     def __init__(self, key, serializer, description="", extraValidator=None):
@@ -116,7 +110,7 @@ class Field(object):
         @param value: The allowed value for the field.
 
         @param description: A description of what this field contains.
-        @type description: C{unicode}
+        @type description: C{str}
 
         @return: A L{Field}.
         """
@@ -139,12 +133,12 @@ class Field(object):
             e.g. C{"path"}.
 
         @ivar classes: A C{list} of allowed Python classes for this field's
-            values. Supported classes are C{unicode}, C{int}, C{float},
+            values. Supported classes are C{str}, C{int}, C{float},
             C{bool}, C{long}, C{list} and C{dict} and C{None} (the latter
             isn't strictly a class, but will be converted appropriately).
 
         @param description: A description of what this field contains.
-        @type description: C{unicode}
+        @type description: C{str}
 
         @param extraValidator: See description in L{Field.__init__}.
 
@@ -189,16 +183,16 @@ def fields(*fields, **keys):
     ]
 
 
-REASON = Field.forTypes(REASON_FIELD, [unicode], "The reason for an event.")
-TRACEBACK = Field.forTypes("traceback", [unicode], "The traceback for an exception.")
-EXCEPTION = Field.forTypes("exception", [unicode], "The FQPN of an exception class.")
+REASON = Field.forTypes(REASON_FIELD, [str], "The reason for an event.")
+TRACEBACK = Field.forTypes("traceback", [str], "The traceback for an exception.")
+EXCEPTION = Field.forTypes("exception", [str], "The FQPN of an exception class.")
 
 
 class _MessageSerializer(object):
     """
     A serializer and validator for messages.
 
-    @ivar fields: A C{dict} mapping a C{unicode} field name to the respective
+    @ivar fields: A C{dict} mapping a C{str} field name to the respective
         L{Field}.
     @ivar allow_additional_fields: If true, additional fields don't cause
         validation failure.
@@ -300,7 +294,7 @@ class MessageType(object):
         e.g. C{"yourapp:subsystem:yourtype"}.
 
     @ivar description: A description of what this message means.
-    @type description: C{unicode}
+    @type description: C{str}
     """
 
     def __init__(self, message_type, fields, description=""):
@@ -312,7 +306,7 @@ class MessageType(object):
             type.
 
         @param description: A description of what this message means.
-        @type description: C{unicode}
+        @type description: C{str}
         """
         self.message_type = message_type
         self.description = description
@@ -395,7 +389,7 @@ class ActionType(object):
         C{"exception"} and C{"reason"} fields).
 
     @ivar description: A description of what this action's messages mean.
-    @type description: C{unicode}
+    @type description: C{str}
     """
 
     # Overrideable hook for testing; need staticmethod() so functions don't

@@ -2,11 +2,8 @@
 Log messages and related utilities.
 """
 
-from __future__ import unicode_literals
-
 import time
 from warnings import warn
-from six import text_type as unicode
 
 from pyrsistent import PClass, pmap_field
 
@@ -74,7 +71,7 @@ class Message(object):
         You can also use L{Message.new} to create L{Message} objects.
 
         @param contents: The contents of this L{Message}, a C{dict} whose keys
-           must be C{unicode}, or text that has been UTF-8 encoded to
+           must be C{str}, or text that has been UTF-8 encoded to
            C{bytes}.
 
         @param serializer: Either C{None}, or
@@ -141,7 +138,7 @@ class WrittenMessage(PClass):
     @ivar _logged_dict: The originally logged dictionary.
     """
 
-    _logged_dict = pmap_field((str, unicode), object)
+    _logged_dict = pmap_field((str, str), object)
 
     @property
     def timestamp(self):

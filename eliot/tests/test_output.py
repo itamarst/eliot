@@ -575,7 +575,7 @@ class LoggerTests(TestCase):
                 raise TypeError()
 
         dictionary = {badobject(): 123, 123: badobject()}
-        badMessage = "eliot: unknown, unicode() raised exception"
+        badMessage = "eliot: unknown, str() raised exception"
         self.assertEqual(
             eval(_safe_unicode_dictionary(dictionary)),
             {badMessage: "123", "123": badMessage},
@@ -599,7 +599,7 @@ class LoggerTests(TestCase):
 
         self.assertEqual(
             _safe_unicode_dictionary(badobject()),
-            "eliot: unknown, unicode() raised exception",
+            "eliot: unknown, str() raised exception",
         )
 
     def test_serializationErrorTraceback(self):

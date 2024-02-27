@@ -5,8 +5,6 @@ Actions have a beginning and an eventual end, and can be nested. Tasks are
 top-level actions.
 """
 
-from __future__ import unicode_literals, absolute_import
-
 import threading
 from uuid import uuid4
 from contextlib import contextmanager
@@ -16,7 +14,6 @@ from contextvars import ContextVar
 
 from pyrsistent import field, PClass, optional, pmap_field, pvector
 from boltons.funcutils import wraps
-from six import text_type as unicode, PY3
 
 from ._message import (
     WrittenMessage,
@@ -114,9 +111,9 @@ class TaskLevel(object):
         """
         Convert to a Unicode string, for serialization purposes.
 
-        @return: L{unicode} representation of the L{TaskLevel}.
+        @return: L{str} representation of the L{TaskLevel}.
         """
-        return "/" + "/".join(map(unicode, self._level))
+        return "/" + "/".join(map(str, self._level))
 
     def next_sibling(self):
         """
@@ -569,7 +566,7 @@ class WrittenAction(PClass):
     start_message = field(type=optional(WrittenMessage), mandatory=True, initial=None)
     end_message = field(type=optional(WrittenMessage), mandatory=True, initial=None)
     task_level = field(type=TaskLevel, mandatory=True)
-    task_uuid = field(type=unicode, mandatory=True, factory=unicode)
+    task_uuid = field(type=str, mandatory=True, factory=str)
     # Pyrsistent doesn't support pmap_field with recursive types.
     _children = pmap_field(TaskLevel, object)
 
@@ -838,7 +835,7 @@ def startTask(logger=None, action_type="", _serializers=None, **fields):
     @return: A new L{Action}.
     """
     action = Action(
-        logger, unicode(uuid4()), TaskLevel(level=[]), action_type, _serializers
+        logger, str(uuid4()), TaskLevel(level=[]), action_type, _serializers
     )
     action._start(fields)
     return action
@@ -909,14 +906,11 @@ def log_call(
         )
 
     if action_type is None:
-        if PY3:
-            action_type = "{}.{}".format(
-                wrapped_function.__module__, wrapped_function.__qualname__
-            )
-        else:
-            action_type = wrapped_function.__name__
+        action_type = "{}.{}".format(
+            wrapped_function.__module__, wrapped_function.__qualname__
+        )
 
-    if PY3 and include_args is not None:
+    if include_args is not None:
         from inspect import signature
 
         sig = signature(wrapped_function)

@@ -6,8 +6,6 @@ TAI64N encodes nanosecond-accuracy timestamps and is supported by logstash.
 @see: U{http://cr.yp.to/libtai/tai64.html}.
 """
 
-from __future__ import unicode_literals
-
 import struct
 from binascii import b2a_hex, a2b_hex
 

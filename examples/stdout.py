@@ -1,7 +1,6 @@
 """
 Output a few Eliot message to standard out.
 """
-from __future__ import unicode_literals
 
 import sys
 import time

@@ -1,16 +1,9 @@
 """Test for pyinstaller compatibility."""
 
-from __future__ import absolute_import
-
 from unittest import TestCase, SkipTest
 from tempfile import mkdtemp, NamedTemporaryFile
 from subprocess import check_call, CalledProcessError
 import os
-
-from six import PY2
-
-if PY2:
-    FileNotFoundError = OSError
 
 
 class PyInstallerTests(TestCase):

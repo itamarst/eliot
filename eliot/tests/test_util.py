@@ -2,8 +2,6 @@
 Tests for L{eliot._util}.
 """
 
-from __future__ import unicode_literals
-
 from unittest import TestCase
 import pprint
 

@@ -1,7 +1,6 @@
 """
 Cross-process log tracing: HTTP client.
 """
-from __future__ import unicode_literals
 
 import sys
 import requests
