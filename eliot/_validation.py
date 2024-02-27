@@ -37,7 +37,7 @@ class ValidationError(Exception):
 
 # Types that can be encoded to JSON:
 _JSON_TYPES = {type(None), int, float, str, list, dict, bytes, bool}
-_JSON_TYPES |= set((int, ))
+_JSON_TYPES |= set((int,))
 
 RESERVED_FIELDS = (TASK_LEVEL_FIELD, TASK_UUID_FIELD, TIMESTAMP_FIELD)
 

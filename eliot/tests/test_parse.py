@@ -235,9 +235,7 @@ class ParserTests(TestCase):
                 completed_tasks, parser = parser.add(message)
                 all_tasks.extend(completed_tasks)
 
-        self.assertCountEqual(
-            all_tasks, [parse_to_task(msgs) for msgs in all_messages]
-        )
+        self.assertCountEqual(all_tasks, [parse_to_task(msgs) for msgs in all_messages])
 
     @given(structure_and_messages=STRUCTURES_WITH_MESSAGES)
     def test_incomplete_tasks(self, structure_and_messages):
@@ -295,9 +293,7 @@ class ParserTests(TestCase):
                 [m for m in chain(*zip_longest(*all_messages)) if m is not None]
             )
         )
-        self.assertCountEqual(
-            all_tasks, [parse_to_task(msgs) for msgs in all_messages]
-        )
+        self.assertCountEqual(all_tasks, [parse_to_task(msgs) for msgs in all_messages])
 
 
 class BackwardsCompatibility(TestCase):

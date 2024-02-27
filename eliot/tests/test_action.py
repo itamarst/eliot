@@ -4,7 +4,7 @@ Tests for L{eliot._action}.
 
 import pickle
 import time
-from unittest import TestCase, skipIf
+from unittest import TestCase
 from unittest.mock import patch
 from threading import Thread
 

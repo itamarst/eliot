@@ -2,7 +2,6 @@
 Utilities that don't go anywhere else.
 """
 
-import sys
 from types import ModuleType
 
 
