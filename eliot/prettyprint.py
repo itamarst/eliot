@@ -9,7 +9,8 @@ from sys import stdin, stdout
 from collections import OrderedDict
 from json import dumps
 
-from ._bytesjson import loads
+from json import loads
+
 from ._message import (
     TIMESTAMP_FIELD,
     TASK_UUID_FIELD,
@@ -81,7 +82,7 @@ def pretty_format(message: dict, local_timezone: bool = False) -> str:
     for field in _first_fields:
         if field in message:
             remaining += add_field(remaining, field, message[field])
-    for (key, value) in sorted(message.items()):
+    for key, value in sorted(message.items()):
         if key not in _skip_fields:
             remaining += add_field(remaining, key, value)
 
@@ -103,7 +104,7 @@ def compact_format(message: dict, local_timezone: bool = False) -> str:
     for field in _first_fields:
         if field in message:
             ordered_message[field] = message[field]
-    for (key, value) in sorted(message.items()):
+    for key, value in sorted(message.items()):
         if key not in _skip_fields:
             ordered_message[key] = value
     # drop { and } from JSON:
