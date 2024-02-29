@@ -34,13 +34,6 @@ class _GeneratorContext(object):
             self._current_generator = previous_generator
 
 
-class GeneratorSupportNotEnabled(Exception):
-    """
-    An attempt was made to use a decorated generator without first turning on
-    the generator context manager.
-    """
-
-
 def eliot_friendly_generator_function(original):
     """
     Decorate a generator function so that the Eliot action context is
@@ -48,7 +41,7 @@ def eliot_friendly_generator_function(original):
     """
 
     @wraps(original)
-    def wrapper(*a, **kw):
+    def wrapper(context, *a, **kw):
         # Keep track of whether the next value to deliver to the generator is
         # a non-exception or an exception.
         ok = True
@@ -62,8 +55,6 @@ def eliot_friendly_generator_function(original):
         # generator function can run until we call send or throw on it.
         gen = original(*a, **kw)
 
-        # Initialize the per-generator context to a copy of the current context.
-        context = copy_context()
         while True:
             try:
                 # Whichever way we invoke the generator, we will do it
@@ -102,7 +93,7 @@ def eliot_friendly_generator_function(original):
                     # indication of where the yield occurred.
                     #
                     # This is noisy, enable only for debugging:
-                    if wrapper.debug:
+                    if trampoline.debug:
                         log_message(message_type="yielded")
                     return value_out
 
@@ -132,5 +123,12 @@ def eliot_friendly_generator_function(original):
                 else:
                     ok = True
 
-    wrapper.debug = False
-    return wrapper
+    @wraps(original)
+    def trampoline(*a, **kw):
+        # Initialize the generator context to a copy of the current context at
+        # the site where the generator is invoked.
+        context = copy_context()
+        return wrapper(context, *a, **kw)
+
+    trampoline.debug = False
+    return trampoline
