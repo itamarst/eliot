@@ -8,6 +8,11 @@ from contextlib import contextmanager
 from contextvars import copy_context
 from weakref import WeakKeyDictionary
 
+try:
+    from twisted.python.failure import Failure
+except ImportError:
+    pass
+
 from . import log_message
 
 
@@ -93,6 +98,8 @@ def eliot_friendly_generator_function(original):
                 def go():
                     if ok:
                         value_out = gen.send(value_in)
+                    elif wrapper._use_failure:
+                        value_out = value_in.throwExceptionIntoGenerator(gen)
                     else:
                         value_out = gen.throw(*value_in)
                     # We have obtained a value from the generator.  In
@@ -128,9 +135,13 @@ def eliot_friendly_generator_function(original):
                     # contextmanager.  But @contextmanager extremely
                     # conveniently eats it for us!  Thanks, @contextmanager!
                     ok = False
-                    value_in = exc_info()
+                    if wrapper._use_failure:
+                        value_in = Failure()
+                    else:
+                        value_in = exc_info()
                 else:
                     ok = True
 
     wrapper.debug = False
+    wrapper._use_failure = False
     return wrapper
