@@ -1,6 +1,13 @@
 What's New
 ==========
 
+1.16.0
+^^^^^^
+
+Enhancements:
+
+* Added official support for Python 3.13, though 1.15.0 works fine too.
+
 1.15.0
 ^^^^^^
 
