@@ -30,7 +30,7 @@ class EliotJSONEncoderTests(TestCase):
             np.float64(2.0),
             np.float16(0.5),
             np.bool_(True),
-            np.unicode_("hello"),
+            np.str_("hello"),
             np.byte(12),
             np.short(12),
             np.intc(-13),
