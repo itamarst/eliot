@@ -8,6 +8,10 @@ Enhancements:
 
 * Added official support for Python 3.13, though 1.15.0 works fine too.
 
+Changes:
+
+* Tests pass with latest Dask.
+
 1.15.0
 ^^^^^^
 
