@@ -6,6 +6,7 @@ from dask import compute, optimize, persist
 
 try:
     from dask.distributed import Future
+    from dask.highlevelgraph import HighLevelGraph
 except:
 
     class Future(object):
@@ -108,6 +109,9 @@ def _add_logging(dsk, ignore=None):
 
     @return: New Dask graph.
     """
+    if isinstance(dsk, HighLevelGraph):
+        dsk = dsk.to_dict()
+
     ctx = current_action()
     result = {}
 
