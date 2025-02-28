@@ -4,7 +4,6 @@ Tests for L{eliot.json}.
 
 from unittest import TestCase, skipUnless, skipIf
 from json import loads
-import sys
 from importlib.metadata import PackageNotFoundError, version as package_version
 
 try:
