@@ -5,6 +5,7 @@ Tests for L{eliot.json}.
 from unittest import TestCase, skipUnless, skipIf
 from json import loads
 import sys
+from importlib.metadata import PackageNotFoundError, version as package_version
 
 try:
     import numpy as np
@@ -17,6 +18,15 @@ from eliot.json import (
     _encoder_to_default_function,
     _dumps_unicode as dumps,
 )
+
+
+def package_installed(name: str) -> bool:
+    """Return whether the package is installed."""
+    try:
+        package_version(name)
+        return True
+    except PackageNotFoundError:
+        return False
 
 
 class EliotJSONEncoderTests(TestCase):
@@ -109,6 +119,7 @@ class EliotJSONEncoderTests(TestCase):
             "counter": Counter(["a", "a", "b"]),
             "complex": 1 + 2j,
             "enum": TestEnum.A,
+            "enum2": TestEnum.B,
         }
 
         serialized = loads(dumps(test_data, default=json_default))
@@ -123,12 +134,10 @@ class EliotJSONEncoderTests(TestCase):
         self.assertEqual(serialized["ordered_dict"], {"a": 1, "b": 2})
         self.assertEqual(serialized["counter"], {"a": 2, "b": 1})
         self.assertEqual(serialized["complex"], {"real": 1.0, "imag": 2.0})
-        self.assertEqual(
-            serialized["enum"],
-            {"__enum__": True, "name": "A", "value": 1, "class": "TestEnum"},
-        )
+        self.assertEqual(serialized["enum"], 1)
+        self.assertEqual(serialized["enum2"], "test")
 
-    @skipUnless(sys.modules.get("pydantic"), "Pydantic not installed.")
+    @skipUnless(package_installed("pydantic"), "Pydantic not installed.")
     def test_pydantic(self):
         """Test serialization of Pydantic models."""
         from pydantic import BaseModel
@@ -141,7 +150,7 @@ class EliotJSONEncoderTests(TestCase):
         serialized = loads(dumps(model, default=json_default))
         self.assertEqual(serialized, {"name": "test", "value": 42})
 
-    @skipUnless(sys.modules.get("pandas"), "Pandas not installed.")
+    @skipUnless(package_installed("pandas"), "Pandas not installed.")
     def test_pandas(self):
         """Test serialization of Pandas objects."""
         import pandas as pd
@@ -171,7 +180,7 @@ class EliotJSONEncoderTests(TestCase):
         period = pd.Period("2024-01")
         self.assertEqual(loads(dumps(period, default=json_default)), "2024-01")
 
-    @skipUnless(sys.modules.get("polars"), "Polars not installed.")
+    @skipUnless(package_installed("polars"), "Polars not installed.")
     def test_polars(self):
         """Test serialization of Polars objects."""
         import polars as pl
