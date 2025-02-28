@@ -1,6 +1,17 @@
 What's New
 ==========
 
+1.17.0
+^^^^^^
+
+Enhancements:
+
+* Eliot's JSON output can now serialize pathlib.Path, Pandas objects, Polars objects, times, dates, Pydantic objects, sets, and complex numbers. Thanks to Anton Kulaga for the patch.
+
+Deprecations and removals:
+
+* Dropped support for Python 3.8.
+
 1.16.0
 ^^^^^^
 
