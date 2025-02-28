@@ -5,8 +5,6 @@ import json
 import sys
 from pathlib import Path
 from datetime import date, time
-from uuid import UUID
-from enum import Enum
 
 
 class EliotJSONEncoder(json.JSONEncoder):
@@ -50,10 +48,6 @@ def json_default(o: object) -> object:
     if pydantic is not None and isinstance(o, pydantic.BaseModel):
         return o.model_dump()
 
-    # Add dataclass support
-    if hasattr(o, "__dataclass_fields__"):
-        return {field: getattr(o, field) for field in o.__dataclass_fields__}
-
     if isinstance(o, Path):
         return str(o)
 
@@ -63,23 +57,11 @@ def json_default(o: object) -> object:
     if isinstance(o, time):
         return o.isoformat()
 
-    if isinstance(o, UUID):
-        return str(o)
-
     if isinstance(o, set):
         return list(o)
 
     if isinstance(o, complex):
         return {"real": o.real, "imag": o.imag}
-
-    # Add Enum support
-    if isinstance(o, Enum):
-        return {
-            "__enum__": True,
-            "name": o.name,
-            "value": o.value,
-            "class": o.__class__.__name__,
-        }
 
     # Add Pandas support
     pandas = sys.modules.get("pandas", None)
