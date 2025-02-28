@@ -27,8 +27,6 @@ jobs:
       id-token: write
     steps:
       - uses: actions/download-artifact@v4
-        with:
-          path: artifact/
       - run: |
           ls -R
       - name: Publish package distributions to PyPI
