@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 from datetime import date, time
+import platform
 
 
 class EliotJSONEncoder(json.JSONEncoder):
@@ -88,6 +89,34 @@ def json_default(o: object) -> object:
             return o.isoformat()
 
     raise TypeError("Unsupported type")
+
+
+if platform.python_implementation() == "PyPy":
+    # We're not using orjson, so need to serialize a few more types.
+
+    original_json_default = json_default
+
+    def json_default(o: object, original_json_default=original_json_default) -> object:
+        from datetime import datetime
+        from enum import Enum
+        from uuid import UUID
+
+        # Add dataclass support
+        if hasattr(o, "__dataclass_fields__"):
+            return {field: getattr(o, field) for field in o.__dataclass_fields__}
+        if isinstance(o, datetime):
+            return o.isoformat()
+
+        if isinstance(o, UUID):
+            return str(o)
+
+        if isinstance(o, Enum):
+            return o.value
+
+        return original_json_default(o)
+
+    json_default.__doc__ = original_json_default.__doc__
+    del original_json_default
 
 
 def _encoder_to_default_function(
