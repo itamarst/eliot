@@ -18,7 +18,6 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
@@ -32,7 +31,7 @@ setup(
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description="Logging library that tells you why it happened",
-    python_requires=">=3.8.0",
+    python_requires=">=3.9.0",
     install_requires=[
         # Internal code documentation:
         "zope.interface",

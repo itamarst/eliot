@@ -4,6 +4,7 @@ Tests for L{eliot.json}.
 
 from unittest import TestCase, skipUnless, skipIf
 from json import loads
+from importlib.metadata import PackageNotFoundError, version as package_version
 
 try:
     import numpy as np
@@ -16,6 +17,15 @@ from eliot.json import (
     _encoder_to_default_function,
     _dumps_unicode as dumps,
 )
+
+
+def package_installed(name: str) -> bool:
+    """Return whether the package is installed."""
+    try:
+        package_version(name)
+        return True
+    except PackageNotFoundError:
+        return False
 
 
 class EliotJSONEncoderTests(TestCase):
@@ -83,3 +93,116 @@ class EliotJSONEncoderTests(TestCase):
             loads(dumps(a1002, default=json_default)),
             {"array_start": a1002.flat[:10000].tolist(), "original_shape": [2, 5001]},
         )
+
+    def test_basic_types(self):
+        """Test serialization of basic Python types."""
+        from pathlib import Path
+        from datetime import datetime, date, time
+        from uuid import UUID
+        from collections import defaultdict, OrderedDict, Counter
+        from enum import Enum
+
+        class TestEnum(Enum):
+            A = 1
+            B = "test"
+
+        test_data = {
+            "path": Path("/tmp/test"),
+            "datetime": datetime(2024, 1, 1, 12, 0),
+            "date": date(2024, 1, 1),
+            "time": time(12, 0),
+            "uuid": UUID("12345678-1234-5678-1234-567812345678"),
+            "set": {1, 2, 3},
+            "defaultdict": defaultdict(list, {"a": [1, 2]}),
+            "ordered_dict": OrderedDict([("a", 1), ("b", 2)]),
+            "counter": Counter(["a", "a", "b"]),
+            "complex": 1 + 2j,
+            "enum": TestEnum.A,
+            "enum2": TestEnum.B,
+        }
+
+        serialized = loads(dumps(test_data, default=json_default))
+
+        self.assertEqual(serialized["path"], "/tmp/test")
+        self.assertEqual(serialized["datetime"], "2024-01-01T12:00:00")
+        self.assertEqual(serialized["date"], "2024-01-01")
+        self.assertEqual(serialized["time"], "12:00:00")
+        self.assertEqual(serialized["uuid"], "12345678-1234-5678-1234-567812345678")
+        self.assertEqual(serialized["set"], [1, 2, 3])
+        self.assertEqual(serialized["defaultdict"], {"a": [1, 2]})
+        self.assertEqual(serialized["ordered_dict"], {"a": 1, "b": 2})
+        self.assertEqual(serialized["counter"], {"a": 2, "b": 1})
+        self.assertEqual(serialized["complex"], {"real": 1.0, "imag": 2.0})
+        self.assertEqual(serialized["enum"], 1)
+        self.assertEqual(serialized["enum2"], "test")
+
+    @skipUnless(package_installed("pydantic"), "Pydantic not installed.")
+    def test_pydantic(self):
+        """Test serialization of Pydantic models."""
+        from pydantic import BaseModel
+
+        class TestModel(BaseModel):
+            name: str
+            value: int
+
+        model = TestModel(name="test", value=42)
+        serialized = loads(dumps(model, default=json_default))
+        self.assertEqual(serialized, {"name": "test", "value": 42})
+
+    @skipUnless(package_installed("pandas"), "Pandas not installed.")
+    def test_pandas(self):
+        """Test serialization of Pandas objects."""
+        import pandas as pd
+
+        # Test Timestamp
+        ts = pd.Timestamp("2024-01-01 12:00:00")
+        self.assertEqual(loads(dumps(ts, default=json_default)), "2024-01-01T12:00:00")
+
+        # Test Series
+        series = pd.Series([1, 2, 3])
+        self.assertEqual(loads(dumps(series, default=json_default)), [1, 2, 3])
+
+        # Test DataFrame
+        df = pd.DataFrame({"a": [1, 2], "b": [3, 4]})
+        self.assertEqual(
+            loads(dumps(df, default=json_default)), [{"a": 1, "b": 3}, {"a": 2, "b": 4}]
+        )
+
+        # Test Interval
+        interval = pd.Interval(0, 1, closed="both")
+        self.assertEqual(
+            loads(dumps(interval, default=json_default)),
+            {"left": 0, "right": 1, "closed": "both"},
+        )
+
+        # Test Period
+        period = pd.Period("2024-01")
+        self.assertEqual(loads(dumps(period, default=json_default)), "2024-01")
+
+    @skipUnless(package_installed("polars"), "Polars not installed.")
+    def test_polars(self):
+        """Test serialization of Polars objects."""
+        import polars as pl
+
+        # Test Series
+        series = pl.Series("a", [1, 2, 3])
+        self.assertEqual(loads(dumps(series, default=json_default)), [1, 2, 3])
+
+        # Test DataFrame
+        df = pl.DataFrame({"a": [1, 2], "b": [3, 4]})
+        self.assertEqual(
+            loads(dumps(df, default=json_default)), [{"a": 1, "b": 3}, {"a": 2, "b": 4}]
+        )
+
+    def test_dataclass(self):
+        """Test serialization of dataclasses."""
+        from dataclasses import dataclass
+
+        @dataclass
+        class TestDataClass:
+            name: str
+            value: int
+
+        obj = TestDataClass(name="test", value=42)
+        serialized = loads(dumps(obj, default=json_default))
+        self.assertEqual(serialized, {"name": "test", "value": 42})
