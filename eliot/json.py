@@ -4,8 +4,7 @@ from typing import Callable
 import json
 import sys
 from pathlib import Path
-from collections import defaultdict, OrderedDict, Counter
-from datetime import datetime, date, time
+from datetime import date, time
 from uuid import UUID
 from enum import Enum
 
@@ -24,7 +23,8 @@ class EliotJSONEncoder(json.JSONEncoder):
 def json_default(o: object) -> object:
     """
     JSON object encoder for non-standard types.  In particular, supports NumPy
-    types, Path objects, Pydantic models, dataclasses, Pandas and Polars objects.  If you are wrapping it, call it last, as it will raise a
+    types, Path objects, Pydantic models, dataclasses, Pandas and Polars
+    objects.  If you are wrapping it, call it last, as it will raise a
     ``TypeError`` on unsupported types.
     """
     numpy = sys.modules.get("numpy", None)
@@ -51,7 +51,7 @@ def json_default(o: object) -> object:
         return o.model_dump()
 
     # Add dataclass support
-    if hasattr(o, '__dataclass_fields__'):
+    if hasattr(o, "__dataclass_fields__"):
         return {field: getattr(o, field) for field in o.__dataclass_fields__}
 
     if isinstance(o, Path):
@@ -69,7 +69,6 @@ def json_default(o: object) -> object:
     if isinstance(o, set):
         return list(o)
 
-
     if isinstance(o, complex):
         return {"real": o.real, "imag": o.imag}
 
@@ -79,7 +78,7 @@ def json_default(o: object) -> object:
             "__enum__": True,
             "name": o.name,
             "value": o.value,
-            "class": o.__class__.__name__
+            "class": o.__class__.__name__,
         }
 
     # Add Pandas support
@@ -90,9 +89,9 @@ def json_default(o: object) -> object:
         if isinstance(o, pandas.Series):
             return o.to_list()
         if isinstance(o, pandas.DataFrame):
-            return o.to_dict(orient='records')
+            return o.to_dict(orient="records")
         if isinstance(o, pandas.Interval):
-            return {'left': o.left, 'right': o.right, 'closed': o.closed}
+            return {"left": o.left, "right": o.right, "closed": o.closed}
         if isinstance(o, pandas.Period):
             return str(o)
 
