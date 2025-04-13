@@ -1045,6 +1045,10 @@ class LowLevelTestingHooks(TestCase):
         # No errors:
         check_for_errors(logger)
 
+        # Unlike EliotJSONEncoder, CustomJSONEncoder doesn't have a
+        # fallback for non-serialisable objects
+        logger = MemoryLogger(encoder=CustomJSONEncoder)
+
         # Now long something unserializable to JSON:
         logger.write({"message_type": object()})
         with self.assertRaises(TypeError):

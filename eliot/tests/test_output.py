@@ -121,7 +121,9 @@ class MemoryLoggerTests(TestCase):
         logger.write(
             {"message_type": "type", "foo": "will become object()"}, serializer
         )
-        self.assertRaises(TypeError, logger.validate)
+        # No exception should be raised, even on values that are not
+        # normally JSON-serialisable like object()
+        logger.validate()
 
     @skipUnless(np, "NumPy is not installed.")
     def test_EliotJSONEncoder(self):
@@ -143,6 +145,14 @@ class MemoryLoggerTests(TestCase):
             None,
         )
         logger.validate()
+
+        # Unlike EliotJSONEncoder, CustomJSONEncoder doesn't have a
+        # fallback for non-serialisable objects
+        logger.write(
+            {"message_type": "type", "unserialisable": object()},
+            None,
+        )
+        self.assertRaises(TypeError, logger.validate)
 
     def test_serialize(self):
         """
