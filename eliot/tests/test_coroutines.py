@@ -34,7 +34,8 @@ def run_coroutines(*async_functions):
     """
     Run a coroutine until it finishes.
     """
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     futures = [asyncio.ensure_future(f()) for f in async_functions]
 
     async def wait_for_futures():
