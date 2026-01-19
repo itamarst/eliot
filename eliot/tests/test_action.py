@@ -13,9 +13,6 @@ from hypothesis.strategies import integers, lists, just, text
 
 from pyrsistent import pvector, v
 
-import testtools
-from testtools.matchers import MatchesStructure
-
 from .._action import (
     Action,
     current_action,
@@ -961,10 +958,14 @@ class TaskLevelTests(TestCase):
         self.assertEqual(TaskLevel.to_string, TaskLevel.toString)
 
 
-class WrittenActionTests(testtools.TestCase):
+class WrittenActionTests(TestCase):
     """
     Tests for L{WrittenAction}.
     """
+
+    def assertWrittenActionContainsSubset(self, subset, action):
+        for key, value in subset.items():
+            self.assertEqual(getattr(action, key), value)
 
     @given(start_action_messages)
     def test_from_single_start_message(self, message):
@@ -974,9 +975,8 @@ class WrittenActionTests(testtools.TestCase):
         C{end_time}, and has a C{status} of C{STARTED_STATUS}.
         """
         action = WrittenAction.from_messages(message)
-        self.assertThat(
-            action,
-            MatchesStructure.byEquality(
+        self.assertWrittenActionContainsSubset(
+            dict(
                 status=STARTED_STATUS,
                 action_type=message.contents[ACTION_TYPE_FIELD],
                 task_uuid=message.task_uuid,
@@ -987,6 +987,7 @@ class WrittenActionTests(testtools.TestCase):
                 reason=None,
                 exception=None,
             ),
+            action,
         )
 
     @given(start_action_messages, message_dicts, integers(min_value=2))
@@ -1009,9 +1010,8 @@ class WrittenActionTests(testtools.TestCase):
             )
         )
         action = WrittenAction.from_messages(end_message=end_message)
-        self.assertThat(
-            action,
-            MatchesStructure.byEquality(
+        self.assertWrittenActionContainsSubset(
+            dict(
                 status=SUCCEEDED_STATUS,
                 action_type=end_message.contents[ACTION_TYPE_FIELD],
                 task_uuid=end_message.task_uuid,
@@ -1022,6 +1022,7 @@ class WrittenActionTests(testtools.TestCase):
                 reason=None,
                 exception=None,
             ),
+            action,
         )
 
     @given(message_dicts)
@@ -1033,9 +1034,8 @@ class WrittenActionTests(testtools.TestCase):
         """
         message = written_from_pmap(message_dict)
         action = WrittenAction.from_messages(children=[message])
-        self.assertThat(
-            action,
-            MatchesStructure.byEquality(
+        self.assertWrittenActionContainsSubset(
+            dict(
                 status=None,
                 action_type=None,
                 task_uuid=message.task_uuid,
@@ -1046,6 +1046,7 @@ class WrittenActionTests(testtools.TestCase):
                 reason=None,
                 exception=None,
             ),
+            action,
         )
 
     @given(start_action_messages, message_dicts, integers(min_value=2))
@@ -1165,9 +1166,8 @@ class WrittenActionTests(testtools.TestCase):
             )
         )
         action = WrittenAction.from_messages(start_message, end_message=end_message)
-        self.assertThat(
-            action,
-            MatchesStructure.byEquality(
+        self.assertWrittenActionContainsSubset(
+            dict(
                 action_type=start_message.contents[ACTION_TYPE_FIELD],
                 status=SUCCEEDED_STATUS,
                 task_uuid=start_message.task_uuid,
@@ -1178,6 +1178,7 @@ class WrittenActionTests(testtools.TestCase):
                 reason=None,
                 exception=None,
             ),
+            action,
         )
 
     @given(start_action_messages, message_dicts, text(), text(), integers(min_value=2))
@@ -1205,9 +1206,8 @@ class WrittenActionTests(testtools.TestCase):
             )
         )
         action = WrittenAction.from_messages(start_message, end_message=end_message)
-        self.assertThat(
-            action,
-            MatchesStructure.byEquality(
+        self.assertWrittenActionContainsSubset(
+            dict(
                 action_type=start_message.contents[ACTION_TYPE_FIELD],
                 status=FAILED_STATUS,
                 task_uuid=start_message.task_uuid,
@@ -1218,6 +1218,7 @@ class WrittenActionTests(testtools.TestCase):
                 reason=reason,
                 exception=exception,
             ),
+            action,
         )
 
     @given(start_action_messages, message_dicts, integers(min_value=2))

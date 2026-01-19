@@ -50,8 +50,6 @@ setup(
         "test": [
             # Bug-seeking missile:
             "hypothesis >= 1.14.0",
-            # Tasteful testing for Python:
-            "testtools",
             "pytest",
             "pytest-xdist",
         ],
