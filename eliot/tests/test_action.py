@@ -647,7 +647,7 @@ class StartActionAndTaskTests(TestCase):
         action = startTask(action_type="sys:do", key="value")
         assertContainsFields(
             self,
-            messages[0],
+            messages[-1],
             {
                 "task_uuid": action._identification["task_uuid"],
                 "task_level": [1],
@@ -667,7 +667,7 @@ class StartActionAndTaskTests(TestCase):
         action = start_action(action_type="sys:do", key="value")
         assertContainsFields(
             self,
-            messages[0],
+            messages[-1],
             {
                 "task_uuid": action._identification["task_uuid"],
                 "task_level": [1],
@@ -1487,15 +1487,22 @@ class PreserveContextTests(TestCase):
         Message.log(message_type="child")
         return x + y
 
-    def test_no_context(self):
+    @capture_logging(None)
+    def test_no_context(self, logger):
         """
         If C{preserve_context} is run outside an action context it just
         returns the same function.
         """
-        wrapped = preserve_context(self.add)
+        # Make sure no leaks from previous tests:
+        assert current_action() is None
+
+        add = self.add
+        wrapped = preserve_context(add)
+        self.assertIs(add, wrapped)
         self.assertEqual(wrapped(2, 3), 5)
 
-    def test_with_context_calls_underlying(self):
+    @capture_logging(None)
+    def test_with_context_calls_underlying(self, logger):
         """
         If run inside an Eliot context, the result of C{preserve_context} is
         the result of calling the underlying function.
@@ -1527,7 +1534,8 @@ class PreserveContextTests(TestCase):
             ("parent", "eliot:remote_task", "child"),
         )
 
-    def test_callable_only_once(self):
+    @capture_logging(None)
+    def test_callable_only_once(self, logger):
         """
         The result of C{preserve_context} can only be called once.
         """

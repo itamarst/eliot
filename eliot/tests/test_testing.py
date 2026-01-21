@@ -695,7 +695,7 @@ class CaptureLoggingTests(ValidateLoggingTestsMixin, TestCase):
         add_destination(messages.append)
         self.addCleanup(remove_destination, messages.append)
         Message.log(some_key=1234)
-        self.assertEqual(messages[0]["some_key"], 1234)
+        self.assertEqual(messages[0]["some_key"], 1234, messages)
 
     def test_global_cleanup_exception(self):
         """
