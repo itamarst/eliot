@@ -24,7 +24,6 @@ from .json import (
 )
 from ._validation import ValidationError
 
-
 # Action type for log messages due to a (hopefully temporarily) broken
 # destination.
 DESTINATION_FAILURE = "eliot:destination_failure"
