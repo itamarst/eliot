@@ -1,0 +1,13 @@
+Replace deprecated datetime.utcfromtimestamp and utcnow
+
+datetime.utcfromtimestamp() and datetime.utcnow() are deprecated
+since Python 3.12 and scheduled for removal. This replaces:
+
+- utcfromtimestamp() in prettyprint.py with
+  datetime.fromtimestamp(ts, tz=timezone.utc), stripping the
+  +00:00 offset so the output stays as before (ISO format + Z)
+
+- utcnow() in a test expression with datetime.now(), since the
+  test only checks that the subtraction produces a timedelta
+
+Fixes #517

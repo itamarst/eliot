@@ -4,7 +4,7 @@ API and command-line support for human-readable Eliot messages.
 
 import pprint
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 from sys import stdin, stdout
 from collections import OrderedDict
 from json import dumps
@@ -44,16 +44,14 @@ _first_fields = [ACTION_TYPE_FIELD, MESSAGE_TYPE_FIELD, ACTION_STATUS_FIELD]
 
 def _render_timestamp(message: dict, local_timezone: bool) -> str:
     """Convert a message's timestamp to a string."""
-    # If we were returning or storing the datetime we'd want to use an
-    # explicit timezone instead of a naive datetime, but since we're
-    # just using it for formatting we needn't bother.
     if local_timezone:
         dt = datetime.fromtimestamp(message[TIMESTAMP_FIELD])
     else:
-        dt = datetime.utcfromtimestamp(message[TIMESTAMP_FIELD])
+        dt = datetime.fromtimestamp(message[TIMESTAMP_FIELD], tz=timezone.utc)
     result = dt.isoformat(sep="T")
     if not local_timezone:
-        result += "Z"
+        # Strip the +00:00 suffix and use Z instead
+        result = result.replace("+00:00", "") + "Z"
     return result
 
 

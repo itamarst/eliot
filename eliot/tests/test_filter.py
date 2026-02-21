@@ -60,7 +60,7 @@ class EliotFilterTests(TestCase):
         built-ins.
         """
         result = self.evaluateExpression(
-            "isinstance(datetime.utcnow() - datetime.utcnow(), timedelta)", {}
+            "isinstance(datetime.now() - datetime.now(), timedelta)", {}
         )
         self.assertEqual(result, True)
 
