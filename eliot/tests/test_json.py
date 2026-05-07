@@ -74,7 +74,9 @@ class EliotJSONEncoderTests(TestCase):
         This ensures NumPy isn't a hard dependency.
         """
         weird_val = object()
-        self.assertEqual(dumps([weird_val], default=json_default), dumps([repr(weird_val)]))
+        self.assertEqual(
+            dumps([weird_val], default=json_default), dumps([repr(weird_val)])
+        )
         self.assertEqual(dumps(12, default=json_default), "12")
 
     @skipUnless(np, "NumPy is not installed.")
@@ -210,7 +212,10 @@ class EliotJSONEncoderTests(TestCase):
     def test_unserializable(self):
         """Test that even values without dedicated JSON serialization
         support dump without errors."""
+
         def unserializable():
             pass
 
-        self.assertEqual(dumps(unserializable, default=json_default), dumps(repr(unserializable)))
+        self.assertEqual(
+            dumps(unserializable, default=json_default), dumps(repr(unserializable))
+        )
