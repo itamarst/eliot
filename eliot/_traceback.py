@@ -3,6 +3,7 @@ Logging of tracebacks and L{twisted.python.failure.Failure} instances,
 as well as common utilities for handling exception logging.
 """
 
+import linecache
 import traceback
 import sys
 
@@ -56,21 +57,28 @@ def _get_traceback_no_io():
     """
     try:
         module = load_module(str("_traceback_no_io"), traceback)
+        my_linecache = load_module(str("my_linecache"), linecache)
     except NotImplementedError:
         # Can't fix the I/O problem, oh well:
         return traceback
 
-    class FakeLineCache(object):
-        def checkcache(self, *args, **kwargs):
-            None
+    def return_none(*args, **kwargs):
+        None
 
-        def getline(self, *args, **kwargs):
-            return ""
+    def return_empty_str(*args, **kwargs):
+        return ""
 
-        def lazycache(self, *args, **kwargs):
-            return None
+    def return_empty_list(*args, **kwargs):
+        return []
 
-    module.linecache = FakeLineCache()
+    my_linecache.checkcache = return_none
+    my_linecache.getline = return_empty_str
+    my_linecache.getlines = return_empty_list
+    my_linecache.lazycache = return_none
+    my_linecache.updatecache = return_empty_list
+    my_linecache._getline_from_code = return_empty_str
+    my_linecache._getlines_from_code = return_empty_list
+    module.linecache = my_linecache
     return module
 
 
