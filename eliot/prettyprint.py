@@ -19,7 +19,6 @@ from ._message import (
 )
 from ._action import ACTION_TYPE_FIELD, ACTION_STATUS_FIELD
 
-
 # Ensure binary stdin, since we expect specifically UTF-8 encoded
 # messages, not platform-encoding messages.
 stdin = stdin.buffer

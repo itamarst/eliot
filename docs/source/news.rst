@@ -1,6 +1,17 @@
 What's New
 ==========
 
+1.18.0
+^^^^^^
+
+Enhancements:
+
+* Official support for Python 3.14.
+
+Deprecations and removals:
+
+* Dropped support for Python 3.9.
+
 1.17.0
 ^^^^^^
 

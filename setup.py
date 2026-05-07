@@ -18,11 +18,11 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Topic :: System :: Logging",
@@ -31,7 +31,7 @@ setup(
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description="Logging library that tells you why it happened",
-    python_requires=">=3.9.0",
+    python_requires=">=3.10.0",
     install_requires=[
         # Internal code documentation:
         "zope.interface",
@@ -50,8 +50,6 @@ setup(
         "test": [
             # Bug-seeking missile:
             "hypothesis >= 1.14.0",
-            # Tasteful testing for Python:
-            "testtools",
             "pytest",
             "pytest-xdist",
         ],

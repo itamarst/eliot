@@ -185,6 +185,7 @@ class DeprecatedMessageTests(TestCase):
         Message.new(key=2).write(logger)
         Message.new(key=3).write(logger)
 
+        self.assertEqual(len(logger.messages), 2, logger.messages)
         message1, message2 = logger.messages
         self.assertEqual(
             (
@@ -287,9 +288,9 @@ class LogMessageTests(TestCase):
         add_destinations(messages.append)
         self.addCleanup(remove_destination, messages.append)
         log_message(message_type="hello", some_key=1234)
-        self.assertEqual(messages[0]["some_key"], 1234)
-        self.assertEqual(messages[0]["message_type"], "hello")
-        self.assertTrue(time.time() - messages[0]["timestamp"] < 0.1)
+        self.assertEqual(messages[-1]["some_key"], 1234)
+        self.assertEqual(messages[-1]["message_type"], "hello")
+        self.assertTrue(time.time() - messages[-1]["timestamp"] < 0.1)
 
     def test_implicitAction(self):
         """
