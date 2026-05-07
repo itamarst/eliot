@@ -4,7 +4,7 @@ API and command-line support for human-readable Eliot messages.
 
 import pprint
 import argparse
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 from sys import stdin, stdout
 from collections import OrderedDict
 from json import dumps, loads
@@ -47,7 +47,7 @@ def _render_timestamp(message: dict, local_timezone: bool) -> str:
     if local_timezone:
         dt = datetime.fromtimestamp(message[TIMESTAMP_FIELD])
     else:
-        dt = datetime.fromtimestamp(message[TIMESTAMP_FIELD], tz=UTC)
+        dt = datetime.fromtimestamp(message[TIMESTAMP_FIELD], tz=timezone.utc)
     result = dt.isoformat(sep="T")
     if not local_timezone:
         result = result[:-6] + "Z"
