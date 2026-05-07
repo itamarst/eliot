@@ -7,6 +7,8 @@ from pathlib import Path
 from datetime import date, time
 import platform
 
+from ._util import saferepr
+
 
 class EliotJSONEncoder(json.JSONEncoder):
     """
@@ -88,7 +90,8 @@ def json_default(o: object) -> object:
         if isinstance(o, polars.Datetime):
             return o.isoformat()
 
-    raise TypeError("Unsupported type")
+    # Fall back to repr() to get _some_ useful value to log
+    return saferepr(o)
 
 
 if platform.python_implementation() == "PyPy":
