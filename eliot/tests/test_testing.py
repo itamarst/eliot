@@ -695,7 +695,7 @@ class CaptureLoggingTests(ValidateLoggingTestsMixin, TestCase):
         add_destination(messages.append)
         self.addCleanup(remove_destination, messages.append)
         Message.log(some_key=1234)
-        self.assertEqual(messages[0]["some_key"], 1234)
+        self.assertEqual(messages[0]["some_key"], 1234, messages)
 
     def test_global_cleanup_exception(self):
         """
@@ -1044,6 +1044,10 @@ class LowLevelTestingHooks(TestCase):
 
         # No errors:
         check_for_errors(logger)
+
+        # Unlike EliotJSONEncoder, CustomJSONEncoder doesn't have a
+        # fallback for non-serialisable objects
+        logger = MemoryLogger(encoder=CustomJSONEncoder)
 
         # Now long something unserializable to JSON:
         logger.write({"message_type": object()})

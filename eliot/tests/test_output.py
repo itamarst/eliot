@@ -121,7 +121,9 @@ class MemoryLoggerTests(TestCase):
         logger.write(
             {"message_type": "type", "foo": "will become object()"}, serializer
         )
-        self.assertRaises(TypeError, logger.validate)
+        # No exception should be raised, even on values that are not
+        # normally JSON-serialisable like object()
+        logger.validate()
 
     @skipUnless(np, "NumPy is not installed.")
     def test_EliotJSONEncoder(self):
@@ -143,6 +145,14 @@ class MemoryLoggerTests(TestCase):
             None,
         )
         logger.validate()
+
+        # Unlike EliotJSONEncoder, CustomJSONEncoder doesn't have a
+        # fallback for non-serialisable objects
+        logger.write(
+            {"message_type": "type", "unserialisable": object()},
+            None,
+        )
+        self.assertRaises(TypeError, logger.validate)
 
     def test_serialize(self):
         """
@@ -367,7 +377,7 @@ class DestinationsTests(TestCase):
         dest3 = []
         destinations.add(dest.append, dest2.append)
         destinations.add(dest3.append)
-        destinations.send(message)
+        destinations.send(message, logger=MemoryLogger())
         self.assertEqual(dest, [message])
         self.assertEqual(dest2, [message])
         self.assertEqual(dest3, [message])
@@ -386,7 +396,7 @@ class DestinationsTests(TestCase):
         destinations.add(dest3.append)
 
         message = {"hello": 123}
-        destinations.send(message)
+        destinations.send(message, logger=MemoryLogger())
         self.assertIn(message, dest)
         self.assertIn(message, dest3)
 
@@ -401,9 +411,9 @@ class DestinationsTests(TestCase):
 
         msg1 = {"hello": 123}
         msg2 = {"world": 456}
-        destinations.send(msg1)
+        destinations.send(msg1, logger=MemoryLogger())
         self.assertNotIn(msg1, dest)
-        destinations.send(msg2)
+        destinations.send(msg2, logger=MemoryLogger())
         self.assertIn(msg2, dest)
 
     def test_remove(self):
@@ -416,7 +426,7 @@ class DestinationsTests(TestCase):
         dest = []
         destinations.add(dest.append)
         destinations.remove(dest.append)
-        destinations.send(message)
+        destinations.send(message, logger=MemoryLogger())
         self.assertEqual(dest, [])
 
     def test_removeNonExistent(self):
@@ -436,7 +446,7 @@ class DestinationsTests(TestCase):
         dest = []
         destinations.add(dest.append)
         destinations.addGlobalFields(x=123, y="hello")
-        destinations.send({"z": 456})
+        destinations.send({"z": 456}, MemoryLogger())
         self.assertEqual(dest, [{"x": 123, "y": "hello", "z": 456}])
 
     def test_addGlobalFieldsCumulative(self):
@@ -449,7 +459,7 @@ class DestinationsTests(TestCase):
         destinations.add(dest.append)
         destinations.addGlobalFields(x=123, y="hello")
         destinations.addGlobalFields(x=456, z=456)
-        destinations.send({"msg": "X"})
+        destinations.send({"msg": "X"}, MemoryLogger())
         self.assertEqual(dest, [{"x": 456, "y": "hello", "z": 456, "msg": "X"}])
 
     def test_buffering(self):
@@ -460,7 +470,7 @@ class DestinationsTests(TestCase):
         destinations = Destinations()
         messages = [{"k": i} for i in range(1050)]
         for m in messages:
-            destinations.send(m)
+            destinations.send(m, MemoryLogger())
         dest, dest2 = [], []
         destinations.add(dest.append, dest2.append)
         self.assertEqual((dest, dest2), (messages[-1000:], messages[-1000:]))
@@ -472,12 +482,12 @@ class DestinationsTests(TestCase):
         destinations = Destinations()
         message = {"m": 1}
         message2 = {"m": 2}
-        destinations.send(message)
+        destinations.send(message, MemoryLogger())
         dest = []
         dest2 = []
         destinations.add(dest.append)
         destinations.add(dest2.append)
-        destinations.send(message2)
+        destinations.send(message2, MemoryLogger())
         self.assertEqual((dest, dest2), ([message, message2], [message2]))
 
     def test_global_fields_buffering(self):
@@ -486,7 +496,7 @@ class DestinationsTests(TestCase):
         """
         destinations = Destinations()
         message = {"m": 1}
-        destinations.send(message)
+        destinations.send(message, MemoryLogger())
         destinations.addGlobalFields(k=123)
         dest = []
         destinations.add(dest.append)

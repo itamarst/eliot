@@ -24,7 +24,6 @@ from .json import (
 )
 from ._validation import ValidationError
 
-
 # Action type for log messages due to a (hopefully temporarily) broken
 # destination.
 DESTINATION_FAILURE = "eliot:destination_failure"
@@ -81,9 +80,6 @@ class Destinations(object):
         """
         message.update(self._globalFields)
         errors = []
-        is_destination_error_message = (
-            message.get("message_type", None) == DESTINATION_FAILURE
-        )
         for dest in self._destinations:
             try:
                 dest(message)
@@ -92,7 +88,7 @@ class Destinations(object):
                 # message, but rather continously, we will get a
                 # "eliot:destination_failure" log message logged, and so we
                 # want to ensure it doesn't do infinite recursion.
-                if not is_destination_error_message:
+                if message.get("message_type", None) != DESTINATION_FAILURE:
                     errors.append(e)
 
         for exception in errors:
@@ -139,7 +135,7 @@ class Destinations(object):
         if buffered_messages:
             # Re-deliver buffered messages:
             for message in buffered_messages:
-                self.send(message)
+                self.send(message, message.get("__eliot_logger__", None))
 
     def remove(self, destination):
         """

@@ -12,11 +12,9 @@ from ._message import TASK_UUID_FIELD, MESSAGE_TYPE_FIELD
 from ._action import ACTION_TYPE_FIELD, ACTION_STATUS_FIELD, FAILED_STATUS
 
 _ffi = FFI()
-_ffi.cdef(
-    """
+_ffi.cdef("""
 int sd_journal_send(const char *format, ...);
-"""
-)
+""")
 try:
     try:
         _journald = _ffi.dlopen("libsystemd.so.0")

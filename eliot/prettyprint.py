@@ -4,12 +4,10 @@ API and command-line support for human-readable Eliot messages.
 
 import pprint
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 from sys import stdin, stdout
 from collections import OrderedDict
-from json import dumps
-
-from json import loads
+from json import dumps, loads
 
 from ._message import (
     TIMESTAMP_FIELD,
@@ -18,7 +16,6 @@ from ._message import (
     MESSAGE_TYPE_FIELD,
 )
 from ._action import ACTION_TYPE_FIELD, ACTION_STATUS_FIELD
-
 
 # Ensure binary stdin, since we expect specifically UTF-8 encoded
 # messages, not platform-encoding messages.
@@ -50,10 +47,10 @@ def _render_timestamp(message: dict, local_timezone: bool) -> str:
     if local_timezone:
         dt = datetime.fromtimestamp(message[TIMESTAMP_FIELD])
     else:
-        dt = datetime.utcfromtimestamp(message[TIMESTAMP_FIELD])
+        dt = datetime.fromtimestamp(message[TIMESTAMP_FIELD], tz=timezone.utc)
     result = dt.isoformat(sep="T")
     if not local_timezone:
-        result += "Z"
+        result = result[:-6] + "Z"
     return result
 
 
