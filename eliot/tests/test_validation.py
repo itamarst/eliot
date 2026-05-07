@@ -541,9 +541,9 @@ class MessageTypeTests(TestCase):
         self.addCleanup(remove_destination, messages.append)
         message_type = self.messageType()
         message_type.log(key=1234, value=3)
-        self.assertEqual(messages[0]["key"], 1234)
-        self.assertEqual(messages[0]["value"], 3)
-        self.assertEqual(messages[0]["message_type"], message_type.message_type)
+        self.assertEqual(messages[-1]["key"], 1234, messages[0])
+        self.assertEqual(messages[-1]["value"], 3)
+        self.assertEqual(messages[-1]["message_type"], message_type.message_type)
 
     def test_description(self):
         """
