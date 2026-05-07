@@ -7,9 +7,8 @@ import argparse
 from datetime import datetime
 from sys import stdin, stdout
 from collections import OrderedDict
-from json import dumps
-
-from json import loads
+from json import dumps, loads
+from datetime import UTC
 
 from ._message import (
     TIMESTAMP_FIELD,
@@ -49,10 +48,10 @@ def _render_timestamp(message: dict, local_timezone: bool) -> str:
     if local_timezone:
         dt = datetime.fromtimestamp(message[TIMESTAMP_FIELD])
     else:
-        dt = datetime.utcfromtimestamp(message[TIMESTAMP_FIELD])
+        dt = datetime.fromtimestamp(message[TIMESTAMP_FIELD], tz=UTC)
     result = dt.isoformat(sep="T")
     if not local_timezone:
-        result += "Z"
+        result = result[:-6] + "Z"
     return result
 
 
