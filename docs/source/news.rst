@@ -4,8 +4,13 @@ What's New
 1.18.0
 ^^^^^^
 
+Bug fixes:
+
+* Fixed traceback-logging issue in threaded logger on some versions of Python.
+
 Enhancements:
 
+* JSON logging will now output a repr for unserializable objects, rather than blowing up and failing to log. Thanks to Maciej Katafiasz for the patch.
 * Official support for Python 3.14.
 
 Deprecations and removals:
