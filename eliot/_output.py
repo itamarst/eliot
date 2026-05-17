@@ -153,7 +153,7 @@ class ILogger(Interface):
     Write out message dictionaries to some destination.
     """
 
-    def write(dictionary, serializer=None):
+    def write(self, dictionary, serializer=None):
         """
         Write a dictionary to the appropriate destination.
 
