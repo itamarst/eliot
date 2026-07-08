@@ -419,7 +419,7 @@ class DestinationsTests(TestCase):
     def test_remove(self):
         """
         A destination removed with L{Destinations.remove} will no longer
-        receive messages from L{Destionations.add} calls.
+        receive messages from L{Destinations.add} calls.
         """
         destinations = Destinations()
         message = {"hello": 123}

@@ -392,7 +392,7 @@ class ActionType(object):
     @type description: C{str}
     """
 
-    # Overrideable hook for testing; need staticmethod() so functions don't
+    # Overridable hook for testing; need staticmethod() so functions don't
     # get turned into methods.
     _start_action = staticmethod(start_action)
     _startTask = staticmethod(startTask)

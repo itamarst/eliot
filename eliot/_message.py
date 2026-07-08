@@ -26,7 +26,7 @@ class Message(object):
     may be auto-populated by logstash).
     """
 
-    # Overrideable for testing purposes:
+    # Overridable for testing purposes:
     _time = time.time
 
     @classmethod

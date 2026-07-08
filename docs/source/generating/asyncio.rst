@@ -3,7 +3,7 @@
 Asyncio/Trio Coroutine Support
 ==============================
 
-As of Eliot 1.8, ``asyncio`` and ``trio`` coroutines have appropriate context propogation for Eliot, automatically.
+As of Eliot 1.8, ``asyncio`` and ``trio`` coroutines have appropriate context propagation for Eliot, automatically.
 
 Asyncio
 --------

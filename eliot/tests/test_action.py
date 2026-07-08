@@ -292,7 +292,7 @@ class ActionTests(TestCase):
 
     def test_withContextUnsetOnRaise(self):
         """
-        L{Action.conext().__exit__} unsets the action if the block raises an
+        L{Action.context().__exit__} unsets the action if the block raises an
         exception.
         """
         action = Action(MemoryLogger(), "", TaskLevel(level=[]), "")

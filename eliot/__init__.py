@@ -40,7 +40,7 @@ def use_asyncio_context():
     )
 
 
-# Backwards compatibilty:
+# Backwards compatibility:
 addDestination = add_destination
 removeDestination = Logger._destinations.remove
 addGlobalFields = Logger._destinations.addGlobalFields
