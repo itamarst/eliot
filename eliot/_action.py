@@ -165,7 +165,7 @@ import time
 
 class Action(object):
     """
-    Part of a nested heirarchy of ongoing actions.
+    Part of a nested hierarchy of ongoing actions.
 
     An action has a start and an end; a message is logged for each.
 

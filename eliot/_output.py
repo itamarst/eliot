@@ -85,7 +85,7 @@ class Destinations(object):
                 dest(message)
             except Exception as e:
                 # If the destination is broken not because of a specific
-                # message, but rather continously, we will get a
+                # message, but rather continuously, we will get a
                 # "eliot:destination_failure" log message logged, and so we
                 # want to ensure it doesn't do infinite recursion.
                 if message.get("message_type", None) != DESTINATION_FAILURE:
