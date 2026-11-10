@@ -301,3 +301,26 @@ class CommandLineTests(TestCase):
                 pretty_format(SIMPLE_MESSAGE),
             ),
         )
+
+
+class NonObjectMessageTests(TestCase):
+    """
+    Tests for valid JSON input that is not an object.
+    """
+
+    def test_non_dict_json_is_not_an_eliot_message(self):
+        """
+        A JSON line that parses to a list is reported as not an Eliot
+        message instead of crashing with C{AttributeError}.
+        """
+        import sys
+        from io import BytesIO, StringIO
+        from unittest.mock import patch
+
+        from .. import prettyprint
+
+        with patch.object(prettyprint, "stdin", BytesIO(b"[1, 2, 3]\n")), patch.object(
+            prettyprint, "stdout", StringIO()
+        ) as out, patch.object(sys, "argv", ["eliot-prettyprint"]):
+            prettyprint._main()
+        self.assertEqual(out.getvalue(), "Not an Eliot message: b'[1, 2, 3]'\n\n")

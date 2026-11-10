@@ -160,7 +160,7 @@ def _main():
         except ValueError:
             stdout.write("Not JSON: {}\n\n".format(line.rstrip(b"\n")))
             continue
-        if REQUIRED_FIELDS - set(message.keys()):
+        if not isinstance(message, dict) or REQUIRED_FIELDS - set(message.keys()):
             stdout.write("Not an Eliot message: {}\n\n".format(line.rstrip(b"\n")))
             continue
         result = formatter(message, args.local_timezone) + "\n"
